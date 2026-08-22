@@ -1,3 +1,15 @@
+;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::spriteram_w)).share("spriteram");
+;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");
+;	map(0x4000, 0x5fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");
+;	map(0x6000, 0x7fff).bankr("bank2");
+;	map(0x8000, 0xffff).rom();
+;	map(0x8000, 0x8000).w(FUNC(namcos86_state::watchdog2_w));
+;	map(0x8800, 0x8800).w(FUNC(namcos86_state::int_ack2_w));   // IRQ acknowledge
+;//  { 0xd800, 0xd802 } layer 2 scroll registers would be here
+;	map(0xd803, 0xd803).w(FUNC(namcos86_state::bankswitch2_w));
+;//  { 0xd804, 0xd806 } layer 3 scroll registers would be here
+
+
 8000: 1A 10       ORCC   #$10
 8002: 10 CE 04 00 LDS    #$0400
 8006: 86 16       LDA    #$16
@@ -66,9 +78,11 @@
 809B: 0F 03       CLR    $03
 809D: 0F 05       CLR    $05
 809F: 0F 07       CLR    $07
-80A1: 1C EF       ANDCC  #$EF
-80A3: BD B0 BF    JSR    $B0BF
-80A6: 20 FB       BRA    $80A3
+80A1: 1C EF       ANDCC  #$EF		; enable interrupts
+mainloop_80a3:
+80A3: BD B0 BF    JSR    process_event_b0bf
+80A6: 20 FB       BRA    mainloop_80a3
+
 80A8: BD 80 BE    JSR    $80BE
 80AB: BD 80 E9    JSR    $80E9
 80AE: BD 80 FE    JSR    $80FE
@@ -5928,6 +5942,8 @@ B0B8: 0C 62       INC    $62
 B0BA: 0A 65       DEC    $65
 B0BC: 26 E7       BNE    $B0A5
 B0BE: 39          RTS
+
+process_event_b0bf:
 B0BF: D6 68       LDB    $68
 B0C1: D1 67       CMPB   $67
 B0C3: 26 01       BNE    $B0C6
