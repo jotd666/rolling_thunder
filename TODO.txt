@@ -1,0 +1,5 @@
+fmode=2 (32 bit scroll)
+fmode=3 64 bit sprites
+upper & lower HUD use fixed sprites, then multiplexes to a layer of 5x64 sprites (scrolling)
+for front objects
+main playfield would use 64 colors

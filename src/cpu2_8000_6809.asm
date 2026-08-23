@@ -9,27 +9,29 @@
 ;	map(0xd803, 0xd803).w(FUNC(namcos86_state::bankswitch2_w));
 ;//  { 0xd804, 0xd806 } layer 3 scroll registers would be here
 
+watchdog_8000 = $8000
+bankswitch2_d803 = $d803
 
-8000: 1A 10       ORCC   #$10
-8002: 10 CE 04 00 LDS    #$0400
-8006: 86 16       LDA    #$16
+8000: 1A 10       ORCC   #$10		; disable interrupts
+8002: 10 CE 04 00 LDS    #$0400		; set stack
+8006: 86 16       LDA    #$16		; set DP at $16xx
 8008: 1F 8B       TFR    A,DP
 800A: 4F          CLRA
-800B: B7 80 00    STA    $8000
+800B: B7 80 00    STA    watchdog_8000
 800E: 4A          DECA
 800F: 26 FA       BNE    $800B
-8011: B7 80 00    STA    $8000
+8011: B7 80 00    STA    watchdog_8000
 8014: B6 1F F0    LDA    $1FF0
 8017: 26 F8       BNE    $8011
 8019: 8E 20 00    LDX    #$2000
 801C: A6 84       LDA    ,X
 801E: 43          COMA
 801F: A7 80       STA    ,X+
-8021: B7 80 00    STA    $8000
+8021: B7 80 00    STA    watchdog_8000
 8024: 8C 40 00    CMPX   #$4000
 8027: 25 F3       BCS    $801C
 8029: 7C 1F F0    INC    $1FF0
-802C: B7 80 00    STA    $8000
+802C: B7 80 00    STA    watchdog_8000
 802F: B6 1F F0    LDA    $1FF0
 8032: 81 03       CMPA   #$03
 8034: 26 F6       BNE    $802C
@@ -37,11 +39,11 @@
 8039: A6 84       LDA    ,X
 803B: 43          COMA
 803C: A7 80       STA    ,X+
-803E: B7 80 00    STA    $8000
+803E: B7 80 00    STA    watchdog_8000
 8041: 8C 60 00    CMPX   #$6000
 8044: 26 F3       BNE    $8039
 8046: 7C 1F F0    INC    $1FF0
-8049: B7 80 00    STA    $8000
+8049: B7 80 00    STA    watchdog_8000
 804C: B6 1F F0    LDA    $1FF0
 804F: 81 05       CMPA   #$05
 8051: 26 F6       BNE    $8049
@@ -49,18 +51,18 @@
 8056: A6 84       LDA    ,X
 8058: 43          COMA
 8059: A7 80       STA    ,X+
-805B: B7 80 00    STA    $8000
+805B: B7 80 00    STA    watchdog_8000
 805E: 8C 1F F0    CMPX   #$1FF0
 8061: 26 F3       BNE    $8056
 8063: 7C 1F F0    INC    $1FF0
-8066: B7 80 00    STA    $8000
+8066: B7 80 00    STA    watchdog_8000
 8069: B6 1F F0    LDA    $1FF0
 806C: 81 07       CMPA   #$07
 806E: 26 F6       BNE    $8066
-8070: 8E 80 00    LDX    #$8000
+8070: 8E 80 00    LDX    #watchdog_8000
 8073: 5F          CLRB
 8074: EB 80       ADDB   ,X+
-8076: B7 80 00    STA    $8000
+8076: B7 80 00    STA    watchdog_8000
 8079: 8C 00 00    CMPX   #$0000
 807C: 26 F6       BNE    $8074
 807E: C1 01       CMPB   #$01
@@ -70,7 +72,7 @@
 8087: B7 1F F1    STA    $1FF1
 808A: 86 01       LDA    #$01
 808C: B7 1F F3    STA    $1FF3
-808F: B7 80 00    STA    $8000
+808F: B7 80 00    STA    watchdog_8000
 8092: B6 1F F3    LDA    $1FF3
 8095: 81 02       CMPA   #$02
 8097: 26 F6       BNE    $808F
@@ -108,7 +110,7 @@ mainloop_80a3:
 80DD: 30 88 10    LEAX   $10,X
 80E0: 8C 20 00    CMPX   #$2000
 80E3: 25 F6       BCS    $80DB
-80E5: B7 80 00    STA    $8000
+80E5: B7 80 00    STA    watchdog_8000
 80E8: 39          RTS
 80E9: 8E 00 00    LDX    #$0000
 80EC: CC 00 00    LDD    #$0000
@@ -117,7 +119,7 @@ mainloop_80a3:
 80F3: ED 81       STD    ,X++
 80F5: 8C 03 00    CMPX   #$0300
 80F8: 25 F9       BCS    $80F3
-80FA: B7 80 00    STA    $8000
+80FA: B7 80 00    STA    watchdog_8000
 80FD: 39          RTS
 80FE: 8E 04 00    LDX    #$0400
 8101: CC 00 00    LDD    #$0000
@@ -142,7 +144,7 @@ mainloop_80a3:
 812B: 30 88 20    LEAX   $20,X
 812E: 4A          DECA
 812F: 26 F8       BNE    $8129
-8131: B7 80 00    STA    $8000
+8131: B7 80 00    STA    watchdog_8000
 8134: 39          RTS
 8135: 8E 09 00    LDX    #$0900
 8138: CC 00 00    LDD    #$0000
@@ -161,7 +163,7 @@ mainloop_80a3:
 8156: 30 88 10    LEAX   $10,X
 8159: 4A          DECA
 815A: 26 F8       BNE    $8154
-815C: B7 80 00    STA    $8000
+815C: B7 80 00    STA    watchdog_8000
 815F: 39          RTS
 8160: 8E 13 00    LDX    #$1300
 8163: CC 00 00    LDD    #$0000
@@ -169,7 +171,7 @@ mainloop_80a3:
 8168: ED 81       STD    ,X++
 816A: 8C 13 20    CMPX   #$1320
 816D: 25 F9       BCS    $8168
-816F: B7 80 00    STA    $8000
+816F: B7 80 00    STA    watchdog_8000
 8172: 39          RTS
 8173: 0C 0F       INC    $0F
 8175: 96 00       LDA    $00
@@ -183,8 +185,8 @@ mainloop_80a3:
 8186: 48          ASLA
 8187: AD 96       JSR    [A,X]
 8189: 96 1A       LDA    $1A
-818B: B7 D8 03    STA    $D803
-818E: B7 80 00    STA    $8000
+818B: B7 D8 03    STA    bankswitch2_d803
+818E: B7 80 00    STA    watchdog_8000
 8191: B7 88 00    STA    $8800
 8194: 3B          RTI
 8195: BD 81 BB    JSR    $81BB
@@ -192,8 +194,8 @@ mainloop_80a3:
 819B: BD 84 8B    JSR    $848B
 819E: B7 1F F2    STA    $1FF2
 81A1: 96 1A       LDA    $1A
-81A3: B7 D8 03    STA    $D803
-81A6: B7 80 00    STA    $8000
+81A3: B7 D8 03    STA    bankswitch2_d803
+81A6: B7 80 00    STA    watchdog_8000
 81A9: B7 88 00    STA    $8800
 81AC: 3B          RTI
 81AD: 80 A8       SUBA   #$A8
@@ -365,7 +367,7 @@ mainloop_80a3:
 8302: 27 05       BEQ    $8309
 8304: 33 C8 10    LEAU   $10,U
 8307: 20 E9       BRA    $82F2
-8309: B7 80 00    STA    $8000
+8309: B7 80 00    STA    watchdog_8000
 830C: 39          RTS
 830D: 8E 00 00    LDX    #$0000
 8310: 10 8E 18 00 LDY    #$1800
@@ -384,7 +386,7 @@ mainloop_80a3:
 8329: 30 02       LEAX   $2,X
 832B: 0A 21       DEC    $21
 832D: 26 EE       BNE    $831D
-832F: B7 80 00    STA    $8000
+832F: B7 80 00    STA    watchdog_8000
 8332: 39          RTS
 8333: 83 43 83    SUBD   #$4383
 8336: 43          COMA
@@ -400,7 +402,7 @@ mainloop_80a3:
 834C: 44          LSRA
 834D: 44          LSRA
 834E: A6 86       LDA    A,X
-8350: B7 D8 03    STA    $D803
+8350: B7 D8 03    STA    bankswitch2_d803
 8353: AE 5E       LDX    -$2,U
 8355: A6 80       LDA    ,X+
 8357: 97 25       STA    $25
@@ -472,7 +474,7 @@ mainloop_80a3:
 83D5: EE 84       LDU    ,X
 83D7: 34 10       PSHS   X
 83D9: 86 01       LDA    #$01
-83DB: B7 D8 03    STA    $D803
+83DB: B7 D8 03    STA    bankswitch2_d803
 83DE: AE 4E       LDX    $E,U
 83E0: 27 3F       BEQ    $8421
 83E2: EC 84       LDD    ,X
@@ -515,7 +517,7 @@ mainloop_80a3:
 8423: EE 84       LDU    ,X
 8425: 34 10       PSHS   X
 8427: 86 01       LDA    #$01
-8429: B7 D8 03    STA    $D803
+8429: B7 D8 03    STA    bankswitch2_d803
 842C: AE 4E       LDX    $E,U
 842E: 27 59       BEQ    $8489
 8430: A6 80       LDA    ,X+
@@ -1120,13 +1122,13 @@ mainloop_80a3:
 8916: 39          RTS
 8917: 86 FF       LDA    #$FF
 8919: 97 07       STA    $07
-891B: B7 80 00    STA    $8000
+891B: B7 80 00    STA    watchdog_8000
 891E: 96 06       LDA    $06
 8920: 2A F9       BPL    $891B
 8922: 0F 06       CLR    $06
 8924: 0D 07       TST    $07
 8926: 26 FC       BNE    $8924
-8928: B7 80 00    STA    $8000
+8928: B7 80 00    STA    watchdog_8000
 892B: 96 06       LDA    $06
 892D: 81 01       CMPA   #$01
 892F: 25 F7       BCS    $8928
@@ -1143,7 +1145,7 @@ mainloop_80a3:
 8948: 0C 07       INC    $07
 894A: BD CE A3    JSR    $CEA3
 894D: 0C 07       INC    $07
-894F: B7 80 00    STA    $8000
+894F: B7 80 00    STA    watchdog_8000
 8952: 96 06       LDA    $06
 8954: 81 02       CMPA   #$02
 8956: 25 F7       BCS    $894F
@@ -1151,7 +1153,7 @@ mainloop_80a3:
 895B: 0C 07       INC    $07
 895D: BD AC AC    JSR    $ACAC
 8960: 0C 07       INC    $07
-8962: B7 80 00    STA    $8000
+8962: B7 80 00    STA    watchdog_8000
 8965: 96 06       LDA    $06
 8967: 81 04       CMPA   #$04
 8969: 25 F7       BCS    $8962
@@ -4517,7 +4519,7 @@ A4C2: 7E A2 D2    JMP    $A2D2
 A4C5: 01 7B       NEG    $7B
 A4C7: 0C 00       INC    $00
 A4C9: 40          NEGA
-A4CA: FF 80 00    STU    $8000
+A4CA: FF 80 00    STU    watchdog_8000
 A4CD: F0 01 7B    SUBB   $017B
 A4D0: 3C 00       CWAI   #$00
 A4D2: 80 00       SUBA   #$00
@@ -4526,7 +4528,7 @@ A4D7: 10 FF C0 FF STS    $C0FF
 A4DB: 80 00       SUBA   #$00
 A4DD: F0 02 7B    SUBB   $027B
 A4E0: 40          NEGA
-A4E1: FE 80 00    LDU    $8000
+A4E1: FE 80 00    LDU    watchdog_8000
 A4E4: F0 05 7B    SUBB   $057B
 A4E7: 0C 00       INC    $00
 A4E9: 20 FF       BRA    $A4EA
@@ -4539,7 +4541,7 @@ A4F7: 10 FF E0 FF STS    $E0FF
 A4FB: 80 00       SUBA   #$00
 A4FD: F0 02 7B    SUBB   $027B
 A500: 40          NEGA
-A501: FE 80 00    LDU    $8000
+A501: FE 80 00    LDU    watchdog_8000
 A504: F0 A3 E0    SUBB   $A3E0
 A507: A3 EB       SUBD   D,S
 A509: A4 0D       ANDA   $D,X
@@ -4886,7 +4888,7 @@ A7E8: 7E A6 42    JMP    $A642
 A7EB: 09 7B       ROL    $7B
 A7ED: 0C 00       INC    $00
 A7EF: 40          NEGA
-A7F0: FF 80 00    STU    $8000
+A7F0: FF 80 00    STU    watchdog_8000
 A7F3: F0 01 7B    SUBB   $017B
 A7F6: 3C 00       CWAI   #$00
 A7F8: 80 00       SUBA   #$00
@@ -4895,7 +4897,7 @@ A7FD: 10 FF C0 FF STS    $C0FF
 A801: 80 00       SUBA   #$00
 A803: F0 02 7B    SUBB   $027B
 A806: 40          NEGA
-A807: FE 80 00    LDU    $8000
+A807: FE 80 00    LDU    watchdog_8000
 A80A: F0 A7 21    SUBB   $A721
 A80D: A7 2C       STA    $C,Y
 A80F: A7 4E       STA    $E,U
@@ -5528,7 +5530,7 @@ AD44: 4C          INCA
 AD45: 84 07       ANDA   #$07
 AD47: 97 67       STA    $67
 AD49: 0F 61       CLR    $61
-AD4B: B7 80 00    STA    $8000
+AD4B: B7 80 00    STA    watchdog_8000
 AD4E: 39          RTS
 AD4F: 8E 13 00    LDX    #$1300
 AD52: D6 67       LDB    $67
@@ -5545,7 +5547,7 @@ AD63: 4C          INCA
 AD64: 84 07       ANDA   #$07
 AD66: 97 67       STA    $67
 AD68: 0F 61       CLR    $61
-AD6A: B7 80 00    STA    $8000
+AD6A: B7 80 00    STA    watchdog_8000
 AD6D: 39          RTS
 AD6E: 8E 13 00    LDX    #$1300
 AD71: D6 67       LDB    $67
@@ -5562,7 +5564,7 @@ AD82: 4C          INCA
 AD83: 84 07       ANDA   #$07
 AD85: 97 67       STA    $67
 AD87: 0F 61       CLR    $61
-AD89: B7 80 00    STA    $8000
+AD89: B7 80 00    STA    watchdog_8000
 AD8C: 39          RTS
 AD8D: 8D DF       BSR    $AD6E
 AD8F: 7E AD 30    JMP    $AD30
@@ -5583,7 +5585,7 @@ ADAB: 4C          INCA
 ADAC: 84 07       ANDA   #$07
 ADAE: 97 67       STA    $67
 ADB0: 0F 61       CLR    $61
-ADB2: B7 80 00    STA    $8000
+ADB2: B7 80 00    STA    watchdog_8000
 ADB5: 39          RTS
 ADB6: 8D DF       BSR    $AD97
 ADB8: 7E AD 30    JMP    $AD30
@@ -5643,7 +5645,7 @@ AE28: 0A 3B       DEC    $3B
 AE2A: 27 05       BEQ    $AE31
 AE2C: 30 88 20    LEAX   $20,X
 AE2F: 20 C4       BRA    $ADF5
-AE31: B7 80 00    STA    $8000
+AE31: B7 80 00    STA    watchdog_8000
 AE34: 39          RTS
 AE35: A6 84       LDA    ,X
 AE37: 2A 2F       BPL    $AE68
@@ -5672,7 +5674,7 @@ AE68: 0A 3B       DEC    $3B
 AE6A: 27 05       BEQ    $AE71
 AE6C: 30 88 20    LEAX   $20,X
 AE6F: 20 C4       BRA    $AE35
-AE71: B7 80 00    STA    $8000
+AE71: B7 80 00    STA    watchdog_8000
 AE74: 39          RTS
 AE75: A6 84       LDA    ,X
 AE77: 2A 2F       BPL    $AEA8
@@ -5701,7 +5703,7 @@ AEA8: 0A 3B       DEC    $3B
 AEAA: 27 05       BEQ    $AEB1
 AEAC: 30 88 20    LEAX   $20,X
 AEAF: 20 C4       BRA    $AE75
-AEB1: B7 80 00    STA    $8000
+AEB1: B7 80 00    STA    watchdog_8000
 AEB4: 39          RTS
 AEB5: A6 84       LDA    ,X
 AEB7: 2A 3F       BPL    $AEF8
@@ -5736,7 +5738,7 @@ AEF8: 0A 3B       DEC    $3B
 AEFA: 27 05       BEQ    $AF01
 AEFC: 30 88 20    LEAX   $20,X
 AEFF: 20 B4       BRA    $AEB5
-AF01: B7 80 00    STA    $8000
+AF01: B7 80 00    STA    watchdog_8000
 AF04: 39          RTS
 AF05: A6 84       LDA    ,X
 AF07: 2A 3F       BPL    $AF48
@@ -5771,7 +5773,7 @@ AF48: 0A 3B       DEC    $3B
 AF4A: 27 05       BEQ    $AF51
 AF4C: 30 88 20    LEAX   $20,X
 AF4F: 20 B4       BRA    $AF05
-AF51: B7 80 00    STA    $8000
+AF51: B7 80 00    STA    watchdog_8000
 AF54: 39          RTS
 AF55: A6 84       LDA    ,X
 AF57: 2A 2F       BPL    $AF88
@@ -5800,7 +5802,7 @@ AF88: 0A 3B       DEC    $3B
 AF8A: 27 05       BEQ    $AF91
 AF8C: 30 88 20    LEAX   $20,X
 AF8F: 20 C4       BRA    $AF55
-AF91: B7 80 00    STA    $8000
+AF91: B7 80 00    STA    watchdog_8000
 AF94: 39          RTS
 AF95: A6 84       LDA    ,X
 AF97: 2A 3F       BPL    $AFD8
@@ -5835,7 +5837,7 @@ AFD8: 0A 3B       DEC    $3B
 AFDA: 27 05       BEQ    $AFE1
 AFDC: 30 88 20    LEAX   $20,X
 AFDF: 20 B4       BRA    $AF95
-AFE1: B7 80 00    STA    $8000
+AFE1: B7 80 00    STA    watchdog_8000
 AFE4: 39          RTS
 AFE5: A6 84       LDA    ,X
 AFE7: 2A 3F       BPL    $B028
@@ -5870,11 +5872,11 @@ B028: 0A 3B       DEC    $3B
 B02A: 27 05       BEQ    $B031
 B02C: 30 88 20    LEAX   $20,X
 B02F: 20 B4       BRA    $AFE5
-B031: B7 80 00    STA    $8000
+B031: B7 80 00    STA    watchdog_8000
 B034: 39          RTS
 B035: 86 02       LDA    #$02
 B037: 9B 3C       ADDA   $3C
-B039: B7 D8 03    STA    $D803
+B039: B7 D8 03    STA    bankswitch2_d803
 B03C: D6 C7       LDB    $C7
 B03E: C0 02       SUBB   #$02
 B040: D7 63       STB    $63
@@ -5928,7 +5930,7 @@ B099: 39          RTS
 B09A: 0F 62       CLR    $62
 B09C: 0F 63       CLR    $63
 B09E: 86 02       LDA    #$02
-B0A0: B7 D8 03    STA    $D803
+B0A0: B7 D8 03    STA    bankswitch2_d803
 B0A3: 97 65       STA    $65
 B0A5: 10 8E 78 3C LDY    #$783C
 B0A9: 96 D1       LDA    $D1
@@ -5943,6 +5945,10 @@ B0BA: 0A 65       DEC    $65
 B0BC: 26 E7       BNE    $B0A5
 B0BE: 39          RTS
 
+; handle some punctual events:
+; - level completed
+; - various special enemies (with guns, etc..). Grunts are handled
+;   by cpu1
 process_event_b0bf:
 B0BF: D6 68       LDB    $68
 B0C1: D1 67       CMPB   $67
@@ -5951,18 +5957,21 @@ B0C5: 39          RTS
 B0C6: 86 02       LDA    #$02
 B0C8: 9B 3C       ADDA   $3C
 B0CA: 97 1A       STA    $1A
-B0CC: B7 D8 03    STA    $D803
+B0CC: B7 D8 03    STA    bankswitch2_d803
 B0CF: 8E 13 00    LDX    #$1300
 B0D2: 58          ASLB
 B0D3: 58          ASLB
 B0D4: 3A          ABX
-B0D5: CE B0 DC    LDU    #$B0DC
+B0D5: CE B0 DC    LDU    #jump_table_b0bc
 B0D8: A6 84       LDA    ,X
 B0DA: 6E D6       JMP    [A,U]
-B0DC: B0 E6 B0    SUBA   $E6B0
-B0DF: EE B1       LDU    [,Y++]
-B0E1: 16 B1 3D    LBRA   $6221
-B0E4: B1 65 96    CMPA   $6596
+jump_table_b0bc:
+	.word	$B0E6 
+	.word	$B0EE 
+	.word	$B116 
+	.word	$B13D    
+	.word	$B165 
+
 B0E7: 68 4C       ASL    $C,U
 B0E9: 84 07       ANDA   #$07
 B0EB: 97 68       STA    $68
@@ -6114,7 +6123,7 @@ B1F6: 27 08       BEQ    $B200
 B1F8: 30 88 20    LEAX   $20,X
 B1FB: 8C 09 00    CMPX   #$0900
 B1FE: 25 EC       BCS    $B1EC
-B200: B7 80 00    STA    $8000
+B200: B7 80 00    STA    watchdog_8000
 B203: 35 D0       PULS   X,U,PC
 B205: EC A1       LDD    ,Y++
 B207: 8A 80       ORA    #$80
@@ -9831,7 +9840,7 @@ D122: 0C 37       INC    $37
 D124: 39          RTS
 D125: A7 E2       STA    ,-S
 D127: 86 01       LDA    #$01
-D129: B7 D8 03    STA    $D803
+D129: B7 D8 03    STA    bankswitch2_d803
 D12C: 8D 2F       BSR    $D15D
 D12E: EC A1       LDD    ,Y++
 D130: DD 5A       STD    $5A
@@ -12256,7 +12265,7 @@ E4C0: FF 40 00    STU    $4000
 E4C3: D0 00       SUBB   $00
 E4C5: 00 03       NEG    $03
 E4C7: 70 FF C0    NEG    $FFC0
-E4CA: FF 80 00    STU    $8000
+E4CA: FF 80 00    STU    watchdog_8000
 E4CD: D0 00       SUBB   $00
 E4CF: 00 01       NEG    $01
 E4D1: 00 FE       NEG    $FE
@@ -12304,7 +12313,7 @@ E526: 00 D0       NEG    $D0
 E528: 00 00       NEG    $00
 E52A: 03 70       COM    $70
 E52C: 00 C0       NEG    $C0
-E52E: FE 80 00    LDU    $8000
+E52E: FE 80 00    LDU    watchdog_8000
 E531: D0 00       SUBB   $00
 E533: 00 01       NEG    $01
 E535: A0 01       SUBA   $1,X
@@ -12352,7 +12361,7 @@ E589: 40          NEGA
 E58A: 00 D0       NEG    $D0
 E58C: 00 00       NEG    $00
 E58E: 01 80       NEG    $80
-E590: FE 80 00    LDU    $8000
+E590: FE 80 00    LDU    watchdog_8000
 E593: 50          NEGB
 E594: 01 40       NEG    $40
 E596: 00 00       NEG    $00
