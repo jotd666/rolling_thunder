@@ -9,6 +9,7 @@
 
 import pathlib,re,bisect
 
+this_dir = pathlib.Path(__file__).absolute().parent
 
 fake = {}
 
@@ -109,8 +110,8 @@ def process(asm_file,rom_file,offset,end_address):
                 nb_entries = 0
                 first_entry = None
 
-                for i in range(0,len(block),2):
-                    a = block[i+1] + block[i]*256   # big endian!
+                for j in range(0,len(block),2):
+                    a = block[j+1] + block[j]*256   # big endian!
                     if a not in fake and (sub > a or a >= end):
                         break
                     # most table first entries follow the table itself. This allows
@@ -142,23 +143,25 @@ def process(asm_file,rom_file,offset,end_address):
                     nb_entries += 1
                     table_address += 2
 
-                if first_entry and first_entry not in inst_addresses:
-                    closest_idx = bisect.bisect(inst_addresses_list,first_entry)
-                    closest_address = inst_addresses_list[closest_idx]
-                    print(f"{label}: first entry {first_entry:04x} not in listing (closest: {closest_address:04x})")
-                    not_in_listing.add((first_entry,closest_address))
+##                if first_entry and first_entry not in inst_addresses:
+##                    closest_idx = bisect.bisect(inst_addresses_list,first_entry)
+##                    closest_address = inst_addresses_list[closest_idx]
+##                    print(f"{label}: first entry {first_entry:04x} not in listing (closest: {closest_address:04x})")
+##                    not_in_listing.add((first_entry,closest_address))
 
                 if nb_entries < 2:
                     print(f"{label}: no or not enough entries")
-
-    # write mame debug script to find missing entrypoints
-    # once run in MAME, use "type d-*asm > missing.asm 2>&1" to reunite the dumps
-    with open("debug_script","w") as f:
-        for n,c in sorted(not_in_listing):
-
-            f.write(f"dasm d-{c:04x}.asm,{n:04x},20\n")
-
-    with open(asm_file.stem + "_new.asm","w") as f:
+                asm_lines[i]  = line.strip()+f" [nb_entries={nb_entries}]\n"
+                print(asm_lines[i])
+##    # write mame debug script to find missing entrypoints
+##    # once run in MAME, use "type d-*asm > missing.asm 2>&1" to reunite the dumps
+##    with open("debug_script","w") as f:
+##        for n,c in sorted(not_in_listing):
+##
+##            f.write(f"dasm d-{c:04x}.asm,{n:04x},20\n")
+##
+    with open(this_dir / (asm_file.stem + "_new.asm"),"w") as f:
         f.writelines(asm_lines)
 
-process(pathlib.Path("../src/cpu2_8000_6809.asm"),"../assets/rom_cpu1.bin",offset=0x8000,end_address=0x10000)
+process(this_dir/"../src/cpu2_8000_6809.asm",this_dir/"../assets/rom_cpu2.bin",offset=0x8000,end_address=0x10000)
+#process(this_dir / "../src/cpu1_8000_6809.asm",this_dir/"../assets/rom_cpu1.bin",offset=0x8000,end_address=0x10000)
