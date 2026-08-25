@@ -180,10 +180,10 @@ mainloop_80a3:
 817B: 96 03       LDA    $03
 817D: 91 02       CMPA   $02
 817F: 22 08       BHI    $8189
-8181: 8E 81 AD    LDX    #$81AD
+8181: 8E 81 AD    LDX    #jump_table_81ad
 8184: 96 03       LDA    $03
 8186: 48          ASLA
-8187: AD 96       JSR    [A,X]        ; [indirect_jump]
+8187: AD 96       JSR    [A,X]        ; [indirect_jump] [nb_entries=14]
 8189: 96 1A       LDA    $1A
 818B: B7 D8 03    STA    bankswitch2_d803
 818E: B7 80 00    STA    watchdog_8000
@@ -382,7 +382,7 @@ mainloop_80a3:
 8324: 44          LSRA
 8325: 44          LSRA
 8326: 44          LSRA
-8327: AD D6       JSR    [A,U]
+8327: AD D6       JSR    [A,U]        ; [indirect_jump] [nb_entries=8]
 8329: 30 02       LEAX   $2,X
 832B: 0A 21       DEC    $21
 832D: 26 EE       BNE    $831D
@@ -739,7 +739,7 @@ mainloop_80a3:
 8608: E6 01       LDB    $1,X
 860A: C4 FC       ANDB   #$FC
 860C: 54          LSRB
-860D: AD D5       JSR    [B,U]
+860D: AD D5       JSR    [B,U]        ; [indirect_jump] [nb_entries=53]
 860F: A6 84       LDA    ,X
 8611: 2B 36       BMI    $8649
 8613: A6 14       LDA    -$C,X
@@ -1046,7 +1046,7 @@ mainloop_80a3:
 8997: 23 01       BLS    $899A
 8999: 39          RTS
 899A: 48          ASLA
-899B: 6E D6       JMP    [A,U]
+899B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
 
 89A5: 0C 07       INC    $07
 89A7: 39          RTS
@@ -1073,7 +1073,7 @@ mainloop_80a3:
 89D0: 39          RTS
 89D1: CE 89 D7    LDU    #jump_table_89d7
 89D4: 48          ASLA
-89D5: 6E D6       JMP    [A,U]
+89D5: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 
 89EB: 0C 07       INC    $07
 89ED: 39          RTS
@@ -1141,7 +1141,7 @@ mainloop_80a3:
 8A77: 39          RTS
 8A78: CE 8A 7E    LDU    #jump_table_8a7e
 8A7B: 48          ASLA
-8A7C: 6E D6       JMP    [A,U]
+8A7C: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 8A82: 0C 07       INC    $07
 8A84: BD 80 BE    JSR    $80BE
@@ -1157,7 +1157,7 @@ mainloop_80a3:
 8A9B: 39          RTS
 8A9C: CE 8A A2    LDU    #jump_table_8aa2
 8A9F: 48          ASLA
-8AA0: 6E D6       JMP    [A,U]
+8AA0: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 
 8AB6: 39          RTS
 8AB7: 39          RTS
@@ -1214,7 +1214,7 @@ mainloop_80a3:
 8B25: 39          RTS
 8B26: CE 8B 2C    LDU    #jump_table_8b2c
 8B29: 48          ASLA
-8B2A: 6E D6       JMP    [A,U]
+8B2A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 
 8B44: 0C 07       INC    $07
 8B46: 39          RTS
@@ -1262,246 +1262,7 @@ mainloop_80a3:
 8BA9: 39          RTS
 8BAA: 39          RTS
 8BAB: 39          RTS
-8BAC: 03 01       COM    $01
-8BAE: 1E 19       EXG    X,B
-8BB0: 0A 11       DEC    $11
-8BB2: 12          NOP
-8BB3: 10          FCB    $10
-8BB4: 11 FF 1C 0C STS    $1C0C
-8BB8: 18          X18
-8BB9: 1B          NOP
-8BBA: 0E 03       JMP    $03
-8BBC: 02 1E       XNC    $1E
-8BBE: 19          DAA
-8BBF: 05 16       LSR    $16
-8BC1: 0A 17       DEC    $17
-8BC3: FF FF 0D    STU    $FF0D
-8BC6: 30 31       LEAX   -$F,Y
-8BC8: FF 01 09    STU    $0109
-8BCB: 08 06       ASL    $06
-8BCD: FF 17 0A    STU    $170A
-8BD0: 16 0C 18    LBRA   $97EB
-8BD3: 13          SYNC
-8BD4: 0A 15       DEC    $15
-8BD6: 15          XHCF
-8BD7: FF 1B 12    STU    $1B12
-8BDA: 10          FCB    $10
-8BDB: 11 1D       SEX
-8BDD: 1C FF       ANDCC  #$FF
-8BDF: 1B          NOP
-8BE0: 0E 1C       JMP    $1C
-8BE2: 0E 1B       JMP    $1B
-8BE4: 1F 0E       TFR    D,inv
-8BE6: 0D 0A       TST    $0A
-8BE8: 0C 1B       INC    $1B
-8BEA: 0E 0D       JMP    $0D
-8BEC: 12          NOP
-8BED: 1D          SEX
-8BEE: FF FF FF    STU    $FFFF
-8BF1: FF 07 0A    STU    $070A
-8BF4: 1D          SEX
-8BF5: 1D          SEX
-8BF6: 1B          NOP
-8BF7: 0A 0C       DEC    $0C
-8BF9: 1D          SEX
-8BFA: 06 1B       ROR    $1B
-8BFC: 0A 1D       DEC    $1D
-8BFE: 12          NOP
-8BFF: 17 10 04    LBSR   $9C06
-8C02: 1B          NOP
-8C03: 0A 17       DEC    $17
-8C05: 14          XHCF
-8C06: 05 1C       LSR    $1C
-8C08: 0C 18       INC    $18
-8C0A: 1B          NOP
-8C0B: 0E 08       JMP    $08
-8C0D: 1C 1D       ANDCC  #$1D
-8C0F: 18          X18
-8C10: 1B          NOP
-8C11: 22 FF       BHI    $8C12
-8C13: FF FF 08    STU    $FF08
-8C16: 0A 1B       DEC    $1B
-8C18: 0E 0A       JMP    $0A
-8C1A: FF FF FF    STU    $FFFF
-8C1D: FF 04 17    STU    $0417
-8C20: 0A 16       DEC    $16
-8C22: 0E 01       JMP    $01
-8C24: 01 01       NEG    $01
-8C26: 02 01       XNC    $01
-8C28: 03 01       COM    $01
-8C2A: 04 01       LSR    $01
-8C2C: 05 08       LSR    $08
-8C2E: 1D          SEX
-8C2F: 12          NOP
-8C30: 16 0E 1B    LBRA   $9A4E
-8C33: FF FF FF    STU    $FFFF
-8C36: 10 1D       SEX
-8C38: 18          X18
-8C39: FF 0C 18    STU    $0C18
-8C3C: 17 1D 12    LBSR   $A951
-8C3F: 17 1E 0E    LBSR   $AA50
-8C42: FF 10 0A    STU    $100A
-8C45: 16 0E 0B    LBRA   $9A53
-8C48: 12          NOP
-8C49: 17 1C 0E    LBSR   $A85A
-8C4C: 1B          NOP
-8C4D: 1D          SEX
-8C4E: FF 0C 18    STU    $0C18
-8C51: 12          NOP
-8C52: 17 04 19    LBSR   $906E
-8C55: 1E 1C       EXG    X,inv
-8C57: 11 0D 1D    TST    $1D
-8C5A: 18          X18
-8C5B: FF 1C 1D    STU    $1C1D
-8C5E: 0A 1B       DEC    $1B
-8C60: 1D          SEX
-8C61: FF 19 1E    STU    $191E
-8C64: 1C 11       ANDCC  #$11
-8C66: 16 18 17    LBRA   $A480
-8C69: 15          XHCF
-8C6A: 22 FF       BHI    $8C6B
-8C6C: 01 FF       NEG    $FF
-8C6E: 19          DAA
-8C6F: 15          XHCF
-8C70: 0A 22       DEC    $22
-8C72: 0E 1B       JMP    $1B
-8C74: 2B 1C       BMI    $8C92
-8C76: FF 0B 1E    STU    $0B1E
-8C79: 1D          SEX
-8C7A: 1D          SEX
-8C7B: 18          X18
-8C7C: 17 16 01    LBSR   $A280
-8C7F: FF 18 1B    STU    $181B
-8C82: FF 02 FF    STU    $02FF
-8C85: 19          DAA
-8C86: 15          XHCF
-8C87: 0A 22       DEC    $22
-8C89: 0E 1B       JMP    $1B
-8C8B: 1C 2B       ANDCC  #$2B
-8C8D: FF 0B 1E    STU    $0B1E
-8C90: 1D          SEX
-8C91: 1D          SEX
-8C92: 18          X18
-8C93: 17 0A 19    LBSR   $96AF
-8C96: 15          XHCF
-8C97: 0A 22       DEC    $22
-8C99: 0E 1B       JMP    $1B
-8C9B: FF 18 17    STU    $1817
-8C9E: 0E 0A       JMP    $0A
-8CA0: 19          DAA
-8CA1: 15          XHCF
-8CA2: 0A 22       DEC    $22
-8CA4: 0E 1B       JMP    $1B
-8CA6: FF 1D 20    STU    $1D20
-8CA9: 18          X18
-8CAA: 0A 1B       DEC    $1B
-8CAC: 0E 0A       JMP    $0A
-8CAE: 0D 22       TST    $22
-8CB0: FF 25 FF    STU    $25FF
-8CB3: FF FF 0A    STU    $FF0A
-8CB6: FF FF 10    STU    $FF10
-8CB9: 18          X18
-8CBA: FF FF 25    STU    $FF25
-8CBD: FF FF FF    STU    $FFFF
-8CC0: 0A 10       DEC    $10
-8CC2: 0A 16       DEC    $16
-8CC4: 0E FF       JMP    $FF
-8CC6: FF 18 1F    STU    $181F
-8CC9: 0E 1B       JMP    $1B
-8CCB: 12          NOP
-8CCC: 16 12 1C    LBRA   $9EEB
-8CCF: 1C 12       ANDCC  #$12
-8CD1: 18          X18
-8CD2: 17 FF 0C    LBSR   $8BE1
-8CD5: 18          X18
-8CD6: 16 19 15    LBRA   $A5EE
-8CD9: 0E 1D       JMP    $1D
-8CDB: 0E FF       JMP    $FF
-8CDD: 25 0A       BCS    $8CE9
-8CDF: 0B 1E       XDEC   $1E
-8CE1: 15          XHCF
-8CE2: 15          XHCF
-8CE3: 0E 1D       JMP    $1D
-8CE5: FF FF FF    STU    $FFFF
-8CE8: FF 0A 16    STU    $0A16
-8CEB: 10 FF 0B 15 STS    $0B15
-8CEF: 1D          SEX
-8CF0: FF FF FF    STU    $FFFF
-8CF3: FF 0D 15    STU    $0D15
-8CF6: 12          NOP
-8CF7: 0F 0E       CLR    $0E
-8CF9: FF FF FF    STU    $FFFF
-8CFC: FF FF FF    STU    $FFFF
-8CFF: FF FF FF    STU    $FFFF
-8D02: 0F 0C       CLR    $0C
-8D04: 18          X18
-8D05: 17 10 1B    LBSR   $9D23
-8D08: 0A 1D       DEC    $1D
-8D0A: 1E 15       EXG    X,PC
-8D0C: 0A 1D       DEC    $1D
-8D0E: 12          NOP
-8D0F: 18          X18
-8D10: 17 1C 0F    LBSR   $A922
-8D13: 1C 1D       ANDCC  #$1D
-8D15: 18          X18
-8D16: 1B          NOP
-8D17: 22 FF       BHI    $8D18
-8D19: FF FF FF    STU    $FFFF
-8D1C: 0C 15       INC    $15
-8D1E: 0E 0A       JMP    $0A
-8D20: 1B          NOP
-8D21: FF 0F 0A    STU    $0F0A
-8D24: 1B          NOP
-8D25: 0E 0A       JMP    $0A
-8D27: FF FF FF    STU    $FFFF
-8D2A: FF FF 0C    STU    $FF0C
-8D2D: 15          XHCF
-8D2E: 0E 0A       JMP    $0A
-8D30: 1B          NOP
-8D31: FF 08 1D    STU    $081D
-8D34: 12          NOP
-8D35: 16 0E FF    LBRA   $9C37
-8D38: FF FF FF    STU    $FFFF
-8D3B: 17 0A 0D    LBSR   $974B
-8D3E: 1F 0A       TFR    D,CC
-8D40: 17 0C 0E    LBSR   $9951
-8D43: FF 1D 18    STU    $1D18
-8D46: FF 11 12    STU    $1112
-8D49: 10          FCB    $10
-8D4A: 11 0E 1B    JMP    $1B
-8D4D: FF 0A 1B    STU    $0A1B
-8D50: 0E 0A       JMP    $0A
-8D52: 1C 02       ANDCC  #$02
-8D54: 0B 22       XDEC   $22
-8D56: 19          DAA
-8D57: 11 18       X18
-8D59: 15          XHCF
-8D5A: 0D 12       TST    $12
-8D5C: 17 10 FF    LBSR   $9E5E
-8D5F: 0D 18       TST    $18
-8D61: 20 17       BRA    $8D7A
-8D63: FF 1C 1D    STU    $1C1D
-8D66: 0A 1B       DEC    $1B
-8D68: 1D          SEX
-8D69: FF 0B 1E    STU    $0B1E
-8D6C: 1D          SEX
-8D6D: 1D          SEX
-8D6E: 18          X18
-8D6F: 17 1E 2A    LBSR   $AB9C
-8D72: FF 16 18    STU    $1618
-8D75: 1F 12       TFR    X,Y
-8D77: 17 10 FF    LBSR   $9E79
-8D7A: 0C 18       INC    $18
-8D7C: 17 1D 1B    LBSR   $AA9A
-8D7F: 18          X18
-8D80: 15          XHCF
-8D81: FF 1D 18    STU    $1D18
-8D84: FF 1D 11    STU    $1D11
-8D87: 0E FF       JMP    $FF
-8D89: 1B          NOP
-8D8A: 12          NOP
-8D8B: 10          FCB    $10
-8D8C: 11 1D       SEX
+
 8D8E: 26 8E       BNE    $8D1E
 8D90: 04 10       LSR    $10
 8D92: CC 28 FF    LDD    #$28FF
@@ -2921,7 +2682,7 @@ mainloop_80a3:
 98C1: E6 01       LDB    $1,X
 98C3: C4 FC       ANDB   #$FC
 98C5: 54          LSRB
-98C6: AD D5       JSR    [B,U]
+98C6: AD D5       JSR    [B,U]        ; [indirect_jump] [nb_entries=106]
 98C8: 8D 03       BSR    $98CD
 98CA: 7E 98 F0    JMP    $98F0
 98CD: A6 84       LDA    ,X
@@ -3222,11 +2983,11 @@ mainloop_80a3:
 9C13: CE 9C 23    LDU    #jump_table_9c23
 9C16: A6 09       LDA    $9,X
 9C18: 48          ASLA
-9C19: 6E D6       JMP    [A,U]
+9C19: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 9C1B: CE 9C 2F    LDU    #jump_table_9c2f
 9C1E: A6 09       LDA    $9,X
 9C20: 48          ASLA
-9C21: 6E D6       JMP    [A,U]
+9C21: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
 
 9C3B: EC 1A       LDD    -$6,X
 9C3D: C3 00 C0    ADDD   #$00C0
@@ -3319,11 +3080,11 @@ mainloop_80a3:
 9D00: CE 9D 10    LDU    #jump_table_9d10
 9D03: A6 09       LDA    $9,X
 9D05: 48          ASLA
-9D06: 6E D6       JMP    [A,U]
+9D06: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 9D08: CE 9D 1C    LDU    #jump_table_9d1c
 9D0B: A6 09       LDA    $9,X
 9D0D: 48          ASLA
-9D0E: 6E D6       JMP    [A,U]
+9D0E: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
 
 9D28: EC 1A       LDD    -$6,X
 9D2A: C3 00 C0    ADDD   #$00C0
@@ -3474,10 +3235,8 @@ mainloop_80a3:
 9E6B: CE A0 13    LDU    #jump_table_a013
 9E6E: A6 09       LDA    $9,X
 9E70: 48          ASLA
-9E71: 6E D6       JMP    [A,U]
-9E73: 05 05       LSR    $05
-9E75: 04 03       LSR    $03
-9E77: 02 00       XNC    $00
+9E71: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=17]
+
 9E79: EE 10       LDU    -$10,X
 9E7B: A6 41       LDA    $1,U
 9E7D: 8A 01       ORA    #$01
@@ -3619,10 +3378,10 @@ mainloop_80a3:
 9F96: A7 09       STA    $9,X
 9F98: CE DA 4C    LDU    #$DA4C
 9F9B: 7E 8D EA    JMP    $8DEA
-9F9E: CE A0 23    LDU    #$A023
+9F9E: CE A0 23    LDU    #jump_table_a023
 9FA1: A6 09       LDA    $9,X
 9FA3: 48          ASLA
-9FA4: 6E D6       JMP    [A,U]
+9FA4: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
 9FA6: EE 10       LDU    -$10,X
 9FA8: A6 41       LDA    $1,U
 9FAA: 8A 01       ORA    #$01
@@ -3697,10 +3456,8 @@ A052: 39          RTS
 A053: CE A1 19    LDU    #jump_table_a119
 A056: A6 09       LDA    $9,X
 A058: 48          ASLA
-A059: 6E D6       JMP    [A,U]
-A05B: 05 05       LSR    $05
-A05D: 04 03       LSR    $03
-A05F: 02 00       XNC    $00
+A059: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
+
 A061: CE DA 4C    LDU    #$DA4C
 A064: 7E 8D E8    JMP    $8DE8
 A067: EE 10       LDU    -$10,X
@@ -3748,10 +3505,10 @@ A0C3: 7E 8D EA    JMP    $8DEA
 A0C6: 6A 0A       DEC    $A,X
 A0C8: 27 01       BEQ    $A0CB
 A0CA: 39          RTS
-A0CB: CE A1 25    LDU    #$A125
+A0CB: CE A1 25    LDU    #jump_table_a125
 A0CE: A6 09       LDA    $9,X
 A0D0: 48          ASLA
-A0D1: 6E D6       JMP    [A,U]
+A0D1: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 A0D3: CE DA 7C    LDU    #$DA7C
 A0D6: 7E 8D E8    JMP    $8DE8
 A0D9: EE 10       LDU    -$10,X
@@ -3835,42 +3592,39 @@ A19A: CB A0       ADDB   #$A0
 A19C: E7 01       STB    $1,X
 A19E: E7 07       STB    $7,X
 A1A0: 7E 8D C8    JMP    $8DC8
-A1A3: CE A1 AD    LDU    #$A1AD
+A1A3: CE A1 AD    LDU    #jump_table_a1ad
 A1A6: 96 0A       LDA    $0A
 A1A8: 84 1C       ANDA   #$1C
 A1AA: 44          LSRA
-A1AB: 6E D6       JMP    [A,U]
-A1AD: A1 B7       CMPA   [E,Y]
-A1AF: A1 BF A1 CD CMPA   [$A1CD]
-A1B3: A1 B7       CMPA   [E,Y]
-A1B5: A1 DB       CMPA   [D,U]
-A1B7: CE A3 5E    LDU    #$A35E
+A1AB: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+
+A1B7: CE A3 5E    LDU    #jump_table_a35e
 A1BA: A6 09       LDA    $9,X
 A1BC: 48          ASLA
-A1BD: 6E D6       JMP    [A,U]
+A1BD: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 A1BF: 86 19       LDA    #$19
 A1C1: A7 01       STA    $1,X
 A1C3: A7 07       STA    $7,X
 A1C5: CE A3 5E    LDU    #$A35E
 A1C8: A6 09       LDA    $9,X
 A1CA: 48          ASLA
-A1CB: 6E D6       JMP    [A,U]
+A1CB: 6E D6       JMP    [A,U]        ; [indirect_jump]
 A1CD: 86 1A       LDA    #$1A
 A1CF: A7 01       STA    $1,X
 A1D1: A7 07       STA    $7,X
-A1D3: CE A3 5E    LDU    #$A35E
+A1D3: CE A3 5E    LDU    #jump_table_a35e
 A1D6: A6 09       LDA    $9,X
 A1D8: 48          ASLA
-A1D9: 6E D6       JMP    [A,U]
+A1D9: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 A1DB: A6 01       LDA    $1,X
 A1DD: 84 03       ANDA   #$03
 A1DF: 8B 1C       ADDA   #$1C
 A1E1: A7 01       STA    $1,X
 A1E3: A7 07       STA    $7,X
-A1E5: CE A5 05    LDU    #$A505
+A1E5: CE A5 05    LDU    #jump_table_a505
 A1E8: A6 09       LDA    $9,X
 A1EA: 48          ASLA
-A1EB: 6E D6       JMP    [A,U]
+A1EB: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A1ED: 6A 0A       DEC    $A,X
 A1EF: 27 01       BEQ    $A1F2
 A1F1: 39          RTS
@@ -4006,43 +3760,7 @@ A313: 0C 40       INC    $40
 A315: CE 16 CA    LDU    #$16CA
 A318: CC 99 99    LDD    #$9999
 A31B: 7E 88 B2    JMP    $88B2
-A31E: 01 7B       NEG    $7B
-A320: 0C 00       INC    $00
-A322: 40          NEGA
-A323: 00 80       NEG    $80
-A325: 02 40       XNC    $40
-A327: 01 7B       NEG    $7B
-A329: 3C 01       CWAI   #$01
-A32B: 80 02       SUBA   #$02
-A32D: 40          NEGA
-A32E: 02 7B       XNC    $7B
-A330: 10 FF C0 FE STS    $C0FE
-A334: 80 02       SUBA   #$02
-A336: 40          NEGA
-A337: 02 7B       XNC    $7B
-A339: 40          NEGA
-A33A: FD 80 02    STD    $8002
-A33D: 40          NEGA
-A33E: 05 7B       LSR    $7B
-A340: 0C 00       INC    $00
-A342: 20 00       BRA    $A344
-A344: 80 02       SUBA   #$02
-A346: 40          NEGA
-A347: 01 7B       NEG    $7B
-A349: 3C 01       CWAI   #$01
-A34B: 80 02       SUBA   #$02
-A34D: 40          NEGA
-A34E: 06 7B       ROR    $7B
-A350: 10 FF E0 FE STS    $E0FE
-A354: 80 02       SUBA   #$02
-A356: 40          NEGA
-A357: 02 7B       XNC    $7B
-A359: 40          NEGA
-A35A: FD 80 02    STD    $8002
-A35D: 40          NEGA
-A35E: A1 ED A1 F8 CMPA   $455A,PCR
-A362: A2 1A       SBCA   -$6,X
-A364: A2 35       SBCA   -$B,Y
+
 A366: 96 CE       LDA    $CE
 A368: 81 01       CMPA   #$01
 A36A: 27 10       BEQ    $A37C
@@ -4065,43 +3783,39 @@ A38D: CB A4       ADDB   #$A4
 A38F: E7 01       STB    $1,X
 A391: E7 07       STB    $7,X
 A393: 7E 8D C8    JMP    $8DC8
-A396: CE A3 A0    LDU    #$A3A0
+A396: CE A3 A0    LDU    #jump_table_a3a0
 A399: 96 0A       LDA    $0A
 A39B: 84 1C       ANDA   #$1C
 A39D: 44          LSRA
-A39E: 6E D6       JMP    [A,U]
-A3A0: A3 AA       SUBD   F,Y
-A3A2: A3 B2       SUBD   Illegal Postbyte
-A3A4: A3 C0       SUBD   ,U+
-A3A6: A3 CE       SUBD   W,U
-A3A8: A3 AA       SUBD   F,Y
-A3AA: CE A5 05    LDU    #$A505
+A39E: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+
+A3AA: CE A5 05    LDU    #jump_table_a505
 A3AD: A6 09       LDA    $9,X
 A3AF: 48          ASLA
-A3B0: 6E D6       JMP    [A,U]
+A3B0: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A3B2: 86 1D       LDA    #$1D
 A3B4: A7 01       STA    $1,X
 A3B6: A7 07       STA    $7,X
-A3B8: CE A5 05    LDU    #$A505
+A3B8: CE A5 05    LDU    #jump_table_a505
 A3BB: A6 09       LDA    $9,X
 A3BD: 48          ASLA
-A3BE: 6E D6       JMP    [A,U]
+A3BE: 6E D6       JMP    [A,U]        ; [indirect_jump]
 A3C0: 86 1E       LDA    #$1E
 A3C2: A7 01       STA    $1,X
 A3C4: A7 07       STA    $7,X
-A3C6: CE A5 05    LDU    #$A505
+A3C6: CE A5 05    LDU    #jump_table_a505
 A3C9: A6 09       LDA    $9,X
 A3CB: 48          ASLA
-A3CC: 6E D6       JMP    [A,U]
+A3CC: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A3CE: A6 01       LDA    $1,X
 A3D0: 84 03       ANDA   #$03
 A3D2: 8B 18       ADDA   #$18
 A3D4: A7 01       STA    $1,X
 A3D6: A7 07       STA    $7,X
-A3D8: CE A3 5E    LDU    #$A35E
+A3D8: CE A3 5E    LDU    #jump_table_a35e
 A3DB: A6 09       LDA    $9,X
 A3DD: 48          ASLA
-A3DE: 6E D6       JMP    [A,U]
+A3DE: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 A3E0: 6A 0A       DEC    $A,X
 A3E2: 27 01       BEQ    $A3E5
 A3E4: 39          RTS
@@ -4233,43 +3947,39 @@ A509: A4 0D       ANDA   $D,X
 A50B: A4 28       ANDA   $8,Y
 A50D: DC CC       LDD    $CC
 A50F: 27 4A       BEQ    $A55B
-A511: CE A5 1B    LDU    #$A51B
+A511: CE A5 1B    LDU    #jump_table_a51b
 A514: 96 0A       LDA    $0A
 A516: 84 1C       ANDA   #$1C
 A518: 44          LSRA
-A519: 6E D6       JMP    [A,U]
-A51B: A5 25       BITA   $5,Y
-A51D: A5 2D       BITA   $D,Y
-A51F: A5 3B       BITA   -$5,Y
-A521: A5 25       BITA   $5,Y
-A523: A5 49       BITA   $9,U
-A525: CE A6 AE    LDU    #$A6AE
+A519: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+
+A525: CE A6 AE    LDU    #jump_table_a6ae
 A528: A6 09       LDA    $9,X
 A52A: 48          ASLA
-A52B: 6E D6       JMP    [A,U]
+A52B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A52D: 86 A1       LDA    #$A1
 A52F: A7 01       STA    $1,X
 A531: A7 07       STA    $7,X
 A533: CE A6 AE    LDU    #$A6AE
 A536: A6 09       LDA    $9,X
 A538: 48          ASLA
-A539: 6E D6       JMP    [A,U]
+A539: 6E D6       JMP    [A,U]        ; [indirect_jump]
 A53B: 86 A2       LDA    #$A2
 A53D: A7 01       STA    $1,X
 A53F: A7 07       STA    $7,X
-A541: CE A6 AE    LDU    #$A6AE
+A541: CE A6 AE    LDU    #jump_table_a6ae
 A544: A6 09       LDA    $9,X
 A546: 48          ASLA
-A547: 6E D6       JMP    [A,U]
+A547: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A549: A6 01       LDA    $1,X
 A54B: 84 03       ANDA   #$03
 A54D: 8B A4       ADDA   #$A4
 A54F: A7 01       STA    $1,X
 A551: A7 07       STA    $7,X
-A553: CE A8 0B    LDU    #$A80B
+A553: CE A8 0B    LDU    #jump_table_a80b
 A556: A6 09       LDA    $9,X
 A558: 48          ASLA
-A559: 6E D6       JMP    [A,U]
+A559: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A55B: 10 8E 5F 08 LDY    #$5F08
 A55F: 86 FF       LDA    #$FF
 A561: F6 8C E9    LDB    $8CE9
@@ -4408,66 +4118,42 @@ A683: 0C 40       INC    $40
 A685: CE 16 CC    LDU    #$16CC
 A688: CC 99 99    LDD    #$9999
 A68B: 7E 88 B2    JMP    $88B2
-A68E: 09 7B       ROL    $7B
-A690: 0C 00       INC    $00
-A692: 40          NEGA
-A693: 00 80       NEG    $80
-A695: 02 40       XNC    $40
-A697: 01 7B       NEG    $7B
-A699: 3C 01       CWAI   #$01
-A69B: 80 02       SUBA   #$02
-A69D: 40          NEGA
-A69E: 0A 7B       DEC    $7B
-A6A0: 10 FF C0 FE STS    $C0FE
-A6A4: 80 02       SUBA   #$02
-A6A6: 40          NEGA
-A6A7: 02 7B       XNC    $7B
-A6A9: 40          NEGA
-A6AA: FD 80 02    STD    $8002
-A6AD: 40          NEGA
-A6AE: A5 78       BITA   -$8,S
-A6B0: A5 83       BITA   ,--X
-A6B2: A5 A5       BITA   B,Y
-A6B4: A5 C0       BITA   ,U+
+
 A6B6: DC CC       LDD    $CC
 A6B8: 27 4A       BEQ    $A704
-A6BA: CE A6 C4    LDU    #$A6C4
+A6BA: CE A6 C4    LDU    #jump_table_a6c4
 A6BD: 96 0A       LDA    $0A
 A6BF: 84 1C       ANDA   #$1C
 A6C1: 44          LSRA
-A6C2: 6E D6       JMP    [A,U]
-A6C4: A6 CE       LDA    W,U
-A6C6: A6 D6       LDA    [A,U]
-A6C8: A6 E4       LDA    ,S
-A6CA: A6 F2       LDA    Illegal Postbyte
-A6CC: A6 CE       LDA    W,U
-A6CE: CE A8 0B    LDU    #$A80B
+A6C2: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+
+A6CE: CE A8 0B    LDU    #jump_table_a80b
 A6D1: A6 09       LDA    $9,X
 A6D3: 48          ASLA
-A6D4: 6E D6       JMP    [A,U]
+A6D4: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A6D6: 86 A5       LDA    #$A5
 A6D8: A7 01       STA    $1,X
 A6DA: A7 07       STA    $7,X
 A6DC: CE A8 0B    LDU    #$A80B
 A6DF: A6 09       LDA    $9,X
 A6E1: 48          ASLA
-A6E2: 6E D6       JMP    [A,U]
+A6E2: 6E D6       JMP    [A,U]        ; [indirect_jump]
 A6E4: 86 A6       LDA    #$A6
 A6E6: A7 01       STA    $1,X
 A6E8: A7 07       STA    $7,X
-A6EA: CE A8 0B    LDU    #$A80B
+A6EA: CE A8 0B    LDU    #jump_table_a80b
 A6ED: A6 09       LDA    $9,X
 A6EF: 48          ASLA
-A6F0: 6E D6       JMP    [A,U]
+A6F0: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A6F2: A6 01       LDA    $1,X
 A6F4: 84 03       ANDA   #$03
 A6F6: 8B A0       ADDA   #$A0
 A6F8: A7 01       STA    $1,X
 A6FA: A7 07       STA    $7,X
-A6FC: CE A6 AE    LDU    #$A6AE
+A6FC: CE A6 AE    LDU    #jump_table_a6ae
 A6FF: A6 09       LDA    $9,X
 A701: 48          ASLA
-A702: 6E D6       JMP    [A,U]
+A702: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A704: 10 8E 5F 08 LDY    #$5F08
 A708: 86 FF       LDA    #$FF
 A70A: F6 8C E9    LDB    $8CE9
@@ -4596,44 +4282,32 @@ A820: 84 0C       ANDA   #$0C
 A822: 44          LSRA
 A823: EC C6       LDD    A,U
 A825: ED 16       STD    -$A,X
-A827: CE A8 2F    LDU    #$A82F
+A827: CE A8 2F    LDU    #jump_table_a82f
 A82A: A6 09       LDA    $9,X
 A82C: 48          ASLA
-A82D: 6E D6       JMP    [A,U]
-A82F: A8 77       EORA   -$9,S
-A831: A8 8E       EORA   W,X
-A833: A8 A3       EORA   ,--Y
-A835: 00 00       NEG    $00
-A837: 00 08       NEG    $08
-A839: FF F8 00    STU    $F800
-A83C: 00 A6       NEG    $A6
-A83E: 01 84       NEG    $84
-A840: 02 26       XNC    $26
-A842: 17 CE A8    LBSR   $76ED
-A845: 35 96       PULS   D,X,PC
+A82D: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
+
 A847: 0A 84       DEC    $84
 A849: 0C 44       INC    $44
 A84B: EC C6       LDD    A,U
 A84D: C3 00 20    ADDD   #$0020
 A850: ED 16       STD    -$A,X
-A852: CE A8 71    LDU    #$A871
+A852: CE A8 71    LDU    #jump_table_a871
 A855: A6 09       LDA    $9,X
 A857: 48          ASLA
-A858: 6E D6       JMP    [A,U]
-A85A: CE A8 35    LDU    #$A835
+A858: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
+A85A: CE A8 35    LDU    #jump_table_a835
 A85D: 96 0A       LDA    $0A
 A85F: 84 0C       ANDA   #$0C
 A861: 44          LSRA
 A862: EC C6       LDD    A,U
 A864: C3 FF E0    ADDD   #$FFE0
 A867: ED 16       STD    -$A,X
-A869: CE A8 71    LDU    #$A871
+A869: CE A8 71    LDU    #jump_table_a871
 A86C: A6 09       LDA    $9,X
 A86E: 48          ASLA
-A86F: 6E D6       JMP    [A,U]
-A871: A8 77       EORA   -$9,S
-A873: A8 8E       EORA   W,X
-A875: A8 A3       EORA   ,--Y
+A86F: 6E D6       JMP    [A,U]        ; [indirect_jump]
+
 A877: BD 8E 05    JSR    $8E05
 A87A: BD 90 76    JSR    $9076
 A87D: 26 07       BNE    $A886
@@ -4706,10 +4380,10 @@ A909: C3 00 01    ADDD   #$0001
 A90C: ED 16       STD    -$A,X
 A90E: CE D9 F0    LDU    #$D9F0
 A911: 7E 8D E8    JMP    $8DE8
-A914: CE A9 FE    LDU    #$A9FE
+A914: CE A9 FE    LDU    #jump_table_a9fe
 A917: A6 09       LDA    $9,X
 A919: 48          ASLA
-A91A: 6E D6       JMP    [A,U]
+A91A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=15]
 A91C: 6A 0A       DEC    $A,X
 A91E: 27 01       BEQ    $A921
 A920: 39          RTS
@@ -4777,10 +4451,10 @@ A9A7: CE E0 14    LDU    #$E014
 A9AA: 7E 99 37    JMP    $9937
 A9AD: 6C 14       INC    -$C,X
 A9AF: 39          RTS
-A9B0: CE AA 12    LDU    #$AA12
+A9B0: CE AA 12    LDU    #jump_table_aa12
 A9B3: A6 09       LDA    $9,X
 A9B5: 48          ASLA
-A9B6: 6E D6       JMP    [A,U]
+A9B6: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 A9B8: BD 90 76    JSR    $9076
 A9BB: 26 01       BNE    $A9BE
 A9BD: 39          RTS
@@ -4862,10 +4536,10 @@ AA61: A6 07       LDA    $7,X
 AA63: A7 01       STA    $1,X
 AA65: CE D9 E4    LDU    #$D9E4
 AA68: 7E 8D E8    JMP    $8DE8
-AA6B: CE AB 3B    LDU    #$AB3B
+AA6B: CE AB 3B    LDU    #jump_table_ab3b
 AA6E: A6 09       LDA    $9,X
 AA70: 48          ASLA
-AA71: 6E D6       JMP    [A,U]
+AA71: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 AA73: 6A 0A       DEC    $A,X
 AA75: 27 01       BEQ    $AA78
 AA77: 39          RTS
@@ -4921,10 +4595,10 @@ AAE3: 84 0C       ANDA   #$0C
 AAE5: 44          LSRA
 AAE6: EC C6       LDD    A,U
 AAE8: ED 16       STD    -$A,X
-AAEA: CE AB 49    LDU    #$AB49
+AAEA: CE AB 49    LDU    #jump_table_ab49
 AAED: A6 09       LDA    $9,X
 AAEF: 48          ASLA
-AAF0: 6E D6       JMP    [A,U]
+AAF0: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 AAF2: BD 8E 05    JSR    $8E05
 AAF5: BD 90 76    JSR    $9076
 AAF8: 26 01       BNE    $AAFB
@@ -4958,13 +4632,7 @@ AB32: CE E0 14    LDU    #$E014
 AB35: 7E 99 37    JMP    $9937
 AB38: 6C 14       INC    -$C,X
 AB3A: 39          RTS
-AB3B: AA 73       ORA    -$D,S
-AB3D: AA 7E       ORA    -$2,S
-AB3F: AA 73       ORA    -$D,S
-AB41: AA 73       ORA    -$D,S
-AB43: AA 9D AA B3 ORA    [$55FA,PCR]
-AB47: AA CA       ORA    F,U
-AB49: AA F2       ORA    Illegal Postbyte
+
 AB4B: AB 10       ADDA   -$10,X
 AB4D: AB 27       ADDA   $7,Y
 AB4F: 6A 0A       DEC    $A,X
@@ -4986,16 +4654,11 @@ AB6B: 84 1F       ANDA   #$1F
 AB6D: 97 E4       STA    $E4
 AB6F: 6C 0D       INC    $D,X
 AB71: 7E 8D C8    JMP    $8DC8
-AB74: CE AB 7C    LDU    #$AB7C
+AB74: CE AB 7C    LDU    #jump_table_ab7c
 AB77: A6 09       LDA    $9,X
 AB79: 48          ASLA
-AB7A: 6E D6       JMP    [A,U]
-AB7C: AB 8C AB    ADDA   $AB2A,PCR
-AB7F: A3 AB       SUBD   D,Y
-AB81: B0 AB B0    SUBA   $ABB0
-AB84: AB B0 AB B0 ADDA   [-$5450,W]
-AB88: AB BB       ADDA   [D,Y]
-AB8A: AB C3       ADDA   ,--U
+AB7A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=8]
+
 AB8C: 6A 0A       DEC    $A,X
 AB8E: 27 01       BEQ    $AB91
 AB90: 39          RTS
@@ -5083,14 +4746,11 @@ AC39: A6 0B       LDA    $B,X
 AC3B: 8A 80       ORA    #$80
 AC3D: A7 0B       STA    $B,X
 AC3F: 39          RTS
-AC40: CE AC 48    LDU    #$AC48
+AC40: CE AC 48    LDU    #jump_table_ac48
 AC43: A6 09       LDA    $9,X
 AC45: 48          ASLA
-AC46: 6E D6       JMP    [A,U]
-AC48: AC 4E       CMPX   $E,U
-AC4A: AC 6C       CMPX   $C,S
-AC4C: AC 88 BD    CMPX   -$43,X
-AC4F: 8E 05 BD    LDX    #$05BD
+AC46: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
+
 AC52: 90 76       SUBA   $76
 AC54: 26 07       BNE    $AC5D
 AC56: A6 19       LDA    -$7,X
@@ -5181,25 +4841,11 @@ AD01: 96 61       LDA    $61
 AD03: 8A 08       ORA    #$08
 AD05: 97 61       STA    $61
 AD07: 39          RTS
-AD08: CE AD 10    LDU    #$AD10
+AD08: CE AD 10    LDU    #jump_table_ad10
 AD0B: 96 61       LDA    $61
 AD0D: 48          ASLA
-AD0E: 6E D6       JMP    [A,U]
-AD10: AD 49       JSR    $9,U
-AD12: AD 30       JSR    -$10,Y
-AD14: AD 4F       JSR    $F,U
-AD16: AD 49       JSR    $9,U
-AD18: AD 6E       JSR    $E,S
-AD1A: AD 8D AD 92 JSR    $5AB0,PCR
-AD1E: AD 49       JSR    $9,U
-AD20: AD 97       JSR    [E,X]
-AD22: AD B6       JSR    [A,Y]
-AD24: AD BB       JSR    [D,Y]
-AD26: AD 49       JSR    $9,U
-AD28: AD 49       JSR    $9,U
-AD2A: AD 49       JSR    $9,U
-AD2C: AD 49       JSR    $9,U
-AD2E: AD 49       JSR    $9,U
+AD0E: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=16]
+
 AD30: 8E 13 00    LDX    #$1300
 AD33: D6 67       LDB    $67
 AD35: 58          ASLB
@@ -5282,26 +4928,11 @@ ADC4: 26 01       BNE    $ADC7
 ADC6: 39          RTS
 ADC7: 8E 04 30    LDX    #$0430
 ADCA: 97 3B       STA    $3B
-ADCC: CE AD D4    LDU    #$ADD4
+ADCC: CE AD D4    LDU    #jump_table_add4
 ADCF: 96 61       LDA    $61
 ADD1: 48          ASLA
-ADD2: 6E D6       JMP    [A,U]
-ADD4: AD F4       JSR    [,S]
-ADD6: AE 35       LDX    -$B,Y
-ADD8: AD F5       JSR    [B,S]
-ADDA: AD F4       JSR    [,S]
-ADDC: AF 55       STX    -$B,U
-ADDE: AF E5       STX    B,S
-ADE0: AF 95       STX    [B,X]
-ADE2: AD F4       JSR    [,S]
-ADE4: AE 75       LDX    -$B,S
-ADE6: AF 05       STX    $5,X
-ADE8: AE B5       LDX    [B,Y]
-ADEA: AD F4       JSR    [,S]
-ADEC: AD F4       JSR    [,S]
-ADEE: AD F4       JSR    [,S]
-ADF0: AD F4       JSR    [,S]
-ADF2: AD F4       JSR    [,S]
+ADD2: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=16]
+
 ADF4: 39          RTS
 ADF5: A6 84       LDA    ,X
 ADF7: 2A 2F       BPL    $AE28
@@ -5647,15 +5278,10 @@ B0CF: 8E 13 00    LDX    #$1300
 B0D2: 58          ASLB
 B0D3: 58          ASLB
 B0D4: 3A          ABX
-B0D5: CE B0 DC    LDU    #jump_table_b0bc
+B0D5: CE B0 DC    LDU    #jump_table_b0dc
 B0D8: A6 84       LDA    ,X
-B0DA: 6E D6       JMP    [A,U]
-jump_table_b0bc:
-	.word	$B0E6 
-	.word	$B0EE 
-	.word	$B116 
-	.word	$B13D    
-	.word	$B165 
+B0DA: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+
 
 B0E7: 68 4C       ASL    $C,U
 B0E9: 84 07       ANDA   #$07
@@ -5898,13 +5524,13 @@ B29E: A6 84       LDA    ,X
 B2A0: 84 FC       ANDA   #$FC
 B2A2: 81 10       CMPA   #$10
 B2A4: 26 03       BNE    $B2A9
-B2A6: CE B3 D1    LDU    #$B3D1
+B2A6: CE B3 D1    LDU    #jump_table_b3d1
 B2A9: E6 01       LDB    $1,X
 B2AB: C1 C0       CMPB   #$C0
 B2AD: 24 05       BCC    $B2B4
 B2AF: C4 FC       ANDB   #$FC
 B2B1: 54          LSRB
-B2B2: AD D5       JSR    [B,U]
+B2B2: AD D5       JSR    [B,U]        ; [indirect_jump] [nb_entries=46]
 B2B4: 0A 3B       DEC    $3B
 B2B6: 26 01       BNE    $B2B9
 B2B8: 39          RTS
@@ -5994,236 +5620,20 @@ B372: A6 84       LDA    ,X
 B374: 8A 80       ORA    #$80
 B376: A7 84       STA    ,X
 B378: 39          RTS
-B379: BB CB B5    ADDA   $CBB5
-B37C: 54          LSRB
-B37D: BC 9E BE    CMPX   $9EBE
-B380: 9C BE       CMPX   $BE
-B382: B8 BE E8    EORA   $BEE8
-B385: B9 0E B9    ADCA   $0EB9
-B388: 74 B6 F1    LSR    $B6F1
-B38B: B6 EB B7    LDA    $EBB7
-B38E: 23 B8       BLS    $B348
-B390: 18          X18
-B391: B8 C4 B7    EORA   $C4B7
-B394: C7 BB       XSTB   #$BB
-B396: FF BD 77    STU    $BD77
-B399: B5 54 BB    BITA   $54BB
-B39C: 85 BE       BITA   #$BE
-B39E: 47          ASRA
-B39F: BF 3A C0    STX    $3AC0
-B3A2: 36 BE       PSHU   PC,Y,X,DP,D
-B3A4: 6C C1       INC    ,U++
-B3A6: 17 C1 8A    LBSR   $7533
-B3A9: C4 39       ANDB   #$39
-B3AB: C4 E5       ANDB   #$E5
-B3AD: C5 69       BITB   #$69
-B3AF: BB CB BB    ADDA   $CBBB
-B3B2: CB BB       ADDB   #$BB
-B3B4: CB C6       ADDB   #$C6
-B3B6: 54          LSRB
-B3B7: C6 92       LDB    #$92
-B3B9: C6 D5       LDB    #$D5
-B3BB: C7 90       XSTB   #$90
-B3BD: C8 FA       EORB   #$FA
-B3BF: CB 01       ADDB   #$01
-B3C1: CB 7C       ADDB   #$7C
-B3C3: CB 9D       ADDB   #$9D
-B3C5: C5 EA       BITB   #$EA
-B3C7: B5 54 B5    BITA   $54B5
-B3CA: 54          LSRB
-B3CB: B5 54 C2    BITA   $54C2
-B3CE: 7B C2 9E    XDEC   $C29E
-B3D1: CD          XHCF
-B3D2: 88 CC       EORA   #$CC
-B3D4: AA CD 88 CD ORA    $3CA5,PCR
-B3D8: 88 CD       EORA   #$CD
-B3DA: 88 CD       EORA   #$CD
-B3DC: 88 CD       EORA   #$CD
-B3DE: E7 CD E7 CD STB    $9BAF,PCR
-B3E2: 88 CD       EORA   #$CD
-B3E4: 88 CD       EORA   #$CD
-B3E6: 88 CD       EORA   #$CD
-B3E8: 88 CD       EORA   #$CD
-B3EA: 88 CD       EORA   #$CD
-B3EC: 88 CD       EORA   #$CD
-B3EE: 88 CD       EORA   #$CD
-B3F0: 88 CD       EORA   #$CD
-B3F2: 21 CE       BRN    $B3C2
-B3F4: 3A          ABX
-B3F5: CD          XHCF
-B3F6: FB CE 26    ADDB   $CE26
-B3F9: CD          XHCF
-B3FA: 88 CD       EORA   #$CD
-B3FC: 88 CD       EORA   #$CD
-B3FE: 88 CD       EORA   #$CD
-B400: 88 CE       EORA   #$CE
+
 B402: 7E CE 7E    JMP    $CE7E
 B405: CE 7E CE    LDU    #$7ECE
 B408: 7E CD 88    JMP    $CD88
-B40B: CD          XHCF
-B40C: 88 CD       EORA   #$CD
-B40E: 88 CD       EORA   #$CD
-B410: 88 CD       EORA   #$CD
-B412: 88 CD       EORA   #$CD
-B414: 88 CD       EORA   #$CD
-B416: 88 CD       EORA   #$CD
-B418: 88 CD       EORA   #$CD
-B41A: 88 CD       EORA   #$CD
-B41C: 88 CD       EORA   #$CD
-B41E: 88 CC       EORA   #$CC
-B420: CE CD 88    LDU    #$CD88
-B423: CD          XHCF
-B424: 88 CD       EORA   #$CD
-B426: 88 CD       EORA   #$CD
-B428: 88 E7       EORA   #$E7
-B42A: 07 C5       ASR    $C5
-B42C: 03 26       COM    $26
-B42E: 08 E6       ASL    $E6
-B430: 01 C4       NEG    $C4
-B432: 03 EB       COM    $EB
-B434: 07 E7       ASR    $E7
-B436: 07 A6       ASR    $A6
-B438: 84 84       ANDA   #$84
-B43A: 7F 81 10    CLR    $8110
-B43D: 24 08       BCC    $B447
-B43F: CE B4 4F    LDU    #$B44F
+
+B43F: CE B4 4F    LDU    #jump_table_b44f
 B442: C4 FC       ANDB   #$FC
 B444: 54          LSRB
-B445: 6E D5       JMP    [B,U]
-B447: CE B4 B9    LDU    #$B4B9
+B445: 6E D5       JMP    [B,U]        ; [indirect_jump] [nb_entries=106]
+B447: CE B4 B9    LDU    #jump_table_b4b9
 B44A: C4 FC       ANDB   #$FC
 B44C: 54          LSRB
-B44D: 6E D5       JMP    [B,U]
-B44F: BB C8 B5    ADDA   $C8B5
-B452: 23 BC       BLS    $B410
-B454: 86 8D       LDA    #$8D
-B456: C8 BE       EORB   #$BE
-B458: B1 8D C8    CMPA   $8DC8
-B45B: B8 F2 B9    EORA   $F2B9
-B45E: 5A          DECB
-B45F: B6 DD B6    LDA    $DDB6
-B462: DD B7       STD    $B7
-B464: 18          X18
-B465: B8 08 B8    EORA   $08B8
-B468: 10 B7 20 8D STA    $208D
-B46C: C8 BD       EORB   #$BD
-B46E: 5F          CLRB
-B46F: B5 23 BB    BITA   $23BB
-B472: 6A 8D C8 BF DEC    $7D35,PCR
-B476: 1D          SEX
-B477: C0 19       SUBB   #$19
-B479: 8D C8       BSR    $B443
-B47B: C0 D2       SUBB   #$D2
-B47D: C0 D5       SUBB   #$D5
-B47F: C3 1A C3    ADDD   #$1AC3
-B482: 1A C3       ORCC   #$C3
-B484: 1A 8D       ORCC   #$8D
-B486: C8 BB       EORB   #$BB
-B488: DD B7       STD    $B7
-B48A: 06 C6       ROR    $C6
-B48C: 00 C6       NEG    $C6
-B48E: 00 8D       NEG    $8D
-B490: C8 C7       EORB   #$C7
-B492: 8D C7       BSR    $B45B
-B494: 8D CA       BSR    $B460
-B496: C2 CA       SBCB   #$CA
-B498: FE CB 9A    LDU    $CB9A
-B49B: C5 E7       BITB   #$E7
-B49D: B5 23 B8    BITA   $23B8
-B4A0: F2 B9 5A    SBCB   $B95A
-B4A3: C2 75       SBCB   #$75
-B4A5: C2 78       SBCB   #$78
-B4A7: 8D C8       BSR    $B471
-B4A9: 8D C8       BSR    $B473
-B4AB: 8D C8       BSR    $B475
-B4AD: 8D C8       BSR    $B477
-B4AF: 8D C8       BSR    $B479
-B4B1: 8D C8       BSR    $B47B
-B4B3: 8D C8       BSR    $B47D
-B4B5: 8D C8       BSR    $B47F
-B4B7: 8D C8       BSR    $B481
-B4B9: CD          XHCF
-B4BA: 75 CC 94    LSR    $CC94
-B4BD: 8D C8       BSR    $B487
-B4BF: 8D C8       BSR    $B489
-B4C1: 8D C8       BSR    $B48B
-B4C3: 8D C8       BSR    $B48D
-B4C5: 8D C8       BSR    $B48F
-B4C7: 8D C8       BSR    $B491
-B4C9: 8D C8       BSR    $B493
-B4CB: 8D C8       BSR    $B495
-B4CD: 8D C8       BSR    $B497
-B4CF: 8D C8       BSR    $B499
-B4D1: 8D C8       BSR    $B49B
-B4D3: 8D C8       BSR    $B49D
-B4D5: 8D C8       BSR    $B49F
-B4D7: 8D C8       BSR    $B4A1
-B4D9: CD          XHCF
-B4DA: 0B 8D       XDEC   $8D
-B4DC: C8 8D       EORB   #$8D
-B4DE: C8 8D       EORB   #$8D
-B4E0: C8 8D       EORB   #$8D
-B4E2: C8 8D       EORB   #$8D
-B4E4: C8 8D       EORB   #$8D
-B4E6: C8 8D       EORB   #$8D
-B4E8: C8 CE       EORB   #$CE
-B4EA: 59          ROLB
-B4EB: CE 59 CE    LDU    #$59CE
-B4EE: 59          ROLB
-B4EF: 8D C8       BSR    $B4B9
-B4F1: 8D C8       BSR    $B4BB
-B4F3: 8D C8       BSR    $B4BD
-B4F5: CE 9E CE    LDU    #$9ECE
-B4F8: 9E 8D       LDX    $8D
-B4FA: C8 8D       EORB   #$8D
-B4FC: C8 8D       EORB   #$8D
-B4FE: C8 8D       EORB   #$8D
-B500: C8 8D       EORB   #$8D
-B502: C8 8D       EORB   #$8D
-B504: C8 8D       EORB   #$8D
-B506: C8 8D       EORB   #$8D
-B508: C8 8D       EORB   #$8D
-B50A: C8 8D       EORB   #$8D
-B50C: C8 8D       EORB   #$8D
-B50E: C8 8D       EORB   #$8D
-B510: C8 8D       EORB   #$8D
-B512: C8 8D       EORB   #$8D
-B514: C8 8D       EORB   #$8D
-B516: C8 8D       EORB   #$8D
-B518: C8 8D       EORB   #$8D
-B51A: C8 8D       EORB   #$8D
-B51C: C8 8D       EORB   #$8D
-B51E: C8 8D       EORB   #$8D
-B520: C8 8D       EORB   #$8D
-B522: C8 CC       EORB   #$CC
-B524: 00 00       NEG    $00
-B526: ED 18       STD    -$8,X
-B528: CE B5 44    LDU    #$B544
-B52B: A6 03       LDA    $3,X
-B52D: 84 30       ANDA   #$30
-B52F: 44          LSRA
-B530: 44          LSRA
-B531: A7 E2       STA    ,-S
-B533: A6 07       LDA    $7,X
-B535: 84 02       ANDA   #$02
-B537: AB E0       ADDA   ,S+
-B539: EC C6       LDD    A,U
-B53B: A7 08       STA    $8,X
-B53D: 5D          TSTB
-B53E: 1D          SEX
-B53F: ED 16       STD    -$A,X
-B541: 7E 8D C8    JMP    $8DC8
-B544: 14          XHCF
-B545: 14          XHCF
-B546: 1E EC       EXG    inv,inv
-B548: 14          XHCF
-B549: 18          X18
-B54A: 1E E8       EXG    inv,A
-B54C: 14          XHCF
-B54D: 1C 1E       ANDCC  #$1E
-B54F: E4 14       ANDB   -$C,X
-B551: 20 1E       BRA    $B571
-B553: E0 BD 94 97 SUBB   [$49EE,PCR]
+B44D: 6E D5       JMP    [B,U]        ; [indirect_jump] [nb_entries=54]
+
 B557: 2A 01       BPL    $B55A
 B559: 39          RTS
 B55A: 10 26 FE CB LBNE   $B429
@@ -6344,15 +5754,7 @@ B649: C6 88       LDB    #$88
 B64B: 39          RTS
 B64C: C6 94       LDB    #$94
 B64E: 39          RTS
-B64F: 00 00       NEG    $00
-B651: 18          X18
-B652: 18          X18
-B653: 0C 0C       INC    $0C
-B655: 18          X18
-B656: 0C A6       INC    $A6
-B658: 02 84       XNC    $84
-B65A: 20 26       BRA    $B682
-B65C: 01 39       NEG    $39
+
 B65E: 96 0F       LDA    $0F
 B660: 84 0F       ANDA   #$0F
 B662: 27 02       BEQ    $B666
@@ -6450,7 +5852,7 @@ B720: 7E 8D C8    JMP    $8DC8
 B723: CE B7 F4    LDU    #jump_table_b7f4
 B726: A6 09       LDA    $9,X
 B728: 48          ASLA
-B729: 6E D6       JMP    [A,U]
+B729: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=11]
 B72B: 6A 0A       DEC    $A,X
 B72D: 27 01       BEQ    $B730
 B72F: 39          RTS
@@ -6525,7 +5927,7 @@ B7C4: 7E B4 29    JMP    $B429
 B7C7: CE B8 04    LDU    #jump_table_b804
 B7CA: A6 09       LDA    $9,X
 B7CC: 48          ASLA
-B7CD: 6E D6       JMP    [A,U]
+B7CD: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 B7CF: BD 95 6D    JSR    $956D
 B7D2: 26 01       BNE    $B7D5
 B7D4: 39          RTS
@@ -6547,10 +5949,10 @@ B7F1: 7E B4 29    JMP    $B429
 B810: CC 00 20    LDD    #$0020
 B813: ED 18       STD    -$8,X
 B815: 7E 8D C8    JMP    $8DC8
-B818: CE B8 DE    LDU    #$B8DE
+B818: CE B8 DE    LDU    #jump_table_b8de
 B81B: A6 09       LDA    $9,X
 B81D: 48          ASLA
-B81E: 6E D6       JMP    [A,U]
+B81E: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=11]
 B820: 6A 0A       DEC    $A,X
 B822: 27 01       BEQ    $B825
 B824: 39          RTS
@@ -6624,10 +6026,10 @@ B8BB: 84 FD       ANDA   #$FD
 B8BD: A7 0C       STA    $C,X
 B8BF: C6 04       LDB    #$04
 B8C1: 7E B4 29    JMP    $B429
-B8C4: CE B8 EE    LDU    #$B8EE
+B8C4: CE B8 EE    LDU    #jump_table_b8ee
 B8C7: A6 09       LDA    $9,X
 B8C9: 48          ASLA
-B8CA: 6E D6       JMP    [A,U]
+B8CA: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 B8CC: BD 94 97    JSR    $9497
 B8CF: 2A 01       BPL    $B8D2
 B8D1: 39          RTS
@@ -6659,10 +6061,10 @@ B90B: 7E 8D C8    JMP    $8DC8
 B90E: 6A 0A       DEC    $A,X
 B910: 27 01       BEQ    $B913
 B912: 39          RTS
-B913: CE B9 1B    LDU    #$B91B
+B913: CE B9 1B    LDU    #jump_table_b91b
 B916: A6 09       LDA    $9,X
 B918: 48          ASLA
-B919: 6E D6       JMP    [A,U]
+B919: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 B91B: B9 25 B9    ADCA   $25B9
 B91E: 2B B9       BMI    $B8D9
 B920: 34 B9       PSHS   PC,Y,X,DP,CC
@@ -6704,10 +6106,10 @@ B971: 7E 8D C8    JMP    $8DC8
 B974: 6A 0A       DEC    $A,X
 B976: 27 01       BEQ    $B979
 B978: 39          RTS
-B979: CE B9 81    LDU    #$B981
+B979: CE B9 81    LDU    #jump_table_b981
 B97C: A6 09       LDA    $9,X
 B97E: 48          ASLA
-B97F: 6E D6       JMP    [A,U]
+B97F: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 B981: B9 8B B9    ADCA   $8BB9
 B984: 91 B9       CMPA   $B9
 B986: 9A B9       ORA    $B9
@@ -6938,10 +6340,10 @@ BB7A: 7E 8D C8    JMP    $8DC8
 BB7D: CC FF D0    LDD    #$FFD0
 BB80: ED 16       STD    -$A,X
 BB82: 7E 8D C8    JMP    $8DC8
-BB85: CE BB C2    LDU    #$BBC2
+BB85: CE BB C2    LDU    #jump_table_bbc2
 BB88: A6 09       LDA    $9,X
 BB8A: 48          ASLA
-BB8B: 6E D6       JMP    [A,U]
+BB8B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 BB8D: BD 94 97    JSR    $9497
 BB90: 2A 01       BPL    $BB93
 BB92: 39          RTS
@@ -6997,19 +6399,11 @@ BBFC: 7E B4 29    JMP    $B429
 BBFF: 6A 0A       DEC    $A,X
 BC01: 27 01       BEQ    $BC04
 BC03: 39          RTS
-BC04: CE BC 0C    LDU    #$BC0C
+BC04: CE BC 0C    LDU    #jump_table_bc0c
 BC07: A6 09       LDA    $9,X
 BC09: 48          ASLA
-BC0A: 6E D6       JMP    [A,U]
-BC0C: BC 1E BC    CMPX   $1EBC
-BC0F: 26 BC       BNE    $BBCD
-BC11: 2C BC       BGE    $BBCF
-BC13: 2C BC       BGE    $BBD1
-BC15: 2C BC       BGE    $BBD3
-BC17: 2C BC       BGE    $BBD5
-BC19: 2C BC       BGE    $BBD7
-BC1B: 1E BC       EXG    DP,inv
-BC1D: 55          LSRB
+BC0A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
+
 BC1E: A6 01       LDA    $1,X
 BC20: 88 03       EORA   #$03
 BC22: A7 01       STA    $1,X
@@ -7072,10 +6466,10 @@ BC9B: 7E 8D C8    JMP    $8DC8
 BC9E: 6A 0A       DEC    $A,X
 BCA0: 27 01       BEQ    $BCA3
 BCA2: 39          RTS
-BCA3: CE BC AB    LDU    #$BCAB
+BCA3: CE BC AB    LDU    #jump_table_bcab
 BCA6: A6 09       LDA    $9,X
 BCA8: 48          ASLA
-BCA9: 6E D6       JMP    [A,U]
+BCA9: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
 BCAB: BC BD BC    CMPX   $BDBC
 BCAE: BD BC BD    JSR    $BCBD
 BCB1: BC BD BC    CMPX   $BDBC
@@ -7168,10 +6562,10 @@ BD74: 7E 8D C8    JMP    $8DC8
 BD77: 6A 0A       DEC    $A,X
 BD79: 27 01       BEQ    $BD7C
 BD7B: 39          RTS
-BD7C: CE BD 84    LDU    #$BD84
+BD7C: CE BD 84    LDU    #jump_table_bd84
 BD7F: A6 09       LDA    $9,X
 BD81: 48          ASLA
-BD82: 6E D6       JMP    [A,U]
+BD82: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=8]
 BD84: BD 94 BD    JSR    $94BD
 BD87: 94 BD       ANDA   $BD
 BD89: 94 BD       ANDA   $BD
@@ -7266,7 +6660,7 @@ BE4B: 39          RTS
 BE4C: CE BE 54    LDU    #jump_table_be54
 BE4F: A6 09       LDA    $9,X
 BE51: 48          ASLA
-BE52: 6E D6       JMP    [A,U]
+BE52: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
 
 BE66: CE DB EC    LDU    #$DBEC
 BE69: 7E 8D E8    JMP    $8DE8
@@ -7313,7 +6707,7 @@ BEBC: 39          RTS
 BEBD: CE BE C5    LDU    #jump_table_bec5
 BEC0: A6 09       LDA    $9,X
 BEC2: 48          ASLA
-BEC3: 6E D6       JMP    [A,U]
+BEC3: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 BECB: 0C 7E       INC    $7E
 BECD: 8D E8       BSR    $BEB7
@@ -7369,14 +6763,14 @@ BF3C: 27 01       BEQ    $BF3F
 BF3E: 39          RTS
 BF3F: 6D 16       TST    -$A,X
 BF41: 2B 08       BMI    $BF4B
-BF43: CE BF 53    LDU    #$BF53
+BF43: CE BF 53    LDU    #jump_table_bf53
 BF46: A6 09       LDA    $9,X
 BF48: 48          ASLA
-BF49: 6E D6       JMP    [A,U]
+BF49: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 BF4B: CE BF 5F    LDU    #$BF5F
 BF4E: A6 09       LDA    $9,X
 BF50: 48          ASLA
-BF51: 6E D6       JMP    [A,U]
+BF51: 6E D6       JMP    [A,U]        ; [indirect_jump]
 BF53: BF 8A BF    STX    $8ABF
 BF56: 8A BF       ORA    #$BF
 BF58: 6B BF 8A BF XDEC   [$8ABF]
@@ -7473,14 +6867,14 @@ C038: 27 01       BEQ    $C03B
 C03A: 39          RTS
 C03B: 6D 16       TST    -$A,X
 C03D: 2B 08       BMI    $C047
-C03F: CE C0 4F    LDU    #$C04F
+C03F: CE C0 4F    LDU    #jump_table_c04f
 C042: A6 09       LDA    $9,X
 C044: 48          ASLA
-C045: 6E D6       JMP    [A,U]
+C045: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 C047: CE C0 5B    LDU    #$C05B
 C04A: A6 09       LDA    $9,X
 C04C: 48          ASLA
-C04D: 6E D6       JMP    [A,U]
+C04D: 6E D6       JMP    [A,U]        ; [indirect_jump]
 C04F: C0 67       SUBB   #$67
 C051: C0 B0       SUBB   #$B0
 C053: C0 B0       SUBB   #$B0
@@ -7572,7 +6966,7 @@ C116: 39          RTS
 C117: CE C2 5B    LDU    #jump_table_c25b
 C11A: A6 09       LDA    $9,X
 C11C: 48          ASLA
-C11D: 6E D6       JMP    [A,U]
+C11D: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=13]
 C11F: EE 10       LDU    -$10,X
 C121: A6 41       LDA    $1,U
 C123: 8A 01       ORA    #$01
@@ -7627,10 +7021,10 @@ C183: 0A 37       DEC    $37
 C185: 0A 33       DEC    $33
 C187: 0A 39       DEC    $39
 C189: 39          RTS
-C18A: CE C2 69    LDU    #$C269
+C18A: CE C2 69    LDU    #jump_table_c269
 C18D: A6 09       LDA    $9,X
 C18F: 48          ASLA
-C190: 6E D6       JMP    [A,U]
+C190: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 C192: EE 10       LDU    -$10,X
 C194: A6 41       LDA    $1,U
 C196: 8A 01       ORA    #$01
@@ -7731,10 +7125,10 @@ C278: 7E 8D C8    JMP    $8DC8
 C27B: 6A 0A       DEC    $A,X
 C27D: 27 01       BEQ    $C280
 C27F: 39          RTS
-C280: CE C2 FA    LDU    #table_c2fa
+C280: CE C2 FA    LDU    #jump_table_c2fa
 C283: A6 09       LDA    $9,X
 C285: 48          ASLA
-C286: 6E D6       JMP    [A,U]
+C286: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=17]
 C288: 86 40       LDA    #$40
 C28A: A7 05       STA    $5,X
 C28C: EC 1C       LDD    -$4,X
@@ -7747,10 +7141,10 @@ C29B: 7E B4 29    JMP    $B429
 C29E: 6A 0A       DEC    $A,X
 C2A0: 27 01       BEQ    $C2A3
 C2A2: 39          RTS
-C2A3: CE C3 0A    LDU    #table_c30a
+C2A3: CE C3 0A    LDU    #jump_table_c30a
 C2A6: A6 09       LDA    $9,X
 C2A8: 48          ASLA
-C2A9: 6E D6       JMP    [A,U]
+C2A9: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=9]
 C2AB: 86 80       LDA    #$80
 C2AD: A7 05       STA    $5,X
 C2AF: EC 1C       LDD    -$4,X
@@ -7801,11 +7195,11 @@ C334: 26 09       BNE    $C33F
 C336: CE C3 48    LDU    #jump_table_c348
 C339: 96 0F       LDA    $0F
 C33B: 84 06       ANDA   #$06
-C33D: 6E D6       JMP    [A,U]
+C33D: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=6]
 C33F: CE C3 50    LDU    #jump_table_c350
 C342: 96 0F       LDA    $0F
 C344: 84 02       ANDA   #$02
-C346: 6E D6       JMP    [A,U]
+C346: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 C35A: A6 01       LDA    $1,X
 C35C: 84 FC       ANDA   #$FC
@@ -7917,7 +7311,7 @@ C436: 7E 8D C8    JMP    $8DC8
 C439: CE C4 41    LDU    #jump_table_c441
 C43C: A6 09       LDA    $9,X
 C43E: 48          ASLA
-C43F: 6E D6       JMP    [A,U]
+C43F: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=11]
 
 C457: EC 16       LDD    -$A,X
 C459: 27 16       BEQ    $C471
@@ -7988,7 +7382,7 @@ C4E4: 39          RTS
 C4E5: CE C4 ED    LDU    #jump_table_c4ed
 C4E8: A6 09       LDA    $9,X
 C4EA: 48          ASLA
-C4EB: 6E D6       JMP    [A,U]
+C4EB: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=11]
 
 C503: BD 94 97    JSR    $9497
 C506: 2A 01       BPL    $C509
@@ -8041,7 +7435,7 @@ C568: 39          RTS
 C569: CE C5 71    LDU    #jump_table_c571
 C56C: A6 09       LDA    $9,X
 C56E: 48          ASLA
-C56F: 6E D6       JMP    [A,U]
+C56F: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=13]
 
 C58B: 6A 0A       DEC    $A,X
 C58D: 27 01       BEQ    $C590
@@ -8102,7 +7496,7 @@ C600: BD C3 5A    JSR    $C35A
 C603: CE C6 0C    LDU    #jump_table_c60c
 C606: 96 0F       LDA    $0F
 C608: 84 02       ANDA   #$02
-C60A: 6E D6       JMP    [A,U]
+C60A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 C610: EC 1C       LDD    -$4,X
 C612: C3 00 E0    ADDD   #$00E0
@@ -8135,7 +7529,7 @@ C651: 7E 8D C8    JMP    $8DC8
 C654: CE C6 5C    LDU    #jump_table_c65c
 C657: A6 09       LDA    $9,X
 C659: 48          ASLA
-C65A: 6E D6       JMP    [A,U]
+C65A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 C662: BD 94 97    JSR    $9497
 C665: 2A 01       BPL    $C668
 C667: 39          RTS
@@ -8161,7 +7555,7 @@ C68F: 7E B4 29    JMP    $B429
 C692: CE C6 9A    LDU    #jump_table_c69a
 C695: A6 09       LDA    $9,X
 C697: 48          ASLA
-C698: 6E D6       JMP    [A,U]
+C698: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 
 C6A0: BD 94 97    JSR    $9497
 C6A3: 2A 01       BPL    $C6A6
@@ -8192,7 +7586,7 @@ C6D5: CE C7 3E    LDU    #jump_table_c73e
 C6D8: A6 07       LDA    $7,X
 C6DA: 84 FC       ANDA   #$FC
 C6DC: 44          LSRA
-C6DD: 6E D6       JMP    [A,U]
+C6DD: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=39]
 C6DF: 10 AE 10    LDY    -$10,X
 C6E2: A6 21       LDA    $1,Y
 C6E4: 84 01       ANDA   #$01
@@ -8243,7 +7637,7 @@ C78D: 7E 8D C8    JMP    $8DC8
 C790: CE C7 98    LDU    #jump_table_c798
 C793: A6 09       LDA    $9,X
 C795: 48          ASLA
-C796: 6E D6       JMP    [A,U]
+C796: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 
 C7AC: 6A 0A       DEC    $A,X
 C7AE: 27 01       BEQ    $C7B1
@@ -8391,10 +7785,10 @@ C8F0: C6 3C       LDB    #$3C
 C8F2: 7E B4 29    JMP    $B429
 C8F5: C6 84       LDB    #$84
 C8F7: 7E B4 29    JMP    $B429
-C8FA: CE C9 02    LDU    #table_c902
+C8FA: CE C9 02    LDU    #jump_table_c902
 C8FD: A6 09       LDA    $9,X
 C8FF: 48          ASLA
-C900: 6E D6       JMP    [A,U]
+C900: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 
 C916: 6A 0A       DEC    $A,X
 C918: 27 01       BEQ    $C91B
@@ -8610,26 +8004,11 @@ CAF9: 0A 33       DEC    $33
 CAFB: 0A 39       DEC    $39
 CAFD: 39          RTS
 CAFE: 7E 8D C8    JMP    $8DC8
-CB01: CE CB 09    LDU    #$CB09
+CB01: CE CB 09    LDU    #jump_table_cb09
 CB04: A6 09       LDA    $9,X
 CB06: 48          ASLA
-CB07: 6E D6       JMP    [A,U]
-CB09: CB 29       ADDB   #$29
-CB0B: CB 29       ADDB   #$29
-CB0D: CB 29       ADDB   #$29
-CB0F: CB 29       ADDB   #$29
-CB11: CB 29       ADDB   #$29
-CB13: CB 29       ADDB   #$29
-CB15: CB 29       ADDB   #$29
-CB17: CB 29       ADDB   #$29
-CB19: CB 29       ADDB   #$29
-CB1B: CB 29       ADDB   #$29
-CB1D: CB 29       ADDB   #$29
-CB1F: CB 29       ADDB   #$29
-CB21: CB 29       ADDB   #$29
-CB23: CB 34       ADDB   #$34
-CB25: CB 52       ADDB   #$52
-CB27: CB 5E       ADDB   #$5E
+CB07: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=16]
+
 CB29: 6A 0A       DEC    $A,X
 CB2B: 27 01       BEQ    $CB2E
 CB2D: 39          RTS
@@ -8687,14 +8066,11 @@ CB9A: 7E 8D C8    JMP    $8DC8
 CB9D: 6A 0A       DEC    $A,X
 CB9F: 27 01       BEQ    $CBA2
 CBA1: 39          RTS
-CBA2: CE CB AA    LDU    #$CBAA
+CBA2: CE CB AA    LDU    #jump_table_cbaa
 CBA5: A6 09       LDA    $9,X
 CBA7: 48          ASLA
-CBA8: 6E D6       JMP    [A,U]
-CBAA: CB B8       ADDB   #$B8
-CBAC: CB B8       ADDB   #$B8
-CBAE: CB B2       ADDB   #$B2
-CBB0: CB BE       ADDB   #$BE
+CBA8: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
+
 CBB2: BD 97 D0    JSR    $97D0
 CBB5: 27 01       BEQ    $CBB8
 CBB7: 39          RTS
@@ -8927,13 +8303,11 @@ CD8C: 26 07       BNE    $CD95
 CD8E: 6F 0C       CLR    $C,X
 CD90: C6 44       LDB    #$44
 CD92: 7E B4 29    JMP    $B429
-CD95: CE CD 9D    LDU    #$CD9D
+CD95: CE CD 9D    LDU    #jump_table_cd9d
 CD98: A6 09       LDA    $9,X
 CD9A: 48          ASLA
-CD9B: 6E D6       JMP    [A,U]
-CD9D: CD          XHCF
-CD9E: A5 CD B7 CD BITA   $856F,PCR
-CDA2: B7 CD C2    STA    $CDC2
+CD9B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
+
 CDA5: EC 1A       LDD    -$6,X
 CDA7: B3 04 0A    SUBD   $040A
 CDAA: 10 83 0C 00 CMPD   #$0C00
@@ -9071,11 +8445,11 @@ CEB9: 81 48       CMPA   #$48
 CEBB: 24 13       BCC    $CED0
 CEBD: 8D 2B       BSR    $CEEA
 CEBF: 2B 0A       BMI    $CECB
-CEC1: CE CE DA    LDU    #$CEDA
+CEC1: CE CE DA    LDU    #jump_table_ceda
 CEC4: A6 84       LDA    ,X
 CEC6: 80 40       SUBA   #$40
 CEC8: 48          ASLA
-CEC9: AD D6       JSR    [A,U]
+CEC9: AD D6       JSR    [A,U]        ; [indirect_jump] [nb_entries=14]
 CECB: 0A 55       DEC    $55
 CECD: 26 01       BNE    $CED0
 CECF: 39          RTS
@@ -9083,15 +8457,7 @@ CED0: 30 88 10    LEAX   $10,X
 CED3: 8C 13 00    CMPX   #$1300
 CED6: 25 D9       BCS    $CEB1
 CED8: 20 FE       BRA    $CED8
-CEDA: CF 21 CF    XSTU   #$21CF
-CEDD: 21 CF       BRN    $CEAE
-CEDF: 21 CF       BRN    $CEB0
-CEE1: 20 CF       BRA    $CEB2
-CEE3: 21 CF       BRN    $CEB4
-CEE5: 21 CF       BRN    $CEB6
-CEE7: 21 CF       BRN    $CEB8
-CEE9: 21 DC       BRN    $CEC7
-CEEB: 88 E3       EORA   #$E3
+
 CEED: 0A ED       DEC    $ED
 CEEF: 0A DC       DEC    $DC
 CEF1: 8A E3       ORA    #$E3
@@ -9116,26 +8482,34 @@ CF1B: 8A 80       ORA    #$80
 CF1D: A7 84       STA    ,X
 CF1F: 39          RTS
 CF20: 39          RTS
-CF21: CE CF 30    LDU    #$CF30
+CF21: CE CF 30    LDU    #table_of_jump_tables_cf30
 CF24: A6 01       LDA    $1,X
 CF26: 84 01       ANDA   #$01
 CF28: 48          ASLA
 CF29: EE C6       LDU    A,U
-CF2B: A6 02       LDA    $2,X
+CF2B: A6 02       LDA    $2,X		; [breakpoint]
 CF2D: 48          ASLA
-CF2E: 6E D6       JMP    [A,U]
-CF30: CF 34 CF    XSTU   #$34CF
-CF33: 3E          XRES
-CF34: D0 83       SUBB   $83
-CF36: D0 44       SUBB   $44
-CF38: D0 2B       SUBB   $2B
-CF3A: D0 12       SUBB   $12
-CF3C: CF F9 CF    XSTU   #$F9CF
-CF3F: 48          ASLA
-CF40: CF 90 CF    XSTU   #$90CF
-CF43: B5 CF DA    BITA   $CFDA
-CF46: CF F2 CE    XSTU   #$F2CE
-CF49: CF 8C A6    XSTU   #$8CA6
+CF2E: 6E D6       JMP    [A,U]        ; [indirect_jump]
+
+table_of_jump_tables_cf30:
+	.word	jump_table_cf34
+	.word	jump_table_cf3e
+	
+jump_table_cf34:
+	.word	$d083
+	.word	$d044
+	.word	$d02b
+	.word	$d012
+	.word	$cff9
+	
+jump_table_cf3e:
+	.word	$cf48
+	.word	$cf40
+	.word	$cfb5 
+	.word	$cfda
+	.word	$cff2 
+	.word	$cecf
+	
 CF4C: 84 84       ANDA   #$84
 CF4E: 03 E6       COM    $E6
 CF50: C6 10       LDB    #$10
@@ -9161,16 +8535,7 @@ CF77: 80 40       SUBA   #$40
 CF79: 48          ASLA
 CF7A: 10 AE C6    LDY    A,U
 CF7D: 7E D1 25    JMP    $D125
-CF80: 76 67 77    ROR    $6777
-CF83: 0C 77       INC    $77
-CF85: B1 76 88    CMPA   $7688
-CF88: 77 2D 77    ASR    $2D77
-CF8B: D2 03       SBCB   $03
-CF8D: 46          RORA
-CF8E: 44          LSRA
-CF8F: 00 A6       NEG    $A6
-CF91: 01 84       NEG    $84
-CF93: 3E          XRES
+
 CF94: A7 01       STA    $1,X
 CF96: A6 03       LDA    $3,X
 CF98: 4C          INCA
@@ -9205,11 +8570,7 @@ CFCE: 48          ASLA
 CFCF: EC C6       LDD    A,U
 CFD1: ED 0E       STD    $E,X
 CFD3: 39          RTS
-CFD4: 76 7D 77    ROR    $7D77
-CFD7: 22 77       BHI    $D050
-CFD9: C7 A6       XSTB   #$A6
-CFDB: 01 84       NEG    $84
-CFDD: 3E          XRES
+
 CFDE: A7 01       STA    $1,X
 CFE0: A6 03       LDA    $3,X
 CFE2: 4C          INCA
@@ -9475,11 +8836,11 @@ D1D6: DC 8A       LDD    $8A
 D1D8: E3 0C       ADDD   $C,X
 D1DA: ED 0C       STD    $C,X
 D1DC: 0C 41       INC    $41
-D1DE: CE D2 14    LDU    #$D214
+D1DE: CE D2 14    LDU    #jump_table_d214
 D1E1: A6 84       LDA    ,X
 D1E3: 80 60       SUBA   #$60
 D1E5: 48          ASLA
-D1E6: AD D6       JSR    [A,U]
+D1E6: AD D6       JSR    [A,U]        ; [indirect_jump] [nb_entries=12]
 D1E8: 0A 42       DEC    $42
 D1EA: 26 01       BNE    $D1ED
 D1EC: 39          RTS
@@ -9502,27 +8863,13 @@ D20D: 39          RTS
 D20E: 30 88 10    LEAX   $10,X
 D211: 20 AD       BRA    $D1C0
 D213: 39          RTS
-D214: D2 2C       SBCB   $2C
-D216: D3 8E       ADDD   $8E
-D218: D4 C2       ANDB   $C2
-D21A: D4 47       ANDB   $47
-D21C: D2 13       SBCB   $13
-D21E: D2 13       SBCB   $13
-D220: D2 13       SBCB   $13
-D222: D2 13       SBCB   $13
-D224: D5 41       BITB   $41
-D226: D5 41       BITB   $41
-D228: D5 76       BITB   $76
-D22A: D6 2D       LDB    $2D
-D22C: CE D2 36    LDU    #$D236
+
+D22C: CE D2 36    LDU    #jump_table_d236
 D22F: A6 01       LDA    $1,X
 D231: 84 0C       ANDA   #$0C
 D233: 44          LSRA
-D234: 6E D6       JMP    [A,U]
-D236: D2 3E       SBCB   $3E
-D238: D2 3E       SBCB   $3E
-D23A: D2 F4       SBCB   $F4
-D23C: D2 F4       SBCB   $F4
+D234: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
+
 D23E: A6 01       LDA    $1,X
 D240: 84 02       ANDA   #$02
 D242: 26 58       BNE    $D29C
@@ -9846,11 +9193,11 @@ D4BC: 48          ASLA
 D4BD: EC C6       LDD    A,U
 D4BF: ED 0E       STD    $E,X
 D4C1: 39          RTS
-D4C2: CE D4 F9    LDU    #$D4F9
+D4C2: CE D4 F9    LDU    #jump_table_d4f9
 D4C5: A6 02       LDA    $2,X
 D4C7: 6C 02       INC    $2,X
 D4C9: 48          ASLA
-D4CA: 6E D6       JMP    [A,U]
+D4CA: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 D4CC: A6 01       LDA    $1,X
 D4CE: 84 02       ANDA   #$02
 D4D0: 26 06       BNE    $D4D8
@@ -9874,21 +9221,8 @@ D4F2: A7 84       STA    ,X
 D4F4: 0A 40       DEC    $40
 D4F6: 0A 41       DEC    $41
 D4F8: 39          RTS
-D4F9: D4 CC       ANDB   $CC
-D4FB: D4 DE       ANDB   $DE
-D4FD: D4 F0       ANDB   $F0
-D4FF: 7B 0C 7B    XDEC   $0C7B
-D502: 14          XHCF
-D503: 7B 1C 7B    XDEC   $1C7B
-D506: 10 7B 18 7B XDEC   $187B
-D50A: 20 7B       BRA    $D587
-D50C: 24 7B       BCC    $D589
-D50E: 2C 7B       BGE    $D58B
-D510: 34 7B       PSHS   U,Y,X,DP,A,CC
-D512: 28 7B       BVC    $D58F
-D514: 30 7B       LEAX   -$5,S
-D516: 38 CE       XANDCC #$CE
-D518: 09 00       ROL    $00
+
+
 D51A: C6 FF       LDB    #$FF
 D51C: E1 C4       CMPB   ,U
 D51E: 27 05       BEQ    $D525
@@ -10416,2476 +9750,1125 @@ D935: 24 DA       BCC    $D911
 D937: 86 7A       LDA    #$7A
 D939: A7 47       STA    $7,U
 D93B: 39          RTS
-D93C: 02 00       XNC    $00
-D93E: 6E 70       JMP    -$10,S
-D940: 04 00       LSR    $00
-D942: 6E CB       JMP    D,U
-D944: 04 00       LSR    $00
-D946: 6E D8 04    JMP    [$04,U]
-D949: 0F 6E       CLR    $6E
-D94B: EB 04       ADDB   $4,X
-D94D: 00 6E       NEG    $6E
-D94F: D8 06       EORB   $06
-D951: 00 6E       NEG    $6E
-D953: 97 06       STA    $06
-D955: 00 6E       NEG    $6E
-D957: A4 06       ANDA   $6,X
-D959: 00 6E       NEG    $6E
-D95B: B1 06 00    CMPA   $0600
-D95E: 6E BE       JMP    [W,Y]
-D960: 06 00       ROR    $00
-D962: 6E 7D       JMP    -$3,S
-D964: 06 00       ROR    $00
-D966: 6E 8A       JMP    F,X
-D968: 05 00       LSR    $00
-D96A: 6E 97       JMP    [E,X]
-D96C: 05 00       LSR    $00
-D96E: 6E A4       JMP    ,Y
-D970: 05 00       LSR    $00
-D972: 6E B1       JMP    [,Y++]
-D974: 05 00       LSR    $00
-D976: 6E BE       JMP    [W,Y]
-D978: 05 00       LSR    $00
-D97A: 6E 7D       JMP    -$3,S
-D97C: 05 00       LSR    $00
-D97E: 6E 8A       JMP    F,X
-D980: 1E 07       EXG    D,inv
-D982: 6F 78       CLR    -$8,S
-D984: 1E 07       EXG    D,inv
-D986: 6F 85       CLR    B,X
-D988: 1E 07       EXG    D,inv
-D98A: 6F 78       CLR    -$8,S
-D98C: 06 00       ROR    $00
-D98E: 6F 92       CLR    Illegal Postbyte
-D990: 1E 07       EXG    D,inv
-D992: 6F 78       CLR    -$8,S
-D994: 1E 07       EXG    D,inv
-D996: 6F 85       CLR    B,X
-D998: 1E 07       EXG    D,inv
-D99A: 6F 78       CLR    -$8,S
-D99C: 06 00       ROR    $00
-D99E: 6F 92       CLR    Illegal Postbyte
-D9A0: 01 04       NEG    $04
-D9A2: 6F A5       CLR    B,Y
-D9A4: 06 00       ROR    $00
-D9A6: 6F B2       CLR    Illegal Postbyte
-D9A8: 0E 00       JMP    $00
-D9AA: 6F C5       CLR    B,U
-D9AC: 04 08       LSR    $08
-D9AE: 6F D8 04    CLR    [$04,U]
-D9B1: 09 6F       ROL    $6F
-D9B3: EB 06       ADDB   $6,X
-D9B5: 09 6F       ROL    $6F
-D9B7: F8 04 09    EORB   $0409
-D9BA: 70 05 05    NEG    $0505
-D9BD: 0F 70       CLR    $70
-D9BF: 12          NOP
-D9C0: 06 0F       ROR    $0F
-D9C2: 70 25 07    NEG    $2507
-D9C5: 0C 70       INC    $70
-D9C7: 32 05       LEAS   $5,X
-D9C9: 0C 70       INC    $70
-D9CB: 45          LSRA
-D9CC: 05 0A       LSR    $0A
-D9CE: 70 58 06    NEG    $5806
-D9D1: 0A 70       DEC    $70
-D9D3: 6B 06       XDEC   $6,X
-D9D5: 0B 70       XDEC   $70
-D9D7: 7E 14 05    JMP    $1405
-D9DA: 70 8B 06    NEG    $8B06
-D9DD: 06 70       ROR    $70
-D9DF: 9E 06       LDX    $06
-D9E1: 0D 70       TST    $70
-D9E3: B1 06 05    CMPA   $0605
-D9E6: 70 8B 06    NEG    $8B06
-D9E9: 06 70       ROR    $70
-D9EB: 9E 06       LDX    $06
-D9ED: 0D 70       TST    $70
-D9EF: B1 14 05    CMPA   $1405
-D9F2: 70 8B 06    NEG    $8B06
-D9F5: 06 70       ROR    $70
-D9F7: 9E 06       LDX    $06
-D9F9: 0D 70       TST    $70
-D9FB: B1 04 0E    CMPA   $040E
-D9FE: 6E F8 06    JMP    [$06,S]
-DA01: 0E 6F       JMP    $6F
-DA03: 0B 06       XDEC   $06
-DA05: 0E 6F       JMP    $6F
-DA07: 1E 06       EXG    D,inv
-DA09: 00 6F       NEG    $6F
-DA0B: 2B 04       BMI    $DA11
-DA0D: 0F 6F       CLR    $6F
-DA0F: 3E          XRES
-DA10: 06 0F       ROR    $0F
-DA12: 6F 51       CLR    -$F,U
-DA14: 06 0F       ROR    $0F
-DA16: 6F 5E       CLR    -$2,U
-DA18: 06 0F       ROR    $0F
-DA1A: 6F 6B       CLR    $B,S
-DA1C: 06 01       ROR    $01
-DA1E: 70 C4 06    NEG    $C406
-DA21: 04 70       LSR    $70
-DA23: D1 06       CMPB   $06
-DA25: 0C 70       INC    $70
-DA27: E4 06       ANDB   $6,X
-DA29: 01 70       NEG    $70
-DA2B: F1 06 01    CMPB   $0601
-DA2E: 70 FE 06    NEG    $FE06
-DA31: 02 71       XNC    $71
-DA33: 0B 06       XDEC   $06
-DA35: 03 71       COM    $71
-DA37: 18          X18
-DA38: 06 01       ROR    $01
-DA3A: 71 25 06    NEG    $2506
-DA3D: 03 71       COM    $71
-DA3F: 38 06       XANDCC #$06
-DA41: 00 71       NEG    $71
-DA43: 4B          XDECA
-DA44: 06 01       ROR    $01
-DA46: 71 58 06    NEG    $5806
-DA49: 03 71       COM    $71
-DA4B: 6B 04       XDEC   $4,X
-DA4D: 21 71       BRN    $DAC0
-DA4F: 7E 04 A1    JMP    $04A1
-DA52: 71 8B 04    NEG    $8B04
-DA55: A1 71       CMPA   -$F,S
-DA57: 9E 04       LDX    $04
-DA59: A1 71       CMPA   -$F,S
-DA5B: B1 04 A1    CMPA   $04A1
-DA5E: 71 C4 04    NEG    $C404
-DA61: A1 71       CMPA   -$F,S
-DA63: 7E 04 A1    JMP    $04A1
-DA66: 72 0A 04    XNC    $0A04
-DA69: A1 72       CMPA   -$E,S
-DA6B: 0A 04       DEC    $04
-DA6D: A1 72       CMPA   -$E,S
-DA6F: 1D          SEX
-DA70: 04 A1       LSR    $A1
-DA72: 72 30 04    XNC    $3004
-DA75: A1 72       CMPA   -$E,S
-DA77: 43          COMA
-DA78: 04 A1       LSR    $A1
-DA7A: 71 FD 04    NEG    $FD04
-DA7D: A1 71       CMPA   -$F,S
-DA7F: FD 04 A1    STD    $04A1
-DA82: 72 0A 04    XNC    $0A04
-DA85: A1 72       CMPA   -$E,S
-DA87: 1D          SEX
-DA88: 04 A1       LSR    $A1
-DA8A: 72 30 04    XNC    $3004
-DA8D: A1 72       CMPA   -$E,S
-DA8F: 43          COMA
-DA90: 04 A1       LSR    $A1
-DA92: 71 FD 0F    NEG    $FD0F
-DA95: 83 72 95    SUBD   #$7295
-DA98: 0F E8       CLR    $E8
-DA9A: 72 A8 0F    XNC    $A80F
-DA9D: E4 72       ANDB   -$E,S
-DA9F: B5 0F 90    BITA   $0F90
-DAA2: 72 C2 0F    XNC    $C20F
-DAA5: 82 72       SBCA   #$72
-DAA7: D5 0F       BITB   $0F
-DAA9: 83 72 95    SUBD   #$7295
-DAAC: 0F D7       CLR    $D7
-DAAE: 72 EE 0F    XNC    $EE0F
-DAB1: 98 73       EORA   $73
-DAB3: 0D 0F       TST    $0F
-DAB5: E7 73       STB    -$D,S
-DAB7: 26 0F       BNE    $DAC8
-DAB9: E6 73       LDB    -$D,S
-DABB: 39          RTS
-DABC: 0F E5       CLR    $E5
-DABE: 73 4C 04    COM    $4C04
-DAC1: E9 73       ADCB   -$D,S
-DAC3: 93 04       SUBD   $04
-DAC5: EA 73       ORB    -$D,S
-DAC7: A0 04       SUBA   $4,X
-DAC9: EB 73       ADDB   -$D,S
-DACB: B3 04 EC    SUBD   $04EC
-DACE: 73 C0 04    COM    $C004
-DAD1: ED 73       STD    -$D,S
-DAD3: CD          XHCF
-DAD4: 04 EE       LSR    $EE
-DAD6: 73 E6 04    COM    $E604
-DAD9: EF 73       STU    -$D,S
-DADB: F3 04 EC    ADDD   $04EC
-DADE: 73 C0 04    COM    $C004
-DAE1: 03 73       COM    $73
-DAE3: 5F          CLRB
-DAE4: 06 03       ROR    $03
-DAE6: 73 6C 06    COM    $6C06
-DAE9: 0E 6F       JMP    $6F
-DAEB: 1E 06       EXG    D,inv
-DAED: 00 6F       NEG    $6F
-DAEF: 2B 04       BMI    $DAF5
-DAF1: 0F 73       CLR    $73
-DAF3: 79 06 0F    ROL    $060F
-DAF6: 73 86 06    COM    $8606
-DAF9: 0F 6F       CLR    $6F
-DAFB: 5E          XCLRB
-DAFC: 06 0F       ROR    $0F
-DAFE: 6F 6B       CLR    $B,S
-DB00: 08 01       ASL    $01
-DB02: 60 00       NEG    $0,X
-DB04: 08 01       ASL    $01
-DB06: 6B 52       XDEC   -$E,U
-DB08: 08 01       ASL    $01
-DB0A: 60 85       NEG    B,X
-DB0C: 08 11       ASL    $11
-DB0E: 60 98 08    NEG    [$08,X]
-DB11: 11 6B 65    XDEC   $5,S
-DB14: 08 01       ASL    $01
-DB16: 60 85       NEG    B,X
-DB18: 06 01       ROR    $01
-DB1A: 61 DA       NEG    [F,U]
-DB1C: 06 01       ROR    $01
-DB1E: 60 13       NEG    -$D,X
-DB20: 06 01       ROR    $01
-DB22: 60 26       NEG    $6,Y
-DB24: 06 01       ROR    $01
-DB26: 60 39       NEG    -$7,Y
-DB28: 06 01       ROR    $01
-DB2A: 60 4C       NEG    $C,U
-DB2C: 06 01       ROR    $01
-DB2E: 60 5F       NEG    -$1,U
-DB30: 06 01       ROR    $01
-DB32: 60 72       NEG    -$E,S
-DB34: 04 01       LSR    $01
-DB36: 60 13       NEG    -$D,X
-DB38: 04 01       LSR    $01
-DB3A: 60 26       NEG    $6,Y
-DB3C: 04 01       LSR    $01
-DB3E: 60 39       NEG    -$7,Y
-DB40: 04 01       LSR    $01
-DB42: 60 4C       NEG    $C,U
-DB44: 04 01       LSR    $01
-DB46: 60 5F       NEG    -$1,U
-DB48: 04 01       LSR    $01
-DB4A: 60 72       NEG    -$E,S
-DB4C: 06 16       ROR    $16
-DB4E: 61 17       NEG    -$9,X
-DB50: 18          X18
-DB51: 13          SYNC
-DB52: 61 30       NEG    -$10,Y
-DB54: 06 01       ROR    $01
-DB56: 61 43       NEG    $3,U
-DB58: 06 16       ROR    $16
-DB5A: 61 17       NEG    -$9,X
-DB5C: 18          X18
-DB5D: 13          SYNC
-DB5E: 61 30       NEG    -$10,Y
-DB60: 06 01       ROR    $01
-DB62: 61 43       NEG    $3,U
-DB64: 08 26       ASL    $26
-DB66: 6B D1       XDEC   [,U++]
-DB68: 08 22       ASL    $22
-DB6A: 6B E4       XDEC   ,S
-DB6C: 08 22       ASL    $22
-DB6E: 6B FD 08 1E XDEC   [$E390,PCR]
-DB72: 6C 35       INC    -$B,Y
-DB74: 08 1F       ASL    $1F
-DB76: 6C 48       INC    $8,U
-DB78: 08 15       ASL    $15
-DB7A: 6C 5B       INC    -$5,U
-DB7C: 08 14       ASL    $14
-DB7E: 6C 74       INC    -$C,S
-DB80: 08 0D       ASL    $0D
-DB82: 6C 8D 08 19 INC    $E39F,PCR
-DB86: 61 56       NEG    -$A,U
-DB88: 04 01       LSR    $01
-DB8A: 61 43       NEG    $3,U
-DB8C: 10 19       DAA
-DB8E: 61 56       NEG    -$A,U
-DB90: 04 01       LSR    $01
-DB92: 61 43       NEG    $3,U
-DB94: 08 01       ASL    $01
-DB96: 60 A5       NEG    B,Y
-DB98: 0A 00       DEC    $00
-DB9A: 60 B8 0A    NEG    [$0A,Y]
-DB9D: 00 60       NEG    $60
-DB9F: D1 0A       CMPB   $0A
-DBA1: 00 60       NEG    $60
-DBA3: B8 08 01    EORA   $0801
-DBA6: 60 A5       NEG    B,Y
-DBA8: 08 11       ASL    $11
-DBAA: 60 EA       NEG    F,S
-DBAC: 0A 11       DEC    $11
-DBAE: 60 FD 0A 11 NEG    [$E5C3,PCR]
-DBB2: 61 0A       NEG    $A,X
-DBB4: 0A 11       DEC    $11
-DBB6: 60 FD 08 11 NEG    [$E3CB,PCR]
-DBBA: 60 EA       NEG    F,S
-DBBC: 06 16       ROR    $16
-DBBE: 61 17       NEG    -$9,X
-DBC0: 06 13       ROR    $13
-DBC2: 61 30       NEG    -$10,Y
-DBC4: 04 01       LSR    $01
-DBC6: 61 43       NEG    $3,U
-DBC8: 08 01       ASL    $01
-DBCA: 61 82       NEG    ,-X
-DBCC: 08 23       ASL    $23
-DBCE: 61 95       NEG    [B,X]
-DBD0: 0C 23       INC    $23
-DBD2: 61 A8 08    NEG    $08,Y
-DBD5: 23 61       BLS    $DC38
-DBD7: C1 08       CMPB   #$08
-DBD9: 23 61       BLS    $DC3C
-DBDB: A8 08       EORA   $8,X
-DBDD: 23 61       BLS    $DC40
-DBDF: C1 08       CMPB   #$08
-DBE1: 23 61       BLS    $DC44
-DBE3: A8 08       EORA   $8,X
-DBE5: 23 61       BLS    $DC48
-DBE7: 95 08       BITA   $08
-DBE9: 01 61       NEG    $61
-DBEB: 82 06       SBCA   #$06
-DBED: 01 61       NEG    $61
-DBEF: DA 06       ORB    $06
-DBF1: 01 61       NEG    $61
-DBF3: ED 06       STD    $6,X
-DBF5: 01 62       NEG    $62
-DBF7: 00 06       NEG    $06
-DBF9: 23 62       BLS    $DC5D
-DBFB: 13          SYNC
-DBFC: 06 24       ROR    $24
-DBFE: 62 26       XNC    $6,Y
-DC00: 06 01       ROR    $01
-DC02: 62 AB       XNC    D,Y
-DC04: 06 01       ROR    $01
-DC06: 62 BE       XNC    [W,Y]
-DC08: 06 01       ROR    $01
-DC0A: 62 D1       XNC    [,U++]
-DC0C: 06 01       ROR    $01
-DC0E: 62 E4       XNC    ,S
-DC10: 06 01       ROR    $01
-DC12: 62 F7       XNC    [E,S]
-DC14: 06 01       ROR    $01
-DC16: 63 0A       COM    $A,X
-DC18: 06 01       ROR    $01
-DC1A: 62 39       XNC    -$7,Y
-DC1C: 06 03       ROR    $03
-DC1E: 62 4C       XNC    $C,U
-DC20: 06 00       ROR    $00
-DC22: 62 5F       XNC    -$1,U
-DC24: 06 01       ROR    $01
-DC26: 62 72       XNC    -$E,S
-DC28: 06 03       ROR    $03
-DC2A: 62 85       XNC    B,X
-DC2C: 06 00       ROR    $00
-DC2E: 62 98 08    XNC    [$08,X]
-DC31: 97 64       STA    $64
-DC33: 73 08 A0    COM    $08A0
-DC36: 64 8C 04    LSR    $DC3D,PCR
-DC39: F0 64 AB    SUBB   $64AB
-DC3C: 04 F0       LSR    $F0
-DC3E: 64 C4       LSR    ,U
-DC40: 18          X18
-DC41: F0 65 67    SUBB   $6567
-DC44: 08 F0       ASL    $F0
-DC46: 65 80       LSR    ,X+
-DC48: 08 F0       ASL    $F0
-DC4A: 65 99 08 F0 LSR    [$08F0,X]
-DC4E: 65 B2       LSR    Illegal Postbyte
-DC50: 08 F0       ASL    $F0
-DC52: 65 C5       LSR    B,U
-DC54: 08 F1       ASL    $F1
-DC56: 65 D8 08    LSR    [$08,U]
-DC59: F1 65 DF    CMPB   $65DF
-DC5C: 0A 83       DEC    $83
-DC5E: 64 DD 08 F7 LSR    [$E559,PCR]
-DC62: 64 F6       LSR    [A,S]
-DC64: 04 F0       LSR    $F0
-DC66: 64 AB       LSR    D,Y
-DC68: 04 F0       LSR    $F0
-DC6A: 64 C4       LSR    ,U
-DC6C: 18          X18
-DC6D: F0 65 67    SUBB   $6567
-DC70: 08 F0       ASL    $F0
-DC72: 65 80       LSR    ,X+
-DC74: 08 F0       ASL    $F0
-DC76: 65 99 08 F0 LSR    [$08F0,X]
-DC7A: 65 B2       LSR    Illegal Postbyte
-DC7C: 08 F0       ASL    $F0
-DC7E: 65 C5       LSR    B,U
-DC80: 08 F1       ASL    $F1
-DC82: 65 D8 08    LSR    [$08,U]
-DC85: F1 65 DF    CMPB   $65DF
-DC88: 08 98       ASL    $98
-DC8A: 65 09       LSR    $9,X
-DC8C: 06 98       ROR    $98
-DC8E: 65 22       LSR    $2,Y
-DC90: 04 98       LSR    $98
-DC92: 65 3B       LSR    -$5,Y
-DC94: 18          X18
-DC95: F0 65 54    SUBB   $6554
-DC98: 08 F0       ASL    $F0
-DC9A: 65 E6       LSR    A,S
-DC9C: 08 F0       ASL    $F0
-DC9E: 65 F9 08 F0 LSR    [$08F0,S]
-DCA2: 66 0C       ROR    $C,X
-DCA4: 08 F0       ASL    $F0
-DCA6: 66 1F       ROR    -$1,X
-DCA8: 08 F0       ASL    $F0
-DCAA: 66 2C       ROR    $C,Y
-DCAC: 08 F0       ASL    $F0
-DCAE: 66 39       ROR    -$7,Y
-DCB0: 08 F0       ASL    $F0
-DCB2: 66 46       ROR    $6,U
-DCB4: 08 F1       ASL    $F1
-DCB6: 66 53       ROR    -$D,U
-DCB8: 08 F1       ASL    $F1
-DCBA: 66 5A       ROR    -$6,U
-DCBC: 05 24       LSR    $24
-DCBE: 63 1D       COM    -$3,X
-DCC0: 05 23       LSR    $23
-DCC2: 63 30       COM    -$10,Y
-DCC4: 05 00       LSR    $00
-DCC6: 63 43       COM    $3,U
-DCC8: 05 F6       LSR    $F6
-DCCA: 63 56       COM    -$A,U
-DCCC: 05 F6       LSR    $F6
-DCCE: 63 7C       COM    -$4,S
-DCD0: 05 F6       LSR    $F6
-DCD2: 63 8F       COM    ,W
-DCD4: 05 F6       LSR    $F6
-DCD6: 63 B5       COM    [B,Y]
-DCD8: 05 F6       LSR    $F6
-DCDA: 63 C8 05    COM    $05,U
-DCDD: 81 61       CMPA   #$61
-DCDF: DA 05       ORB    $05
-DCE1: 81 64       CMPA   #$64
-DCE3: 60 0C       NEG    $C,X
-DCE5: F6 63 DB    LDB    $63DB
-DCE8: 06 F6       ROR    $F6
-DCEA: 64 01       LSR    $1,X
-DCEC: 06 F6       ROR    $F6
-DCEE: 64 14       LSR    -$C,X
-DCF0: 06 00       ROR    $00
-DCF2: 64 27       LSR    $7,Y
-DCF4: 05 24       LSR    $24
-DCF6: 64 3A       LSR    -$6,Y
-DCF8: 05 25       LSR    $25
-DCFA: 64 4D       LSR    $D,U
-DCFC: 08 00       ASL    $00
-DCFE: 69 4A       ROL    $A,U
-DD00: 0A 1A       DEC    $1A
-DD02: 66 87       ROR    E,X
-DD04: 0A 1A       DEC    $1A
-DD06: 66 9A       ROR    [F,X]
-DD08: 0A 1A       DEC    $1A
-DD0A: 66 B3       ROR    [,--Y]
-DD0C: 08 1A       ASL    $1A
-DD0E: 66 CC 08    ROR    $DD19,PCR
-DD11: 1A 66       ORCC   #$66
-DD13: E5 08       BITB   $8,X
-DD15: 1A 69       ORCC   #$69
-DD17: 37 08       PULU   DP
-DD19: 00 69       NEG    $69
-DD1B: 4A          DECA
-DD1C: 08 01       ASL    $01
-DD1E: 61 DA       NEG    [F,U]
-DD20: 08 1B       ASL    $1B
-DD22: 68 B3       ASL    [,--Y]
-DD24: 08 21       ASL    $21
-DD26: 68 C0       ASL    ,U+
-DD28: 0A 1C       DEC    $1C
-DD2A: 68 D9 0A 1D ASL    [$0A1D,U]
-DD2E: 68 EC 04    ASL    $DD35,PCR
-DD31: 21 69       BRN    $DD9C
-DD33: 05 08       LSR    $08
-DD35: 21 69       BRN    $DDA0
-DD37: 1E 08       EXG    D,A
-DD39: 1A 69       ORCC   #$69
-DD3B: 37 08       PULU   DP
-DD3D: 00 69       NEG    $69
-DD3F: 4A          DECA
-DD40: 06 1A       ROR    $1A
-DD42: 69 5D       ROL    -$3,U
-DD44: 06 1A       ROR    $1A
-DD46: 69 76       ROL    -$A,S
-DD48: 06 1A       ROR    $1A
-DD4A: 69 8F       ROL    ,W
-DD4C: 06 0E       ROR    $0E
-DD4E: 69 A8 06    ROL    $06,Y
-DD51: 10 69 C1    ROL    ,U++
-DD54: 06 10       ROR    $10
-DD56: 69 DA       ROL    [F,U]
-DD58: 06 10       ROR    $10
-DD5A: 69 F3       ROL    [,--S]
-DD5C: 06 14       ROR    $14
-DD5E: 6A 0C       DEC    $C,X
-DD60: 06 12       ROR    $12
-DD62: 6A 25       DEC    $5,Y
-DD64: 06 04       ROR    $04
-DD66: 6A 3E       DEC    -$2,Y
-DD68: 06 00       ROR    $00
-DD6A: 6A 57       DEC    -$9,U
-DD6C: 06 00       ROR    $00
-DD6E: 6A 6A       DEC    $A,S
-DD70: 06 10       ROR    $10
-DD72: 6A 7D       DEC    -$3,S
-DD74: 06 10       ROR    $10
-DD76: 6A 96       DEC    [A,X]
-DD78: 06 10       ROR    $10
-DD7A: 6A A9 06 10 DEC    $0610,Y
-DD7E: 6A C2       DEC    ,-U
-DD80: 06 10       ROR    $10
-DD82: 6A DB       DEC    [D,U]
-DD84: 06 00       ROR    $00
-DD86: 6A F4       DEC    [,S]
-DD88: 06 01       ROR    $01
-DD8A: 6B 0D       XDEC   $D,X
-DD8C: 06 01       ROR    $01
-DD8E: 6B 26       XDEC   $6,Y
-DD90: 06 02       ROR    $02
-DD92: 6B 3F       XDEC   -$1,Y
-DD94: 08 25       ASL    $25
-DD96: 6B 98 0A    XDEC   [$0A,X]
-DD99: 25 6B       BCS    $DE06
-DD9B: AB 0A       ADDA   $A,X
-DD9D: 25 6B       BCS    $DE0A
-DD9F: 72 0A 25    XNC    $0A25
-DDA2: 6B BE       XDEC   [W,Y]
-DDA4: 08 25       ASL    $25
-DDA6: 6B 72       XDEC   -$E,S
-DDA8: 08 25       ASL    $25
-DDAA: 6B 85       XDEC   B,X
-DDAC: 08 25       ASL    $25
-DDAE: 6B 72       XDEC   -$E,S
-DDB0: 08 25       ASL    $25
-DDB2: 6B AB       XDEC   D,Y
-DDB4: 08 25       ASL    $25
-DDB6: 6B 98 03    XDEC   [$03,X]
-DDB9: F2 6C A0    SBCB   $6CA0
-DDBC: 03 F2       COM    $F2
-DDBE: 6C AD 03 F2 INC    $E1B4,PCR
-DDC2: 6C C0       INC    ,U+
-DDC4: 03 F2       COM    $F2
-DDC6: 6C D3       INC    [,--U]
-DDC8: 03 F2       COM    $F2
-DDCA: 6C E6       INC    A,S
-DDCC: 03 F2       COM    $F2
-DDCE: 6C F9 03 F2 INC    [$03F2,S]
-DDD2: 6D 0C       TST    $C,X
-DDD4: 03 F2       COM    $F2
-DDD6: 6D 1F       TST    -$1,X
-DDD8: 03 1A       COM    $1A
-DDDA: 6D 32       TST    -$E,Y
-DDDC: 03 1A       COM    $1A
-DDDE: 6D 4B       TST    $B,U
-DDE0: 03 1A       COM    $1A
-DDE2: 6D 6A       TST    $A,S
-DDE4: 03 1A       COM    $1A
-DDE6: 6D 89 03 1A TST    $031A,X
-DDEA: 6D A8 03    TST    $03,Y
-DDED: 1A 6D       ORCC   #$6D
-DDEF: C1 08       CMPB   #$08
-DDF1: 21 69       BRN    $DE5C
-DDF3: 1E 08       EXG    D,A
-DDF5: 1A 69       ORCC   #$69
-DDF7: 37 08       PULU   DP
-DDF9: 00 69       NEG    $69
-DDFB: 4A          DECA
-DDFC: 04 1A       LSR    $1A
-DDFE: 6D C1       TST    ,U++
-DE00: 04 1A       LSR    $1A
-DE02: 6D A8 04    TST    $04,Y
-DE05: 1A 6D       ORCC   #$6D
-DE07: 89 04       ADCA   #$04
-DE09: 1A 6D       ORCC   #$6D
-DE0B: 6A 04       DEC    $4,X
-DE0D: 1A 6D       ORCC   #$6D
-DE0F: 4B          XDECA
-DE10: 04 1A       LSR    $1A
-DE12: 6D 32       TST    -$E,Y
-DE14: 04 F2       LSR    $F2
-DE16: 6D 1F       TST    -$1,X
-DE18: 04 F2       LSR    $F2
-DE1A: 6D 0C       TST    $C,X
-DE1C: 04 F2       LSR    $F2
-DE1E: 6C F9 04 F2 INC    [$04F2,S]
-DE22: 6C E6       INC    A,S
-DE24: 04 F2       LSR    $F2
-DE26: 6C D3       INC    [,--U]
-DE28: 04 F2       LSR    $F2
-DE2A: 6C C0       INC    ,U+
-DE2C: 04 F2       LSR    $F2
-DE2E: 6C AD 04 F2 INC    $E324,PCR
-DE32: 6C A0       INC    ,Y+
-DE34: 06 0E       ROR    $0E
-DE36: 6D DA       TST    [F,U]
-DE38: 06 00       ROR    $00
-DE3A: 6D F3       TST    [,--S]
-DE3C: 06 02       ROR    $02
-DE3E: 6E 0C       JMP    $C,X
-DE40: 06 02       ROR    $02
-DE42: 6E 2B       JMP    $B,Y
-DE44: 0A 18       DEC    $18
-DE46: 65 09       LSR    $9,X
-DE48: 0A 18       DEC    $18
-DE4A: 65 22       LSR    $2,Y
-DE4C: 0A 18       DEC    $18
-DE4E: 65 3B       LSR    -$5,Y
-DE50: 0A 11       DEC    $11
-DE52: 60 98 0A    NEG    [$0A,X]
-DE55: 01 60       NEG    $60
-DE57: 85 0A       BITA   #$0A
-DE59: 01 60       NEG    $60
-DE5B: 00 0A       NEG    $0A
-DE5D: 01 6B       NEG    $6B
-DE5F: 52          XNCB
-DE60: 0A 17       DEC    $17
-DE62: 64 73       LSR    -$D,S
-DE64: 0A 20       DEC    $20
-DE66: 64 8C 0A    LSR    $DE73,PCR
-DE69: 20 64       BRA    $DECF
-DE6B: 8C 0A 11    CMPX   #$0A11
-DE6E: 60 98 0A    NEG    [$0A,X]
-DE71: 01 60       NEG    $60
-DE73: 85 0A       BITA   #$0A
-DE75: 01 60       NEG    $60
-DE77: 00 0A       NEG    $0A
-DE79: 01 6B       NEG    $6B
-DE7B: 52          XNCB
-DE7C: 08 01       ASL    $01
-DE7E: 60 85       NEG    B,X
-DE80: 08 01       ASL    $01
-DE82: 60 00       NEG    $0,X
-DE84: 08 01       ASL    $01
-DE86: 6B 52       XDEC   -$E,U
-DE88: 08 01       ASL    $01
-DE8A: 60 00       NEG    $0,X
-DE8C: 08 01       ASL    $01
-DE8E: 6B 52       XDEC   -$E,U
-DE90: 08 8A       ASL    $8A
-DE92: 68 54       ASL    -$C,U
-DE94: 08 8A       ASL    $8A
-DE96: 68 67       ASL    $7,S
-DE98: 08 8A       ASL    $8A
-DE9A: 68 7A       ASL    -$6,S
-DE9C: 08 8A       ASL    $8A
-DE9E: 68 8D 08 8A ASL    $E72C,PCR
-DEA2: 68 A0       ASL    ,Y+
-DEA4: 08 8A       ASL    $8A
-DEA6: 67 F5       ASR    [B,S]
-DEA8: 08 8A       ASL    $8A
-DEAA: 68 08       ASL    $8,X
-DEAC: 08 FF       ASL    $FF
-DEAE: 68 1B       ASL    -$5,X
-DEB0: 08 8A       ASL    $8A
-DEB2: 68 2E       ASL    $E,Y
-DEB4: 08 8A       ASL    $8A
-DEB6: 68 41       ASL    $1,U
-DEB8: 08 8A       ASL    $8A
-DEBA: 67 5D       ASR    -$3,U
-DEBC: 08 8A       ASL    $8A
-DEBE: 67 70       ASR    -$10,S
-DEC0: 08 8A       ASL    $8A
-DEC2: 67 83       ASR    ,--X
-DEC4: 08 8A       ASL    $8A
-DEC6: 67 96       ASR    [A,X]
-DEC8: 08 8A       ASL    $8A
-DECA: 67 4A       ASR    $A,U
-DECC: 08 8A       ASL    $8A
-DECE: 67 4A       ASR    $A,U
-DED0: 08 8A       ASL    $8A
-DED2: 66 FE       ROR    [W,S]
-DED4: 08 8A       ASL    $8A
-DED6: 67 11       ASR    -$F,X
-DED8: 08 8A       ASL    $8A
-DEDA: 67 24       ASR    $4,Y
-DEDC: 08 8A       ASL    $8A
-DEDE: 67 37       ASR    -$9,Y
-DEE0: 08 8A       ASL    $8A
-DEE2: 67 24       ASR    $4,Y
-DEE4: 08 8A       ASL    $8A
-DEE6: 67 11       ASR    -$F,X
-DEE8: 08 8A       ASL    $8A
-DEEA: 66 FE       ROR    [W,S]
-DEEC: 08 8A       ASL    $8A
-DEEE: 67 4A       ASR    $A,U
-DEF0: 08 8A       ASL    $8A
-DEF2: 67 A9 10 8A ASR    $108A,Y
-DEF6: 67 BC 08    ASR    [$DF01,PCR]
-DEF9: 8A 67       ORA    #$67
-DEFB: A9 08       ADCA   $8,X
-DEFD: 8A 67       ORA    #$67
-DEFF: CF 08 8A    XSTU   #$088A
-DF02: 67 E2       ASR    ,-S
-DF04: 08 8A       ASL    $8A
-DF06: 67 CF       ASR    ,W++
-DF08: 08 8A       ASL    $8A
-DF0A: 68 41       ASL    $1,U
-DF0C: 08 8A       ASL    $8A
-DF0E: 68 2E       ASL    $E,Y
-DF10: 08 FF       ASL    $FF
-DF12: 68 1B       ASL    -$5,X
-DF14: 08 8A       ASL    $8A
-DF16: 68 08       ASL    $8,X
-DF18: 08 8A       ASL    $8A
-DF1A: 67 F5       ASR    [B,S]
-DF1C: 08 24       ASL    $24
-DF1E: 63 1D       COM    -$3,X
-DF20: 08 23       ASL    $23
-DF22: 63 30       COM    -$10,Y
-DF24: 08 23       ASL    $23
-DF26: 63 30       COM    -$10,Y
-DF28: 08 24       ASL    $24
-DF2A: 63 1D       COM    -$3,X
-DF2C: 06 53       ROR    $53
-DF2E: 6E 70       JMP    -$10,S
-DF30: 06 53       ROR    $53
-DF32: 6E 83       JMP    ,--X
-DF34: 06 53       ROR    $53
-DF36: 6E 96       JMP    [A,X]
-DF38: 06 53       ROR    $53
-DF3A: 6E A3       JMP    ,--Y
-DF3C: 06 53       ROR    $53
-DF3E: 6E B0 06 53 JMP    [$0653,W]
-DF42: 6E C3       JMP    ,--U
-DF44: 06 53       ROR    $53
-DF46: 6E D6       JMP    [A,U]
-DF48: 06 53       ROR    $53
-DF4A: 6E E9 08 53 JMP    $0853,S
-DF4E: 6E FC 08    JMP    [$DF59,PCR]
-DF51: 53          COMB
-DF52: 6F 09       CLR    $9,X
-DF54: 08 53       ASL    $53
-DF56: 6F 1C       CLR    -$4,X
-DF58: 08 53       ASL    $53
-DF5A: 6F 2F       CLR    $F,Y
-DF5C: 08 53       ASL    $53
-DF5E: 6F 3C       CLR    -$4,Y
-DF60: 08 53       ASL    $53
-DF62: 6F 4F       CLR    $F,U
-DF64: 10 53       COMB
-DF66: 6F 62       CLR    $2,S
-DF68: 08 53       ASL    $53
-DF6A: 6F 4F       CLR    $F,U
-DF6C: 08 53       ASL    $53
-DF6E: 6F 3C       CLR    -$4,Y
-DF70: 08 53       ASL    $53
-DF72: 6F 2F       CLR    $F,Y
-DF74: 08 53       ASL    $53
-DF76: 6F 75       CLR    -$B,S
-DF78: 10 53       COMB
-DF7A: 6F 88 08    CLR    $08,X
-DF7D: 53          COMB
-DF7E: 6F 75       CLR    -$B,S
-DF80: 08 53       ASL    $53
-DF82: 6F 2F       CLR    $F,Y
-DF84: 06 53       ROR    $53
-DF86: 6F 9B       CLR    [D,X]
-DF88: 06 54       ROR    $54
-DF8A: 6F AE       CLR    W,Y
-DF8C: 06 54       ROR    $54
-DF8E: 6F C1       CLR    ,U++
-DF90: 06 55       ROR    $55
-DF92: 6F D4       CLR    [,U]
-DF94: 06 56       ROR    $56
-DF96: 6F ED 06 56 CLR    $E5F0,PCR
-DF9A: 70 06 04    NEG    $0604
-DF9D: 57          ASRB
-DF9E: 70 1F 04    NEG    $1F04
-DFA1: 58          ASLB
-DFA2: 70 38 04    NEG    $3804
-DFA5: 58          ASLB
-DFA6: 70 4B 04    NEG    $4B04
-DFA9: 57          ASRB
-DFAA: 70 5E 04    NEG    $5E04
-DFAD: 59          ROLB
-DFAE: 70 77 04    NEG    $7704
-DFB1: 59          ROLB
-DFB2: 70 8A 08    NEG    $8A08
-DFB5: 53          COMB
-DFB6: 71 03 08    NEG    $0308
-DFB9: 53          COMB
-DFBA: 71 10 08    NEG    $1008
-DFBD: 53          COMB
-DFBE: 71 23 08    NEG    $2308
-DFC1: 53          COMB
-DFC2: 71 36 08    NEG    $3608
-DFC5: 53          COMB
-DFC6: 71 49 08    NEG    $4908
-DFC9: 53          COMB
-DFCA: 71 5C 08    NEG    $5C08
-DFCD: 53          COMB
-DFCE: 71 10 08    NEG    $1008
-DFD1: 53          COMB
-DFD2: 71 03 06    NEG    $0306
-DFD5: 5A          DECB
-DFD6: 70 9D 06    NEG    $9D06
-DFD9: 5A          DECB
-DFDA: 70 AA 06    NEG    $AA06
-DFDD: 5A          DECB
-DFDE: 70 B7 06    NEG    $B706
-DFE1: 5A          DECB
-DFE2: 70 AA 06    NEG    $AA06
-DFE5: 5A          DECB
-DFE6: 70 9D 0A    NEG    $9D0A
-DFE9: 81 71       CMPA   #$71
-DFEB: 6F 0A       CLR    $A,X
-DFED: 83 71 82    SUBD   #$7182
-DFF0: 0A 83       DEC    $83
-DFF2: 71 8F 0A    NEG    $8F0A
-DFF5: 83 71 9C    SUBD   #$719C
-DFF8: 0A F0       DEC    $F0
-DFFA: 71 A9 0A    NEG    $A90A
-DFFD: F0 71 B6    SUBB   $71B6
-E000: 0A F0       DEC    $F0
-E002: 71 C3 0F    NEG    $C30F
-E005: F0 71 D0    SUBB   $71D0
-E008: 0F 83       CLR    $83
-E00A: 71 E9 0F    NEG    $E90F
-E00D: 83 72 02    SUBD   #$7202
-E010: 0F 83       CLR    $83
-E012: 72 1B 00    XNC    $1B00
-E015: 18          X18
-E016: 20 18       BRA    $E030
-E018: 05 19       LSR    $19
-E01A: 25 19       BCS    $E035
-E01C: 06 1A       ROR    $1A
-E01E: 26 1A       BNE    $E03A
-E020: 08 18       ASL    $18
-E022: 28 18       BVC    $E03C
-E024: 0C 18       INC    $18
-E026: 2C 18       BGE    $E040
-E028: 10 1C 20    ANDCC  #$20
-E02B: 1C 11       ANDCC  #$11
-E02D: 1D          SEX
-E02E: 25 1D       BCS    $E04D
-E030: 12          NOP
-E031: 1E 26       EXG    Y,inv
-E033: 1E 00       EXG    D,D
-E035: 18          X18
-E036: 20 18       BRA    $E050
-E038: 10 1C 2C    ANDCC  #$2C
-E03B: 1C 14       ANDCC  #$14
-E03D: 1C 2C       ANDCC  #$2C
-E03F: 1C 15       ANDCC  #$15
-E041: 1D          SEX
-E042: 21 1D       BRN    $E061
-E044: 16 1E 22    LBRA   $FE69
-E047: 1E 14       EXG    X,S
-E049: 18          X18
-E04A: 20 1C       BRA    $E068
-E04C: 10 1C 2C    ANDCC  #$2C
-E04F: 1C 00       ANDCC  #$00
-E051: 18          X18
-E052: 20 18       BRA    $E06C
-E054: 05 19       LSR    $19
-E056: 25 19       BCS    $E071
-E058: 06 1A       ROR    $1A
-E05A: 26 1A       BNE    $E076
-E05C: 00 18       NEG    $18
-E05E: 20 18       BRA    $E078
-E060: 10 1C 2C    ANDCC  #$2C
-E063: 1C 00       ANDCC  #$00
-E065: 18          X18
-E066: 20 18       BRA    $E080
-E068: 05 19       LSR    $19
-E06A: 25 19       BCS    $E085
-E06C: 06 1A       ROR    $1A
-E06E: 26 1A       BNE    $E08A
-E070: 08 18       ASL    $18
-E072: 28 18       BVC    $E08C
-E074: 0C 1C       INC    $1C
-E076: 2C 1C       BGE    $E094
-E078: 14          XHCF
-E079: 1C 2C       ANDCC  #$2C
-E07B: 1C 15       ANDCC  #$15
-E07D: 1D          SEX
-E07E: 25 1D       BCS    $E09D
-E080: 16 1E 26    LBRA   $FEA9
-E083: 1E 14       EXG    X,S
-E085: 18          X18
-E086: 20 18       BRA    $E0A0
-E088: 10 1C 2C    ANDCC  #$2C
-E08B: 1C 28       ANDCC  #$28
-E08D: 18          X18
-E08E: 20 18       BRA    $E0A8
-E090: 29 19       BVS    $E0AB
-E092: 25 19       BCS    $E0AD
-E094: 2A 1A       BPL    $E0B0
-E096: 26 1A       BNE    $E0B2
-E098: 28 18       BVC    $E0B2
-E09A: 28 18       BVC    $E0B4
-E09C: 10 18       X18
-E09E: 2C 18       BGE    $E0B8
-E0A0: 34 18       PSHS   X,DP
-E0A2: 20 18       BRA    $E0BC
-E0A4: 35 19       PULS   CC,DP,X
-E0A6: 25 19       BCS    $E0C1
-E0A8: 36 1A       PSHU   X,DP,A
-E0AA: 26 1A       BNE    $E0C6
-E0AC: 34 18       PSHS   X,DP
-E0AE: 28 18       BVC    $E0C8
-E0B0: 10 18       X18
-E0B2: 2C 18       BGE    $E0CC
-E0B4: 2C 18       BGE    $E0CE
-E0B6: 20 18       BRA    $E0D0
-E0B8: 2D 19       BLT    $E0D3
-E0BA: 25 19       BCS    $E0D5
-E0BC: 2E 1A       BGT    $E0D8
-E0BE: 26 1A       BNE    $E0DA
-E0C0: 2C 18       BGE    $E0DA
-E0C2: 28 18       BVC    $E0DC
-E0C4: 10 18       X18
-E0C6: 2C 18       BGE    $E0E0
-E0C8: 30 18       LEAX   -$8,X
-E0CA: 20 18       BRA    $E0E4
-E0CC: 31 19       LEAY   -$7,X
-E0CE: 25 19       BCS    $E0E9
-E0D0: 32 1A       LEAS   -$6,X
-E0D2: 26 1A       BNE    $E0EE
-E0D4: 30 18       LEAX   -$8,X
-E0D6: 28 18       BVC    $E0F0
-E0D8: 10 18       X18
-E0DA: 2C 18       BGE    $E0F4
-E0DC: 00 18       NEG    $18
-E0DE: 20 18       BRA    $E0F8
-E0E0: 41          NEGA
-E0E1: 19          DAA
-E0E2: 25 19       BCS    $E0FD
-E0E4: 42          XNCA
-E0E5: 1A 26       ORCC   #$26
-E0E7: 1A 08       ORCC   #$08
-E0E9: 18          X18
-E0EA: 28 18       BVC    $E104
-E0EC: 0C 18       INC    $18
-E0EE: 2C 18       BGE    $E108
-E0F0: 00 18       NEG    $18
-E0F2: 20 18       BRA    $E10C
-E0F4: 4D          TSTA
-E0F5: 19          DAA
-E0F6: 25 19       BCS    $E111
-E0F8: 52          XNCB
-E0F9: 1A 26       ORCC   #$26
-E0FB: 1A 08       ORCC   #$08
-E0FD: 18          X18
-E0FE: 28 18       BVC    $E118
-E100: 0C 18       INC    $18
-E102: 2C 18       BGE    $E11C
-E104: 00 18       NEG    $18
-E106: 20 18       BRA    $E120
-E108: 51          NEGB
-E109: 19          DAA
-E10A: 25 19       BCS    $E125
-E10C: 4E          XCLRA
-E10D: 1A 26       ORCC   #$26
-E10F: 1A 08       ORCC   #$08
-E111: 18          X18
-E112: 28 18       BVC    $E12C
-E114: 0C 18       INC    $18
-E116: 2C 18       BGE    $E130
-E118: 00 18       NEG    $18
-E11A: 20 18       BRA    $E134
-E11C: 51          NEGB
-E11D: 19          DAA
-E11E: 25 19       BCS    $E139
-E120: 4E          XCLRA
-E121: 1A 26       ORCC   #$26
-E123: 1A 08       ORCC   #$08
-E125: 18          X18
-E126: 28 18       BVC    $E140
-E128: 0C 18       INC    $18
-E12A: 2C 18       BGE    $E144
-E12C: 00 18       NEG    $18
-E12E: 20 18       BRA    $E148
-E130: 4D          TSTA
-E131: 19          DAA
-E132: 25 19       BCS    $E14D
-E134: 52          XNCB
-E135: 1A 26       ORCC   #$26
-E137: 1A 08       ORCC   #$08
-E139: 18          X18
-E13A: 28 18       BVC    $E154
-E13C: 0C 18       INC    $18
-E13E: 2C 18       BGE    $E158
-E140: 00 00       NEG    $00
-E142: 03 70       COM    $70
-E144: FF A0 FF    STU    $A0FF
-E147: A0 00       SUBA   $0,X
-E149: D0 00       SUBB   $00
-E14B: 00 03       NEG    $03
-E14D: 70 FF F0    NEG    $FFF0
-E150: FF 50 00    STU    $5000
-E153: D0 00       SUBB   $00
-E155: 00 03       NEG    $03
-E157: 70 00 30    NEG    >$0030
-E15A: FF 10 00    STU    $1000
-E15D: D0 00       SUBB   $00
-E15F: 00 03       NEG    $03
-E161: 70 FF 70    NEG    $FF70
-E164: FF D0 00    STU    $D000
-E167: D0 00       SUBB   $00
-E169: 00 02       NEG    $02
-E16B: E0 FF 70 FF SUBB   [$70FF]
-E16F: D0 00       SUBB   $00
-E171: D0 00       SUBB   $00
-E173: 60 02       NEG    $2,X
-E175: E0 FF B0 FF SUBB   [$B0FF]
-E179: 90 00       SUBA   $00
-E17B: D0 00       SUBB   $00
-E17D: 00 02       NEG    $02
-E17F: E0 FF C0 FF SUBB   [$C0FF]
-E183: 80 00       SUBA   #$00
-E185: D0 01       SUBB   $01
-E187: 20 01       BRA    $E18A
-E189: E0 00       SUBB   $0,X
-E18B: 00 FF       NEG    $FF
-E18D: 40          NEGA
-E18E: 00 D0       NEG    $D0
-E190: 01 A0       NEG    $A0
-E192: 01 A0       NEG    $A0
-E194: FF B0 FF    STU    $B0FF
-E197: 90 00       SUBA   $00
-E199: D0 02       SUBB   $02
-E19B: 30 01       LEAX   $1,X
-E19D: A0 FF B0 FF SUBA   [$B0FF]
-E1A1: 90 00       SUBA   $00
-E1A3: D0 01       SUBB   $01
-E1A5: D0 01       SUBB   $01
-E1A7: A0 FF 40 00 SUBA   [$4000]
-E1AB: 00 00       NEG    $00
-E1AD: D0 01       SUBB   $01
-E1AF: C0 01       SUBB   #$01
-E1B1: A0 FF 70 FF SUBA   [$70FF]
-E1B5: D0 00       SUBB   $00
-E1B7: D0 00       SUBB   $00
-E1B9: 00 03       NEG    $03
-E1BB: 20 FF       BRA    $E1BC
-E1BD: 80 FF       SUBA   #$FF
-E1BF: C0 00       SUBB   #$00
-E1C1: D0 00       SUBB   $00
-E1C3: 00 03       NEG    $03
-E1C5: 00 FF       NEG    $FF
-E1C7: D0 FF       SUBB   $FF
-E1C9: 70 00 D0    NEG    >$00D0
-E1CC: 00 00       NEG    $00
-E1CE: 03 20       COM    $20
-E1D0: FF 60 FF    STU    $60FF
-E1D3: E0 00       SUBB   $0,X
-E1D5: D0 00       SUBB   $00
-E1D7: 00 02       NEG    $02
-E1D9: 60 FF 50 FF NEG    [$50FF]
-E1DD: F0 00 D0    SUBB   >$00D0
-E1E0: 00 00       NEG    $00
-E1E2: 03 70       COM    $70
-E1E4: FF 40 00    STU    $4000
-E1E7: 00 00       NEG    $00
-E1E9: D0 00       SUBB   $00
-E1EB: 00 02       NEG    $02
-E1ED: 60 FF C0 FF NEG    [$C0FF]
-E1F1: 80 00       SUBA   #$00
-E1F3: D0 00       SUBB   $00
-E1F5: 00 02       NEG    $02
-E1F7: 60 FF 70 FF NEG    [$70FF]
-E1FB: D0 00       SUBB   $00
-E1FD: D0 00       SUBB   $00
-E1FF: 50          NEGB
-E200: 02 E0       XNC    $E0
-E202: FF E0 FF    STU    $E0FF
-E205: 60 00       NEG    $0,X
-E207: D0 00       SUBB   $00
-E209: 00 02       NEG    $02
-E20B: A0 FF 70 FF SUBA   [$70FF]
-E20F: D0 00       SUBB   $00
-E211: D0 00       SUBB   $00
-E213: 60 02       NEG    $2,X
-E215: A0 FF A0 FF SUBA   [$A0FF]
-E219: A0 00       SUBA   $0,X
-E21B: D0 00       SUBB   $00
-E21D: 00 03       NEG    $03
-E21F: 20 FF       BRA    $E220
-E221: F0 FF 50    SUBB   $FF50
-E224: 00 D0       NEG    $D0
-E226: FF 40 03    STU    $4003
-E229: 00 00       NEG    $00
-E22B: 40          NEGA
-E22C: FF 00 00    STU    >$0000
-E22F: D0 00       SUBB   $00
-E231: 00 03       NEG    $03
-E233: 00 00       NEG    $00
-E235: 10 FF 30 00 STS    $3000
-E239: D0 00       SUBB   $00
-E23B: 00 03       NEG    $03
-E23D: 70 00 00    NEG    >$0000
-E240: FF 40 00    STU    $4000
-E243: D0 00       SUBB   $00
-E245: 00 03       NEG    $03
-E247: 20 FF       BRA    $E248
-E249: 80 FF       SUBA   #$FF
-E24B: C0 00       SUBB   #$00
-E24D: D0 00       SUBB   $00
-E24F: 00 02       NEG    $02
-E251: 00 FF       NEG    $FF
-E253: 70 FF D0    NEG    $FFD0
-E256: 00 D0       NEG    $D0
-E258: 01 F0       NEG    $F0
-E25A: 02 00       XNC    $00
-E25C: FF A0 FF    STU    $A0FF
-E25F: A0 00       SUBA   $0,X
-E261: D0 01       SUBB   $01
-E263: 50          NEGB
-E264: 02 00       XNC    $00
-E266: FF A0 FF    STU    $A0FF
-E269: A0 00       SUBA   $0,X
-E26B: D0 02       SUBB   $02
-E26D: 10 02 00    XNC    $00
-E270: 00 00       NEG    $00
-E272: FF 40 00    STU    $4000
-E275: D0 02       SUBB   $02
-E277: 90 02       SUBA   $02
-E279: 00 00       NEG    $00
-E27B: 00 FF       NEG    $FF
-E27D: 40          NEGA
-E27E: 00 D0       NEG    $D0
-E280: 00 30       NEG    $30
-E282: 02 00       XNC    $00
-E284: 00 20       NEG    $20
-E286: FF 20 00    STU    $2000
-E289: D0 00       SUBB   $00
-E28B: 00 03       NEG    $03
-E28D: C0 FF       SUBB   #$FF
-E28F: B0 FF 90    SUBA   $FF90
-E292: 00 D0       NEG    $D0
-E294: 00 20       NEG    $20
-E296: 03 F0       COM    $F0
-E298: FF E0 FF    STU    $E0FF
-E29B: 60 00       NEG    $0,X
-E29D: D0 00       SUBB   $00
-E29F: 00 03       NEG    $03
-E2A1: 70 FF 60    NEG    $FF60
-E2A4: FF E0 00    STU    $E000
-E2A7: D0 00       SUBB   $00
-E2A9: 00 03       NEG    $03
-E2AB: 70 FF B0    NEG    $FFB0
-E2AE: FF 90 00    STU    $9000
-E2B1: D0 00       SUBB   $00
-E2B3: 00 03       NEG    $03
-E2B5: 70 FF F0    NEG    $FFF0
-E2B8: FF 50 00    STU    $5000
-E2BB: D0 00       SUBB   $00
-E2BD: 00 02       NEG    $02
-E2BF: A0 FF D0 FF SUBA   [$D0FF]
-E2C3: 70 00 D0    NEG    >$00D0
-E2C6: FF 50 03    STU    $5003
-E2C9: 20 FF       BRA    $E2CA
-E2CB: 90 FF       SUBA   $FF
-E2CD: 80 01       SUBA   #$01
-E2CF: 00 00       NEG    $00
-E2D1: 00 02       NEG    $02
-E2D3: 80 FF       SUBA   #$FF
-E2D5: B0 FF 60    SUBA   $FF60
-E2D8: 01 00       NEG    $00
-E2DA: 00 00       NEG    $00
-E2DC: 02 D0       XNC    $D0
-E2DE: FF A0 FF    STU    $A0FF
-E2E1: 70 01 00    NEG    $0100
-E2E4: 00 B0       NEG    $B0
-E2E6: 02 00       XNC    $00
-E2E8: FF C0 FF    STU    $C0FF
-E2EB: 50          NEGB
-E2EC: 01 00       NEG    $00
-E2EE: 00 00       NEG    $00
-E2F0: 03 00       COM    $00
-E2F2: FF 70 FF    STU    $70FF
-E2F5: A0 01       SUBA   $1,X
-E2F7: 00 00       NEG    $00
-E2F9: 00 03       NEG    $03
-E2FB: 00 FF       NEG    $FF
-E2FD: 70 FF 80    NEG    $FF80
-E300: 01 20       NEG    $20
-E302: 00 00       NEG    $00
-E304: 02 60       XNC    $60
-E306: FF A0 FF    STU    $A0FF
-E309: 50          NEGB
-E30A: 01 20       NEG    $20
-E30C: 00 00       NEG    $00
-E30E: 02 00       XNC    $00
-E310: FF C0 FF    STU    $C0FF
-E313: 30 01       LEAX   $1,X
-E315: 20 00       BRA    $E317
-E317: E0 02       SUBB   $2,X
-E319: 60 FF 70 FF NEG    [$70FF]
-E31D: 80 01       SUBA   #$01
-E31F: 20 01       BRA    $E322
-E321: 00 02       NEG    $02
-E323: 00 FF       NEG    $FF
-E325: C0 FF       SUBB   #$FF
-E327: 30 01       LEAX   $1,X
-E329: 20 FF       BRA    $E32A
-E32B: C0 02       SUBB   #$02
-E32D: C0 FF       SUBB   #$FF
-E32F: D0 FF       SUBB   $FF
-E331: 20 01       BRA    $E334
-E333: 20 00       BRA    $E335
-E335: 00 02       NEG    $02
-E337: 80 FF       SUBA   #$FF
-E339: B0 FF 80    SUBA   $FF80
-E33C: 00 E0       NEG    $E0
-E33E: 00 50       NEG    $50
-E340: 02 A0       XNC    $A0
-E342: 00 10       NEG    $10
-E344: FF 20 00    STU    $2000
-E347: E0 01       SUBB   $1,X
-E349: 00 02       NEG    $02
-E34B: A0 00       SUBA   $0,X
-E34D: 10 FF 20 00 STS    $2000
-E351: E0 00       SUBB   $0,X
-E353: 00 02       NEG    $02
-E355: 40          NEGA
-E356: FF E0 FF    STU    $E0FF
-E359: 50          NEGB
-E35A: 00 E0       NEG    $E0
-E35C: 00 60       NEG    $60
-E35E: 02 20       XNC    $20
-E360: 00 00       NEG    $00
-E362: FF 30 00    STU    $3000
-E365: E0 00       SUBB   $0,X
-E367: 50          NEGB
-E368: 02 40       XNC    $40
-E36A: 00 10       NEG    $10
-E36C: FF 20 00    STU    $2000
-E36F: E0 00       SUBB   $0,X
-E371: 00 02       NEG    $02
-E373: A0 00       SUBA   $0,X
-E375: 20 FF       BRA    $E376
-E377: 10 00 E0    NEG    $E0
-E37A: 00 00       NEG    $00
-E37C: 01 60       NEG    $60
-E37E: FF C0 FF    STU    $C0FF
-E381: B0 00 A0    SUBA   >$00A0
-E384: 00 00       NEG    $00
-E386: 01 00       NEG    $00
-E388: FF 60 FF    STU    $60FF
-E38B: B0 01 00    SUBA   $0100
-E38E: 00 00       NEG    $00
-E390: 01 C0       NEG    $C0
-E392: FF C0 FF    STU    $C0FF
-E395: B0 00 A0    SUBA   >$00A0
-E398: 00 00       NEG    $00
-E39A: 01 80       NEG    $80
-E39C: FF 00 FE    STU    >$00FE
-E39F: 30 02       LEAX   $2,X
-E3A1: E0 00       SUBB   $0,X
-E3A3: 00 01       NEG    $01
-E3A5: 80 FF       SUBA   #$FF
-E3A7: 50          NEGB
-E3A8: FE 40 02    LDU    $4002
-E3AB: 80 00       SUBA   #$00
-E3AD: 00 01       NEG    $01
-E3AF: 80 FF       SUBA   #$FF
-E3B1: 50          NEGB
-E3B2: FE A0 02    LDU    $A002
-E3B5: 20 00       BRA    $E3B7
-E3B7: 00 01       NEG    $01
-E3B9: 80 FF       SUBA   #$FF
-E3BB: 90 FF       SUBA   $FF
-E3BD: 40          NEGA
-E3BE: 01 40       NEG    $40
-E3C0: 00 00       NEG    $00
-E3C2: 01 80       NEG    $80
-E3C4: FF 40 FF    STU    $40FF
-E3C7: 90 01       SUBA   $01
-E3C9: 40          NEGA
-E3CA: 00 00       NEG    $00
-E3CC: 01 00       NEG    $00
-E3CE: FF 20 FE    STU    $20FE
-E3D1: 30 02       LEAX   $2,X
-E3D3: C0 00       SUBB   #$00
-E3D5: 00 01       NEG    $01
-E3D7: 80 FF       SUBA   #$FF
-E3D9: 80 FF       SUBA   #$FF
-E3DB: 10 01 80    NEG    $80
-E3DE: 00 00       NEG    $00
-E3E0: 01 C0       NEG    $C0
-E3E2: FF 80 FF    STU    $80FF
-E3E5: 90 01       SUBA   $01
-E3E7: 00 00       NEG    $00
-E3E9: 00 01       NEG    $01
-E3EB: 80 FF       SUBA   #$FF
-E3ED: 00 FE       NEG    $FE
-E3EF: B0 02 60    SUBA   $0260
-E3F2: 00 00       NEG    $00
-E3F4: 01 00       NEG    $00
-E3F6: FF 00 FF    STU    >$00FF
-E3F9: 90 01       SUBA   $01
-E3FB: 80 00       SUBA   #$00
-E3FD: 00 01       NEG    $01
-E3FF: 00 FF       NEG    $FF
-E401: 00 FF       NEG    $FF
-E403: 10 02 00    XNC    $00
-E406: 00 00       NEG    $00
-E408: 01 80       NEG    $80
-E40A: FF 80 FE    STU    $80FE
-E40D: 90 02       SUBA   $02
-E40F: 00 00       NEG    $00
-E411: 00 01       NEG    $01
-E413: 40          NEGA
-E414: FF 90 FF    STU    $90FF
-E417: 80 01       SUBA   #$01
-E419: 00 00       NEG    $00
-E41B: 00 01       NEG    $01
-E41D: 80 FF       SUBA   #$FF
-E41F: C0 FE       SUBB   #$FE
-E421: 30 02       LEAX   $2,X
-E423: 20 00       BRA    $E425
-E425: 80 01       SUBA   #$01
-E427: 60 FF 90 FE NEG    [$90FE]
-E42B: 20 02       BRA    $E42F
-E42D: 60 00       NEG    $0,X
-E42F: 00 02       NEG    $02
-E431: 60 FF 10 00 NEG    [$1000]
-E435: 00 01       NEG    $01
-E437: 00 00       NEG    $00
-E439: 00 03       NEG    $03
-E43B: 20 FF       BRA    $E43C
-E43D: 10 00 00    NEG    $00
-E440: 01 00       NEG    $00
-E442: 00 00       NEG    $00
-E444: 01 80       NEG    $80
-E446: FF 00 FF    STU    >$00FF
-E449: D0 01       SUBB   $01
-E44B: 40          NEGA
-E44C: 01 D0       NEG    $D0
-E44E: 01 40       NEG    $40
-E450: FF 10 00    STU    $1000
-E453: 40          NEGA
-E454: 00 C0       NEG    $C0
-E456: 01 B0       NEG    $B0
-E458: 01 C0       NEG    $C0
-E45A: FF 10 00    STU    $1000
-E45D: 40          NEGA
-E45E: 00 C0       NEG    $C0
-E460: 01 00       NEG    $00
-E462: 01 C0       NEG    $C0
-E464: FF 90 FF    STU    $90FF
-E467: C0 00       SUBB   #$00
-E469: C0 00       SUBB   #$00
-E46B: 00 01       NEG    $01
-E46D: 00 FF       NEG    $FF
-E46F: 40          NEGA
-E470: FE D0 02    LDU    $D002
-E473: 00 01       NEG    $01
-E475: 60 02       NEG    $2,X
-E477: 20 FF       BRA    $E478
-E479: 10 00 00    NEG    $00
-E47C: 01 00       NEG    $00
-E47E: 00 00       NEG    $00
-E480: 03 70       COM    $70
-E482: FF 90 FF    STU    $90FF
-E485: B0 00 D0    SUBA   >$00D0
-E488: 00 00       NEG    $00
-E48A: 03 70       COM    $70
-E48C: FF 40 00    STU    $4000
-E48F: 00 00       NEG    $00
-E491: D0 00       SUBB   $00
-E493: 00 03       NEG    $03
-E495: 70 FE F0    NEG    $FEF0
-E498: 00 50       NEG    $50
-E49A: 00 D0       NEG    $D0
-E49C: 00 00       NEG    $00
-E49E: 03 70       COM    $70
-E4A0: 00 80       NEG    $80
-E4A2: FE C0 00    LDU    $C000
-E4A5: D0 00       SUBB   $00
-E4A7: 00 03       NEG    $03
-E4A9: 70 FF E0    NEG    $FFE0
-E4AC: FF 60 00    STU    $6000
-E4AF: D0 00       SUBB   $00
-E4B1: 00 03       NEG    $03
-E4B3: 70 FF B0    NEG    $FFB0
-E4B6: FF 90 00    STU    $9000
-E4B9: D0 00       SUBB   $00
-E4BB: 00 03       NEG    $03
-E4BD: 70 00 00    NEG    >$0000
-E4C0: FF 40 00    STU    $4000
-E4C3: D0 00       SUBB   $00
-E4C5: 00 03       NEG    $03
-E4C7: 70 FF C0    NEG    $FFC0
-E4CA: FF 80 00    STU    watchdog_8000
-E4CD: D0 00       SUBB   $00
-E4CF: 00 01       NEG    $01
-E4D1: 00 FE       NEG    $FE
-E4D3: 80 FE       SUBA   #$FE
-E4D5: 90 03       SUBA   $03
-E4D7: 00 01       NEG    $01
-E4D9: 00 01       NEG    $01
-E4DB: 50          NEGB
-E4DC: FE C0 FF    LDU    $C0FF
-E4DF: 00 02       NEG    $02
-E4E1: 50          NEGB
-E4E2: 01 00       NEG    $00
-E4E4: 01 50       NEG    $50
-E4E6: FF 50 FF    STU    $50FF
-E4E9: 60 01       NEG    $1,X
-E4EB: 60 02       NEG    $2,X
-E4ED: 50          NEGB
-E4EE: 00 B0       NEG    $B0
-E4F0: FF 20 FF    STU    $20FF
-E4F3: A0 01       SUBA   $1,X
-E4F5: 50          NEGB
-E4F6: 02 50       XNC    $50
-E4F8: 00 B0       NEG    $B0
-E4FA: FF 40 FF    STU    $40FF
-E4FD: A0 01       SUBA   $1,X
-E4FF: 30 02       LEAX   $2,X
-E501: 50          NEGB
-E502: 00 B0       NEG    $B0
-E504: FF A0 FF    STU    $A0FF
-E507: B0 00 C0    SUBA   >$00C0
-E50A: 01 40       NEG    $40
-E50C: 01 00       NEG    $00
-E50E: FE E0 00    LDU    $E000
-E511: A0 00       SUBA   $0,X
-E513: 90 02       SUBA   $02
-E515: 50          NEGB
-E516: 00 B0       NEG    $B0
-E518: 00 00       NEG    $00
-E51A: FF A0 00    STU    $A000
-E51D: 70 00 00    NEG    >$0000
-E520: 02 A0       XNC    $A0
-E522: FF F0 FF    STU    $F0FF
-E525: 50          NEGB
-E526: 00 D0       NEG    $D0
-E528: 00 00       NEG    $00
-E52A: 03 70       COM    $70
-E52C: 00 C0       NEG    $C0
-E52E: FE 80 00    LDU    watchdog_8000
-E531: D0 00       SUBB   $00
-E533: 00 01       NEG    $01
-E535: A0 01       SUBA   $1,X
-E537: 40          NEGA
-E538: FE 00 00    LDU    >$0000
-E53B: D0 00       SUBB   $00
-E53D: 00 02       NEG    $02
-E53F: 40          NEGA
-E540: 01 40       NEG    $40
-E542: FE 00 00    LDU    >$0000
-E545: D0 00       SUBB   $00
-E547: 00 02       NEG    $02
-E549: 40          NEGA
-E54A: 00 B0       NEG    $B0
-E54C: FE 90 00    LDU    $9000
-E54F: D0 00       SUBB   $00
-E551: 00 03       NEG    $03
-E553: 00 FF       NEG    $FF
-E555: 00 00       NEG    $00
-E557: 40          NEGA
-E558: 00 D0       NEG    $D0
-E55A: 00 00       NEG    $00
-E55C: 03 B0       COM    $B0
-E55E: FF E0 FF    STU    $E0FF
-E561: 60 00       NEG    $0,X
-E563: D0 00       SUBB   $00
-E565: 00 02       NEG    $02
-E567: C0 01       SUBB   #$01
-E569: 50          NEGB
-E56A: FD E0 00    STD    $E000
-E56D: E0 00       SUBB   $0,X
-E56F: 00 01       NEG    $01
-E571: 80 00       SUBA   #$00
-E573: 90 FE       SUBA   $FE
-E575: 40          NEGA
-E576: 01 40       NEG    $40
-E578: 00 00       NEG    $00
-E57A: 02 C0       XNC    $C0
-E57C: FE F0 00    LDU    $F000
-E57F: 30 00       LEAX   $0,X
-E581: F0 00 00    SUBB   >$0000
-E584: 03 10       COM    $10
-E586: FF 00 00    STU    >$0000
-E589: 40          NEGA
-E58A: 00 D0       NEG    $D0
-E58C: 00 00       NEG    $00
-E58E: 01 80       NEG    $80
-E590: FE 80 00    LDU    watchdog_8000
-E593: 50          NEGB
-E594: 01 40       NEG    $40
-E596: 00 00       NEG    $00
-E598: 01 80       NEG    $80
-E59A: FE 90 FF    LDU    $90FF
-E59D: A0 01       SUBA   $1,X
-E59F: E0 00       SUBB   $0,X
-E5A1: 00 02       NEG    $02
-E5A3: E0 FE       SUBB   [W,S]
-E5A5: A0 00       SUBA   $0,X
-E5A7: 70 01 00    NEG    $0100
-E5AA: 00 00       NEG    $00
-E5AC: 01 40       NEG    $40
-E5AE: FE E0 00    LDU    $E000
-E5B1: B0 00 80    SUBA   >$0080
-E5B4: 00 00       NEG    $00
-E5B6: 03 20       COM    $20
-E5B8: FF 40 00    STU    $4000
-E5BB: 00 00       NEG    $00
-E5BD: D0 00       SUBB   $00
-E5BF: 00 00       NEG    $00
-E5C1: 80 FF       SUBA   #$FF
-E5C3: 90 FE       SUBA   $FE
-E5C5: A0 01       SUBA   $1,X
-E5C7: E0 00       SUBB   $0,X
-E5C9: 00 03       NEG    $03
-E5CB: 00 FE       NEG    $FE
-E5CD: F0 00 20    SUBB   >$0020
-E5D0: 01 00       NEG    $00
-E5D2: 00 00       NEG    $00
-E5D4: 01 00       NEG    $00
-E5D6: FF C0 FF    STU    $C0FF
-E5D9: 70 00 E0    NEG    >$00E0
-E5DC: 00 00       NEG    $00
-E5DE: 03 70       COM    $70
-E5E0: FF A0 FF    STU    $A0FF
-E5E3: A0 00       SUBA   $0,X
-E5E5: D0 00       SUBB   $00
-E5E7: F0 02 60    SUBB   $0260
-E5EA: FE C0 00    LDU    $C000
-E5ED: 50          NEGB
-E5EE: 01 00       NEG    $00
-E5F0: 00 00       NEG    $00
-E5F2: 02 80       XNC    $80
-E5F4: FF 60 FF    STU    $60FF
-E5F7: B0 01 00    SUBA   $0100
-E5FA: FC 10 01    LDD    $1001
-E5FD: 40          NEGA
-E5FE: 00 80       NEG    $80
-E600: FE 90 01    LDU    $9001
-E603: 00 01       NEG    $01
-E605: A0 01       SUBA   $1,X
-E607: 40          NEGA
-E608: 00 80       NEG    $80
-E60A: FE 90 01    LDU    $9001
-E60D: 00 02       NEG    $02
-E60F: 20 01       BRA    $E612
-E611: 40          NEGA
-E612: 00 80       NEG    $80
-E614: FE 90 01    LDU    $9001
-E617: 00 02       NEG    $02
-E619: 60 01       NEG    $1,X
-E61B: 40          NEGA
-E61C: 00 80       NEG    $80
-E61E: FE 90 01    LDU    $9001
-E621: 00 02       NEG    $02
-E623: 80 01       SUBA   #$01
-E625: 40          NEGA
-E626: 00 80       NEG    $80
-E628: FE 90 01    LDU    $9001
-E62B: 00 02       NEG    $02
-E62D: C0 01       SUBB   #$01
-E62F: 40          NEGA
-E630: 00 80       NEG    $80
-E632: FE 90 01    LDU    $9001
-E635: 00 00       NEG    $00
-E637: 60 01       NEG    $1,X
-E639: 60 FF 00 FE NEG    [$00FE]
-E63D: 30 02       LEAX   $2,X
-E63F: E0 00       SUBB   $0,X
-E641: 60 00       NEG    $0,X
-E643: 40          NEGA
-E644: 00 00       NEG    $00
-E646: 00 00       NEG    $00
-E648: 01 00       NEG    $00
-E64A: 00 00       NEG    $00
-E64C: 00 C0       NEG    $C0
-E64E: 00 20       NEG    $20
-E650: 00 20       NEG    $20
-E652: 00 C0       NEG    $C0
-E654: 00 00       NEG    $00
-E656: 01 40       NEG    $40
-E658: FF 60 00    STU    $6000
-E65B: 60 01       NEG    $1,X
-E65D: 40          NEGA
-E65E: 02 F0       XNC    $F0
-E660: 00 80       NEG    $80
-E662: 01 00       NEG    $00
-E664: FE 30 01    LDU    $3001
-E667: D0 00       SUBB   $00
-E669: 00 01       NEG    $01
-E66B: 00 00       NEG    $00
-E66D: 60 00       NEG    $0,X
-E66F: 60 00       NEG    $0,X
-E671: 40          NEGA
-E672: 00 00       NEG    $00
-E674: 01 00       NEG    $00
-E676: 00 30       NEG    $30
-E678: FF 30 01    STU    $3001
-E67B: A0 E6       SUBA   A,S
-E67D: 84 E6       ANDA   #$E6
-E67F: C4 E7       ANDB   #$E7
-E681: 04 E7       LSR    $E7
-E683: 44          LSRA
-E684: 82 82       SBCA   #$82
-E686: 82 82       SBCA   #$82
-E688: 82 82       SBCA   #$82
-E68A: 82 82       SBCA   #$82
-E68C: 00 00       NEG    $00
-E68E: 00 00       NEG    $00
-E690: 00 00       NEG    $00
-E692: 00 00       NEG    $00
-E694: 00 00       NEG    $00
-E696: 00 00       NEG    $00
-E698: 00 00       NEG    $00
-E69A: 00 00       NEG    $00
-E69C: 00 00       NEG    $00
-E69E: 07 00       ASR    $00
-E6A0: 00 00       NEG    $00
-E6A2: 00 00       NEG    $00
-E6A4: 00 00       NEG    $00
-E6A6: 07 06       ASR    $06
-E6A8: 00 00       NEG    $00
-E6AA: 06 06       ROR    $06
-E6AC: 00 00       NEG    $00
-E6AE: 00 00       NEG    $00
-E6B0: 00 00       NEG    $00
-E6B2: 00 06       NEG    $06
-E6B4: 00 00       NEG    $00
-E6B6: 00 00       NEG    $00
-E6B8: 00 00       NEG    $00
-E6BA: 00 00       NEG    $00
-E6BC: 00 00       NEG    $00
-E6BE: 00 00       NEG    $00
-E6C0: 00 00       NEG    $00
-E6C2: 00 00       NEG    $00
-E6C4: 82 82       SBCA   #$82
-E6C6: 82 00       SBCA   #$00
-E6C8: 82 82       SBCA   #$82
-E6CA: 82 82       SBCA   #$82
-E6CC: 08 08       ASL    $08
-E6CE: 08 08       ASL    $08
-E6D0: 00 00       NEG    $00
-E6D2: 00 00       NEG    $00
-E6D4: 00 00       NEG    $00
-E6D6: 60 60       NEG    $0,S
-E6D8: 66 66       ROR    $6,S
-E6DA: 67 67       ASR    $7,S
-E6DC: 43          COMA
-E6DD: 47          ASRA
-E6DE: 00 00       NEG    $00
-E6E0: 10 47       ASRA
-E6E2: 47          ASRA
-E6E3: 86 82       LDA    #$82
-E6E5: 42          XNCA
-E6E6: 47          ASRA
-E6E7: 86 47       LDA    #$47
-E6E9: 47          ASRA
-E6EA: 47          ASRA
-E6EB: 47          ASRA
-E6EC: 00 00       NEG    $00
-E6EE: 00 01       NEG    $01
-E6F0: 47          ASRA
-E6F1: 47          ASRA
-E6F2: 00 47       NEG    $47
-E6F4: C2 00       SBCB   #$00
-E6F6: 00 01       NEG    $01
-E6F8: 00 46       NEG    $46
-E6FA: 00 00       NEG    $00
-E6FC: 00 00       NEG    $00
-E6FE: 00 00       NEG    $00
-E700: 00 00       NEG    $00
-E702: 00 00       NEG    $00
-E704: 87 87       XSTA   #$87
-E706: 87 87       XSTA   #$87
-E708: 87 87       XSTA   #$87
-E70A: 87 87       XSTA   #$87
-E70C: 10          FCB    $10
-E70D: 10          FCB    $10
-E70E: 10          FCB    $10
-E70F: 10 A0 A0    SUBA   ,Y+
-E712: A6 A6       LDA    A,Y
-E714: A7 A7       STA    E,Y
-E716: 00 00       NEG    $00
-E718: 00 00       NEG    $00
-E71A: 00 00       NEG    $00
-E71C: 46          RORA
-E71D: 00 00       NEG    $00
-E71F: 00 08       NEG    $08
-E721: 00 00       NEG    $00
-E723: 86 82       LDA    #$82
-E725: 42          XNCA
-E726: 87 87       XSTA   #$87
-E728: 87 87       XSTA   #$87
-E72A: 87 87       XSTA   #$87
-E72C: 00 00       NEG    $00
-E72E: 00 00       NEG    $00
-E730: 82 82       SBCA   #$82
-E732: 00 87       NEG    $87
-E734: C2 00       SBCB   #$00
-E736: 00 01       NEG    $01
-E738: 87 87       XSTA   #$87
-E73A: 00 00       NEG    $00
-E73C: 00 00       NEG    $00
-E73E: 00 00       NEG    $00
-E740: 00 00       NEG    $00
-E742: 00 00       NEG    $00
-E744: 87 87       XSTA   #$87
-E746: 87 87       XSTA   #$87
-E748: 87 87       XSTA   #$87
-E74A: 87 87       XSTA   #$87
-E74C: 00 00       NEG    $00
-E74E: 00 00       NEG    $00
-E750: 00 00       NEG    $00
-E752: 00 00       NEG    $00
-E754: 00 00       NEG    $00
-E756: 00 00       NEG    $00
-E758: 00 00       NEG    $00
-E75A: 00 00       NEG    $00
-E75C: 00 00       NEG    $00
-E75E: 00 C6       NEG    $C6
-E760: 00 00       NEG    $00
-E762: 00 00       NEG    $00
-E764: 00 00       NEG    $00
-E766: 00 C6       NEG    $C6
-E768: C7 C7       XSTB   #$C7
-E76A: 00 00       NEG    $00
-E76C: 00 00       NEG    $00
-E76E: 00 00       NEG    $00
-E770: 00 00       NEG    $00
-E772: 00 00       NEG    $00
-E774: C2 82       SBCB   #$82
-E776: C7 00       XSTB   #$00
-E778: 00 00       NEG    $00
-E77A: 00 00       NEG    $00
-E77C: 00 00       NEG    $00
-E77E: 00 00       NEG    $00
-E780: 00 00       NEG    $00
-E782: 00 00       NEG    $00
-E784: D9 3C       ADCB   $3C
-E786: D9 50       ADCB   $50
-E788: D9 40       ADCB   $40
-E78A: D9 44       ADCB   $44
-E78C: D9 48       ADCB   $48
-E78E: D9 4C       ADCB   $4C
-E790: D9 FC       ADCB   $FC
-E792: DA 0C       ORB    $0C
-E794: D9 80       ADCB   $80
-E796: D9 90       ADCB   $90
-E798: D9 A0       ADCB   $A0
-E79A: D9 C8       ADCB   $C8
-E79C: D9 E4       ADCB   $E4
-E79E: D9 F0       ADCB   $F0
-E7A0: D9 3C       ADCB   $3C
-E7A2: D9 3C       ADCB   $3C
-E7A4: D9 68       ADCB   $68
-E7A6: D9 90       ADCB   $90
-E7A8: D9 3C       ADCB   $3C
-E7AA: DA 1C       ORB    $1C
-E7AC: DA 34       ORB    $34
-E7AE: D9 3C       ADCB   $3C
-E7B0: DA 4C       ORB    $4C
-E7B2: DA 64       ORB    $64
-E7B4: DA 98       ORB    $98
-E7B6: DA 9C       ORB    $9C
-E7B8: DA A0       ORB    $A0
-E7BA: DA A4       ORB    $A4
-E7BC: D9 3C       ADCB   $3C
-E7BE: D9 3C       ADCB   $3C
-E7C0: D9 80       ADCB   $80
-E7C2: D9 3C       ADCB   $3C
-E7C4: D9 3C       ADCB   $3C
-E7C6: D9 3C       ADCB   $3C
-E7C8: D9 3C       ADCB   $3C
-E7CA: D9 3C       ADCB   $3C
-E7CC: D9 3C       ADCB   $3C
-E7CE: D9 3C       ADCB   $3C
-E7D0: D9 3C       ADCB   $3C
-E7D2: D9 50       ADCB   $50
-E7D4: DA E0       ORB    $E0
-E7D6: DA F0       ORB    $F0
-E7D8: DA 4C       ORB    $4C
-E7DA: DA 7C       ORB    $7C
-E7DC: D9 3C       ADCB   $3C
-E7DE: D9 3C       ADCB   $3C
-E7E0: D9 3C       ADCB   $3C
-E7E2: D9 3C       ADCB   $3C
-E7E4: D9 3C       ADCB   $3C
-E7E6: D9 3C       ADCB   $3C
-E7E8: D9 3C       ADCB   $3C
-E7EA: D9 3C       ADCB   $3C
-E7EC: D9 3C       ADCB   $3C
-E7EE: DB 00       ADDB   $00
-E7F0: DB 1C       ADDB   $1C
-E7F2: DD 94       STD    $94
-E7F4: DB 08       ADDB   $08
-E7F6: DB 0C       ADDB   $0C
-E7F8: DB 14       ADDB   $14
-E7FA: DB 94       ADDB   $94
-E7FC: DB A8       ADDB   $A8
-E7FE: DB 4C       ADDB   $4C
-E800: DB 58       ADDB   $58
-E802: DB 64       ADDB   $64
-E804: DD 20       STD    $20
-E806: DB 84       ADDB   $84
-E808: DB 8C       ADDB   $8C
-E80A: DB C8       ADDB   $C8
-E80C: DC FC       LDD    $FC
-E80E: DB 34       ADDB   $34
-E810: DB BC       ADDB   $BC
-E812: DB EC       ADDB   $EC
-E814: DC 00       LDD    $00
-E816: DC 18       LDD    $18
-E818: DB 18       ADDB   $18
-E81A: DC BC       LDD    $BC
-E81C: DC E4       LDD    $E4
-E81E: DC 30       LDD    $30
-E820: DC 5C       LDD    $5C
-E822: DC 88       LDD    $88
-E824: DC 30       LDD    $30
-E826: DB 00       ADDB   $00
-E828: DB 00       ADDB   $00
-E82A: DC 30       LDD    $30
-E82C: DC 5C       LDD    $5C
-E82E: DB 00       ADDB   $00
-E830: DD 40       STD    $40
-E832: DD 68       STD    $68
-E834: DD B8       STD    $B8
-E836: DD FC       STD    $FC
-E838: DE 34       LDU    $34
-E83A: DE 7C       LDU    $7C
-E83C: DB 1C       ADDB   $1C
-E83E: DB 94       ADDB   $94
-E840: DB A8       ADDB   $A8
-E842: DC BC       LDD    $BC
-E844: DC DC       LDD    $DC
-E846: DE 90       LDU    $90
-E848: DE A4       LDU    $A4
-E84A: DE B8       LDU    $B8
-E84C: DE C8       LDU    $C8
-E84E: DE CC       LDU    $CC
-E850: DE FC       LDU    $FC
-E852: DE F0       LDU    $F0
-E854: DF 1C       STU    $1C
-E856: DF 24       STU    $24
-E858: DF 4C       STU    $4C
-E85A: DF 2C       STU    $2C
-E85C: DF 4C       STU    $4C
-E85E: DF 4C       STU    $4C
-E860: DF 4C       STU    $4C
-E862: DF 4C       STU    $4C
-E864: DF B4       STU    $B4
-E866: DF 4C       STU    $4C
-E868: DF 4C       STU    $4C
-E86A: DF 4C       STU    $4C
-E86C: DF 4C       STU    $4C
-E86E: DF 4C       STU    $4C
-E870: DF 4C       STU    $4C
-E872: DF 4C       STU    $4C
-E874: DF 4C       STU    $4C
-E876: DF 4C       STU    $4C
-E878: DF 9C       STU    $9C
-E87A: DF 5C       STU    $5C
-E87C: DF D4       STU    $D4
-E87E: DF 74       STU    $74
-E880: DF 4C       STU    $4C
-E882: DF 4C       STU    $4C
-E884: DF 4C       STU    $4C
-E886: DF 4C       STU    $4C
-E888: DF E8       STU    $E8
-E88A: DF E8       STU    $E8
-E88C: DF E8       STU    $E8
-E88E: DF E8       STU    $E8
-E890: DF 4C       STU    $4C
-E892: DF 4C       STU    $4C
-E894: DF 4C       STU    $4C
-E896: DF 4C       STU    $4C
-E898: DF 4C       STU    $4C
-E89A: DF 4C       STU    $4C
-E89C: DF 4C       STU    $4C
-E89E: DF 4C       STU    $4C
-E8A0: DF 4C       STU    $4C
-E8A2: DF 4C       STU    $4C
-E8A4: DF 4C       STU    $4C
-E8A6: DF 84       STU    $84
-E8A8: DF 4C       STU    $4C
-E8AA: DF 4C       STU    $4C
-E8AC: DF 4C       STU    $4C
-E8AE: DF 4C       STU    $4C
-E8B0: E8 B8 E8    EORB   [-$18,Y]
-E8B3: C2 E8       SBCB   #$E8
-E8B5: CC E8 D6    LDD    #$E8D6
-E8B8: 60 00       NEG    $0,X
-E8BA: 62 24       XNC    $4,Y
-E8BC: 64 B5       LSR    [B,Y]
-E8BE: 66 99 68 85 ROR    [$6885,X]
-E8C2: 6A 4F       DEC    $F,U
-E8C4: 6D 0D       TST    $D,X
-E8C6: 70 00 73    NEG    >$0073
-E8C9: 3E          XRES
-E8CA: 75 A2 60    LSR    $A260
-E8CD: 00 62       NEG    $62
-E8CF: 24 64       BCC    $E935
-E8D1: A7 66       STA    $6,S
-E8D3: 84 68       ANDA   #$68
-E8D5: 70 6A 3A    NEG    $6A3A
-E8D8: 6C F8 6F    INC    [$6F,S]
-E8DB: EB 73       ADDB   -$D,S
-E8DD: 29 75       BVS    $E954
-E8DF: 8D 00       BSR    $E8E1
-E8E1: 01 00       NEG    $00
-E8E3: 01 00       NEG    $00
-E8E5: 01 00       NEG    $00
-E8E7: 01 04       NEG    $04
-E8E9: 01 06       NEG    $06
-E8EB: 01 08       NEG    $08
-E8ED: 01 0A       NEG    $0A
-E8EF: 01 0C       NEG    $0C
-E8F1: 02 0E       XNC    $0E
-E8F3: 02 10       XNC    $10
-E8F5: 02 12       XNC    $12
-E8F7: 02 50       XNC    $50
-E8F9: 01 52       NEG    $52
-E8FB: 02 54       XNC    $54
-E8FD: 03 56       COM    $56
-E8FF: 04 22       LSR    $22
-E901: 19          DAA
-E902: 22 19       BHI    $E91D
-E904: 22 19       BHI    $E91F
-E906: 22 19       BHI    $E921
-E908: 00 01       NEG    $01
-E90A: 00 01       NEG    $01
-E90C: 00 01       NEG    $01
-E90E: 00 01       NEG    $01
-E910: 00 01       NEG    $01
-E912: 00 01       NEG    $01
-E914: 00 01       NEG    $01
-E916: 00 01       NEG    $01
-E918: 00 01       NEG    $01
-E91A: 00 01       NEG    $01
-E91C: 00 01       NEG    $01
-E91E: 00 01       NEG    $01
-E920: 14          XHCF
-E921: 01 14       NEG    $14
-E923: 01 14       NEG    $14
-E925: 01 14       NEG    $14
-E927: 01 28       NEG    $28
-E929: 01 28       NEG    $28
-E92B: 01 28       NEG    $28
-E92D: 01 28       NEG    $28
-E92F: 01 20       NEG    $20
-E931: 01 20       NEG    $20
-E933: 01 20       NEG    $20
-E935: 01 20       NEG    $20
-E937: 01 1A       NEG    $1A
-E939: 01 1A       NEG    $1A
-E93B: 01 1A       NEG    $1A
-E93D: 01 1A       NEG    $1A
-E93F: 01 FF       NEG    $FF
-E941: F8 FF F8    EORB   $FFF8
-E944: FF F8 FF    STU    $F8FF
-E947: FA FF F8    ORB    $FFF8
-E94A: FF F8 FF    STU    $F8FF
-E94D: F8 FF F8    EORB   $FFF8
-E950: FF FA FF    STU    $FAFF
-E953: F4 FF FE    ANDB   $FFFE
-E956: FF FA E9    STU    $FAE9
-E959: 5C          INCB
-E95A: E9 66       ADCB   $6,S
-E95C: E9 70       ADCB   -$10,S
-E95E: E9 98 E9    ADCB   [-$17,X]
-E961: C0 E9       SUBB   #$E9
-E963: E8 EA       EORB   F,S
-E965: 10 EA 38    ORB    -$8,Y
-E968: EA 60       ORB    $0,S
-E96A: EA 88 EA    ORB    -$16,X
-E96D: B0 EA D8    SUBA   $EAD8
-E970: 04 5E       LSR    $5E
-E972: 00 16       NEG    $16
-E974: 00 04       NEG    $04
-E976: 5E          XCLRB
-E977: 00 18       NEG    $18
-E979: 00 04       NEG    $04
-E97B: 5E          XCLRB
-E97C: 00 18       NEG    $18
-E97E: 00 04       NEG    $04
-E980: 5D          TSTB
-E981: 00 1A       NEG    $1A
-E983: 00 04       NEG    $04
-E985: 5E          XCLRB
-E986: 00 1A       NEG    $1A
-E988: 00 04       NEG    $04
-E98A: 5E          XCLRB
-E98B: 05 1A       LSR    $1A
-E98D: 00 04       NEG    $04
-E98F: 5E          XCLRB
-E990: 05 18       LSR    $18
-E992: 00 08       NEG    $08
-E994: 5D          TSTB
-E995: 00 1A       NEG    $1A
-E997: 00 04       NEG    $04
-E999: 5E          XCLRB
-E99A: 00 16       NEG    $16
-E99C: 00 04       NEG    $04
-E99E: 5E          XCLRB
-E99F: 00 18       NEG    $18
-E9A1: 00 04       NEG    $04
-E9A3: 5E          XCLRB
-E9A4: 00 18       NEG    $18
-E9A6: 00 04       NEG    $04
-E9A8: 5D          TSTB
-E9A9: 00 1A       NEG    $1A
-E9AB: 00 04       NEG    $04
-E9AD: 5E          XCLRB
-E9AE: 00 1A       NEG    $1A
-E9B0: 00 04       NEG    $04
-E9B2: 5E          XCLRB
-E9B3: 05 1A       LSR    $1A
-E9B5: 00 04       NEG    $04
-E9B7: 5E          XCLRB
-E9B8: 05 18       LSR    $18
-E9BA: 00 08       NEG    $08
-E9BC: 5D          TSTB
-E9BD: 00 1A       NEG    $1A
-E9BF: 00 04       NEG    $04
-E9C1: 5E          XCLRB
-E9C2: 00 16       NEG    $16
-E9C4: 00 04       NEG    $04
-E9C6: 5E          XCLRB
-E9C7: 00 18       NEG    $18
-E9C9: 00 04       NEG    $04
-E9CB: 5E          XCLRB
-E9CC: 05 18       LSR    $18
-E9CE: 00 04       NEG    $04
-E9D0: 5D          TSTB
-E9D1: 00 1A       NEG    $1A
-E9D3: 00 08       NEG    $08
-E9D5: 5E          XCLRB
-E9D6: 00 1A       NEG    $1A
-E9D8: 00 04       NEG    $04
-E9DA: 5E          XCLRB
-E9DB: 05 1A       LSR    $1A
-E9DD: 00 04       NEG    $04
-E9DF: 5E          XCLRB
-E9E0: 05 18       LSR    $18
-E9E2: 00 08       NEG    $08
-E9E4: 5D          TSTB
-E9E5: 00 1A       NEG    $1A
-E9E7: 00 04       NEG    $04
-E9E9: 5E          XCLRB
-E9EA: 00 16       NEG    $16
-E9EC: 00 04       NEG    $04
-E9EE: 5E          XCLRB
-E9EF: 00 18       NEG    $18
-E9F1: 00 08       NEG    $08
-E9F3: 5E          XCLRB
-E9F4: 05 18       LSR    $18
-E9F6: 00 04       NEG    $04
-E9F8: 5D          TSTB
-E9F9: 00 1A       NEG    $1A
-E9FB: 00 08       NEG    $08
-E9FD: 5E          XCLRB
-E9FE: 00 1A       NEG    $1A
-EA00: 00 04       NEG    $04
-EA02: 5E          XCLRB
-EA03: 05 1A       LSR    $1A
-EA05: 00 04       NEG    $04
-EA07: 5E          XCLRB
-EA08: 05 18       LSR    $18
-EA0A: 00 08       NEG    $08
-EA0C: 5D          TSTB
-EA0D: 00 1A       NEG    $1A
-EA0F: 00 08       NEG    $08
-EA11: 5E          XCLRB
-EA12: 20 16       BRA    $EA2A
-EA14: 00 04       NEG    $04
-EA16: 5E          XCLRB
-EA17: 20 29       BRA    $EA42
-EA19: 00 08       NEG    $08
-EA1B: 5E          XCLRB
-EA1C: 25 18       BCS    $EA36
-EA1E: 00 04       NEG    $04
-EA20: 5D          TSTB
-EA21: 25 1A       BCS    $EA3D
-EA23: 00 08       NEG    $08
-EA25: 5E          XCLRB
-EA26: 20 1A       BRA    $EA42
-EA28: 00 04       NEG    $04
-EA2A: 5E          XCLRB
-EA2B: 25 1A       BCS    $EA47
-EA2D: 00 04       NEG    $04
-EA2F: 5E          XCLRB
-EA30: 25 18       BCS    $EA4A
-EA32: 00 08       NEG    $08
-EA34: 5D          TSTB
-EA35: 20 1A       BRA    $EA51
-EA37: 00 08       NEG    $08
-EA39: 5E          XCLRB
-EA3A: 20 36       BRA    $EA72
-EA3C: 00 04       NEG    $04
-EA3E: 5E          XCLRB
-EA3F: 25 3A       BCS    $EA7B
-EA41: 00 08       NEG    $08
-EA43: 5E          XCLRB
-EA44: E3 3A       ADDD   -$6,Y
-EA46: 00 04       NEG    $04
-EA48: 5D          TSTB
-EA49: 25 3A       BCS    $EA85
-EA4B: 00 08       NEG    $08
-EA4D: 5E          XCLRB
-EA4E: E3 3A       ADDD   -$6,Y
-EA50: 00 04       NEG    $04
-EA52: 5E          XCLRB
-EA53: 25 BA       BCS    $EA0F
-EA55: 00 04       NEG    $04
-EA57: 5E          XCLRB
-EA58: 2A 38       BPL    $EA92
-EA5A: 00 08       NEG    $08
-EA5C: 5D          TSTB
-EA5D: 20 3A       BRA    $EA99
-EA5F: 00 08       NEG    $08
-EA61: 5E          XCLRB
-EA62: 00 36       NEG    $36
-EA64: 00 04       NEG    $04
-EA66: 5E          XCLRB
-EA67: 05 38       LSR    $38
-EA69: 00 08       NEG    $08
-EA6B: 5E          XCLRB
-EA6C: 00 3A       NEG    $3A
-EA6E: 00 04       NEG    $04
-EA70: 5D          TSTB
-EA71: 05 3A       LSR    $3A
-EA73: 00 08       NEG    $08
-EA75: 5E          XCLRB
-EA76: 0A BA       DEC    $BA
-EA78: 00 04       NEG    $04
-EA7A: 5E          XCLRB
-EA7B: 05 BA       LSR    $BA
-EA7D: 00 04       NEG    $04
-EA7F: 5E          XCLRB
-EA80: 05 3A       LSR    $3A
-EA82: 00 08       NEG    $08
-EA84: 5D          TSTB
-EA85: 00 3A       NEG    $3A
-EA87: 00 08       NEG    $08
-EA89: 5E          XCLRB
-EA8A: 25 36       BCS    $EAC2
-EA8C: 00 04       NEG    $04
-EA8E: 5E          XCLRB
-EA8F: 35 3A       PULS   A,DP,X,Y
-EA91: 00 08       NEG    $08
-EA93: 5E          XCLRB
-EA94: 2A 3A       BPL    $EAD0
-EA96: 00 04       NEG    $04
-EA98: 5D          TSTB
-EA99: 25 3A       BCS    $EAD5
-EA9B: 00 08       NEG    $08
-EA9D: 5E          XCLRB
-EA9E: 2A 3A       BPL    $EADA
-EAA0: 00 04       NEG    $04
-EAA2: 5E          XCLRB
-EAA3: 25 3A       BCS    $EADF
-EAA5: 00 04       NEG    $04
-EAA7: 5E          XCLRB
-EAA8: 25 BA       BCS    $EA64
-EAAA: 00 08       NEG    $08
-EAAC: 5D          TSTB
-EAAD: 20 3A       BRA    $EAE9
-EAAF: 00 08       NEG    $08
-EAB1: 5E          XCLRB
-EAB2: 25 36       BCS    $EAEA
-EAB4: 00 04       NEG    $04
-EAB6: 5E          XCLRB
-EAB7: 25 3A       BCS    $EAF3
-EAB9: 00 08       NEG    $08
-EABB: 5E          XCLRB
-EABC: E3 3A       ADDD   -$6,Y
-EABE: 00 04       NEG    $04
-EAC0: 5D          TSTB
-EAC1: 25 3A       BCS    $EAFD
-EAC3: 00 08       NEG    $08
-EAC5: 5E          XCLRB
-EAC6: 25 3A       BCS    $EB02
-EAC8: 00 04       NEG    $04
-EACA: 5E          XCLRB
-EACB: 25 BA       BCS    $EA87
-EACD: 00 08       NEG    $08
-EACF: 5E          XCLRB
-EAD0: 25 BA       BCS    $EA8C
-EAD2: 00 08       NEG    $08
-EAD4: 5D          TSTB
-EAD5: 20 3A       BRA    $EB11
-EAD7: 00 08       NEG    $08
-EAD9: 5E          XCLRB
-EADA: 25 36       BCS    $EB12
-EADC: 00 04       NEG    $04
-EADE: 5E          XCLRB
-EADF: 25 3A       BCS    $EB1B
-EAE1: 00 08       NEG    $08
-EAE3: 5E          XCLRB
-EAE4: 2A 3A       BPL    $EB20
-EAE6: 00 04       NEG    $04
-EAE8: 5D          TSTB
-EAE9: BA BA 00    ORA    $BA00
-EAEC: 04 5E       LSR    $5E
-EAEE: 2A 3A       BPL    $EB2A
-EAF0: 00 08       NEG    $08
-EAF2: 5E          XCLRB
-EAF3: 25 BA       BCS    $EAAF
-EAF5: 00 08       NEG    $08
-EAF7: 5E          XCLRB
-EAF8: FF BA 00    STU    $BA00
-EAFB: 08 5D       ASL    $5D
-EAFD: 25 3A       BCS    $EB39
-EAFF: 00 01       NEG    $01
-EB01: 05 1D       LSR    $1D
-EB03: 05 19       LSR    $19
-EB05: 29 19       BVS    $EB20
-EB07: 05 19       LSR    $19
-EB09: 1D          SEX
-EB0A: 05 05       LSR    $05
-EB0C: 2D 19       BLT    $EB27
-EB0E: 1D          SEX
-EB0F: 1E 1E       EXG    X,inv
-EB11: 1D          SEX
-EB12: 1A 05       ORCC   #$05
-EB14: 19          DAA
-EB15: 05 08       LSR    $08
-EB17: 29 19       BVS    $EB32
-EB19: 19          DAA
-EB1A: 05 05       LSR    $05
-EB1C: 1D          SEX
-EB1D: 1D          SEX
-EB1E: 2D 1D       BLT    $EB3D
-EB20: 19          DAA
-EB21: 19          DAA
-EB22: 05 1D       LSR    $1D
-EB24: 19          DAA
-EB25: 19          DAA
-EB26: 80 EB       SUBA   #$EB
-EB28: 67 EB       ASR    D,S
-EB2A: 78 EB 87    ASL    $EB87
-EB2D: EB 96       ADDB   [A,X]
-EB2F: EB A9 EB B9 ADDB   -$1447,Y
-EB33: EB C6       ADDB   A,U
-EB35: EB D5       ADDB   [B,U]
-EB37: EB E4       ADDB   ,S
-EB39: EB F7       ADDB   [E,S]
-EB3B: EC 08       LDD    $8,X
-EB3D: EC 16       LDD    -$A,X
-EB3F: EC 24       LDD    $4,Y
-EB41: EC 31       LDD    -$F,Y
-EB43: EC 41       LDD    $1,U
-EB45: EC 4C       LDD    $C,U
-EB47: EC 5B       LDD    -$5,U
-EB49: EC 69       LDD    $9,S
-EB4B: EC 74       LDD    -$C,S
-EB4D: EC 7F       LDD    -$1,S
-EB4F: EC 8F       LDD    ,W
-EB51: EC A2       LDD    ,-Y
-EB53: EC B2       LDD    Illegal Postbyte
-EB55: EC C0       LDD    ,U+
-EB57: EC CF       LDD    ,W++
-EB59: EC DE       LDD    [W,U]
-EB5B: EC EF       LDD    ,--W
-EB5D: ED 00       STD    $0,X
-EB5F: ED 12       STD    -$E,X
-EB61: ED 23       STD    $3,Y
-EB63: ED 34       STD    -$C,Y
-EB65: ED 44       STD    $4,U
-EB67: B1 B1 B5    CMPA   $B1B5
-EB6A: B1 B6 B6    CMPA   $B6B6
-EB6D: B1 B6 C5    CMPA   $B6C5
-EB70: D2 06       SBCB   $06
-EB72: 06 06       ROR    $06
-EB74: F6 F6 F6    LDB    $F6F6
-EB77: FF B1 B1    STU    $B1B1
-EB7A: B5 B1 B1    BITA   $B1B1
-EB7D: C1 B1       CMPB   #$B1
-EB7F: D2 06       SBCB   $06
-EB81: 4A          DECA
-EB82: 05 95       LSR    $95
-EB84: 95 95       BITA   $95
-EB86: FF B1 B1    STU    $B1B1
-EB89: C1 F3       CMPB   #$F3
-EB8B: B1 B1 B6    CMPA   $B1B6
-EB8E: B6 F5 B5    LDA    $F5B5
-EB91: B5 F5 B1    BITA   $F5B1
-EB94: B1 FF B1    CMPA   $FFB1
-EB97: C5 F4       BITB   #$F4
-EB99: B1 B6 B1    CMPA   $B6B1
-EB9C: D2 96       SBCB   $96
-EB9E: CE C5 B1    LDU    #$C5B1
-EBA1: B5 B1 F2    BITA   $B1F2
-EBA4: D2 96       SBCB   $96
-EBA6: 96 96       LDA    $96
-EBA8: FF B1 F4    STU    $B1F4
-EBAB: B1 B5 B1    CMPA   $B5B1
-EBAE: B1 F4 C9    CMPA   $F4C9
-EBB1: D1 05       CMPB   $05
-EBB3: CD          XHCF
-EBB4: C9 B1       ADCB   #$B1
-EBB6: B5 B5 FF    BITA   $B5FF
-EBB9: B1 B6 B6    CMPA   $B6B6
-EBBC: B1 D2 06    CMPA   $D206
-EBBF: 06 06       ROR    $06
-EBC1: F6 F6 F6    LDB    $F6F6
-EBC4: F6 FF B1    LDB    $FFB1
-EBC7: B5 F3 C1    BITA   $F3C1
-EBCA: B5 B5 B5    BITA   $B5B5
-EBCD: B5 F3 C1    BITA   $F3C1
-EBD0: D2 06       SBCB   $06
-EBD2: 06 06       ROR    $06
-EBD4: FF B1 B1    STU    $B1B1
-EBD7: B1 B1 F3    CMPA   $B1F3
-EBDA: C1 B6       CMPB   #$B6
-EBDC: B6 C2 F0    LDA    $C2F0
-EBDF: D2 06       SBCB   $06
-EBE1: 06 06       ROR    $06
-EBE3: FF B9 B9    STU    $B9B9
-EBE6: F0 F4 B9    SUBB   $F4B9
-EBE9: B9 B9 F3    ADCA   $B9F3
-EBEC: C1 B9       CMPB   #$B9
-EBEE: B9 C9 D2    ADCA   $C9D2
-EBF1: 06 06       ROR    $06
-EBF3: 06 06       ROR    $06
-EBF5: 06 FF       ROR    $FF
-EBF7: B1 C9 B1    CMPA   $C9B1
-EBFA: C9 B1       ADCB   #$B1
-EBFC: C9 C9       ADCB   #$C9
-EBFE: F4 C9 D2    ANDB   $C9D2
-EC01: 06 06       ROR    $06
-EC03: CE B1 C9    LDU    #$B1C9
-EC06: C9 FF       ADCB   #$FF
-EC08: B1 B1 B1    CMPA   $B1B1
-EC0B: F4 C9 D2    ANDB   $C9D2
-EC0E: 06 CE       ROR    $CE
-EC10: C9 B1       ADCB   #$B1
-EC12: B5 B1 F6    BITA   $B1F6
-EC15: FF B1 B1    STU    $B1B1
-EC18: B1 F4 C9    CMPA   $F4C9
-EC1B: D1 05       CMPB   $05
-EC1D: CD          XHCF
-EC1E: C9 B9       ADCB   #$B9
-EC20: B9 B9 F6    ADCA   $B9F6
-EC23: FF 06 06    STU    $0606
-EC26: 02 F5       XNC    $F5
-EC28: 46          RORA
-EC29: F6 F5 1A    LDB    $F51A
-EC2C: F0 46 F6    SUBB   $46F6
-EC2F: F6 FF 02    LDB    $FF02
-EC32: 46          RORA
-EC33: 06 4A       ROR    $4A
-EC35: 05 49       LSR    $49
-EC37: 06 4A       ROR    $4A
-EC39: 05 49       LSR    $49
-EC3B: 02 4E       XNC    $4E
-EC3D: F4 4E F6    ANDB   $4EF6
-EC40: FF 02 F6    STU    $02F6
-EC43: 46          RORA
-EC44: F6 F4 46    LDB    $F446
-EC47: F6 F6 F6    LDB    $F6F6
-EC4A: F6 FF 02    LDB    $FF02
-EC4D: 46          RORA
-EC4E: F5 F4 46    BITB   $F446
-EC51: F5 46 F6    BITB   $46F6
-EC54: 4E          XCLRA
-EC55: 4E          XCLRA
-EC56: F0 F0 46    SUBB   $F046
-EC59: 46          RORA
-EC5A: FF B2 B2    STU    $B2B2
-EC5D: B6 B6 B6    LDA    $B6B6
-EC60: B6 B2 B2    LDA    $B2B2
-EC63: B5 B5 B5    BITA   $B5B5
-EC66: B5 B1 B1    BITA   $B1B1
-EC69: B2 B2 B2    SBCA   $B2B2
-EC6C: B2 B2 B2    SBCA   $B2B2
-EC6F: B6 B6 B2    LDA    $B6B2
-EC72: B2 B2 B2    SBCA   $B2B2
-EC75: B2 B2 B2    SBCA   $B2B2
-EC78: B6 B6 B2    LDA    $B6B2
-EC7B: B2 B2 B2    SBCA   $B2B2
-EC7E: B2 B1 B6    SBCA   $B1B6
-EC81: B6 B1 D2    LDA    $B1D2
-EC84: 06 4A       ROR    $4A
-EC86: 05 49       LSR    $49
-EC88: 06 06       ROR    $06
-EC8A: 06 F6       ROR    $F6
-EC8C: F6 F6 FF    LDB    $F6FF
-EC8F: B1 C9 B1    CMPA   $C9B1
-EC92: C9 B1       ADCB   #$B1
-EC94: C9 B1       ADCB   #$B1
-EC96: C9 C9       ADCB   #$C9
-EC98: B1 C9 C9    CMPA   $C9C9
-EC9B: C9 B1       ADCB   #$B1
-EC9D: D2 06       SBCB   $06
-EC9F: 06 06       ROR    $06
-ECA1: FF B1 B6    STU    $B1B6
-ECA4: B6 B1 D2    LDA    $B1D2
-ECA7: 06 CE       ROR    $CE
-ECA9: 05 CD       LSR    $CD
-ECAB: 06 06       ROR    $06
-ECAD: 06 06       ROR    $06
-ECAF: F6 F6 FF    LDB    $F6FF
-ECB2: B1 B1 C1    CMPA   $B1C1
-ECB5: B5 B5 B5    BITA   $B5B5
-ECB8: B5 D2 06    BITA   $D206
-ECBB: 06 06       ROR    $06
-ECBD: 06 06       ROR    $06
-ECBF: FF B1 B1    STU    $B1B1
-ECC2: C1 B1       CMPB   #$B1
-ECC4: B1 B6 B6    CMPA   $B6B6
-ECC7: C9 C9       ADCB   #$C9
-ECC9: B5 B5 B5    BITA   $B5B5
-ECCC: C9 B5       ADCB   #$B5
-ECCE: FF C9 F3    STU    $C9F3
-ECD1: 06 06       ROR    $06
-ECD3: 06 06       ROR    $06
-ECD5: CE B1 B5    LDU    #$B1B5
-ECD8: B1 B6 B1    CMPA   $B6B1
-ECDB: B6 B1 FF    LDA    $B1FF
-ECDE: B1 C9 C1    CMPA   $C9C1
-ECE1: F4 C9 C9    ANDB   $C9C9
-ECE4: F4 B1 B1    ANDB   $B1B1
-ECE7: F4 B1 B1    ANDB   $B1B1
-ECEA: D1 95       CMPB   $95
-ECEC: 95 CD       BITA   $CD
-ECEE: FF B1 C9    STU    $B1C9
-ECF1: C2 D2       SBCB   #$D2
-ECF3: 96 96       LDA    $96
-ECF5: CE B1 B1    LDU    #$B1B1
-ECF8: F4 B1 B1    ANDB   $B1B1
-ECFB: F4 CA CA    ANDB   $CACA
-ECFE: B1 FF 02    CMPA   $FF02
-ED01: 46          RORA
-ED02: F5 F0 06    BITB   $F006
-ED05: 46          RORA
-ED06: F6 F4 4A    LDB    $F44A
-ED09: 05 05       LSR    $05
-ED0B: 45          LSRA
-ED0C: F6 F4 4A    LDB    $F44A
-ED0F: 06 F6       ROR    $F6
-ED11: FF B1 B1    STU    $B1B1
-ED14: D1 05       CMPB   $05
-ED16: F4 F2 95    ANDB   $F295
-ED19: 95 49       BITA   $49
-ED1B: 06 CE       ROR    $CE
-ED1D: C9 B6       ADCB   #$B6
-ED1F: B6 B6 B6    LDA    $B6B6
-ED22: FF B1 B1    STU    $B1B1
-ED25: D2 06       SBCB   $06
-ED27: F4 F2 96    ANDB   $F296
-ED2A: 96 4A       LDA    $4A
-ED2C: 05 CD       LSR    $CD
-ED2E: C9 B5       ADCB   #$B5
-ED30: B5 B5 B5    BITA   $B5B5
-ED33: FF B1 C9    STU    $B1C9
-ED36: C2 D2       SBCB   #$D2
-ED38: 96 96       LDA    $96
-ED3A: CE B5 B6    LDU    #$B5B6
-ED3D: B1 C9 B1    CMPA   $C9B1
-ED40: B1 C9 F1    CMPA   $C9F1
-ED43: FF B1 C9    STU    $B1C9
-ED46: C1 D1       CMPB   #$D1
-ED48: 95 95       BITA   $95
-ED4A: CD          XHCF
-ED4B: B5 B6 B1    BITA   $B6B1
-ED4E: C9 B1       ADCB   #$B1
-ED50: B1 C9 F1    CMPA   $C9F1
 
-FFF2: 00 00       NEG    $00
-FFF4: 00 00       NEG    $00
-FFF6: 00 00       NEG    $00
-FFF8: 81 73       CMPA   #$73
-FFFA: 00 00       NEG    $00
-FFFC: 81 73       CMPA   #$73
-FFFE: 80 00       SUBA   #$00
+jump_table_81ad:
+	dc.w	$80a8	; $81ad
+	dc.w	$852a	; $81af
+	dc.w	$854f	; $81b1
+	dc.w	$8768	; $81b3
+	dc.w	$8800	; $81b5
+	dc.w	$88c4	; $81b7
+	dc.w	$88e9	; $81b9
+	dc.w	$9652	; $81bb
+	dc.w	$9b53	; $81bd
+	dc.w	$9b32	; $81bf
+	dc.w	$9b33	; $81c1
+	dc.w	$9b41	; $81c3
+	dc.w	$9b46	; $81c5
+	dc.w	$9720	; $81c7
+jump_table_8333:
+	dc.w	$8343	; $8333
+	dc.w	$8343	; $8335
+	dc.w	$8343	; $8337
+	dc.w	$8343	; $8339
+	dc.w	$8423	; $833b
+	dc.w	$8423	; $833d
+	dc.w	$83d5	; $833f
+	dc.w	$83d5	; $8341
+jump_table_8537:
+	dc.w	$853b	; $8537
+	dc.w	$854e	; $8539
+jump_table_8561:
+	dc.w	$8567	; $8561
+	dc.w	$858d	; $8563
+	dc.w	$85cb	; $8565
+jump_table_86fd:
+	dc.w	$cdd3	; $86fd
+	dc.w	$ccaa	; $86ff
+	dc.w	$cdd3	; $8701
+	dc.w	$cdd3	; $8703
+	dc.w	$cdd3	; $8705
+	dc.w	$cdd3	; $8707
+	dc.w	$cde7	; $8709
+	dc.w	$cde7	; $870b
+	dc.w	$cdd3	; $870d
+	dc.w	$cdd3	; $870f
+	dc.w	$cdd3	; $8711
+	dc.w	$cdd3	; $8713
+	dc.w	$cdd3	; $8715
+	dc.w	$cdd3	; $8717
+	dc.w	$cdd3	; $8719
+	dc.w	$cdd3	; $871b
+	dc.w	$ccaa	; $871d
+	dc.w	$ce3a	; $871f
+	dc.w	$cdfb	; $8721
+	dc.w	$ce26	; $8723
+	dc.w	$cdd3	; $8725
+	dc.w	$cdd3	; $8727
+	dc.w	$cdd3	; $8729
+	dc.w	$cdd3	; $872b
+	dc.w	$ce7e	; $872d
+	dc.w	$ce7e	; $872f
+	dc.w	$ce7e	; $8731
+	dc.w	$ce7e	; $8733
+	dc.w	$8767	; $8735
+	dc.w	$8767	; $8737
+	dc.w	$8767	; $8739
+	dc.w	$8767	; $873b
+	dc.w	$cdd3	; $873d
+	dc.w	$cdd3	; $873f
+	dc.w	$cdd3	; $8741
+	dc.w	$cdd3	; $8743
+	dc.w	$cdd3	; $8745
+	dc.w	$cdd3	; $8747
+	dc.w	$cdd3	; $8749
+	dc.w	$ccce	; $874b
+	dc.w	$cdd3	; $874d
+	dc.w	$cdd3	; $874f
+	dc.w	$cdd3	; $8751
+	dc.w	$cdd3	; $8753
+	dc.w	$8767	; $8755
+	dc.w	$8767	; $8757
+	dc.w	$8767	; $8759
+	dc.w	$8767	; $875b
+	dc.w	$8767	; $875d
+	dc.w	$8767	; $875f
+	dc.w	$8767	; $8761
+	dc.w	$8767	; $8763
+	dc.w	$8767	; $8765
+jump_table_8775:
+	dc.w	$8789	; $8775
+	dc.w	$89c4	; $8777
+	dc.w	$89c5	; $8779
+	dc.w	$8a71	; $877b
+	dc.w	$84a7	; $877d
+	dc.w	$8790	; $877f
+	dc.w	$879a	; $8781
+	dc.w	$87e0	; $8783
+	dc.w	$87e5	; $8785
+	dc.w	$87f4	; $8787
+jump_table_880d:
+	dc.w	$881b	; $880d
+	dc.w	$882e	; $880f
+	dc.w	$882f	; $8811
+	dc.w	$8830	; $8813
+	dc.w	$8853	; $8815
+	dc.w	$888f	; $8817
+	dc.w	$8898	; $8819
+jump_table_88d1:
+	dc.w	$88d5	; $88d1
+	dc.w	$88e8	; $88d3
+jump_table_88f6:
+	dc.w	$8910	; $88f6
+	dc.w	$898f	; $88f8
+	dc.w	$89c3	; $88fa
+	dc.w	$89c4	; $88fc
+	dc.w	$89c5	; $88fe
+	dc.w	$8a71	; $8900
+	dc.w	$84a7	; $8902
+	dc.w	$8a94	; $8904
+	dc.w	$8917	; $8906
+	dc.w	$8990	; $8908
+	dc.w	$8a95	; $890a
+	dc.w	$89ca	; $890c
+	dc.w	$8b1f	; $890e
+jump_table_899d:
+	dc.w	$89a5	; $899d
+	dc.w	$89a8	; $899f
+	dc.w	$89b4	; $89a1
+	dc.w	$89c2	; $89a3
+jump_table_89d7:
+	dc.w	$89eb	; $89d7
+	dc.w	$89ee	; $89d9
+	dc.w	$89fa	; $89db
+	dc.w	$8a08	; $89dd
+	dc.w	$8a09	; $89df
+	dc.w	$8a0a	; $89e1
+	dc.w	$8a2e	; $89e3
+	dc.w	$8a66	; $89e5
+	dc.w	$8a6f	; $89e7
+	dc.w	$8a70	; $89e9
+jump_table_8a7e:
+	dc.w	$8a82	; $8a7e
+	dc.w	$8a93	; $8a80
+jump_table_8aa2:
+	dc.w	$8ab6	; $8aa2
+	dc.w	$8ab7	; $8aa4
+	dc.w	$8ab8	; $8aa6
+	dc.w	$8ab9	; $8aa8
+	dc.w	$8ada	; $8aaa
+	dc.w	$8b12	; $8aac
+	dc.w	$8b1b	; $8aae
+	dc.w	$8b1c	; $8ab0
+	dc.w	$8b1d	; $8ab2
+	dc.w	$8b1e	; $8ab4
+jump_table_8b2c:
+	dc.w	$8b44	; $8b2c
+	dc.w	$8b47	; $8b2e
+	dc.w	$8b53	; $8b30
+	dc.w	$8b61	; $8b32
+	dc.w	$8b62	; $8b34
+	dc.w	$8b63	; $8b36
+	dc.w	$8b64	; $8b38
+	dc.w	$8b88	; $8b3a
+	dc.w	$8ba0	; $8b3c
+	dc.w	$8ba9	; $8b3e
+	dc.w	$8baa	; $8b40
+	dc.w	$8bab	; $8b42
+jump_table_9951:
+	dc.w	$9a28	; $9951
+	dc.w	$9a90	; $9953
+	dc.w	$ab4f	; $9955
+	dc.w	$a137	; $9957
+	dc.w	$a14b	; $9959
+	dc.w	$a15f	; $995b
+	dc.w	$a1a3	; $995d
+	dc.w	$a396	; $995f
+	dc.w	$a81b	; $9961
+	dc.w	$a83d	; $9963
+	dc.w	$a914	; $9965
+	dc.w	$aa6b	; $9967
+	dc.w	$aade	; $9969
+	dc.w	$a9b0	; $996b
+	dc.w	$ab5c	; $996d
+	dc.w	$ab5d	; $996f
+	dc.w	$9a90	; $9971
+	dc.w	$a1a3	; $9973
+	dc.w	$ab5e	; $9975
+	dc.w	$9bf6	; $9977
+	dc.w	$9ce3	; $9979
+	dc.w	$ab5f	; $997b
+	dc.w	$9e46	; $997d
+	dc.w	$9f7f	; $997f
+	dc.w	$ab74	; $9981
+	dc.w	$ab74	; $9983
+	dc.w	$ab74	; $9985
+	dc.w	$ab74	; $9987
+	dc.w	$9a28	; $9989
+	dc.w	$9a28	; $998b
+	dc.w	$ac40	; $998d
+	dc.w	$9a28	; $998f
+	dc.w	$9a28	; $9991
+	dc.w	$9a28	; $9993
+	dc.w	$9a28	; $9995
+	dc.w	$9a28	; $9997
+	dc.w	$9a28	; $9999
+	dc.w	$9a28	; $999b
+	dc.w	$9a28	; $999d
+	dc.w	$9b56	; $999f
+	dc.w	$a50d	; $99a1
+	dc.w	$a6b6	; $99a3
+	dc.w	$a02f	; $99a5
+	dc.w	$a0a7	; $99a7
+	dc.w	$9a28	; $99a9
+	dc.w	$9a28	; $99ab
+	dc.w	$9a28	; $99ad
+	dc.w	$9a28	; $99af
+	dc.w	$9a28	; $99b1
+	dc.w	$9a28	; $99b3
+	dc.w	$9a28	; $99b5
+	dc.w	$9a28	; $99b7
+	dc.w	$9a28	; $99b9
+	dc.w	$9a25	; $99bb
+	dc.w	$9a3c	; $99bd
+	dc.w	$9db2	; $99bf
+	dc.w	$9e2f	; $99c1
+	dc.w	$a131	; $99c3
+	dc.w	$a134	; $99c5
+	dc.w	$a173	; $99c7
+	dc.w	$a366	; $99c9
+	dc.w	$a813	; $99cb
+	dc.w	$a813	; $99cd
+	dc.w	$a8c5	; $99cf
+	dc.w	$aa18	; $99d1
+	dc.w	$aa52	; $99d3
+	dc.w	$a8f2	; $99d5
+	dc.w	$8dc8	; $99d7
+	dc.w	$8dc8	; $99d9
+	dc.w	$9a3c	; $99db
+	dc.w	$a173	; $99dd
+	dc.w	$8dc8	; $99df
+	dc.w	$9b86	; $99e1
+	dc.w	$9bbe	; $99e3
+	dc.w	$8dc8	; $99e5
+	dc.w	$8dc8	; $99e7
+	dc.w	$8dc8	; $99e9
+	dc.w	$ab60	; $99eb
+	dc.w	$ab60	; $99ed
+	dc.w	$ab60	; $99ef
+	dc.w	$ab60	; $99f1
+	dc.w	$8dc8	; $99f3
+	dc.w	$8dc8	; $99f5
+	dc.w	$ac17	; $99f7
+	dc.w	$8dc8	; $99f9
+	dc.w	$8dc8	; $99fb
+	dc.w	$8dc8	; $99fd
+	dc.w	$8dc8	; $99ff
+	dc.w	$8dc8	; $9a01
+	dc.w	$8dc8	; $9a03
+	dc.w	$8dc8	; $9a05
+	dc.w	$8dc8	; $9a07
+	dc.w	$9a3c	; $9a09
+	dc.w	$a173	; $9a0b
+	dc.w	$a366	; $9a0d
+	dc.w	$8dc8	; $9a0f
+	dc.w	$8dc8	; $9a11
+	dc.w	$8dc8	; $9a13
+	dc.w	$8dc8	; $9a15
+	dc.w	$8dc8	; $9a17
+	dc.w	$8dc8	; $9a19
+	dc.w	$8dc8	; $9a1b
+	dc.w	$8dc8	; $9a1d
+	dc.w	$8dc8	; $9a1f
+	dc.w	$8dc8	; $9a21
+	dc.w	$8dc8	; $9a23
+jump_table_99bb:
+	dc.w	$9a25	; $99bb
+	dc.w	$9a3c	; $99bd
+	dc.w	$9db2	; $99bf
+	dc.w	$9e2f	; $99c1
+	dc.w	$a131	; $99c3
+	dc.w	$a134	; $99c5
+	dc.w	$a173	; $99c7
+	dc.w	$a366	; $99c9
+	dc.w	$a813	; $99cb
+	dc.w	$a813	; $99cd
+	dc.w	$a8c5	; $99cf
+	dc.w	$aa18	; $99d1
+	dc.w	$aa52	; $99d3
+	dc.w	$a8f2	; $99d5
+	dc.w	$8dc8	; $99d7
+	dc.w	$8dc8	; $99d9
+	dc.w	$9a3c	; $99db
+	dc.w	$a173	; $99dd
+	dc.w	$8dc8	; $99df
+	dc.w	$9b86	; $99e1
+	dc.w	$9bbe	; $99e3
+	dc.w	$8dc8	; $99e5
+	dc.w	$8dc8	; $99e7
+	dc.w	$8dc8	; $99e9
+	dc.w	$ab60	; $99eb
+	dc.w	$ab60	; $99ed
+	dc.w	$ab60	; $99ef
+	dc.w	$ab60	; $99f1
+	dc.w	$8dc8	; $99f3
+	dc.w	$8dc8	; $99f5
+	dc.w	$ac17	; $99f7
+	dc.w	$8dc8	; $99f9
+	dc.w	$8dc8	; $99fb
+	dc.w	$8dc8	; $99fd
+	dc.w	$8dc8	; $99ff
+	dc.w	$8dc8	; $9a01
+	dc.w	$8dc8	; $9a03
+	dc.w	$8dc8	; $9a05
+	dc.w	$8dc8	; $9a07
+	dc.w	$9a3c	; $9a09
+	dc.w	$a173	; $9a0b
+	dc.w	$a366	; $9a0d
+	dc.w	$8dc8	; $9a0f
+	dc.w	$8dc8	; $9a11
+	dc.w	$8dc8	; $9a13
+	dc.w	$8dc8	; $9a15
+	dc.w	$8dc8	; $9a17
+	dc.w	$8dc8	; $9a19
+	dc.w	$8dc8	; $9a1b
+	dc.w	$8dc8	; $9a1d
+	dc.w	$8dc8	; $9a1f
+	dc.w	$8dc8	; $9a21
+	dc.w	$8dc8	; $9a23
+jump_table_9c23:
+	dc.w	$9c4d	; $9c23
+	dc.w	$9c4d	; $9c25
+	dc.w	$9c3b	; $9c27
+	dc.w	$9c4d	; $9c29
+	dc.w	$9c4d	; $9c2b
+	dc.w	$9c6b	; $9c2d
+	dc.w	$9c65	; $9c2f
+	dc.w	$9c65	; $9c31
+	dc.w	$9c53	; $9c33
+	dc.w	$9c65	; $9c35
+	dc.w	$9c65	; $9c37
+	dc.w	$9c96	; $9c39
+jump_table_9c2f:
+	dc.w	$9c65	; $9c2f
+	dc.w	$9c65	; $9c31
+	dc.w	$9c53	; $9c33
+	dc.w	$9c65	; $9c35
+	dc.w	$9c65	; $9c37
+	dc.w	$9c96	; $9c39
+	dc.w	$ec1a	; $9c3b
+	dc.w	$c300	; $9c3d
+	dc.w	$c0ed	; $9c3f
+jump_table_9d10:
+	dc.w	$9d3a	; $9d10
+	dc.w	$9d28	; $9d12
+	dc.w	$9d3a	; $9d14
+	dc.w	$9d3a	; $9d16
+	dc.w	$9d28	; $9d18
+	dc.w	$9d5e	; $9d1a
+	dc.w	$9d52	; $9d1c
+	dc.w	$9d40	; $9d1e
+	dc.w	$9d52	; $9d20
+	dc.w	$9d52	; $9d22
+	dc.w	$9d40	; $9d24
+	dc.w	$9d77	; $9d26
+jump_table_9d1c:
+	dc.w	$9d52	; $9d1c
+	dc.w	$9d40	; $9d1e
+	dc.w	$9d52	; $9d20
+	dc.w	$9d52	; $9d22
+	dc.w	$9d40	; $9d24
+	dc.w	$9d77	; $9d26
+	dc.w	$ec1a	; $9d28
+	dc.w	$c300	; $9d2a
+	dc.w	$c0ed	; $9d2c
+jump_table_a013:
+	dc.w	$9e79	; $a013
+	dc.w	$9e8c	; $a015
+	dc.w	$9e8c	; $a017
+	dc.w	$9e8c	; $a019
+	dc.w	$9eaa	; $a01b
+	dc.w	$9ecb	; $a01d
+	dc.w	$9ee2	; $a01f
+	dc.w	$9f4c	; $a021
+	dc.w	$9fa6	; $a023
+	dc.w	$9fbb	; $a025
+	dc.w	$9fbb	; $a027
+	dc.w	$9fbb	; $a029
+	dc.w	$9fbb	; $a02b
+	dc.w	$9fdf	; $a02d
+	dc.w	$960a	; $a02f
+	dc.w	$841c	; $a031
+	dc.w	$8110	; $a033
+jump_table_a023:
+	dc.w	$9fa6	; $a023
+	dc.w	$9fbb	; $a025
+	dc.w	$9fbb	; $a027
+	dc.w	$9fbb	; $a029
+	dc.w	$9fbb	; $a02b
+	dc.w	$9fdf	; $a02d
+	dc.w	$960a	; $a02f
+	dc.w	$841c	; $a031
+	dc.w	$8110	; $a033
+jump_table_a119:
+	dc.w	$a061	; $a119
+	dc.w	$a067	; $a11b
+	dc.w	$a067	; $a11d
+	dc.w	$a067	; $a11f
+	dc.w	$a07c	; $a121
+	dc.w	$a095	; $a123
+	dc.w	$a0d3	; $a125
+	dc.w	$a0d9	; $a127
+	dc.w	$a0d9	; $a129
+	dc.w	$a0d9	; $a12b
+	dc.w	$a0f2	; $a12d
+	dc.w	$a107	; $a12f
+jump_table_a125:
+	dc.w	$a0d3	; $a125
+	dc.w	$a0d9	; $a127
+	dc.w	$a0d9	; $a129
+	dc.w	$a0d9	; $a12b
+	dc.w	$a0f2	; $a12d
+	dc.w	$a107	; $a12f
+jump_table_a1ad:
+	dc.w	$a1b7	; $a1ad
+	dc.w	$a1bf	; $a1af
+	dc.w	$a1cd	; $a1b1
+	dc.w	$a1b7	; $a1b3
+	dc.w	$a1db	; $a1b5
+jump_table_a35e:
+	dc.w	$a1ed	; $a35e
+	dc.w	$a1f8	; $a360
+	dc.w	$a21a	; $a362
+	dc.w	$a235	; $a364
+	dc.w	$96ce	; $a366
+	dc.w	$8101	; $a368
+jump_table_a505:
+	dc.w	$a3e0	; $a505
+	dc.w	$a3eb	; $a507
+	dc.w	$a40d	; $a509
+	dc.w	$a428	; $a50b
+	dc.w	$dccc	; $a50d
+jump_table_a3a0:
+	dc.w	$a3aa	; $a3a0
+	dc.w	$a3b2	; $a3a2
+	dc.w	$a3c0	; $a3a4
+	dc.w	$a3ce	; $a3a6
+	dc.w	$a3aa	; $a3a8
+jump_table_a51b:
+	dc.w	$a525	; $a51b
+	dc.w	$a52d	; $a51d
+	dc.w	$a53b	; $a51f
+	dc.w	$a525	; $a521
+	dc.w	$a549	; $a523
+jump_table_a6ae:
+	dc.w	$a578	; $a6ae
+	dc.w	$a583	; $a6b0
+	dc.w	$a5a5	; $a6b2
+	dc.w	$a5c0	; $a6b4
+	dc.w	$dccc	; $a6b6
+jump_table_a80b:
+	dc.w	$a721	; $a80b
+	dc.w	$a72c	; $a80d
+	dc.w	$a74e	; $a80f
+	dc.w	$a769	; $a811
+	dc.w	$cc00	; $a813
+jump_table_a6c4:
+	dc.w	$a6ce	; $a6c4
+	dc.w	$a6d6	; $a6c6
+	dc.w	$a6e4	; $a6c8
+	dc.w	$a6f2	; $a6ca
+	dc.w	$a6ce	; $a6cc
+jump_table_a82f:
+	dc.w	$a877	; $a82f
+	dc.w	$a88e	; $a831
+	dc.w	$a8a3	; $a833
+jump_table_a871:
+	dc.w	$a877	; $a871
+	dc.w	$a88e	; $a873
+	dc.w	$a8a3	; $a875
+jump_table_a9fe:
+	dc.w	$a91c	; $a9fe
+	dc.w	$a927	; $aa00
+	dc.w	$a943	; $aa02
+	dc.w	$a958	; $aa04
+	dc.w	$a958	; $aa06
+	dc.w	$a963	; $aa08
+	dc.w	$a958	; $aa0a
+	dc.w	$a958	; $aa0c
+	dc.w	$a991	; $aa0e
+	dc.w	$a99c	; $aa10
+	dc.w	$a9b8	; $aa12
+	dc.w	$a9d3	; $aa14
+	dc.w	$a9ea	; $aa16
+	dc.w	$a601	; $aa18
+	dc.w	$a107	; $aa1a
+jump_table_aa12:
+	dc.w	$a9b8	; $aa12
+	dc.w	$a9d3	; $aa14
+	dc.w	$a9ea	; $aa16
+	dc.w	$a601	; $aa18
+	dc.w	$a107	; $aa1a
+jump_table_ab3b:
+	dc.w	$aa73	; $ab3b
+	dc.w	$aa7e	; $ab3d
+	dc.w	$aa73	; $ab3f
+	dc.w	$aa73	; $ab41
+	dc.w	$aa9d	; $ab43
+	dc.w	$aab3	; $ab45
+	dc.w	$aaca	; $ab47
+	dc.w	$aaf2	; $ab49
+	dc.w	$ab10	; $ab4b
+	dc.w	$ab27	; $ab4d
+jump_table_ab49:
+	dc.w	$aaf2	; $ab49
+	dc.w	$ab10	; $ab4b
+	dc.w	$ab27	; $ab4d
+jump_table_ab7c:
+	dc.w	$ab8c	; $ab7c
+	dc.w	$aba3	; $ab7e
+	dc.w	$abb0	; $ab80
+	dc.w	$abb0	; $ab82
+	dc.w	$abb0	; $ab84
+	dc.w	$abb0	; $ab86
+	dc.w	$abbb	; $ab88
+	dc.w	$abc3	; $ab8a
+jump_table_ac48:
+	dc.w	$ac4e	; $ac48
+	dc.w	$ac6c	; $ac4a
+	dc.w	$ac88	; $ac4c
+jump_table_ad10:
+	dc.w	$ad49	; $ad10
+	dc.w	$ad30	; $ad12
+	dc.w	$ad4f	; $ad14
+	dc.w	$ad49	; $ad16
+	dc.w	$ad6e	; $ad18
+	dc.w	$ad8d	; $ad1a
+	dc.w	$ad92	; $ad1c
+	dc.w	$ad49	; $ad1e
+	dc.w	$ad97	; $ad20
+	dc.w	$adb6	; $ad22
+	dc.w	$adbb	; $ad24
+	dc.w	$ad49	; $ad26
+	dc.w	$ad49	; $ad28
+	dc.w	$ad49	; $ad2a
+	dc.w	$ad49	; $ad2c
+	dc.w	$ad49	; $ad2e
+jump_table_add4:
+	dc.w	$adf4	; $add4
+	dc.w	$ae35	; $add6
+	dc.w	$adf5	; $add8
+	dc.w	$adf4	; $adda
+	dc.w	$af55	; $addc
+	dc.w	$afe5	; $adde
+	dc.w	$af95	; $ade0
+	dc.w	$adf4	; $ade2
+	dc.w	$ae75	; $ade4
+	dc.w	$af05	; $ade6
+	dc.w	$aeb5	; $ade8
+	dc.w	$adf4	; $adea
+	dc.w	$adf4	; $adec
+	dc.w	$adf4	; $adee
+	dc.w	$adf4	; $adf0
+	dc.w	$adf4	; $adf2
+jump_table_b0dc:
+	dc.w	$b0e6	; $b0dc
+	dc.w	$b0ee	; $b0de
+	dc.w	$b116	; $b0e0
+	dc.w	$b13d	; $b0e2
+	dc.w	$b165	; $b0e4
+jump_table_b3d1:
+	dc.w	$cd88	; $b3d1
+	dc.w	$ccaa	; $b3d3
+	dc.w	$cd88	; $b3d5
+	dc.w	$cd88	; $b3d7
+	dc.w	$cd88	; $b3d9
+	dc.w	$cd88	; $b3db
+	dc.w	$cde7	; $b3dd
+	dc.w	$cde7	; $b3df
+	dc.w	$cd88	; $b3e1
+	dc.w	$cd88	; $b3e3
+	dc.w	$cd88	; $b3e5
+	dc.w	$cd88	; $b3e7
+	dc.w	$cd88	; $b3e9
+	dc.w	$cd88	; $b3eb
+	dc.w	$cd88	; $b3ed
+	dc.w	$cd88	; $b3ef
+	dc.w	$cd21	; $b3f1
+	dc.w	$ce3a	; $b3f3
+	dc.w	$cdfb	; $b3f5
+	dc.w	$ce26	; $b3f7
+	dc.w	$cd88	; $b3f9
+	dc.w	$cd88	; $b3fb
+	dc.w	$cd88	; $b3fd
+	dc.w	$cd88	; $b3ff
+	dc.w	$ce7e	; $b401
+	dc.w	$ce7e	; $b403
+	dc.w	$ce7e	; $b405
+	dc.w	$ce7e	; $b407
+	dc.w	$cd88	; $b409
+	dc.w	$cd88	; $b40b
+	dc.w	$cd88	; $b40d
+	dc.w	$cd88	; $b40f
+	dc.w	$cd88	; $b411
+	dc.w	$cd88	; $b413
+	dc.w	$cd88	; $b415
+	dc.w	$cd88	; $b417
+	dc.w	$cd88	; $b419
+	dc.w	$cd88	; $b41b
+	dc.w	$cd88	; $b41d
+	dc.w	$ccce	; $b41f
+	dc.w	$cd88	; $b421
+	dc.w	$cd88	; $b423
+	dc.w	$cd88	; $b425
+	dc.w	$cd88	; $b427
+	dc.w	$e707	; $b429
+	dc.w	$c503	; $b42b
+jump_table_b44f:
+	dc.w	$bbc8	; $b44f
+	dc.w	$b523	; $b451
+	dc.w	$bc86	; $b453
+	dc.w	$8dc8	; $b455
+	dc.w	$beb1	; $b457
+	dc.w	$8dc8	; $b459
+	dc.w	$b8f2	; $b45b
+	dc.w	$b95a	; $b45d
+	dc.w	$b6dd	; $b45f
+	dc.w	$b6dd	; $b461
+	dc.w	$b718	; $b463
+	dc.w	$b808	; $b465
+	dc.w	$b810	; $b467
+	dc.w	$b720	; $b469
+	dc.w	$8dc8	; $b46b
+	dc.w	$bd5f	; $b46d
+	dc.w	$b523	; $b46f
+	dc.w	$bb6a	; $b471
+	dc.w	$8dc8	; $b473
+	dc.w	$bf1d	; $b475
+	dc.w	$c019	; $b477
+	dc.w	$8dc8	; $b479
+	dc.w	$c0d2	; $b47b
+	dc.w	$c0d5	; $b47d
+	dc.w	$c31a	; $b47f
+	dc.w	$c31a	; $b481
+	dc.w	$c31a	; $b483
+	dc.w	$8dc8	; $b485
+	dc.w	$bbdd	; $b487
+	dc.w	$b706	; $b489
+	dc.w	$c600	; $b48b
+	dc.w	$c600	; $b48d
+	dc.w	$8dc8	; $b48f
+	dc.w	$c78d	; $b491
+	dc.w	$c78d	; $b493
+	dc.w	$cac2	; $b495
+	dc.w	$cafe	; $b497
+	dc.w	$cb9a	; $b499
+	dc.w	$c5e7	; $b49b
+	dc.w	$b523	; $b49d
+	dc.w	$b8f2	; $b49f
+	dc.w	$b95a	; $b4a1
+	dc.w	$c275	; $b4a3
+	dc.w	$c278	; $b4a5
+	dc.w	$8dc8	; $b4a7
+	dc.w	$8dc8	; $b4a9
+	dc.w	$8dc8	; $b4ab
+	dc.w	$8dc8	; $b4ad
+	dc.w	$8dc8	; $b4af
+	dc.w	$8dc8	; $b4b1
+	dc.w	$8dc8	; $b4b3
+	dc.w	$8dc8	; $b4b5
+	dc.w	$8dc8	; $b4b7
+	dc.w	$cd75	; $b4b9
+	dc.w	$cc94	; $b4bb
+	dc.w	$8dc8	; $b4bd
+	dc.w	$8dc8	; $b4bf
+	dc.w	$8dc8	; $b4c1
+	dc.w	$8dc8	; $b4c3
+	dc.w	$8dc8	; $b4c5
+	dc.w	$8dc8	; $b4c7
+	dc.w	$8dc8	; $b4c9
+	dc.w	$8dc8	; $b4cb
+	dc.w	$8dc8	; $b4cd
+	dc.w	$8dc8	; $b4cf
+	dc.w	$8dc8	; $b4d1
+	dc.w	$8dc8	; $b4d3
+	dc.w	$8dc8	; $b4d5
+	dc.w	$8dc8	; $b4d7
+	dc.w	$cd0b	; $b4d9
+	dc.w	$8dc8	; $b4db
+	dc.w	$8dc8	; $b4dd
+	dc.w	$8dc8	; $b4df
+	dc.w	$8dc8	; $b4e1
+	dc.w	$8dc8	; $b4e3
+	dc.w	$8dc8	; $b4e5
+	dc.w	$8dc8	; $b4e7
+	dc.w	$ce59	; $b4e9
+	dc.w	$ce59	; $b4eb
+	dc.w	$ce59	; $b4ed
+	dc.w	$8dc8	; $b4ef
+	dc.w	$8dc8	; $b4f1
+	dc.w	$8dc8	; $b4f3
+	dc.w	$ce9e	; $b4f5
+	dc.w	$ce9e	; $b4f7
+	dc.w	$8dc8	; $b4f9
+	dc.w	$8dc8	; $b4fb
+	dc.w	$8dc8	; $b4fd
+	dc.w	$8dc8	; $b4ff
+	dc.w	$8dc8	; $b501
+	dc.w	$8dc8	; $b503
+	dc.w	$8dc8	; $b505
+	dc.w	$8dc8	; $b507
+	dc.w	$8dc8	; $b509
+	dc.w	$8dc8	; $b50b
+	dc.w	$8dc8	; $b50d
+	dc.w	$8dc8	; $b50f
+	dc.w	$8dc8	; $b511
+	dc.w	$8dc8	; $b513
+	dc.w	$8dc8	; $b515
+	dc.w	$8dc8	; $b517
+	dc.w	$8dc8	; $b519
+	dc.w	$8dc8	; $b51b
+	dc.w	$8dc8	; $b51d
+	dc.w	$8dc8	; $b51f
+	dc.w	$8dc8	; $b521
+jump_table_b4b9:
+	dc.w	$cd75	; $b4b9
+	dc.w	$cc94	; $b4bb
+	dc.w	$8dc8	; $b4bd
+	dc.w	$8dc8	; $b4bf
+	dc.w	$8dc8	; $b4c1
+	dc.w	$8dc8	; $b4c3
+	dc.w	$8dc8	; $b4c5
+	dc.w	$8dc8	; $b4c7
+	dc.w	$8dc8	; $b4c9
+	dc.w	$8dc8	; $b4cb
+	dc.w	$8dc8	; $b4cd
+	dc.w	$8dc8	; $b4cf
+	dc.w	$8dc8	; $b4d1
+	dc.w	$8dc8	; $b4d3
+	dc.w	$8dc8	; $b4d5
+	dc.w	$8dc8	; $b4d7
+	dc.w	$cd0b	; $b4d9
+	dc.w	$8dc8	; $b4db
+	dc.w	$8dc8	; $b4dd
+	dc.w	$8dc8	; $b4df
+	dc.w	$8dc8	; $b4e1
+	dc.w	$8dc8	; $b4e3
+	dc.w	$8dc8	; $b4e5
+	dc.w	$8dc8	; $b4e7
+	dc.w	$ce59	; $b4e9
+	dc.w	$ce59	; $b4eb
+	dc.w	$ce59	; $b4ed
+	dc.w	$8dc8	; $b4ef
+	dc.w	$8dc8	; $b4f1
+	dc.w	$8dc8	; $b4f3
+	dc.w	$ce9e	; $b4f5
+	dc.w	$ce9e	; $b4f7
+	dc.w	$8dc8	; $b4f9
+	dc.w	$8dc8	; $b4fb
+	dc.w	$8dc8	; $b4fd
+	dc.w	$8dc8	; $b4ff
+	dc.w	$8dc8	; $b501
+	dc.w	$8dc8	; $b503
+	dc.w	$8dc8	; $b505
+	dc.w	$8dc8	; $b507
+	dc.w	$8dc8	; $b509
+	dc.w	$8dc8	; $b50b
+	dc.w	$8dc8	; $b50d
+	dc.w	$8dc8	; $b50f
+	dc.w	$8dc8	; $b511
+	dc.w	$8dc8	; $b513
+	dc.w	$8dc8	; $b515
+	dc.w	$8dc8	; $b517
+	dc.w	$8dc8	; $b519
+	dc.w	$8dc8	; $b51b
+	dc.w	$8dc8	; $b51d
+	dc.w	$8dc8	; $b51f
+	dc.w	$8dc8	; $b521
+	dc.w	$cc00	; $b523
+jump_table_b7f4:
+	dc.w	$b72b	; $b7f4
+	dc.w	$b73e	; $b7f6
+	dc.w	$b75a	; $b7f8
+	dc.w	$b777	; $b7fa
+	dc.w	$b782	; $b7fc
+	dc.w	$b777	; $b7fe
+	dc.w	$b777	; $b800
+	dc.w	$b7a1	; $b802
+	dc.w	$b7cf	; $b804
+	dc.w	$b7db	; $b806
+	dc.w	$cc00	; $b808
+jump_table_b804:
+	dc.w	$b7cf	; $b804
+	dc.w	$b7db	; $b806
+	dc.w	$cc00	; $b808
+jump_table_b8de:
+	dc.w	$b820	; $b8de
+	dc.w	$b82b	; $b8e0
+	dc.w	$b84a	; $b8e2
+	dc.w	$b855	; $b8e4
+	dc.w	$b86f	; $b8e6
+	dc.w	$b887	; $b8e8
+	dc.w	$b893	; $b8ea
+	dc.w	$b89e	; $b8ec
+	dc.w	$b8cc	; $b8ee
+	dc.w	$b89e	; $b8f0
+	dc.w	$ec1a	; $b8f2
+jump_table_b8ee:
+	dc.w	$b8cc	; $b8ee
+	dc.w	$b89e	; $b8f0
+	dc.w	$ec1a	; $b8f2
+jump_table_b91b:
+	dc.w	$b925	; $b91b
+	dc.w	$b92b	; $b91d
+	dc.w	$b934	; $b91f
+	dc.w	$b925	; $b921
+	dc.w	$b940	; $b923
+jump_table_b981:
+	dc.w	$b98b	; $b981
+	dc.w	$b991	; $b983
+	dc.w	$b99a	; $b985
+	dc.w	$b98b	; $b987
+	dc.w	$b9a6	; $b989
+jump_table_bbc2:
+	dc.w	$bb8d	; $bbc2
+	dc.w	$bba1	; $bbc4
+	dc.w	$bbb3	; $bbc6
+jump_table_bc0c:
+	dc.w	$bc1e	; $bc0c
+	dc.w	$bc26	; $bc0e
+	dc.w	$bc2c	; $bc10
+	dc.w	$bc2c	; $bc12
+	dc.w	$bc2c	; $bc14
+	dc.w	$bc2c	; $bc16
+	dc.w	$bc2c	; $bc18
+	dc.w	$bc1e	; $bc1a
+	dc.w	$bc55	; $bc1c
+jump_table_bcab:
+	dc.w	$bcbd	; $bcab
+	dc.w	$bcbd	; $bcad
+	dc.w	$bcbd	; $bcaf
+	dc.w	$bcbd	; $bcb1
+	dc.w	$bcc3	; $bcb3
+	dc.w	$bd24	; $bcb5
+	dc.w	$bcbd	; $bcb7
+	dc.w	$bcbd	; $bcb9
+	dc.w	$bd3a	; $bcbb
+jump_table_bd84:
+	dc.w	$bd94	; $bd84
+	dc.w	$bd94	; $bd86
+	dc.w	$bd94	; $bd88
+	dc.w	$bd94	; $bd8a
+	dc.w	$bd9a	; $bd8c
+	dc.w	$be0c	; $bd8e
+	dc.w	$bd94	; $bd90
+	dc.w	$be22	; $bd92
+jump_table_be54:
+	dc.w	$be66	; $be54
+	dc.w	$be66	; $be56
+	dc.w	$be5e	; $be58
+	dc.w	$be66	; $be5a
+	dc.w	$be71	; $be5c
+jump_table_bec5:
+	dc.w	$bec9	; $bec5
+	dc.w	$becf	; $bec7
+jump_table_bf53:
+	dc.w	$bf8a	; $bf53
+	dc.w	$bf8a	; $bf55
+	dc.w	$bf6b	; $bf57
+	dc.w	$bf8a	; $bf59
+	dc.w	$bf8a	; $bf5b
+	dc.w	$bfc7	; $bf5d
+	dc.w	$bf8a	; $bf5f
+	dc.w	$bf8a	; $bf61
+	dc.w	$bf90	; $bf63
+	dc.w	$bf8a	; $bf65
+	dc.w	$bf8a	; $bf67
+	dc.w	$bff0	; $bf69
+jump_table_c04f:
+	dc.w	$c067	; $c04f
+	dc.w	$c0b0	; $c051
+	dc.w	$c0b0	; $c053
+	dc.w	$c067	; $c055
+	dc.w	$c0b0	; $c057
+	dc.w	$c0c8	; $c059
+	dc.w	$c091	; $c05b
+	dc.w	$c0b0	; $c05d
+	dc.w	$c0b0	; $c05f
+	dc.w	$c091	; $c061
+	dc.w	$c0b0	; $c063
+	dc.w	$c0c8	; $c065
+jump_table_c25b:
+	dc.w	$c11f	; $c25b
+	dc.w	$c11f	; $c25d
+	dc.w	$c132	; $c25f
+	dc.w	$c132	; $c261
+	dc.w	$c132	; $c263
+	dc.w	$c152	; $c265
+	dc.w	$c171	; $c267
+	dc.w	$c192	; $c269
+	dc.w	$c1bd	; $c26b
+	dc.w	$c1bd	; $c26d
+	dc.w	$c1d7	; $c26f
+	dc.w	$c227	; $c271
+	dc.w	$c23e	; $c273
+jump_table_c269:
+	dc.w	$c192	; $c269
+	dc.w	$c1bd	; $c26b
+	dc.w	$c1bd	; $c26d
+	dc.w	$c1d7	; $c26f
+	dc.w	$c227	; $c271
+	dc.w	$c23e	; $c273
+jump_table_c2fa:
+	dc.w	$c293	; $c2fa
+	dc.w	$c293	; $c2fc
+	dc.w	$c28c	; $c2fe
+	dc.w	$c28c	; $c300
+	dc.w	$c28c	; $c302
+	dc.w	$c288	; $c304
+	dc.w	$c293	; $c306
+	dc.w	$c299	; $c308
+	dc.w	$c2b6	; $c30a
+	dc.w	$c2b6	; $c30c
+	dc.w	$c2ab	; $c30e
+	dc.w	$c2af	; $c310
+	dc.w	$c2af	; $c312
+	dc.w	$c2bc	; $c314
+	dc.w	$c2b6	; $c316
+	dc.w	$c2ea	; $c318
+	dc.w	$8d3e	; $c31a
+jump_table_c30a:
+	dc.w	$c2b6	; $c30a
+	dc.w	$c2b6	; $c30c
+	dc.w	$c2ab	; $c30e
+	dc.w	$c2af	; $c310
+	dc.w	$c2af	; $c312
+	dc.w	$c2bc	; $c314
+	dc.w	$c2b6	; $c316
+	dc.w	$c2ea	; $c318
+	dc.w	$8d3e	; $c31a
+jump_table_c348:
+	dc.w	$c395	; $c348
+	dc.w	$c41f	; $c34a
+	dc.w	$c3da	; $c34c
+	dc.w	$c41f	; $c34e
+	dc.w	$c395	; $c350
+	dc.w	$c3da	; $c352
+jump_table_c350:
+	dc.w	$c395	; $c350
+	dc.w	$c3da	; $c352
+jump_table_c441:
+	dc.w	$c457	; $c441
+	dc.w	$c47f	; $c443
+	dc.w	$c4ae	; $c445
+	dc.w	$c4ae	; $c447
+	dc.w	$c4ae	; $c449
+	dc.w	$c4b9	; $c44b
+	dc.w	$c4ae	; $c44d
+	dc.w	$c4ae	; $c44f
+	dc.w	$c4ae	; $c451
+	dc.w	$c4ae	; $c453
+	dc.w	$c4d3	; $c455
+jump_table_c4ed:
+	dc.w	$c503	; $c4ed
+	dc.w	$c517	; $c4ef
+	dc.w	$c532	; $c4f1
+	dc.w	$c532	; $c4f3
+	dc.w	$c532	; $c4f5
+	dc.w	$c53d	; $c4f7
+	dc.w	$c532	; $c4f9
+	dc.w	$c532	; $c4fb
+	dc.w	$c532	; $c4fd
+	dc.w	$c532	; $c4ff
+	dc.w	$c557	; $c501
+jump_table_c571:
+	dc.w	$c58b	; $c571
+	dc.w	$c58b	; $c573
+	dc.w	$c596	; $c575
+	dc.w	$c5a7	; $c577
+	dc.w	$c5a7	; $c579
+	dc.w	$c5b2	; $c57b
+	dc.w	$c5a7	; $c57d
+	dc.w	$c5a7	; $c57f
+	dc.w	$c5a7	; $c581
+	dc.w	$c5a7	; $c583
+	dc.w	$c5a7	; $c585
+	dc.w	$c5a7	; $c587
+	dc.w	$c5d5	; $c589
+jump_table_c60c:
+	dc.w	$c610	; $c60c
+	dc.w	$c632	; $c60e
+jump_table_c65c:
+	dc.w	$c662	; $c65c
+	dc.w	$c676	; $c65e
+	dc.w	$c688	; $c660
+jump_table_c69a:
+	dc.w	$c6a0	; $c69a
+	dc.w	$c6b4	; $c69c
+	dc.w	$c6c6	; $c69e
+jump_table_c73e:
+	dc.w	$bbc8	; $c73e
+	dc.w	$b523	; $c740
+	dc.w	$8dc8	; $c742
+	dc.w	$8dc8	; $c744
+	dc.w	$beb1	; $c746
+	dc.w	$8dc8	; $c748
+	dc.w	$b8f2	; $c74a
+	dc.w	$b95a	; $c74c
+	dc.w	$b6dd	; $c74e
+	dc.w	$b6dd	; $c750
+	dc.w	$b718	; $c752
+	dc.w	$b808	; $c754
+	dc.w	$b810	; $c756
+	dc.w	$b720	; $c758
+	dc.w	$8dc8	; $c75a
+	dc.w	$8dc8	; $c75c
+	dc.w	$b523	; $c75e
+	dc.w	$bb6a	; $c760
+	dc.w	$8dc8	; $c762
+	dc.w	$bf1d	; $c764
+	dc.w	$c019	; $c766
+	dc.w	$8dc8	; $c768
+	dc.w	$c6df	; $c76a
+	dc.w	$c0d5	; $c76c
+	dc.w	$c31a	; $c76e
+	dc.w	$c31a	; $c770
+	dc.w	$c31a	; $c772
+	dc.w	$c78c	; $c774
+	dc.w	$bbdd	; $c776
+	dc.w	$b706	; $c778
+	dc.w	$c600	; $c77a
+	dc.w	$c78c	; $c77c
+	dc.w	$c78c	; $c77e
+	dc.w	$c78d	; $c780
+	dc.w	$c78d	; $c782
+	dc.w	$c71a	; $c784
+	dc.w	$cafe	; $c786
+	dc.w	$cb9a	; $c788
+	dc.w	$c5e7	; $c78a
+jump_table_c798:
+	dc.w	$c7ac	; $c798
+	dc.w	$c7ac	; $c79a
+	dc.w	$c7ac	; $c79c
+	dc.w	$c7c6	; $c79e
+	dc.w	$c80d	; $c7a0
+	dc.w	$c84c	; $c7a2
+	dc.w	$c88b	; $c7a4
+	dc.w	$c7ac	; $c7a6
+	dc.w	$c7ac	; $c7a8
+	dc.w	$c8c7	; $c7aa
+jump_table_c902:
+	dc.w	$c916	; $c902
+	dc.w	$c916	; $c904
+	dc.w	$c930	; $c906
+	dc.w	$c977	; $c908
+	dc.w	$c9b6	; $c90a
+	dc.w	$c9f5	; $c90c
+	dc.w	$ca34	; $c90e
+	dc.w	$ca73	; $c910
+	dc.w	$c916	; $c912
+	dc.w	$caa9	; $c914
+jump_table_cb09:
+	dc.w	$cb29	; $cb09
+	dc.w	$cb29	; $cb0b
+	dc.w	$cb29	; $cb0d
+	dc.w	$cb29	; $cb0f
+	dc.w	$cb29	; $cb11
+	dc.w	$cb29	; $cb13
+	dc.w	$cb29	; $cb15
+	dc.w	$cb29	; $cb17
+	dc.w	$cb29	; $cb19
+	dc.w	$cb29	; $cb1b
+	dc.w	$cb29	; $cb1d
+	dc.w	$cb29	; $cb1f
+	dc.w	$cb29	; $cb21
+	dc.w	$cb34	; $cb23
+	dc.w	$cb52	; $cb25
+	dc.w	$cb5e	; $cb27
+jump_table_cbaa:
+	dc.w	$cbb8	; $cbaa
+	dc.w	$cbb8	; $cbac
+	dc.w	$cbb2	; $cbae
+	dc.w	$cbbe	; $cbb0
+jump_table_cd9d:
+	dc.w	$cda5	; $cd9d
+	dc.w	$cdb7	; $cd9f
+	dc.w	$cdb7	; $cda1
+	dc.w	$cdc2	; $cda3
+jump_table_ceda:
+	dc.w	$cf21	; $ceda
+	dc.w	$cf21	; $cedc
+	dc.w	$cf21	; $cede
+	dc.w	$cf20	; $cee0
+	dc.w	$cf21	; $cee2
+	dc.w	$cf21	; $cee4
+	dc.w	$cf21	; $cee6
+	dc.w	$cf21	; $cee8
+	dc.w	$dc88	; $ceea
+	dc.w	$e30a	; $ceec
+	dc.w	$ed0a	; $ceee
+	dc.w	$dc8a	; $cef0
+	dc.w	$e30c	; $cef2
+	dc.w	$ed0c	; $cef4
+jump_table_d214:
+	dc.w	$d22c	; $d214
+	dc.w	$d38e	; $d216
+	dc.w	$d4c2	; $d218
+	dc.w	$d447	; $d21a
+	dc.w	$d213	; $d21c
+	dc.w	$d213	; $d21e
+	dc.w	$d213	; $d220
+	dc.w	$d213	; $d222
+	dc.w	$d541	; $d224
+	dc.w	$d541	; $d226
+	dc.w	$d576	; $d228
+	dc.w	$d62d	; $d22a
+jump_table_d236:
+	dc.w	$d23e	; $d236
+	dc.w	$d23e	; $d238
+	dc.w	$d2f4	; $d23a
+	dc.w	$d2f4	; $d23c
+jump_table_d4f9:
+	dc.w	$d4cc	; $d4f9
+	dc.w	$d4de	; $d4fb
+	dc.w	$d4f0	; $d4fd

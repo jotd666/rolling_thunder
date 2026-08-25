@@ -77,7 +77,7 @@ def process(asm_file,rom_file,offset,end_address):
 
 
             else:
-                for j in range(i-1,i-3,-1):
+                for j in range(i-1,i-5,-1):
                     prev = asm_lines[j]
                     m = re.search("LD(.)\s+#\$(\w+)",prev)
                     if m:
@@ -135,10 +135,10 @@ def process(asm_file,rom_file,offset,end_address):
 
                     if a != 0xFFFF and a != first_entry and a not in inst_addresses:
                         closest_idx = bisect.bisect(inst_addresses_list,a)
-                        if closest_idx < len(inst_addresses_list):
-                            closest_address = inst_addresses_list[closest_idx]
-                            print(f"{label}: table entry {a:04x} not in listing (closest: {closest_address:04x})")
-                            not_in_listing.add((a,closest_address))
+##                        if closest_idx < len(inst_addresses_list):
+##                            closest_address = inst_addresses_list[closest_idx]
+##                            print(f"{label}: table entry {a:04x} not in listing (closest: {closest_address:04x})")
+##                            not_in_listing.add((a,closest_address))
 
                     nb_entries += 1
                     table_address += 2
@@ -151,8 +151,9 @@ def process(asm_file,rom_file,offset,end_address):
 
                 if nb_entries < 2:
                     print(f"{label}: no or not enough entries")
-                asm_lines[i]  = line.strip()+f" [nb_entries={nb_entries}]\n"
-                print(asm_lines[i])
+                if "[nb_entries=" not in line:
+                    asm_lines[i]  = line.strip()+f" [nb_entries={nb_entries}]\n"
+
 ##    # write mame debug script to find missing entrypoints
 ##    # once run in MAME, use "type d-*asm > missing.asm 2>&1" to reunite the dumps
 ##    with open("debug_script","w") as f:
@@ -163,5 +164,22 @@ def process(asm_file,rom_file,offset,end_address):
     with open(this_dir / (asm_file.stem + "_new.asm"),"w") as f:
         f.writelines(asm_lines)
 
-process(this_dir/"../src/cpu2_8000_6809.asm",this_dir/"../assets/rom_cpu2.bin",offset=0x8000,end_address=0x10000)
+#process(this_dir/"../src/cpu2_8000_6809.asm",this_dir/"../assets/rom_cpu2.bin",offset=0x8000,end_address=0x10000)
 #process(this_dir / "../src/cpu1_8000_6809.asm",this_dir/"../assets/rom_cpu1.bin",offset=0x8000,end_address=0x10000)
+
+with open(this_dir/"../assets/rom_cpu1.bin","rb") as f,open(this_dir/"table_of_jump_tables_cpu1.asm","w") as fw:
+    contents = f.read()
+    for table_address in [0xB8D3,
+    0xB93D,
+    0xB9A7,
+    0xBA11,
+    0xCEB8,
+    0xB7A6]:
+        fw.write(f"jump_table_{table_address:04x}:\n")
+        block = contents[table_address-0x8000:]
+        for j in range(0,len(block),2):
+            a = block[j+1] + block[j]*256   # big endian!
+            if a not in fake and (0x8000 > a):
+                break
+            fw.write(f"\t.word\t${a:04x}\n")
+
