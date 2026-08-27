@@ -169,12 +169,11 @@ def process(asm_file,rom_file,offset,end_address):
 
 with open(this_dir/"../assets/rom_cpu1.bin","rb") as f,open(this_dir/"table_of_jump_tables_cpu1.asm","w") as fw:
     contents = f.read()
-    for table_address in [0xB8D3,
-    0xB93D,
-    0xB9A7,
-    0xBA11,
-    0xCEB8,
-    0xB7A6]:
+    for table_address in [0xb6e6,
+0xb750,
+0xb7ba,
+0xbab8,
+]:
         fw.write(f"jump_table_{table_address:04x}:\n")
         block = contents[table_address-0x8000:]
         for j in range(0,len(block),2):

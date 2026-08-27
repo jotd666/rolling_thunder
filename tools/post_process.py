@@ -22,6 +22,16 @@ this_dir = pathlib.Path(__file__).absolute().parent
 
 source_dir = this_dir / "../src"
 
+
+# empty template
+single_line_to_cc_protect = set()
+remove_error_in_next_line = {0x9730,0x9756}
+remove_error_in_prev_line =set()
+line_to_push_cc_protect = set() | single_line_to_cc_protect
+line_to_pull_cc_protect = set() | single_line_to_cc_protect
+line_to_pull_cc_prev_protect = set()
+
+
 # game_specific: replace or remove I/O addresses
 input_dict = {
 "watchdog_8000":"",
@@ -29,7 +39,17 @@ input_dict = {
 
 def game_specific(address,lines,i):
     line = lines[i]
-
+    if address in [0x9728,0x974e]:
+        lines[i+1]=""
+    elif address in [0x972b,0x9751]:
+        line = change_instruction("add.b\t#0x20,(a0)",lines,i)
+    elif address in [0x972D,0x9753]:
+        line = remove_instruction(lines,i)
+    elif address == 0xC663:
+        # replace stack pull by direct read of B/D1
+        line = change_instruction("move.w\t(4,a7),d4",lines,i)
+    elif address in [0x8592,0x85a1]:
+        line = change_instruction("rts",lines,i)  # rti => rts
     return line
 
 dreg_dict = {'a':'d0','b':'d1'}
@@ -123,6 +143,38 @@ def remove_continuing_lines(lines,i):
             break
 
 
+def check_stack_usage(lines,i):
+    line = lines[i]
+    if any(x for x in ("[alloc_locals]","[free_locals]","[local]")):
+        for j in range(1,4):
+            if "ERROR" in lines[i-j] and " S " in lines[i-j]:
+               lines[i-j]=remove_error(lines[i-j],True)
+
+
+    if "[manual_stack_push]" in line:
+        # native/target word D, or byte A,B stack mix goes crashy crashy
+        arg = line.split()[1].lower()
+        param = arg.split(",")[0]
+        if param == "d0/d1":
+            line = "\tsubq.w\t#2,d5\n"+change_instruction("GET_REG_ADDRESS\t0,d5",lines,i) + "\tMAKE_D\n\tMOVE_W_FROM_REG\td1,a0\n"
+        else:
+            # native/target byte A/B stack mix goes crashy crashy
+            line = "\tsubq.w\t#1,d5\n" + change_instruction("GET_REG_ADDRESS\t0,d5",lines,i) + f"\tmove.b\t{param},(a0)\n"
+
+    elif "[manual_stack_pull]" in line:
+        # native/target word D, or byte A,B stack mix goes crashy crashy
+        arg = line.split()[1].lower()
+        param = arg.split(",")[1]
+        line = change_instruction("GET_REG_ADDRESS\t0,d5",lines,i)
+        if param == "d0/d1":
+             line += "\taddq.w\t#2,d5\n\tMOVE_W_TO_REG\ta0,d1\n"
+        else:
+            # native/target byte A/B stack mix goes crashy crashy
+            line += f"\taddq.w\t#1,d5\n\tmove.b\t(a0),{param}\n"
+        if ",pc" in lines[i].lower():  # puls ...,pc
+            line += "\trts\n"
+
+    return line
 
 def handle_special_addresses(lines,i):
     line = lines[i]
@@ -174,6 +226,7 @@ for i,line in enumerate(lines):
 
     line = handle_special_addresses(lines,i)
 
+    line = check_stack_usage(lines,i)
     ###############################################
     # game_specific
     line = process_jump_table(line)
@@ -188,6 +241,20 @@ for i,line in enumerate(lines):
 
 ##    if any(x in line for x in ( "check explicit S usage",)):
 ##        line = remove_error(line,ignore_missing=True)
+
+    if address in remove_error_in_prev_line:
+        lines[i-1] = remove_error(lines[i-1].strip()+f" ({address:04x})")
+    if address in remove_error_in_next_line:
+        lines[i+1] = remove_error(lines[i+1].strip()+f" ({address:04x})")
+    if address in line_to_pull_cc_protect:
+        # protect the sub instructions if any
+        for j in range(i+1,len(lines)):
+            if not "[...]" in lines[j]:
+                break
+
+        lines[j-1] += "\tPOP_SR\n"
+        if j-1==i:
+            line = lines[i]
 
     if "[global]" in line:
         label = line.split(":")[0]
