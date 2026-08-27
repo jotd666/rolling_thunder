@@ -31,6 +31,7 @@ bankswitch_6800 = $6800
 irq_ack_8400 = $8400
 watchdog_8000 = $8000
 
+cpu1_boot_0000:    ; [global]
 8000: 1A 10       ORCC   #$10
 8002: 10 CE 58 00 LDS    #$5800
 8006: 86 56       LDA    #$56
@@ -685,13 +686,8 @@ jump_table_85a2:
 8614: B6 54 2B    LDA    $542B
 8617: 48          ASLA
 8618: CE 86 1D    LDU    #jump_table_861d
-861B: 6E D6       JMP    [A,U]        ; [indirect_jump]
-jump_table_861d:
-JT861D: 86 27       LDA    #$27
-JT861F: 86 33       LDA    #$33
-JT8621: 86 46       LDA    #$46
-JT8623: 89 37       ADCA   #$37
-JT8625: 8C 87
+861B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
+	
 8628: 5F          CLRB
 8629: F1 8A 80    CMPB   $8A80
 862C: B7 5F F1    STA    $5FF1
@@ -11061,3 +11057,9 @@ jump_table_dcdb:
 	dc.w	$dce1	; $dcdb
 	dc.w	$dce9	; $dcdd
 	dc.w	$dcf1	; $dcdf
+jump_table_861d:
+	.word	$8627
+	.word	$8633
+	.word	$8646
+	.word	$8937
+	.word	$8c87
