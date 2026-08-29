@@ -30,20 +30,26 @@ bankswitch_shadow_19 = $19
 bankswitch_6800 = $6800
 irq_ack_8400 = $8400
 watchdog_8000 = $8000
+unknown_6e00 = $6E00
+unknown_6200 = $6200
+unknown_6600 = $6600
+unknown_6C00 = $6C00
+cpu_sync_5ff0 = $5ff0
 
 cpu1_boot_0000:    ; [global]
 8000: 1A 10       ORCC   #$10
-8002: 10 CE 58 00 LDS    #$5800
+8002: 10 CE 58 00 LDS    #$5800		; set stack to almost top RAM
 8006: 86 56       LDA    #$56
-8008: 1F 8B       TFR    A,DP
+8008: 1F 8B       TFR    A,DP		; direct page: $5600
 800A: 4F          CLRA
-800B: B7 6E 00    STA    $6E00
-800E: B7 62 00    STA    $6200
-8011: B7 66 00    STA    $6600
-8014: B7 6C 00    STA    $6C00
+800B: B7 6E 00    STA    unknown_6e00		; bank switch?
+800E: B7 62 00    STA    unknown_6200		; bank switch?
+8011: B7 66 00    STA    unknown_6600		; bank switch?
+8014: B7 6C 00    STA    unknown_6C00		; bank switch?
 8017: 7F 5F F1    CLR    $5FF1
 801A: 7F 5F F3    CLR    $5FF3
-801D: 7F 5F F0    CLR    $5FF0
+801D: 7F 5F F0    CLR    cpu_sync_5ff0
+; copy RAM with ROM start several times
 8020: 8E 80 00    LDX    #watchdog_8000
 8023: 10 8E 00 00 LDY    #$0000
 8027: EC 81       LDD    ,X++
@@ -51,9 +57,10 @@ cpu1_boot_0000:    ; [global]
 802B: B7 80 00    STA    watchdog_8000
 802E: 10 8C 20 00 CMPY   #$2000
 8032: 26 F3       BNE    $8027
-8034: 7C 5F F0    INC    $5FF0
+8034: 7C 5F F0    INC    cpu_sync_5ff0
 8037: B7 80 00    STA    watchdog_8000
-803A: B6 5F F0    LDA    $5FF0
+; wait for cpu 2 sync
+803A: B6 5F F0    LDA    cpu_sync_5ff0
 803D: 81 02       CMPA   #$02
 803F: 26 F6       BNE    $8037
 8041: 8E 80 00    LDX    #watchdog_8000
@@ -76,9 +83,9 @@ cpu1_boot_0000:    ; [global]
 806E: B7 80 00    STA    watchdog_8000
 8071: 10 8C 40 00 CMPY   #$4000
 8075: 26 F3       BNE    $806A
-8077: 7C 5F F0    INC    $5FF0
+8077: 7C 5F F0    INC    cpu_sync_5ff0
 807A: B7 80 00    STA    watchdog_8000
-807D: B6 5F F0    LDA    $5FF0
+807D: B6 5F F0    LDA    cpu_sync_5ff0
 8080: 81 04       CMPA   #$04
 8082: 26 F6       BNE    $807A
 8084: 8E 80 00    LDX    #watchdog_8000
@@ -99,11 +106,11 @@ cpu1_boot_0000:    ; [global]
 80AD: EC 81       LDD    ,X++
 80AF: ED A1       STD    ,Y++
 80B1: B7 80 00    STA    watchdog_8000
-80B4: 10 8C 5F F0 CMPY   #$5FF0
+80B4: 10 8C 5F F0 CMPY   #cpu_sync_5ff0
 80B8: 26 F3       BNE    $80AD
-80BA: 7C 5F F0    INC    $5FF0
+80BA: 7C 5F F0    INC    cpu_sync_5ff0
 80BD: B7 80 00    STA    watchdog_8000
-80C0: B6 5F F0    LDA    $5FF0
+80C0: B6 5F F0    LDA    cpu_sync_5ff0
 80C3: 81 06       CMPA   #$06
 80C5: 26 F6       BNE    $80BD
 80C7: 8E 80 00    LDX    #watchdog_8000
@@ -113,13 +120,13 @@ cpu1_boot_0000:    ; [global]
 80D2: B7 80 00    STA    watchdog_8000
 80D5: 81 FF       CMPA   #$FF
 80D7: 26 08       BNE    $80E1
-80D9: 10 8C 5F F0 CMPY   #$5FF0
+80D9: 10 8C 5F F0 CMPY   #cpu_sync_5ff0
 80DD: 26 EF       BNE    $80CE
 80DF: 20 08       BRA    $80E9
 80E1: B6 5F F1    LDA    $5FF1
 80E4: 8A 10       ORA    #$10
 80E6: B7 5F F1    STA    $5FF1
-80E9: 7C 5F F0    INC    $5FF0
+80E9: 7C 5F F0    INC    cpu_sync_5ff0
 80EC: 5F          CLRB
 80ED: 8E 80 00    LDX    #watchdog_8000
 80F0: B7 80 00    STA    watchdog_8000
@@ -151,12 +158,13 @@ cpu1_boot_0000:    ; [global]
 812F: B6 5F F1    LDA    $5FF1
 8132: 8A 20       ORA    #$20
 8134: B7 5F F1    STA    $5FF1
-8137: 7F 5F F0    CLR    $5FF0
+8137: 7F 5F F0    CLR    cpu_sync_5ff0
 813A: B7 80 00    STA    watchdog_8000
 813D: B6 5F F3    LDA    $5FF3
 8140: 27 F5       BEQ    $8137
 8142: B6 5F F1    LDA    $5FF1
-8145: 27 49       BEQ    $8190
+8145: 27 49       BEQ    normal_start_8190
+; service mode or whatever: not good
 8147: 86 01       LDA    #$01
 8149: B7 5F F6    STA    $5FF6
 814C: BD 83 C9    JSR    $83C9
@@ -186,8 +194,12 @@ cpu1_boot_0000:    ; [global]
 8182: 10 8E 81 CA LDY    #$81CA
 8186: A6 A6       LDA    A,Y
 8188: ED C8 10    STD    $10,U
+; infinite loop
 818B: B7 80 00    STA    watchdog_8000
 818E: 20 FB       BRA    $818B
+
+normal_start_8190:
+; clear memory
 8190: 8E 56 00    LDX    #$5600
 8193: CC 00 00    LDD    #$0000
 8196: ED 81       STD    ,X++
@@ -505,13 +517,13 @@ cpu1_boot_0000:    ; [global]
 846D: CC 00 00    LDD    #$0000
 8470: 97 24       STA    $24
 8472: ED 81       STD    ,X++
-8474: 8C 5F F0    CMPX   #$5FF0
+8474: 8C 5F F0    CMPX   #cpu_sync_5ff0
 8477: 25 F9       BCS    $8472
 8479: 8E 58 09    LDX    #$5809
 847C: 86 E0       LDA    #$E0
 847E: A7 84       STA    ,X
 8480: 30 88 10    LEAX   $10,X
-8483: 8C 5F F0    CMPX   #$5FF0
+8483: 8C 5F F0    CMPX   #cpu_sync_5ff0
 8486: 25 F6       BCS    $847E
 8488: B7 80 00    STA    watchdog_8000
 848B: 39          RTS
@@ -705,7 +717,7 @@ jump_table_85a2:
 862F: 7C 54 2B    INC    $542B
 8632: 39          RTS
 8633: 7F 5F F3    CLR    $5FF3
-8636: 7F 5F F0    CLR    $5FF0
+8636: 7F 5F F0    CLR    cpu_sync_5ff0
 8639: BD 83 C9    JSR    $83C9
 863C: BD 84 6A    JSR    $846A
 863F: BD 84 13    JSR    $8413
@@ -1230,22 +1242,22 @@ jump_table_85a2:
 8B03: B6 42 7A    LDA    $427A
 8B06: BA 42 6E    ORA    $426E
 8B09: 27 11       BEQ    $8B1C
-8B0B: B6 5F F0    LDA    $5FF0
+8B0B: B6 5F F0    LDA    cpu_sync_5ff0
 8B0E: 26 07       BNE    $8B17
 8B10: 86 02       LDA    #$02
-8B12: B7 5F F0    STA    $5FF0
+8B12: B7 5F F0    STA    cpu_sync_5ff0
 8B15: 20 1C       BRA    $8B33
-8B17: 7A 5F F0    DEC    $5FF0
+8B17: 7A 5F F0    DEC    cpu_sync_5ff0
 8B1A: 20 17       BRA    $8B33
 8B1C: B6 42 7C    LDA    $427C
 8B1F: BA 42 70    ORA    $4270
 8B22: 27 0F       BEQ    $8B33
-8B24: B6 5F F0    LDA    $5FF0
+8B24: B6 5F F0    LDA    cpu_sync_5ff0
 8B27: 81 02       CMPA   #$02
 8B29: 26 05       BNE    $8B30
-8B2B: 7F 5F F0    CLR    $5FF0
+8B2B: 7F 5F F0    CLR    cpu_sync_5ff0
 8B2E: 20 03       BRA    $8B33
-8B30: 7C 5F F0    INC    $5FF0
+8B30: 7C 5F F0    INC    cpu_sync_5ff0
 8B33: B6 5F F3    LDA    $5FF3
 8B36: 8E 42 85    LDX    #$4285
 8B39: F6 42 7E    LDB    $427E
@@ -1274,7 +1286,7 @@ jump_table_85a2:
 8B72: 7F 43 80    CLR    $4380
 8B75: 7F 54 2C    CLR    $542C
 8B78: 4A          DECA
-8B79: F6 5F F0    LDB    $5FF0
+8B79: F6 5F F0    LDB    cpu_sync_5ff0
 8B7C: C1 02       CMPB   #$02
 8B7E: 26 0C       BNE    $8B8C
 8B80: 4D          TSTA
@@ -1293,11 +1305,11 @@ jump_table_85a2:
 8B97: 25 0A       BCS    $8BA3
 8B99: 4F          CLRA
 8B9A: 20 07       BRA    $8BA3
-8B9C: F6 5F F0    LDB    $5FF0
+8B9C: F6 5F F0    LDB    cpu_sync_5ff0
 8B9F: 26 02       BNE    $8BA3
 8BA1: 84 1F       ANDA   #$1F
 8BA3: B7 5F F3    STA    $5FF3
-8BA6: F6 5F F0    LDB    $5FF0
+8BA6: F6 5F F0    LDB    cpu_sync_5ff0
 8BA9: C1 01       CMPB   #$01
 8BAB: 24 38       BCC    $8BE5
 8BAD: CE 8E EC    LDU    #$8EEC

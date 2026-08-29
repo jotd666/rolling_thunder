@@ -1,6 +1,9 @@
-;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::spriteram_w)).share("spriteram");
-;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");
-;	map(0x4000, 0x5fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");
+;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::spriteram_w)).share("spriteram");   shared with 0x4000-0x5FFF of maincpu
+;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");   shared with map(0x0000, 0x1fff) maincpu
+;	map(0x4000, 0x5fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");   shared with map(0x2000, 0x3fff) maincpu
+
+
+
 ;	map(0x6000, 0x7fff).bankr("bank2");
 ;	map(0x8000, 0xffff).rom();
 ;	map(0x8000, 0x8000).w(FUNC(namcos86_state::watchdog2_w));
@@ -11,6 +14,7 @@
 
 watchdog_8000 = $8000
 bankswitch2_d803 = $d803
+cpu_sync_1ff0 = $1ff0
 
 8000: 1A 10       ORCC   #$10		; disable interrupts
 8002: 10 CE 04 00 LDS    #$0400		; set stack
@@ -21,7 +25,8 @@ bankswitch2_d803 = $d803
 800E: 4A          DECA
 800F: 26 FA       BNE    $800B
 8011: B7 80 00    STA    watchdog_8000
-8014: B6 1F F0    LDA    $1FF0
+; sync with other cpu
+8014: B6 1F F0    LDA    cpu_sync_1ff0
 8017: 26 F8       BNE    $8011
 8019: 8E 20 00    LDX    #$2000
 801C: A6 84       LDA    ,X
@@ -30,9 +35,10 @@ bankswitch2_d803 = $d803
 8021: B7 80 00    STA    watchdog_8000
 8024: 8C 40 00    CMPX   #$4000
 8027: 25 F3       BCS    $801C
-8029: 7C 1F F0    INC    $1FF0
+8029: 7C 1F F0    INC    cpu_sync_1ff0
 802C: B7 80 00    STA    watchdog_8000
-802F: B6 1F F0    LDA    $1FF0
+; sync with other cpu
+802F: B6 1F F0    LDA    cpu_sync_1ff0
 8032: 81 03       CMPA   #$03
 8034: 26 F6       BNE    $802C
 8036: 8E 40 00    LDX    #$4000
@@ -42,9 +48,10 @@ bankswitch2_d803 = $d803
 803E: B7 80 00    STA    watchdog_8000
 8041: 8C 60 00    CMPX   #$6000
 8044: 26 F3       BNE    $8039
-8046: 7C 1F F0    INC    $1FF0
+8046: 7C 1F F0    INC    cpu_sync_1ff0
 8049: B7 80 00    STA    watchdog_8000
-804C: B6 1F F0    LDA    $1FF0
+; sync with other cpu
+804C: B6 1F F0    LDA    cpu_sync_1ff0
 804F: 81 05       CMPA   #$05
 8051: 26 F6       BNE    $8049
 8053: 8E 04 00    LDX    #$0400
@@ -52,11 +59,11 @@ bankswitch2_d803 = $d803
 8058: 43          COMA
 8059: A7 80       STA    ,X+
 805B: B7 80 00    STA    watchdog_8000
-805E: 8C 1F F0    CMPX   #$1FF0
+805E: 8C 1F F0    CMPX   #cpu_sync_1ff0
 8061: 26 F3       BNE    $8056
-8063: 7C 1F F0    INC    $1FF0
+8063: 7C 1F F0    INC    cpu_sync_1ff0
 8066: B7 80 00    STA    watchdog_8000
-8069: B6 1F F0    LDA    $1FF0
+8069: B6 1F F0    LDA    cpu_sync_1ff0
 806C: 81 07       CMPA   #$07
 806E: 26 F6       BNE    $8066
 8070: 8E 80 00    LDX    #watchdog_8000
@@ -98,7 +105,7 @@ mainloop_80a3:
 80C1: CC 00 00    LDD    #$0000
 80C4: 97 24       STA    $24
 80C6: ED 81       STD    ,X++
-80C8: 8C 1F F0    CMPX   #$1FF0
+80C8: 8C 1F F0    CMPX   #cpu_sync_1ff0
 80CB: 25 F9       BCS    $80C6
 80CD: 30 08       LEAX   $8,X
 80CF: ED 81       STD    ,X++
@@ -198,13 +205,7 @@ mainloop_80a3:
 81A6: B7 80 00    STA    watchdog_8000
 81A9: B7 88 00    STA    $8800
 81AC: 3B          RTI
-81AD: 80 A8       SUBA   #$A8
-81AF: 85 2A       BITA   #$2A
-81B1: 85 4F       BITA   #$4F
-81B3: 87 68       XSTA   #$68
-81B5: 88 00       EORA   #$00
-81B7: 88 C4       EORA   #$C4
-81B9: 88 E9       EORA   #$E9
+
 81BB: 96 52       LDA    $52
 81BD: 9B 53       ADDA   $53
 81BF: 9B 32       ADDA   $32
@@ -389,7 +390,7 @@ mainloop_80a3:
 832F: B7 80 00    STA    watchdog_8000
 8332: 39          RTS
 
-8344: 10 EE 84    LDS    ,X
+
 8347: 8E 84 9B    LDX    #$849B
 834A: A6 C4       LDA    ,U
 834C: 44          LSRA
@@ -567,15 +568,10 @@ mainloop_80a3:
 848D: 86 E0       LDA    #$E0
 848F: A7 A4       STA    ,Y
 8491: 31 A8 10    LEAY   $10,Y
-8494: 10 8C 1F F0 CMPY   #$1FF0
+8494: 10 8C 1F F0 CMPY   #cpu_sync_1ff0
 8498: 25 F5       BCS    $848F
 849A: 39          RTS
-849B: 00 00       NEG    $00
-849D: 01 00       NEG    $00
-849F: 01 00       NEG    $00
-84A1: 00 00       NEG    $00
-84A3: 00 01       NEG    $01
-84A5: 01 00       NEG    $00
+
 84A7: 8E 04 10    LDX    #$0410
 84AA: 96 03       LDA    $03
 84AC: 81 03       CMPA   #$03
@@ -603,42 +599,7 @@ mainloop_80a3:
 84DE: 0C 05       INC    $05
 84E0: 0F 07       CLR    $07
 84E2: 39          RTS
-84E3: 84 E7       ANDA   #$E7
-84E5: 84 FB       ANDA   #$FB
-84E7: 85 18       BITA   #$18
-84E9: 85 21       BITA   #$21
-84EB: 85 18       BITA   #$18
-84ED: 85 21       BITA   #$21
-84EF: 85 18       BITA   #$18
-84F1: 85 18       BITA   #$18
-84F3: 85 18       BITA   #$18
-84F5: 85 18       BITA   #$18
-84F7: 85 18       BITA   #$18
-84F9: 85 18       BITA   #$18
-84FB: 85 18       BITA   #$18
-84FD: 85 21       BITA   #$21
-84FF: 85 18       BITA   #$18
-8501: 85 18       BITA   #$18
-8503: 85 18       BITA   #$18
-8505: 85 18       BITA   #$18
-8507: 85 18       BITA   #$18
-8509: 85 18       BITA   #$18
-850B: 85 18       BITA   #$18
-850D: 85 18       BITA   #$18
-850F: 03 01       COM    $01
-8511: 00 00       NEG    $00
-8513: 80 05       SUBA   #$05
-8515: 80 01       SUBA   #$01
-8517: 00 00       NEG    $00
-8519: 01 00       NEG    $00
-851B: 00 80       NEG    $80
-851D: 06 00       ROR    $00
-851F: 01 00       NEG    $00
-8521: 00 01       NEG    $01
-8523: 00 00       NEG    $00
-8525: 40          NEGA
-8526: 06 00       ROR    $00
-8528: 07 80       ASR    $80
+
 852A: 96 05       LDA    $05
 852C: 91 04       CMPA   $04
 852E: 23 01       BLS    $8531
@@ -646,6 +607,7 @@ mainloop_80a3:
 8531: CE 85 37    LDU    #jump_table_8537
 8534: 48          ASLA
 8535: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
+
 853B: 0C 05       INC    $05
 853D: 0F 07       CLR    $07
 853F: BD 80 BE    JSR    $80BE
@@ -773,9 +735,7 @@ mainloop_80a3:
 864D: 39          RTS
 864E: 30 88 20    LEAX   $20,X
 8651: 20 99       BRA    $85EC
-8653: 01 02       NEG    $02
-8655: 04 08       LSR    $08
-8657: 10 20 40 EC XLBRA  $C747
+
 865B: 1C 10       ANDCC  #$10
 865D: 83 FC 00    SUBD   #$FC00
 8660: 2D 28       BLT    $868A
@@ -3335,12 +3295,7 @@ mainloop_80a3:
 9F3B: 97 E4       STA    $E4
 9F3D: 6C 09       INC    $9,X
 9F3F: 39          RTS
-9F40: 00 14       NEG    $14
-9F42: 1E 32       EXG    U,Y
-9F44: 00 00       NEG    $00
-9F46: 01 28       NEG    $28
-9F48: 01 50       NEG    $50
-9F4A: 01 64       NEG    $64
+
 9F4C: EE 10       LDU    -$10,X
 9F4E: A6 41       LDA    $1,U
 9F50: 85 20       BITA   #$20
@@ -3915,36 +3870,8 @@ A4B7: 10 8E A4 E5 LDY    #$A4E5
 A4BB: 7E A2 D2    JMP    $A2D2
 A4BE: 10 8E A4 F5 LDY    #$A4F5
 A4C2: 7E A2 D2    JMP    $A2D2
-A4C5: 01 7B       NEG    $7B
-A4C7: 0C 00       INC    $00
-A4C9: 40          NEGA
-A4CA: FF 80 00    STU    watchdog_8000
-A4CD: F0 01 7B    SUBB   $017B
-A4D0: 3C 00       CWAI   #$00
-A4D2: 80 00       SUBA   #$00
-A4D4: F0 02 7B    SUBB   $027B
-A4D7: 10 FF C0 FF STS    $C0FF
-A4DB: 80 00       SUBA   #$00
-A4DD: F0 02 7B    SUBB   $027B
-A4E0: 40          NEGA
-A4E1: FE 80 00    LDU    watchdog_8000
-A4E4: F0 05 7B    SUBB   $057B
-A4E7: 0C 00       INC    $00
-A4E9: 20 FF       BRA    $A4EA
-A4EB: 80 00       SUBA   #$00
-A4ED: F0 01 7B    SUBB   $017B
-A4F0: 3C 00       CWAI   #$00
-A4F2: 80 00       SUBA   #$00
-A4F4: F0 06 7B    SUBB   $067B
-A4F7: 10 FF E0 FF STS    $E0FF
-A4FB: 80 00       SUBA   #$00
-A4FD: F0 02 7B    SUBB   $027B
-A500: 40          NEGA
-A501: FE 80 00    LDU    watchdog_8000
-A504: F0 A3 E0    SUBB   $A3E0
-A507: A3 EB       SUBD   D,S
-A509: A4 0D       ANDA   $D,X
-A50B: A4 28       ANDA   $8,Y
+
+
 A50D: DC CC       LDD    $CC
 A50F: 27 4A       BEQ    $A55B
 A511: CE A5 1B    LDU    #jump_table_a51b
@@ -4256,23 +4183,7 @@ A7DD: 10 8E A7 EB LDY    #$A7EB
 A7E1: 7E A6 42    JMP    $A642
 A7E4: 10 8E A7 FB LDY    #$A7FB
 A7E8: 7E A6 42    JMP    $A642
-A7EB: 09 7B       ROL    $7B
-A7ED: 0C 00       INC    $00
-A7EF: 40          NEGA
-A7F0: FF 80 00    STU    watchdog_8000
-A7F3: F0 01 7B    SUBB   $017B
-A7F6: 3C 00       CWAI   #$00
-A7F8: 80 00       SUBA   #$00
-A7FA: F0 0A 7B    SUBB   $0A7B
-A7FD: 10 FF C0 FF STS    $C0FF
-A801: 80 00       SUBA   #$00
-A803: F0 02 7B    SUBB   $027B
-A806: 40          NEGA
-A807: FE 80 00    LDU    watchdog_8000
-A80A: F0 A7 21    SUBB   $A721
-A80D: A7 2C       STA    $C,Y
-A80F: A7 4E       STA    $E,U
-A811: A7 69       STA    $9,S
+
 A813: CC 00 70    LDD    #$0070
 A816: ED 18       STD    -$8,X
 A818: 7E 8D C8    JMP    $8DC8
@@ -6065,11 +5976,7 @@ B913: CE B9 1B    LDU    #jump_table_b91b
 B916: A6 09       LDA    $9,X
 B918: 48          ASLA
 B919: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=5]
-B91B: B9 25 B9    ADCA   $25B9
-B91E: 2B B9       BMI    $B8D9
-B920: 34 B9       PSHS   PC,Y,X,DP,CC
-B922: 25 B9       BCS    $B8DD
-B924: 40          NEGA
+
 B925: CE DB 94    LDU    #$DB94
 B928: 7E 8D E8    JMP    $8DE8
 B92B: BD B9 C6    JSR    $B9C6
@@ -6368,12 +6275,7 @@ BBB8: CC 00 00    LDD    #$0000
 BBBB: ED 18       STD    -$8,X
 BBBD: C6 04       LDB    #$04
 BBBF: 7E B4 29    JMP    $B429
-BBC2: BB 8D BB    ADDA   $8DBB
-BBC5: A1 BB       CMPA   [D,Y]
-BBC7: B3 7E 8D    SUBD   $7E8D
-BBCA: C8 6A       EORB   #$6A
-BBCC: 0A 27       DEC    $27
-BBCE: 01 39       NEG    $39
+
 BBD0: C6 04       LDB    #$04
 BBD2: 7E B4 29    JMP    $B429
 BBD5: 6A 0A       DEC    $A,X
@@ -8653,13 +8555,7 @@ D070: 80 40       SUBA   #$40
 D072: 48          ASLA
 D073: 10 AE C6    LDY    A,U
 D076: 7E D1 25    JMP    $D125
-D079: 76 25 76    ROR    $2576
-D07C: CA 77       ORB    #$77
-D07E: 6F 03       CLR    $3,X
-D080: 46          RORA
-D081: 44          LSRA
-D082: 00 A6       NEG    $A6
-D084: 01 85       NEG    $85
+
 D086: 3A          ABX
 D087: 27 01       BEQ    $D08A
 D089: 39          RTS
@@ -9375,19 +9271,7 @@ D653: EC C6       LDD    A,U
 D655: E3 0C       ADDD   $C,X
 D657: ED 0C       STD    $C,X
 D659: 39          RTS
-D65A: 00 00       NEG    $00
-D65C: 00 00       NEG    $00
-D65E: 00 00       NEG    $00
-D660: 01 10       NEG    $10
-D662: 00 F0       NEG    $F0
-D664: 00 40       NEG    $40
-D666: 00 30       NEG    $30
-D668: 00 10       NEG    $10
-D66A: FF F0 00    STU    $F000
-D66D: 40          NEGA
-D66E: 00 00       NEG    $00
-D670: 00 20       NEG    $20
-D672: 00 20       NEG    $20
+
 D674: CE 04 10    LDU    #$0410
 D677: A6 C4       LDA    ,U
 D679: 2B 22       BMI    $D69D

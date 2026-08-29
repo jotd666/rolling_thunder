@@ -35,6 +35,10 @@ line_to_pull_cc_prev_protect = set()
 # game_specific: replace or remove I/O addresses
 input_dict = {
 "watchdog_8000":"",
+"unknown_6E00":""
+"unknown_6200":""
+"unknown_6600":""
+"unknown_6C00":""
 }
 
 def game_specific(address,lines,i):
