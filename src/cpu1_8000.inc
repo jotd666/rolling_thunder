@@ -365,7 +365,7 @@ okay\@:
 * Double Dragon, the move corrupted CC and it led to nasty bugs
 	.macro	STORE_DP_IN_MEMORY
 	PUSH_SR
-	move.l	a5,m6809_direct_page_pointer
+	move.l	a5,m6809_direct_page_pointer_cpu1
 	POP_SR
 	.endm
 
