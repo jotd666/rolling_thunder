@@ -22,26 +22,20 @@ this_dir = pathlib.Path(__file__).absolute().parent
 
 source_dir = this_dir / "../src"
 
+class SourceChanger:
+    def __init__(self):
+        self.single_line_to_cc_protect = set()
+        self.remove_error_in_next_line = set()
+        self.remove_error_in_prev_line =set()
+        self.line_to_push_cc_protect = set() | self.single_line_to_cc_protect
+        self.line_to_pull_cc_protect = set() | self.single_line_to_cc_protect
+        self.line_to_pull_cc_prev_protect = set()
 
-# empty template
-single_line_to_cc_protect = set()
-remove_error_in_next_line = {0x9730,0x9756}
-remove_error_in_prev_line =set()
-line_to_push_cc_protect = set() | single_line_to_cc_protect
-line_to_pull_cc_protect = set() | single_line_to_cc_protect
-line_to_pull_cc_prev_protect = set()
+sc_cpu1 = SourceChanger()
+sc_cpu1.remove_error_in_next_line = {0x9730,0x9756}
 
 
-# game_specific: replace or remove I/O addresses
-input_dict = {
-"watchdog_8000":"",
-"unknown_6E00":""
-"unknown_6200":""
-"unknown_6600":""
-"unknown_6C00":""
-}
-
-def game_specific(address,lines,i):
+def game_specific_cpu1(address,lines,i):
     line = lines[i]
     if address in [0x9728,0x974e]:
         lines[i+1]=""
@@ -53,6 +47,14 @@ def game_specific(address,lines,i):
         # replace stack pull by direct read of B/D1
         line = change_instruction("move.w\t(4,a7),d4",lines,i)
     elif address in [0x8592,0x85a1]:
+        line = change_instruction("rts",lines,i)  # rti => rts
+    return line
+
+sc_cpu2 = SourceChanger()
+
+def game_specific_cpu2(address,lines,i):
+    line = lines[i]
+    if address in [0x8194,0x81ac]:
         line = change_instruction("rts",lines,i)  # rti => rts
     return line
 
@@ -180,7 +182,7 @@ def check_stack_usage(lines,i):
 
     return line
 
-def handle_special_addresses(lines,i):
+def handle_special_addresses(input_dict,lines,i):
     line = lines[i]
     if "GET_ADDRESS" in line:
         val = line.split()[1]
@@ -218,72 +220,91 @@ def handle_special_addresses(lines,i):
                 break
     return line
 
-global_symbols = []
+
+def doit(cpu):
+    global_symbols = []
+    # game_specific: replace or remove I/O addresses
+    input_dict = {
+    "watchdog_8000":"",
+    "unknown_6E00":"",
+    "unknown_6200":"",
+    "unknown_6600":"",
+    "unknown_6C00":"",
+    } if cpu==1 else  {
+    "watchdog_8000":"",
+    "bankswitch2_d803":"set_cpu2_bank",
+    }
+    sc = sc_cpu1 if cpu==1 else sc_cpu2
 
 
-# various dirty but at least automatic patches applying on the converted code
-with open(source_dir / f"conv_cpu1.s") as f:
-    lines = list(f)
+    game_specific = game_specific_cpu1 if cpu==1 else game_specific_cpu2
+    # various dirty but at least automatic patches applying on the converted code
+    with open(source_dir / f"conv_cpu{cpu}.s") as f:
+        lines = list(f)
 
-for i,line in enumerate(lines):
-    address = get_line_address(line)
+    for i,line in enumerate(lines):
+        address = get_line_address(line)
 
-    line = handle_special_addresses(lines,i)
+        line = handle_special_addresses(input_dict,lines,i)
 
-    line = check_stack_usage(lines,i)
-    ###############################################
-    # game_specific
-    line = process_jump_table(line)
-    lines[i] = line
+        line = check_stack_usage(lines,i)
+        ###############################################
+        # game_specific
+        line = process_jump_table(line)
+        lines[i] = line
 
-    line = game_specific(address,lines,i)
+        line = game_specific(address,lines,i)
 
-##    if "addx mix" in line:
-##        # errors have been fixed
-##        line = ""
-
-
-##    if any(x in line for x in ( "check explicit S usage",)):
-##        line = remove_error(line,ignore_missing=True)
-
-    if address in remove_error_in_prev_line:
-        lines[i-1] = remove_error(lines[i-1].strip()+f" ({address:04x})")
-    if address in remove_error_in_next_line:
-        lines[i+1] = remove_error(lines[i+1].strip()+f" ({address:04x})")
-    if address in line_to_pull_cc_protect:
-        # protect the sub instructions if any
-        for j in range(i+1,len(lines)):
-            if not "[...]" in lines[j]:
-                break
-
-        lines[j-1] += "\tPOP_SR\n"
-        if j-1==i:
-            line = lines[i]
-
-    if "[global]" in line:
-        label = line.split(":")[0]
-        global_symbols.append(label)
-        line = f"{label}:\n"
-
-    m = re.match("(\w+)\s*=\s*(\w+)",line)
-    if m:
-        equates.append(line)
-
-    lines[i] = line
-
-with open(source_dir / f"cpu1_8000.68k","w") as fw:
-    # game_specific: fill global symbols
-    fw.write(f"""\t.include "data_cpu1.inc"
-""")
-    for g in global_symbols:
-        fw.write(f"\t.global\t{g}\n")
-
-    fw.write("\n")
+    ##    if "addx mix" in line:
+    ##        # errors have been fixed
+    ##        line = ""
 
 
-    fw.writelines(lines)
+    ##    if any(x in line for x in ( "check explicit S usage",)):
+    ##        line = remove_error(line,ignore_missing=True)
+
+        if address in sc.remove_error_in_prev_line:
+            lines[i-1] = remove_error(lines[i-1].strip()+f" ({address:04x})")
+        if address in sc.remove_error_in_next_line:
+            lines[i+1] = remove_error(lines[i+1].strip()+f" ({address:04x})")
+        if address in sc.line_to_push_cc_protect:
+            # protect the sub instructions
+            line = "\tPUSH_SR\n"+line
+        if address in sc.line_to_pull_cc_protect:
+            # protect the sub instructions if any
+            for j in range(i+1,len(lines)):
+                if not "[...]" in lines[j]:
+                    break
+
+            lines[j-1] += "\tPOP_SR\n"
+            if j-1==i:
+                line = lines[i]
+
+        if "[global]" in line:
+            label = line.split(":")[0]
+            global_symbols.append(label)
+            line = f"{label}:\n"
+
+        m = re.match("(\w+)\s*=\s*(\w+)",line)
+        if m:
+            equates.append(line)
+
+        lines[i] = line
+
+    with open(source_dir / f"cpu{cpu}_8000.68k","w") as fw:
+        # game_specific: fill global symbols
+        fw.write(f"""\t.include "data_cpu1.inc"
+    """)
+        for g in global_symbols:
+            fw.write(f"\t.global\t{g}\n")
+
+        fw.write("\n")
 
 
-with open(source_dir / "data_cpu1.inc","w") as fw:
-    fw.writelines(equates)
+        fw.writelines(lines)
 
+
+    with open(source_dir / f"data_cpu{cpu}.inc","w") as fw:
+        fw.writelines(equates)
+
+doit(cpu=2)

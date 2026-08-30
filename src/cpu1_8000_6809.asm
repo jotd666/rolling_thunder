@@ -36,7 +36,7 @@ unknown_6600 = $6600
 unknown_6C00 = $6C00
 cpu_sync_5ff0 = $5ff0
 
-cpu1_boot_0000:    ; [global]
+cpu1_boot_8000:    ; [global]
 8000: 1A 10       ORCC   #$10
 8002: 10 CE 58 00 LDS    #$5800		; set stack to almost top RAM
 8006: 86 56       LDA    #$56

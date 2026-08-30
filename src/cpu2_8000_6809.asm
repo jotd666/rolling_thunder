@@ -16,6 +16,7 @@ watchdog_8000 = $8000
 bankswitch2_d803 = $d803
 cpu_sync_1ff0 = $1ff0
 
+cpu2_boot_8000:  ; [global]
 8000: 1A 10       ORCC   #$10		; disable interrupts
 8002: 10 CE 04 00 LDS    #$0400		; set stack
 8006: 86 16       LDA    #$16		; set DP at $16xx
@@ -101,6 +102,7 @@ mainloop_80a3:
 80B9: 0F 05       CLR    $05
 80BB: 0F 07       CLR    $07
 80BD: 39          RTS
+
 80BE: 8E 18 00    LDX    #$1800
 80C1: CC 00 00    LDD    #$0000
 80C4: 97 24       STA    $24
@@ -769,16 +771,7 @@ mainloop_80a3:
 876F: CE 87 75    LDU    #jump_table_8775
 8772: 48          ASLA
 8773: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
-8775: 87 89       XSTA   #$89
-8777: 89 C4       ADCA   #$C4
-8779: 89 C5       ADCA   #$C5
-877B: 8A 71       ORA    #$71
-877D: 84 A7       ANDA   #$A7
-877F: 87 90       XSTA   #$90
-8781: 87 9A       XSTA   #$9A
-8783: 87 E0       XSTA   #$E0
-8785: 87 E5       XSTA   #$E5
-8787: 87 F4       XSTA   #$F4
+
 8789: 0F 91       CLR    $91
 878B: 0C 05       INC    $05
 878D: 0F 07       CLR    $07
@@ -4398,18 +4391,7 @@ A9F5: CE E0 14    LDU    #$E014
 A9F8: 7E 99 37    JMP    $9937
 A9FB: 6C 14       INC    -$C,X
 A9FD: 39          RTS
-A9FE: A9 1C       ADCA   -$4,X
-AA00: A9 27       ADCA   $7,Y
-AA02: A9 43       ADCA   $3,U
-AA04: A9 58       ADCA   -$8,U
-AA06: A9 58       ADCA   -$8,U
-AA08: A9 63       ADCA   $3,S
-AA0A: A9 58       ADCA   -$8,U
-AA0C: A9 58       ADCA   -$8,U
-AA0E: A9 91       ADCA   [,X++]
-AA10: A9 9C A9    ADCA   [$A9BC,PCR]
-AA13: B8 A9 D3    EORA   $A9D3
-AA16: A9 EA       ADCA   F,S
+
 AA18: A6 01       LDA    $1,X
 AA1A: A1 07       CMPA   $7,X
 AA1C: 27 23       BEQ    $AA41
@@ -6669,21 +6651,11 @@ BF43: CE BF 53    LDU    #jump_table_bf53
 BF46: A6 09       LDA    $9,X
 BF48: 48          ASLA
 BF49: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
-BF4B: CE BF 5F    LDU    #$BF5F
+BF4B: CE BF 5F    LDU    #jump_table_bf5f
 BF4E: A6 09       LDA    $9,X
 BF50: 48          ASLA
 BF51: 6E D6       JMP    [A,U]        ; [indirect_jump]
-BF53: BF 8A BF    STX    $8ABF
-BF56: 8A BF       ORA    #$BF
-BF58: 6B BF 8A BF XDEC   [$8ABF]
-BF5C: 8A BF       ORA    #$BF
-BF5E: C7 BF       XSTB   #$BF
-BF60: 8A BF       ORA    #$BF
-BF62: 8A BF       ORA    #$BF
-BF64: 90 BF       SUBA   $BF
-BF66: 8A BF       ORA    #$BF
-BF68: 8A BF       ORA    #$BF
-BF6A: F0 EC 1A    SUBB   $EC1A
+
 BF6D: C3 00 C0    ADDD   #$00C0
 BF70: 10 83 14 00 CMPD   #$1400
 BF74: 2C 3F       BGE    $BFB5

@@ -1,10 +1,10 @@
-* Converted with 6809to68k v1.12 by JOTD
+* Converted with 6809to68k v1.13 by JOTD
 *
 * make sure you call "cpu_init" first so all bits of data registers
 * are zeroed out so we can use add.l dy,ax with dy > 0x7FFF
 * without systematic masking
 *
-* WARNING: you also have to call "cpu_init_cpu1"
+* WARNING: you also have to call "cpu_init_cpu2"
 * at start of any interrupt you could hook
 *
 * the GET_ADDRESS macro can just call get_address or it can also use
@@ -27,12 +27,12 @@
 
 	.macro	VIDEO_BYTE_DIRTY
 	| called when a byte write was done in a0
-	jbsr	osd_video_byte_dirty_cpu1
+	jbsr	osd_video_byte_dirty_cpu2
 	.endm
 
 	.macro	VIDEO_WORD_DIRTY
 	| called when a word write was done in a0
-	jbsr	osd_video_word_dirty_cpu1
+	jbsr	osd_video_word_dirty_cpu2
 	.endm
 
 * the function that accesses all memory (except banks)
@@ -538,6 +538,8 @@ okay\@:
 	READ_BE_WORD	a0
 	GET_UNCHECKED_ADDRESS_FUNC
 	.endm
+
+
 
 
 multiply_ab:
