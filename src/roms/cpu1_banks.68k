@@ -1,0 +1,23 @@
+	.global	cpu1_banks
+    * each bank has a size of 0x2000
+cpu1_banks:
+	.include	"cpu2_bank_00.68k"
+	.include	"cpu2_bank_01.68k"
+	.include	"cpu2_bank_02.68k"
+	.include	"cpu2_bank_03.68k"
+	.include	"cpu2_bank_04.68k"
+	.include	"cpu2_bank_05.68k"
+	.include	"cpu2_bank_06.68k"
+	.include	"cpu2_bank_07.68k"
+	.include	"cpu2_bank_08.68k"
+	.include	"cpu2_bank_09.68k"
+	.include	"cpu2_bank_0a.68k"
+	.include	"cpu2_bank_0b.68k"
+	.include	"cpu2_bank_0c.68k"
+	.include	"cpu2_bank_0d.68k"
+	.include	"cpu2_bank_0e.68k"
+	.include	"cpu2_bank_0f.68k"
+	.include	"cpu2_bank_10.68k"
+	.include	"cpu2_bank_11.68k"
+	.include	"cpu2_bank_12.68k"
+	.include	"cpu2_bank_13.68k"

@@ -1,5 +1,5 @@
-;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");
-;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");
+;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
+;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
 ;
 ;	map(0x4000, 0x5fff).ram().w(FUNC(namcos86_state::spriteram_w)).share("spriteram");
 ;
@@ -4199,7 +4199,7 @@ A6BA: 0C AB       INC    $AB
 A6BC: 0F AD       CLR    $AD
 A6BE: 7E A6 43    JMP    $A643
 
-A6C0: 43          COMA
+A6C0: 43          COMA			; [breakpoint]  instruction overlap!
 A6C1: 39          RTS
 A6C2: 0D CF       TST    $CF
 A6C4: 27 01       BEQ    $A6C7

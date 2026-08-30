@@ -1,0 +1,7 @@
+	.global		cpu2_banks
+	* each bank has a size of 0x2000
+cpu2_banks:
+	.include	"cpu2_bank_00.68k"
+	.include	"cpu2_bank_01.68k"
+	.include	"cpu2_bank_02.68k"
+	.include	"cpu2_bank_03.68k"

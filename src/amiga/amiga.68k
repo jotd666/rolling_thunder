@@ -29,19 +29,18 @@ start:
 	move.l	a7,old_stack
 	jra		_user
 
-	.include "../src/options.inc"
+	.include "../src/cpu1_options.inc"
+	.include "../src/cpu2_options.inc"
 	
- 
 	
 	.include "hardware/custom.i"
 	.include "lvo/exec_lvos.i"
 	.include "lvo/dos_lvos.i"
 	.include "lvo/graphics_lvos.i"
 
-	.include "include.inc"
 	.include "blitter_macros.inc"
 	.include "sounds.inc"
-	.include "data.inc"
+	.include "cpu1_data.inc"
 	.include "utility_macros.inc"
 	
 AttnFlags = 0x128
@@ -291,11 +290,8 @@ osd_enter_\@:
 	.global		cheat_used
 * osd layer		
 	.global osd_enable_interrupts
-	.global osd_black_colors
 	.global osd_disable_interrupts
-	.global osd_set_tile_palette
-	.global osd_no_continue_hook
-	.global osd_colors_cycled
+
 	.global osd_break		| for debug	
 	.global osd_blitz		| for debug
 	.global osd_read_dsw1
@@ -306,9 +302,8 @@ osd_enter_\@:
 	.global	osd_read_p1_inputs
 	.global	osd_read_p2_inputs
 	
-	.global	osd_video_byte_dirty
-	.global	osd_video_word_dirty
-	.global	osd_weapon_palette_change
+	.global	osd_video_byte_dirty_cpu1
+	.global	osd_video_byte_dirty_cpu2
 	
 
 	.global osd_read_high_scores
@@ -569,7 +564,7 @@ display_text:
 	jmi		1f
 	move.b	d1,(a0)
 	move.b	d0,(0x400,a0)
-	jbsr	osd_video_byte_dirty
+	jbsr	osd_video_byte_dirty_cpu1
 	addq	#1,a0
 	jra		0b
 1:
@@ -791,56 +786,42 @@ demo_game:
 	* and lower 16-bit match original RAM & even ROM offsets
 	*
 
-	lea		dev_ram_buffer,a6
+	lea		cpu1_dev_ram_buffer,a6
 	move.l	a6,d0
 	clr.w	d0
 	move.l	d0,d1
-	add.l	#0x10000+RAM_START,d1
-	move.l	d1,ram_start_0000		| memory (0x1000-0xFFFF)
+	add.l	#0x10000+CPU1_RAM_START,d1
+	move.l	d1,cpu1_ram_start_0000		| memory (0x1000-0xFFFF)
 	
 	* relocate rom tables just after shared RAM
 	* memory is contiguous (only 1 segment of memory RAM+ROM)
 	* and 6809 memory access is way faster (no bank switching)
 	
 	* copy the ROM data
-	add.l	#ROM_START-RAM_START,d1
+	add.l	#CPU1_ROM_START-CPU1_RAM_START,d1
 	move.l 	d1,a1
-	move.w	#(0x10000-ROM_START)/4-1,d0
+	move.w	#(0x10000-CPU1_ROM_START)/4-1,d0
 	.else
 	* release mode
 
 	* copy the ROM data after RAM
 	lea		rom_buffer,a1
-	move.w	#(0x10000-ROM_START)/4-1,d0
+	move.w	#(0x10000-CPU1_ROM_START)/4-1,d0
 	.endif
 	
 	lea		rom_base,a0
 0:
 	move.l	(a0)+,(a1)+
 	dbf		d0,0b
-	* change copyright message "all right reseved"
-	lea	bank3_4000+0x9B1,A1
-	lea	copyright_message,a0
-0:
-	move.b	(a0)+,(a1)+
-	jne		0b
+
 	
-	lea	bank3_4000,A1
-	move.b	#0x53,(0xEFA,a1)		| fix "PROGRES"
-	move.b	#0x45,(0xF80,a1)		| fix "STRONGTH"
-	* change bogus message to "YOU FEEL STRENGTH WELLING UP IN YOU"
-	lea		(0xF90,a1),a0
-	move.l	#0x0B555020,(a0)+
-	move.l	#0x494E2059,(a0)+
-	move.l	#0x4F552020,(a0)+
-	move.b	#0x20,(a0)
 	
 	* install bank 4 in 0x4000, we may as well use that space
 	* plus it allows simpler code ex at 9088 where game accesses
 	* ROM or bank ROM in bank 4
 
-	GET_MEMORY_START_AND_DP
-	jbsr	install_bank_4
+*	GET_MEMORY_START_AND_DP
+*	jbsr	install_bank_4
 	
 	
 	.ifndef	RELEASE
@@ -861,16 +842,7 @@ demo_game:
 	jbsr	cache_fg_tiles_address
 	jbsr	cache_bg_tiles_address
 
-	* load level 1 music
-	.ifeq	OPT_CD32_VERSION
-	lea		level_12_music,a0
-	.else
-	lea		cd32_music,a0
-	.endif
-	move.l	a0,current_music_name
-	lea		module_buffer,a1
-	move.l	#BIGGEST_MUSIC_SIZE,d0
-	jbsr	load_file
+
 	
 	tst.b	no_level_music_flag
 	jeq		0f
@@ -910,7 +882,7 @@ demo_game:
 
 	moveq	#0,d0
 	jbsr	osd_set_bank
-	GET_MEMORY_START_AND_DP	
+	CPU1_GET_MEMORY_START_AND_DP	
 	jmp		reset_6000								| pass control to the mpatrol core
 	
 
@@ -1040,12 +1012,7 @@ make_automatic_sound_channels:
 1:
 	st	d2
 	* skip those, leave in fixed channel else they saturate the channels
-	cmp.w	#SHOT_FIRED_06_SND,d1
-	jeq		0f
-	cmp.w	#ENEMY_HIT_1A_SND,d1
-	jeq		0f
-	cmp.w	#SHIELD_FLYING_1F_SND,d1
-	jne		2f
+
 	move.b	#1,d2		| switch to channel 1
 2:
 	move.w	(a0),d0
@@ -1072,253 +1039,8 @@ osd_black_colors:
 2:
 	rts
 
-	
-* called when continue timer reaches 0: time to load context 1 else tiles will be trashed in the title
-* < A0: shadow ram palette
-osd_no_continue_hook:
-	clr.b	(current_level_0072,a6)		| doesn't matter for the game but it matters for the context
-	jbsr	osd_set_tile_palette
-	rts
-	
-osd_colors_cycled:
-* < A0: tile palette in RAM (but shadows hardware palette)
-* format (RGB4) is: offset=$RG, offset+$40=$B0
-* I imagine that on NeoGeo we just set the palette and so be it but here we have eliminated
-* duplicate entries for tiles and were lucky enough on level 1 for instance to keep the exact unique
-* colors for the tiles. So the RGB values used are the same as in the game, but the game uses 4 slots
-* and we only have 3 slots. We'll have to adapt I doubt it will be noticeable
-	OSD_ENTER
-	movem.l	d0-a6,-(a7)
-	GET_MEMORY_START_IN_A6
-	move.b	(current_level_0072,a6),d0
-	jne		0f
-	* graveyard, get 2 first palette entries
-	move.w	#0x2A,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
-	swap	d2
-	move.w	#0x2B,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
-	* we track 3 values (there are 4 possibilities actually)
-	moveq	#0,d0
-	cmp.l	#0x059008A0,d2
-	jeq		1f
-	moveq	#6,d0
-	cmp.l	#0x08A008A0,d2
-	jeq		1f
-	*cmp.l	#0x08A00590,d2
-	moveq	#12,d0
-1:
-	lea		water_color_table,a2
-	jbsr	cycle_colors
-	jra		10f
-0:
-	cmp.b	#3,(current_level_0072,a6)		| bridge
-	jne		10f
-	* bridge
-	move.w	#0x21,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
-	swap	d2
-	move.w	#0x23,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
-	move.w	#0x23,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
 
-
-	* there are 3 possibilities
-	moveq	#0,d0
-	cmp.l	#0xA030A030,d2	| first color combo
-	jeq		1f
-	moveq	#8,d0
-	cmp.l	#0xA030,d2
-	jeq		1f
-	moveq	#16,d0
-	*cmp.l	#0xA0300000,d2
-	*jeq		1f
-1:
-	lea		bridge_color_table,a2
-	jbsr	cycle_colors	
-10:
-	movem.l	(a7)+,d0-a6
-	OSD_EXIT
-	rts
-
-cycle_colors:
-	* change some colors (water animation in level 1)
-	lea		dyn_color_indexes,a0
-	add.w	d0,a2
-	lea		copperlist_colors+4,a1		| skip bplcon3
-2:
-	move.w	(a0)+,d0		| color index times 4
-	jmi		3f
-	move.w	(a2)+,d1
-	move.w	d1,(2,a1,d0.w)		| change color in copperlist
-	jra		2b
-3:
-	rts
-	
-* the color scheme is simplified compared to the original
-* but it should work all right
-water_color_table:
-	.word	0x08A
-	.word	0x059
-	.word	0x6AC
-	.word	0x059
-	.word	0x08A
-	.word	0x6AC
-	.word	0x6AC
-	.word	0x059
-	.word	0x08A
-bridge_color_table:
-	.word	0xA03
-	.word	0xC04
-	.word	0xF50
-	.word	0xF70
-	
-	.word	0xC04
-	.word	0xA03
-	.word	0xF70
-	.word	0xF50
-	
-	.word	0xF70
-	.word	0xF50
-	.word	0x0
-	.word	0xA03
-	
-	.word	0xF50
-	.word	0x0
-	.word	0xC04
-	.word	0xF70
-
-	          
-* very important for the amiga version as it allows to detect level/context switches
-* and load the relevant parts (we can't have everything in memory)
-* on 68k non-amiga versions (if done one day) derived on this port, this could be much simpler.
-* I imagine that on NeoGeo we just set the palette and so be it.
-
-osd_set_tile_palette:
-	OSD_ENTER
-	movem.l	d0-a6,-(a7)
-	* re-compose RGBx word to search in palette
-	* if color are at the indicated positions, then we know
-	* for sure what is the palette and thus what is the context
-	move.w	unique_color_index,d0
-	move.b	(a0,d0.w),d2
-	lsl.w	#8,d2
-	move.b	(0x40,a0,d0.w),d2
-	
-	lea		context_data,a1
-	lsr.w	#4,d2
-0:
-	move.w	(a1)+,d0
-	jmi		5f
-	addq	#2,a1
-	cmp.w	d0,d2
-	jne		0b
-
-	* we recognized our context
-	* but actually it's way more complex as the game performs
-	* dynamic color changes. Better rely on the level number
-	* at this point, except for map context, which has priority
-	move.w	(-2,a1),d0
-	cmp.w	#MAP_CONTEXT,d0
-	jeq		2f
-	
-	* level 3 or 4. Check the level number in RAM color to find out
-	* as both levels share the exact same palette, but we want
-	* a different context load as it's cleaner that way
-	
-	GET_MEMORY_START_IN_A6
-	cmp.b	#2,(current_level_0072,a6)
-	jeq		3f			| level 3 all right
-	cmp.b	#3,(current_level_0072,a6)
-	jne		1f
-	moveq	#3,d0
-	jra		2f			| level 4
-3:
-	moveq	#2,d0		| level 3
-	jra		2f
-1:
-	
-	move.w	(-2,a1),d0
-	jne		1f
-	* level 1 or 2. Check the level number in RAM color to find out
-	* as both levels share the exact same palette, but we want
-	* a different context load as it's cleaner that way
-	GET_MEMORY_START_IN_A6
-	tst.b	(current_level_0072,a6)
-	jeq		2f			| level 1 all right
-	addq	#1,d0
-	cmp.b	#1,(current_level_0072,a6)
-	jeq		2f			| level 2
-	* neither level 1 or 2. Must have used a start level cheat
-	* ignore the context load, it will load properly later
-	jra		103f
-1:
-
-	
-	cmp.w	#0x100,d0
-	jcc		7f			| special context: palette change but no context load
-2:
-	jbsr	load_context
-5:
-	* reset palette
-	move.l	bg_character_table_buffer_ptr,a0
-6:
-	move.l	color_copper_pointers,a1	| entries 0-31
-	move.w	#TOTAL_NB_COLORS/2,d0
-	jbsr	load_palette
-	* locate interesting colors in palette for levels 1 and 4 (bridge) to color-cycle tiles
-	move.l	bg_character_table_buffer_ptr,a0
-	lea		dyn_color_indexes,a2
-	lea		interesting_colors_level_1,a1
-	tst.b	(current_level_0072,a6)
-	jeq		10f
-	lea		interesting_colors_level_4,a1	
-10:
-	moveq	#0,d0
-	move.w	(a1)+,d2		| load first interesting color, look it up
-100:
-
-	move.w	(a0)+,d1
-	cmp.w	d2,d1
-	jne		101f
-	* store index*4
-	move.w	d0,(a2)+
-	* load next interesting color
-	move.w 	(a1)+,d2
-	jmi		102f			| no more interesting color
-	moveq	#0,d0
-	* reset search
-	move.l	bg_character_table_buffer_ptr,a0
-	jra		100b
-101:
-	addq	#4,d0		| next index times 4
-	cmp.w	#TOTAL_NB_COLORS*2,d0
-	jne		100b
-102:
-	move.w	#-1,(a2)		| terminate list
-103:
-	movem.l	(a7)+,d0-a6
-	OSD_EXIT
-	rts
-7:
-	* palette change
-	sub.w	#0x100,d0	
-	lsl.w	#NB_PLAYFIELD_PLANES,d0  | half colors, 2 bytes per word
-	lea		fade_palettes,a0
-	add.w	d0,a0
-	jra		6b
-	
+	     
 	
 * < D0: context name
 load_context:
@@ -1344,26 +1066,8 @@ load_context:
 
 	move.w	current_context,previous_context
 	move.w	d0,current_context
-	cmp.w	#MAP_CONTEXT,d0
-	jne		0f
 
-	* map context: we should save previous context
-	* and use that map context aleady in RAM
-	move.w	previous_context,saved_context
-	move.l	#bg_tile_palette,bg_character_table_buffer_ptr
-	jra		30f
-0:
-	* is previous context map?
-	cmp.w	#MAP_CONTEXT,previous_context
-	jne		1f
-	* coming from map: check if saved_context is the context we want
-	cmp.w	saved_context,d0
-	jne		1f   
-	* the file buffer already contains the context, just set pointer
-	move.l	#bg_character_table_buffer,bg_character_table_buffer_ptr
-	jra		30f
-1:
-	lea	tile_context_name_table,A0
+	*lea	tile_context_name_table,A0
 	add.w	d0,d0	
 	add.w	d0,d0
 	move.l	(a0,d0.w),a0
@@ -1377,8 +1081,7 @@ load_context:
 	* now load the specific sprites for that level
 	* there will be some repeats, but overall the memory footprint will be smaller
 	* thus allowing pre-computed symmetric bitmaps
-	cmp.w	#MAP_CONTEXT,d0
-	jeq		2f
+
 	move.w	current_context,d0
 	lea	sprite_context_name_table,A0
 	add.w	d0,d0	
@@ -1390,8 +1093,7 @@ load_context:
 	jbsr	load_file
 	* todo: copy the first level of pointers in fastmem (256*4: 1kb)
 	jbsr	relocate_sprites_file
-	
-2:
+
 	jbsr	relocate_tiles_file
 30:
 	* re-set pointer
@@ -1405,12 +1107,7 @@ load_context:
 	tst.b	(a0,d0.w)
 	sne		must_mirror_y_tiles
 	
-	* if level 1 set (intro), pre-load level 12 music as may has been overwritten by highscore tune
-	tst.w	current_context
-	jne		0f
-	move.w	#LEVEL12_TUNE_SND*8,d0
-	jbsr	load_music_if_needed
-0:
+
 	* at start redraw everything
 	move.w	#START_X,game_scroll_x
 	move.w	#START_Y,game_scroll_y
@@ -1420,8 +1117,7 @@ load_context:
 	* we should play CD music here because it was stopped
 	* by CD data load
 	.ifne	OPT_CD32_VERSION
-	cmp.w	#MAP_CONTEXT,previous_context
-	jne		0f
+
 	moveq	#0,d0
 	move.b	previous_cd_track,d0
 	jmi		0f
@@ -1542,7 +1238,7 @@ force_all_screen_redraw:
 	lea		_custom,a5
 	REALLY_WAIT_BLIT
 	jbsr	osd_disable_interrupts
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	* given the current scroll X/Y, draw all tiles on screen
 	jbsr	set_initial_scroll_values
 	
@@ -1625,7 +1321,7 @@ draw_column_tiles:
 	lsl.w	#6,d0	
 	move.w	d0,x_offset
 	move.w	(a7)+,d0	
-	GET_MEMORY_START_AND_DP
+	CPU1_GET_MEMORY_START_AND_DP
 
 	lea		(bg_tiles_address_2800,a6),a5
 	lsr.w	#4,D0	| divide by 16 to get real X tile offset
@@ -1773,7 +1469,7 @@ call_nmi:
 	* reset most registers (not D5)
 	jbsr	cpu_init
 	* set base for RAM
-	GET_MEMORY_START_AND_DP
+	CPU1_GET_MEMORY_START_AND_DP
 	* should we set a saved copy of S or use the one that existed
 	* when the game was interrupted? depends if the game was interrupted
 	* in the original game code or in an osd function
@@ -1904,18 +1600,18 @@ level1_interrupt:
 
 	jbsr	call_nmi
 
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	
-	
-	move.w	(scroll_x_register_lsb_3b08,a6),d0
-	ror.w	#8,d0		| hardware is in little endian
-	move.w	D0,game_scroll_x
-	move.w	(scroll_y_register_lsb_3b0a,a6),d0
-	ror.w	#8,d0		| hardware is in little endian
-	jpl		0f
-	* scroll register is either 0 or negative FE00->FFFF->0000
-	add.w	#0x200,d0
-0:
+	moveq	#0,d0
+*	move.w	(scroll_x_register_lsb_3b08,a6),d0
+*	ror.w	#8,d0		| hardware is in little endian
+*	move.w	D0,game_scroll_x
+*	move.w	(scroll_y_register_lsb_3b0a,a6),d0
+*	ror.w	#8,d0		| hardware is in little endian
+*	jpl		0f
+*	* scroll register is either 0 or negative FE00->FFFF->0000
+*	add.w	#0x200,d0
+*0:
 	move.w	D0,game_scroll_y
 	
 	* ok now D5 can be used freely
@@ -1985,7 +1681,7 @@ level1_interrupt:
 	tst.b	osd_debug_active
 	jeq		0f
 	.set	row,2
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	move.b	#2,current_color
 	WRITE_TEXT	scrollx_text,0
 	WRITE_TEXT	scrolly_text,0
@@ -2079,7 +1775,7 @@ startup_level1_interrupt:
 	tst.b	credits_displayed
 	jne		0f
 	st.b	credits_displayed
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	move.b	#7,d0		| color
 	lea		(0x2040+0x20*2,a6),a0
 	lea		gng_credits_text,a1
@@ -2339,13 +2035,13 @@ osd_wait:
 
 add_to_score:
 	movem.l	a6/d0-d3,-(a7)
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	moveq	#0,d0
 	abcd 	d0,d0		| clear X
-	move.b	(player_score_0068+2,a6),d0
-	move.b	(player_score_0068+1,a6),d1
-	move.b	(player_score_0068,a6),d2
-	move.b	#0x90,d3		| 9000 points
+	*move.b	(player_score_0068+2,a6),d0
+	*move.b	(player_score_0068+1,a6),d1
+	*move.b	(player_score_0068,a6),d2
+	*move.b	#0x90,d3		| 9000 points
 	abcd	d3,d0
 	jcc		0f
 	moveq	#0,d3
@@ -2354,49 +2050,28 @@ add_to_score:
 	abcd	d3,d2
 
 0:
-	move.b	d0,(player_score_0068+2,a6)
-	move.b	d1,(player_score_0068+1,a6)
-	move.b	d2,(player_score_0068,a6)
+	*move.b	d0,(player_score_0068+2,a6)
+	*move.b	d1,(player_score_0068+1,a6)
+	*move.b	d2,(player_score_0068,a6)
 	movem.l	(a7)+,a6/d0-d3
 	rts
 
 lose_all_lives:
 	movem.l	a6/d0-d3,-(a7)
-	GET_MEMORY_START_IN_A6
-	move.b	#1,(nb_lives_0060,a6)
-	move.w	#1,(time_00aa,a6)
+	CPU1_GET_MEMORY_START_IN_A6
+	*move.b	#1,(nb_lives_0060,a6)
+	*move.w	#1,(time_00aa,a6)
 	movem.l	(a7)+,a6/d0-d3
 	rts
 
-* "0x00">Torch (crap)
-* "0x01">Lance (okay)	
-* "0x02">Axe (useless shit weapon)	
-* "0x03">Shield (must have for last levels, but rather crap)
-* "0x04">Sword (the best!)
-
-cycle_weapon:
-	movem.l	a6/d0,-(a7)
-	GET_MEMORY_START_IN_A6
-	move.b	(weapon_type_0073,a6),d0
-	addq	#1,d0
-	cmp.b	#5,d0
-	jne		0f
-	moveq	#0,d0
-0:
-	move.b	d0,(weapon_type_0073,a6)
-	movem.l	(a7)+,a6/d0
-	rts
 	
 * Z: set if playing
 is_game_playing:
 	movem.l	d0/a6,-(a7)
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	* if game is in "continue play", consider that game is not playing
 	* check that first
-	move.w	(0x216A,a6),d0
-	cmp.w	#0x434F,d0		| "CO"
-	jeq		0f
-	move.b	(global_state_0002,a6),d0
+
 	cmp.b	#2,d0
 1:
 	movem.l	(a7)+,d0/a6
@@ -2658,7 +2333,7 @@ really_update_sprites:
 	* draw current BOBs *
 	*********************
 	
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE,a6),a0
 	*lea		mockup+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE,a0
 
@@ -3499,7 +3174,7 @@ platform_init:
 	move.w	#COPPER_NOP,pal_intreq_block_game
 	* also change screen start position, make it higher
 	move.w	#0x01+(0xC<<8),screen_start
-	sub.b	#8,weapon_palette_wait_value
+
 	
 	*move.w	#0x0401,pal_wait			| else intreq never happens
 0:
@@ -3565,12 +3240,6 @@ platform_init:
 	jbsr	generate_row_table
 	.endif
 	
-	* install jump for palette switch
-	move.l	#after_osd_lower_palette,d0
-	lea		osd_lower_palette_switch_address,a0
-	move.w	d0,(6,a0)
-	swap	d0
-	move.w	d0,(2,a0)
 	
 	lea		hw_sprite_ram_buffer,a0
 	jbsr	align_for_fmode
@@ -3664,11 +3333,7 @@ platform_init:
 	move.w	#16,d0
 	jbsr	load_palette
 		
-	* load palette for bottom tiles (in-game), skipping first color (transparent, for sprites)
-	lea		fg_tile_lower_palette+2,a0
-	lea		osd_lower_palette,a1
-	move.w	#15,d0
-	jbsr	load_palette
+
 	
 	lea		sprite_palette,a0
 	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64
@@ -3858,58 +3523,7 @@ osd_set_bank:
 1:
 	rts
 
-* < A6: game memory
-osd_main_loop_hook:
-	* music
-	move.l	d0,d6		| just save d0, the rest is not changed
-	tst.b	_mt_E8Trigger
-	jeq		0f
-	cmp.b	#2,_mt_E8Trigger
-	jeq		777f
-	* trigger: map/level start music ended: time to start level music
-	* if queued
-	clr.b	_mt_E8Trigger
-	clr.b	wait_for_map_music_end
-	tst.b	play_level_1_tune_after_music_stop
-	jeq		0f
-	clr.b	play_level_1_tune_after_music_stop
 
-	move.w	#LEVEL12_TUNE_SND,d0
-	jbsr	osd_sound_start
-	jra		0f
-777:
-	clr.b	_mt_E8Trigger
-	* high score entry tune ended: load current level music
-	* (don't play it)
-	moveq	#0,d0
-	move.b	(current_level_0072,a6),d0
-	lea		current_level_music_table,a0
-	add.w	d0,d0
-	move.w 	(a0,d0.w),d0
-	jbsr	load_music_if_needed
-0:
-	move.l	d6,d0
-	rts
-	
-* < A6: game memory
-
-osd_weapon_palette_change:
-	movem.l	d0/a0/a1,-(a7)
-	moveq	#0,d0
-	move.b	(weapon_type_0073,a6),d0	| current weapon type
-	lsl.w	#3,d0
-	lea		weapon_palettes,a0
-	lea		osd_lower_palette+2,a1
-	add.w	d0,a0
-	* copy the 3 colors for weapon
-	move.w	(a0)+,(a1)
-	addq	#4,a1
-	move.w	(a0)+,(a1)
-	addq	#4,a1
-	move.w	(a0)+,(a1)
-	movem.l	(a7)+,d0/a0/a1
-	rts
-	
 	
 
 * a0=screen address (preserved)
@@ -3918,7 +3532,7 @@ osd_weapon_palette_change:
 * allows 2000-3000 range
 * 2000: foreground/HUD (2400: attributes)
 * 2800: background
-osd_video_byte_dirty:
+osd_video_byte_dirty_cpu1:
 	OSD_ENTER
 	movem.l	d0-d7/a0-a2/a5,-(a7)
 	move.b	(a0),d0
@@ -3956,21 +3570,7 @@ osd_video_byte_dirty:
 	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a0
 	move.b	(a0,d7.w),d1
 
-	* special case to get proper shield color
-	cmp.w	#0x1F9,d7
-	jne		0f
-	* special location where the shield is
-	* when the message appears if you kill level 6 bosses without it
-	
-	cmp.b	#0x86,d0
-	jne		1f
-	* shield is here: make palette change earlier
-	move.w	#COPPER_NOP,weapon_palette_wait
-	jra		0f
-1:
-	* shield is not here: palette change at the bottom
-	move.w	weapon_palette_wait_value,weapon_palette_wait
-0:
+
 
 	jbsr	update_fg_tile
 
@@ -4519,15 +4119,7 @@ update_fg_tile:
 	move.b	d1,d3	| attribute + tile msbits
 	and.w	#0xF,d3	| clut
 
-	* if weapon frame is written, install palette change branch
-	cmp.w	#0x34E,d7
-	jne		0f
-	lea		osd_lower_palette_switch,a0
-	move.w	#copjmp2,(a0)
-	cmp.b	#0xA0,d0
-	jne		0f
-	move.w	#COPPER_NOP,(a0)		| activate weapon & frame palette
-0:
+
 	lea		fg_tile_address_table,a1
 	.ifdef	NO68020
 	add.w	d7,d7
@@ -4977,7 +4569,7 @@ log_used_fg_tiles:
 	* scan the whole screen, see what was updated
 	* main screen
 
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	lea		(FG_SCREEN_TILE_ADDRESS,a6),a5
 	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a4
 	lea		fg_tile_log_table,a0
@@ -4989,7 +4581,7 @@ log_used_bg_tiles:
 	* scan the whole screen, see what was updated
 	* main screen
 
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	lea		(BG_SCREEN_TILE_ADDRESS,a6),a5
 	lea		(BG_SCREEN_COLOR_ADDRESS,a6),a4
 	lea		bg_tile_log_table,a0
@@ -5037,7 +4629,7 @@ log_used_sprites:
 	* scan the whole screen, see what was updated
 	* main screen
 	
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	lea		(SPRITE_ADDRESS,a6),a5
 	lea	sprite_log_table,a0
 	moveq	#0,d7
@@ -5076,24 +4668,14 @@ redraw_bg_tiles:
 	
 skip_level:
 	movem.l	d0-a6,-(a7)
-	GET_MEMORY_START_IN_A6
-	cmp.b	#1,(sub_sub_state_0008,a6)
+	CPU1_GET_MEMORY_START_IN_A6
+	*cmp.b	#1,(sub_sub_state_0008,a6)
 	jne		0f
-	cmp.b	#6,(current_level_0072,a6)
+	*cmp.b	#6,(current_level_0072,a6)
 	jcc		0f
-	clr.b	(sub_sub_state_0008,a6)
-	clr.b	(sub_sub_sub_state_000b,a6)
-	clr.b	(0xE,a6)
-	addq.b	#1,(current_level_0072,a6)
-0:
-	movem.l	(a7)+,d0-a6
-	rts
-	
-warp_on_top_of_screen:
-	movem.l	d0-a6,-(a7)
-	GET_MEMORY_START_IN_A6
-	st.b	(0x50A,a6)
+	*clr.b	(sub_sub_state_0008,a6)
 
+0:
 	movem.l	(a7)+,d0-a6
 	rts
 	
@@ -5164,15 +4746,13 @@ handle_keyboard:
 	cmp.b	#0x52,d0	| F3 key: change weapon
 	bne.b	0f
 	st.b	cheat_used
-	jbsr	cycle_weapon
 	
 0:
 
-	cmp.b	#0x53,d0	| F4 key: warp on top of scren
+	cmp.b	#0x53,d0	| F4 key:
 	bne.b	0f
 	st.b	cheat_used
 	COLOR0_FLASH	0x0FF
-	jbsr	warp_on_top_of_screen
 0:
 	cmp.b	#0x54,d0	| F5 key
 	bne.b	0f
@@ -5265,8 +4845,8 @@ read_args_string_end:
 osd_read_high_scores:
 	OSD_ENTER
 	movem.l	d0-d7/a0-a6,-(a7)
-	GET_MEMORY_START_IN_A6
-	lea	(high_score_table_1518,a6),a0
+	CPU1_GET_MEMORY_START_IN_A6
+	*lea	(high_score_table_1518,a6),a0
 	move.l	_resload,d0
 	beq.b	0f
 	move.l	d0,a2
@@ -5291,11 +4871,11 @@ osd_read_high_scores:
 	move.b	(a1)+,(a0)+
 	dbf		d0,0b
 1:
-	lea	(high_score_table_1518,a6),a0
+	*lea	(high_score_table_1518,a6),a0
 	move.w	(a0),d0		| offset for highest score
 	lea		(a6,d0.w),a0
 	* also update copy (for top screen display)
-	lea	(high_score_00d0,a6),a1
+	*lea	(high_score_00d0,a6),a1
 	move.l	(a0),(a1)
 	movem.l	(a7)+,d0-d7/a0-a6
 	OSD_EXIT
@@ -5309,8 +4889,8 @@ osd_write_high_scores:
 	tst.b	cheat_used		| don't save score if cheat on
 	bne.b	2f
 	.endif
-	GET_MEMORY_START_IN_A6
-	lea	(high_score_table_1518,a6),a0
+	CPU1_GET_MEMORY_START_IN_A6
+	*lea	(high_score_table_1518,a6),a0
 	
 	move.l	_resload,d0
 	bne.b	1f
@@ -5639,7 +5219,6 @@ load_music_if_needed:
 	tst.b	no_level_music_flag
 	jeq		0f
 	* no music: don't load level tunes
- 	lea		cd32_music,a0
 
 	jra		1f
 0:
@@ -5892,7 +5471,7 @@ osd_dump_logs:
 	move.l	#SPRITE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	
-	GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_IN_A6
 	lea		(SPRITE_ADDRESS,a6),a1
 	lea		sprite_mem_name(pc),a0
 	move.l	#SPRITE_BUFFER_SIZE,d0
@@ -5914,7 +5493,7 @@ save_cpu_log:
 	move.l	log_ptr,a0
 	* add RAM & ROM base in the end
 	move.l	a6,(a0)+
-	move.l	#rom_base,(a0)+
+	move.l	#cpu1_rom_base,(a0)+
 	addq	#8,d0
 	lea		cpu_log_name(pc),a0
 	jbsr	resload_SaveFile(a2)
@@ -5939,7 +5518,9 @@ sprite_mem_name:
 
 	.align	2
 
-
+looped_sound_enabled:
+	.long	0
+	
 return_address:
 	.long	0
 	

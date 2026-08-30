@@ -11,7 +11,7 @@
 * conditional compilation to select the proper memory banks at compile time
 * (see my burger time 6502 conversion which does that in RELEASE mode)
 
-	.include 	"options.inc"
+	.include 	"cpu2_options.inc"
 	.ifdef	__amiga__
 	* to define BREAKPOINT
 	.include 	"amiga/utility_macros.inc"
@@ -365,7 +365,7 @@ okay\@:
 * Double Dragon, the move corrupted CC and it led to nasty bugs
 	.macro	STORE_DP_IN_MEMORY
 	PUSH_SR
-	move.l	a5,m6809_direct_page_pointer_cpu2
+	move.l	a5,cpu2_m6809_direct_page_pointer
 	POP_SR
 	.endm
 

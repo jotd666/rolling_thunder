@@ -1,5 +1,5 @@
-	.ifndef	OPTIONS_INC
-OPTIONS_INC = 1
+	.ifndef	CPU2_OPTIONS_INC
+CPU2_OPTIONS_INC = 1
 	
 	.ifdef	RELEASE
 OPT_ENABLE_LOGGING = 0           | DO NOT CHANGE THIS
@@ -12,8 +12,8 @@ OPT_ALIGNED_MEMORY = 1
 * makes random routines return 0. Can lock up the game
 *OPT_FIX_RANDOM = 1
 
-RAM_START = 0x0000
-ROM_START = 0x6000
+CPU2_RAM_START = 0x0000
+CPU2_ROM_START = 0x8000
 
 	.ifdef	RELEASE
 
@@ -23,22 +23,22 @@ LOG_BUFFER_SIZE = 0x8000
 	* amiga specific
 	.endif
 	
-	.macro	GET_MEMORY_START_IN_A6
+	.macro	CPU2_GET_MEMORY_START_IN_A6
 	.ifeq	OPT_ALIGNED_MEMORY
-	lea		ram_buffer-RAM_START,a6
+	lea		cpu2_ram_buffer-CPU2_RAM_START,a6
 	.else
-	move.l		ram_start_0000,a6
+	move.l		cpu2_ram_start_0000,a6
 	* adjust offset to avoid subbing at run-time
-	.ifne	RAM_START
-	sub.w	#RAM_START,a6
+	.ifne	CPU2_RAM_START
+	sub.w	#CPU2_RAM_START,a6
 	.endif
 	.endif	
 	.endm
 	
-	.macro	GET_MEMORY_START_AND_DP
-	move.l	m6809_direct_page_pointer,a5
-	move.l	bank_base,a1
-	GET_MEMORY_START_IN_A6
+	.macro	CPU2_GET_MEMORY_START_AND_DP
+	move.l	cpu2_m6809_direct_page_pointer,a5
+	*move.l	bank_base,a1
+	CPU2_GET_MEMORY_START_IN_A6
 	.endm
 	
 	.endif

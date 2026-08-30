@@ -8412,11 +8412,11 @@ jump_table_cf3e:
 
 CF40: 39          RTS   ; [breakpoint] fake
 
-CF48: CE CF 8C    LDU    #$CF8C	
-CF4C: 84 84       ANDA   #$84
-CF4E: 03 E6       COM    $E6
-CF50: C6 10       LDB    #$10
-CF52: 8E 13 A0    LDX    #$13A0
+CF48: CE CF 8C    LDU    #$CF8C
+CF4B: A6 84       LDA    ,X
+CF4D: 84 03       ANDA   #$03
+CF4F: E6 C6       LDB    A,U
+CF51: 10 8E 13 A0 LDY    #$13A0
 CF55: 96 E6       LDA    $E6
 CF57: E7 A6       STB    A,Y
 CF59: 4C          INCA

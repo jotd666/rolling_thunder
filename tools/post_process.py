@@ -293,7 +293,7 @@ def doit(cpu):
 
     with open(source_dir / f"cpu{cpu}_8000.68k","w") as fw:
         # game_specific: fill global symbols
-        fw.write(f"""\t.include "data_cpu1.inc"
+        fw.write(f"""\t.include "cpu{cpu}_data.inc"
     """)
         for g in global_symbols:
             fw.write(f"\t.global\t{g}\n")
@@ -304,7 +304,8 @@ def doit(cpu):
         fw.writelines(lines)
 
 
-    with open(source_dir / f"data_cpu{cpu}.inc","w") as fw:
+    with open(source_dir / f"cpu{cpu}_data.inc","w") as fw:
         fw.writelines(equates)
 
+doit(cpu=1)
 doit(cpu=2)
