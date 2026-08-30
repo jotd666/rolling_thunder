@@ -37,7 +37,7 @@ WHDASM = vasmm68k_mot -DDATETIME -I$(HDBASE)/amiga39_JFF_OS/include -I$(WHDBASE)
 
 
 # leave MAIN_OBJ first
-MEM_OBJS = cpu1_rom.o cpu1_ram.o cpu2_rom.o cpu2_ram.o
+MEM_OBJS = cpu1_rom.o cpu1_ram.o cpu2_rom.o cpu2_ram.o cpu1_banks.o cpu2_banks.o
 HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
 AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
 CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o
@@ -84,6 +84,10 @@ cpu1_rom.o: roms/cpu1_rom.68k
 	$(ASM) roms/cpu1_rom.68k -o cpu1_rom.o
 cpu2_rom.o: roms/cpu2_rom.68k
 	$(ASM) roms/cpu2_rom.68k -o cpu2_rom.o
+cpu1_banks.o: roms/cpu1_banks.68k
+	$(ASM) -Iroms roms/cpu1_banks.68k -o cpu1_banks.o
+cpu2_banks.o: roms/cpu2_banks.68k
+	$(ASM) -Iroms roms/cpu2_banks.68k -o cpu2_banks.o
 	
 bank0.o: bank0.68k
 	$(ASM) bank0.68k -o bank0.o
