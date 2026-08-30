@@ -33,7 +33,7 @@ watchdog_8000 = $8000
 unknown_6e00 = $6E00
 unknown_6200 = $6200
 unknown_6600 = $6600
-unknown_6C00 = $6C00
+unknown_6c00 = $6C00
 cpu_sync_5ff0 = $5ff0
 
 cpu1_boot_8000:    ; [global]
@@ -45,7 +45,7 @@ cpu1_boot_8000:    ; [global]
 800B: B7 6E 00    STA    unknown_6e00		; bank switch?
 800E: B7 62 00    STA    unknown_6200		; bank switch?
 8011: B7 66 00    STA    unknown_6600		; bank switch?
-8014: B7 6C 00    STA    unknown_6C00		; bank switch?
+8014: B7 6C 00    STA    unknown_6c00		; bank switch?
 8017: 7F 5F F1    CLR    $5FF1
 801A: 7F 5F F3    CLR    $5FF3
 801D: 7F 5F F0    CLR    cpu_sync_5ff0
@@ -622,10 +622,12 @@ normal_start_8190:
 855E: B7 64 00    STA    $6400
 8561: B7 6C 00    STA    $6C00
 8564: 39          RTS
+
+cpu1_irq_8565:    ; [global]
 8565: 0C 0E       INC    $0E
 8567: 96 00       LDA    $00
 8569: 84 01       ANDA   #$01
-856B: 26 26       BNE    $8593
+856B: 26 26       BNE    $8593		; skip most irq code
 856D: BD 81 CC    JSR    $81CC
 8570: BD AF 16    JSR    $AF16
 8573: BD AF 6C    JSR    $AF6C
@@ -634,7 +636,7 @@ normal_start_8190:
 857B: 91 03       CMPA   $03
 857D: 22 08       BHI    $8587
 857F: CE 85 A2    LDU    #jump_table_85a2
-8582: 96 02       LDA    $02
+8582: 96 02       LDA    $02			; global state
 8584: 48          ASLA
 8585: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=7]
 8587: 96 19       LDA    bankswitch_shadow_19
@@ -642,7 +644,6 @@ normal_start_8190:
 858C: B7 80 00    STA    watchdog_8000
 858F: B7 84 00    STA    irq_ack_8400
 8592: 3B          RTI
-
 8593: BD 81 CC    JSR    $81CC
 8596: 96 19       LDA    bankswitch_shadow_19
 8598: B7 68 00    STA    bankswitch_6800

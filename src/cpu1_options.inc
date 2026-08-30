@@ -37,7 +37,7 @@ LOG_BUFFER_SIZE = 0x8000
 	
 	.macro	CPU1_GET_MEMORY_START_AND_DP
 	move.l	cpu1_m6809_direct_page_pointer,a5
-	*move.l	bank_base,a1
+	move.l	cpu1_bank_base,a1
 	CPU1_GET_MEMORY_START_IN_A6
 	.endm
 	

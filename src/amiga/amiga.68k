@@ -266,10 +266,13 @@ BIT_FIRE_2 = 5
 	.macro	OSD_ENTER
 	tst.b	osd_entry_count
 	jne		osd_enter_\@
-
+	tst.b	currently_running_cpu+1
+	jeq		from_cpu1_\@
+	move.w	d5,cpu2_target_ssp_value
+	jra		osd_enter_\@
 	* top entry: save game S register
-	move.w	d5,target_ssp_value
-
+from_cpu1_\@:
+	move.w	d5,cpu1_target_ssp_value
 osd_enter_\@:
 	addq.b	#1,osd_entry_count	| increase nesting
 	.endm
@@ -296,8 +299,8 @@ osd_enter_\@:
 	.global osd_blitz		| for debug
 	.global osd_read_dsw1
 	.global osd_read_dsw2
-	.global	osd_main_loop_hook
-	.global	osd_set_bank
+	.global	osd_set_cpu1_bank
+	.global	osd_set_cpu2_bank
 	.global	osd_read_system
 	.global	osd_read_p1_inputs
 	.global	osd_read_p2_inputs
@@ -815,15 +818,6 @@ demo_game:
 	dbf		d0,0b
 
 	
-	
-	* install bank 4 in 0x4000, we may as well use that space
-	* plus it allows simpler code ex at 9088 where game accesses
-	* ROM or bank ROM in bank 4
-
-*	GET_MEMORY_START_AND_DP
-*	jbsr	install_bank_4
-	
-	
 	.ifndef	RELEASE
 	* install dump and quit handler
 	pea		dump_and_quit
@@ -881,9 +875,18 @@ demo_game:
 	move.l	(a7)+,(0x64,a1)
 
 	moveq	#0,d0
-	jbsr	osd_set_bank
-	CPU1_GET_MEMORY_START_AND_DP	
-	jmp		reset_6000								| pass control to the mpatrol core
+	jbsr	osd_set_cpu1_bank
+	moveq	#0,d0
+	jbsr	osd_set_cpu2_bank
+	
+	* first, call init of cpu 2. We plugged a RTS after init so it doesn't enter the mainloop
+	* and returns there
+	CPU2_GET_MEMORY_START_AND_DP
+	move.b	#1,currently_running_cpu
+	jbsr	cpu2_boot_8000
+	CPU1_GET_MEMORY_START_AND_DP
+	clr.b	currently_running_cpu
+	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
 
 	
@@ -1083,7 +1086,7 @@ load_context:
 	* thus allowing pre-computed symmetric bitmaps
 
 	move.w	current_context,d0
-	lea	sprite_context_name_table,A0
+	*lea	sprite_context_name_table,A0
 	add.w	d0,d0	
 	add.w	d0,d0
 	move.l	(a0,d0.w),a0
@@ -1448,24 +1451,52 @@ load_file:
 	rts
 0:
 	illegal
-	
-* < A6: memory base
-install_bank_4:
-	movem.l	a0/a1/d0,-(a7)
-	lea	bank4_4000,a0
-	lea		(bank_address_4000,a6),a1
-	move.w	#0x7FF,d0
-0:
-	move.l	(a0)+,(a1)+
-	dbf		d0,0b
-	
-	move.l	a6,bank_table+4*4	| first entry is RAM base
-	move.l	a6,bank_base
-	movem.l	(a7)+,a0/a1/d0
-	
-	rts
 
-call_nmi:
+* < D0: bank number	
+osd_set_cpu1_bank:
+	moveq	#0,d7
+	move.b	d0,d7
+	.ifndef	RELEASE
+	cmp.w	#0x14,d7
+	jcs 	0f
+	BREAKPOINT	"Bank 1 out of range (d7)"
+0:
+	.endif
+	swap	d7
+	lsr.l	#1,d7	| times 0x2000*4 total
+	lea		cpu1_banks,a0
+	sub.l	#0x6000,d7		| so a1+address points on data
+	lea		(a0,d7.l),a1
+	move.l	a1,cpu1_bank_base
+	rts
+	
+* < D0: bank number	
+osd_set_cpu2_bank:
+	moveq	#0,d7
+	move.b	d0,d7
+	.ifndef	RELEASE
+	cmp.w	#0x4,d7
+	jcs 	0f
+	BREAKPOINT	"Bank 2 out of range (d7)"
+0:
+	.endif
+	swap	d7
+	lsr.l	#1,d7	| times 0x2000*4 total
+	lea		cpu2_banks,a0
+	sub.l	#0x6000,d7		| so a1+address points on data
+	lea		(a0,d7.l),a1
+	move.l	a1,cpu2_bank_base
+	rts
+	
+call_nmis:
+	move.w	currently_running_cpu,-(a7)
+	jbsr	call_nmi_cpu_1
+	jbsr	call_nmi_cpu_2
+	move.w	(a7)+,currently_running_cpu
+	rts
+	
+call_nmi_cpu_1:
+	* TODO check if interrupts are enabled for cpu 1
 	* reset most registers (not D5)
 	jbsr	cpu_init
 	* set base for RAM
@@ -1479,7 +1510,37 @@ call_nmi:
 	* we have to restore d5 as it was on entering the osd call
 	* restore game S (aka d5) so it's used in the irq
 	* we must not change d5 until game irq has been called
-	move.w	target_ssp_value,d5
+	move.w	cpu1_target_ssp_value,d5
+0:
+
+	swap	d5
+	clr		d5
+	swap 	d5
+	.ifndef	RELEASE
+	tst.w	d5
+	jne		0f
+	BREAKPOINT	"entering game irq with d5/S=0"
+0:
+	.endif
+	clr.b	currently_running_cpu+1
+	jra	cpu1_irq_8565
+	
+call_nmi_cpu_2:
+	* TODO check if interrupts are enabled for cpu 2
+	* reset most registers (not D5)
+	jbsr	cpu_init
+	* set base for RAM
+	CPU2_GET_MEMORY_START_AND_DP
+	* should we set a saved copy of S or use the one that existed
+	* when the game was interrupted? depends if the game was interrupted
+	* in the original game code or in an osd function
+	cmp.b	#1,osd_entry_count
+	jeq		0f
+	* osd_entry_count > 1: means that we interrupted an osd call
+	* we have to restore d5 as it was on entering the osd call
+	* restore game S (aka d5) so it's used in the irq
+	* we must not change d5 until game irq has been called
+	move.w	cpu2_target_ssp_value,d5
 0:
 
 	swap	d5
@@ -1492,7 +1553,8 @@ call_nmi:
 0:
 	.endif
 	
-	jra	irq_65c4
+	move.b	#1,currently_running_cpu+1
+	jra	cpu2_irq_8173
 	
 
 * just in case some hardware calls nmi
@@ -1590,7 +1652,7 @@ level1_interrupt:
 	addq.b	#1,d0
 	cmp.b	#5,d0
 	bne.b	1f
-	jbsr	call_nmi
+	jbsr	call_nmis
 	clr.b	d0
 1:
 	move.b	d0,mid_screen_interrupt_count
@@ -1598,7 +1660,7 @@ level1_interrupt:
 2:
 
 
-	jbsr	call_nmi
+	jbsr	call_nmis
 
 	CPU1_GET_MEMORY_START_IN_A6
 	
@@ -3015,15 +3077,6 @@ start_process_1_plane:
 	GEN_MINTERM_TABLE_2	cookie_cut_mask_blit,0x0BCA
 
 
-
-bank_base:
-	.long	0
-bank_table:
-	.long	bank0_4000-0x4000
-	.long	bank1_4000-0x4000
-	.long	bank2_4000-0x4000
-	.long	bank3_4000-0x4000
-	.long	0  | bank4_4000-0x4000
 	
 bob_previous_positions_1:
 	.fill NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE+4 , 1 , -1
@@ -3489,42 +3542,6 @@ osd_disable_interrupts:
 	
 
 
-	
-	
-
-	
-* set bank
-* < D0.B bank 0-4
-* > A1 bank pointer minus 0x4000
-osd_set_bank:
-	* make sure D5 is not used there!
-	cmp.b	current_rom_bank,d0
-	jeq		1f
-	movem.l	d0/a0,-(a7)
-	move.b	d0,current_rom_bank
-	and.w	#0xFF,d0
-	.ifndef	RELEASE
-	cmp.b	#5,d0
-	jcs		0f
-	BREAKPOINT	"illegal bank index"
-0:
-	.endif
-	lea		bank_table,a0
-	.ifdef	NO68020
-	add.w	d0,d0
-	add.w	d0,d0
-	move.l	(a0,d0.w),a1
-	.else
-	move.l	(a0,d0.w*4),a1
-	.endif
-	move.l	a1,bank_base
-	
-	movem.l	(a7)+,d0/a0
-1:
-	rts
-
-
-	
 
 * a0=screen address (preserved)
 * a6=ram base
@@ -5557,6 +5574,8 @@ music_loops:
 music_volume:
 	.byte	0
 	.align	2
+currently_running_cpu:
+	.word	0
 current_context:
 	.word	-1
 saved_context:
@@ -5721,7 +5740,9 @@ mid_screen_interrupt_count:
 	.align	2
 system_vbr:
 	.long	0
-target_ssp_value:
+cpu1_target_ssp_value:
+	.word	0
+cpu2_target_ssp_value:
 	.word	0
 
 host_scroll_x:

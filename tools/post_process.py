@@ -230,6 +230,8 @@ def doit(cpu):
     "unknown_6200":"",
     "unknown_6600":"",
     "unknown_6C00":"",
+    "irq_ack_8400":"",
+    "bankswitch_6800":"set_cpu1_bank",
     } if cpu==1 else  {
     "watchdog_8000":"",
     "bankswitch2_d803":"set_cpu2_bank",
@@ -246,7 +248,7 @@ def doit(cpu):
         address = get_line_address(line)
 
         line = handle_special_addresses(input_dict,lines,i)
-
+        lines[i] = line
         line = check_stack_usage(lines,i)
         ###############################################
         # game_specific

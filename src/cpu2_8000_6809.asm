@@ -182,6 +182,8 @@ mainloop_80a3:
 816D: 25 F9       BCS    $8168
 816F: B7 80 00    STA    watchdog_8000
 8172: 39          RTS
+
+cpu2_irq_8173:  ; [global]
 8173: 0C 0F       INC    $0F
 8175: 96 00       LDA    $00
 8177: 84 01       ANDA   #$01
