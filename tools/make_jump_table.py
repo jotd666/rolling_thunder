@@ -164,21 +164,21 @@ def process(asm_file,rom_file,offset,end_address):
     with open(this_dir / (asm_file.stem + "_new.asm"),"w") as f:
         f.writelines(asm_lines)
 
-#process(this_dir/"../src/cpu2_8000_6809.asm",this_dir/"../assets/rom_cpu2.bin",offset=0x8000,end_address=0x10000)
+process(this_dir/"../src/cpu2_8000_6809.asm",this_dir/"../assets/rom_cpu2.bin",offset=0x8000,end_address=0x10000)
 #process(this_dir / "../src/cpu1_8000_6809.asm",this_dir/"../assets/rom_cpu1.bin",offset=0x8000,end_address=0x10000)
 
-with open(this_dir/"../assets/rom_cpu1.bin","rb") as f,open(this_dir/"table_of_jump_tables_cpu1.asm","w") as fw:
-    contents = f.read()
-    for table_address in [0xb6e6,
-0xb750,
-0xb7ba,
-0xbab8,
-]:
-        fw.write(f"jump_table_{table_address:04x}:\n")
-        block = contents[table_address-0x8000:]
-        for j in range(0,len(block),2):
-            a = block[j+1] + block[j]*256   # big endian!
-            if a not in fake and (0x8000 > a):
-                break
-            fw.write(f"\t.word\t${a:04x}\n")
-
+##with open(this_dir/"../assets/rom_cpu1.bin","rb") as f,open(this_dir/"table_of_jump_tables_cpu1.asm","w") as fw:
+##    contents = f.read()
+##    for table_address in [0xb6e6,
+##0xb750,
+##0xb7ba,
+##0xbab8,
+##]:
+##        fw.write(f"jump_table_{table_address:04x}:\n")
+##        block = contents[table_address-0x8000:]
+##        for j in range(0,len(block),2):
+##            a = block[j+1] + block[j]*256   # big endian!
+##            if a not in fake and (0x8000 > a):
+##                break
+##            fw.write(f"\t.word\t${a:04x}\n")
+##
