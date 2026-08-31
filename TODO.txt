@@ -1,5 +1,13 @@
 fmode=2 (32 bit scroll)
 fmode=3 64 bit sprites
-upper & lower HUD use fixed sprites, then multiplexes to a layer of 5x64 sprites (scrolling)
-for front objects
+upper & lower HUD use fixed sprites either 4*64 attached either 5*64 with limited colors, check in game
 main playfield would use 64 colors
+find 4 layers addresses, specially HUD layer: $3000 but not visible until???
+write mockups for all layers
+patch cpu2 init to return
+patch cpu1 init to skip memory tests
+cpu log should take cpu # as parameter too
+
+0x1000 tiles for layers 1,2,3
+0x800 tiles for HUD layer 4
+0x400 sprites 32x32 max so "ungrouping" is needed

@@ -301,7 +301,7 @@ osd_enter_\@:
 	.global osd_read_dsw2
 	.global	osd_set_cpu1_bank
 	.global	osd_set_cpu2_bank
-	.global	osd_read_system
+	.global	osd_set_back_color
 	.global	osd_read_p1_inputs
 	.global	osd_read_p2_inputs
 	
@@ -794,7 +794,7 @@ demo_game:
 	clr.w	d0
 	move.l	d0,d1
 	add.l	#0x10000+CPU1_RAM_START,d1
-	move.l	d1,cpu1_ram_start_0000		| memory (0x1000-0xFFFF)
+	move.l	d1,cpu1_ram_start_0000		| memory (0x0000-0xFFFF)
 	
 	* relocate rom tables just after shared RAM
 	* memory is contiguous (only 1 segment of memory RAM+ROM)
@@ -808,11 +808,45 @@ demo_game:
 	* release mode
 
 	* copy the ROM data after RAM
-	lea		rom_buffer,a1
+	lea		cpu1_rom_buffer,a1
 	move.w	#(0x10000-CPU1_ROM_START)/4-1,d0
 	.endif
 	
-	lea		rom_base,a0
+	lea		cpu1_rom_base,a0
+0:
+	move.l	(a0)+,(a1)+
+	dbf		d0,0b
+
+	.ifne	OPT_ALIGNED_MEMORY
+	* compute ram start for dev mode
+	* align so real addresses LSW match actual arcade addresses
+	* and lower 16-bit match original RAM & even ROM offsets
+	*
+
+	lea		cpu2_dev_ram_buffer,a6
+	move.l	a6,d0
+	clr.w	d0
+	move.l	d0,d1
+	add.l	#0x10000+CPU2_RAM_START,d1
+	move.l	d1,cpu2_ram_start_0000		| memory (0x0000-0xFFFF)
+	
+	* relocate rom tables just after shared RAM
+	* memory is contiguous (only 1 segment of memory RAM+ROM)
+	* and 6809 memory access is way faster (no bank switching)
+	
+	* copy the ROM data
+	add.l	#CPU2_ROM_START-CPU2_RAM_START,d1
+	move.l 	d1,a1
+	move.w	#(0x10000-CPU2_ROM_START)/4-1,d0
+	.else
+	* release mode
+
+	* copy the ROM data after RAM
+	lea		cpu2_rom_buffer,a1
+	move.w	#(0x10000-CPU2_ROM_START)/4-1,d0
+	.endif
+	
+	lea		cpu2_rom_base,a0
 0:
 	move.l	(a0)+,(a1)+
 	dbf		d0,0b
@@ -1248,7 +1282,7 @@ force_all_screen_redraw:
 	move.w	host_scroll_x,d0
 	
 	move.w	d0,d5				| save scroll X
-	lea		(bg_tiles_address_2800,a6),a5
+	lea		(bg_tiles_address_0000,a6),a5
 	move.w	game_scroll_x,d0
 	lsr.w	#4,D0	| divide by 16 to get real X tile offset
 	* now compute start address to fetch data from
@@ -1326,7 +1360,7 @@ draw_column_tiles:
 	move.w	(a7)+,d0	
 	CPU1_GET_MEMORY_START_AND_DP
 
-	lea		(bg_tiles_address_2800,a6),a5
+	lea		(bg_tiles_address_0000,a6),a5
 	lsr.w	#4,D0	| divide by 16 to get real X tile offset
 	* now compute start address to fetch data from
 	move.w	#0,d7		| first row is not visible with scroll=0, visible with=$10
@@ -4496,7 +4530,9 @@ decode_joypad_controls:
 0:
 	rts
 	
-
+osd_set_back_color:
+	RTS
+	
 osd_read_dsw1:
 	* actual dipswitches
 	move.b	dip_switches_1,d0	| what MAME returns by default: demo sounds on. ~0x60: service mode

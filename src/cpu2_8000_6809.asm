@@ -1282,12 +1282,12 @@ cpu2_irq_8173:  ; [global]
 
 8E05: DC 84       LDD    $84
 8E07: C4 F0       ANDB   #$F0
-8E09: ED E3       STD    ,--S
+8E09: ED E3       STD    ,--S		; [local]
 8E0B: DC 84       LDD    $84
 8E0D: E3 16       ADDD   -$A,X
 8E0F: DD 84       STD    $84
 8E11: C4 F0       ANDB   #$F0
-8E13: A3 E1       SUBD   ,S++
+8E13: A3 E1       SUBD   ,S++		; [local]
 8E15: 47          ASRA
 8E16: 56          RORB
 8E17: 57          ASRB
@@ -1344,13 +1344,13 @@ cpu2_irq_8173:  ; [global]
 8E77: E6 45       LDB    $5,U
 8E79: CB 50       ADDB   #$50
 8E7B: C4 7E       ANDB   #$7E
-8E7D: E7 E2       STB    ,-S
+8E7D: E7 E2       STB    ,-S				; [local]
 8E7F: EC 46       LDD    $6,U
 8E81: C3 0E 80    ADDD   #$0E80
 8E84: 84 0F       ANDA   #$0F
-8E86: EB E0       ADDB   ,S+
+8E86: EB E0       ADDB   ,S+			; [local]
 8E88: CE 40 00    LDU    #$4000
-8E8B: ED E3       STD    ,--S
+8E8B: ED E3       STD    ,--S		; [local]
 8E8D: EC CB       LDD    D,U
 8E8F: C4 07       ANDB   #$07
 8E91: 10 83 FF 03 CMPD   #$FF03
@@ -1359,14 +1359,14 @@ cpu2_irq_8173:  ; [global]
 8E99: 96 83       LDA    $83
 8E9B: 84 07       ANDA   #$07
 8E9D: 26 10       BNE    $8EAF
-8E9F: EC E1       LDD    ,S++
+8E9F: EC E1       LDD    ,S++		; [local]
 8EA1: 83 0D 80    SUBD   #$0D80
 8EA4: 84 0F       ANDA   #$0F
 8EA6: EC CB       LDD    D,U
 8EA8: C4 07       ANDB   #$07
 8EAA: 10 83 FF 03 CMPD   #$FF03
 8EAE: 39          RTS
-8EAF: EC E1       LDD    ,S++
+8EAF: EC E1       LDD    ,S++		; [local]
 8EB1: 83 0E 00    SUBD   #$0E00
 8EB4: 84 0F       ANDA   #$0F
 8EB6: EC CB       LDD    D,U
@@ -1384,10 +1384,10 @@ cpu2_irq_8173:  ; [global]
 8ED1: CE 13 E0    LDU    #$13E0
 8ED4: A6 1B       LDA    -$5,X
 8ED6: 84 70       ANDA   #$70
-8ED8: A7 E2       STA    ,-S
+8ED8: A7 E2       STA    ,-S		; [local]
 8EDA: A6 41       LDA    $1,U
 8EDC: 84 70       ANDA   #$70
-8EDE: AB E0       ADDA   ,S+
+8EDE: AB E0       ADDA   ,S+		; [local]
 8EE0: 84 70       ANDA   #$70
 8EE2: 26 09       BNE    $8EED
 8EE4: CC 01 00    LDD    #$0100
@@ -1406,7 +1406,7 @@ cpu2_irq_8173:  ; [global]
 8F00: DD 88       STD    $88
 8F02: A6 41       LDA    $1,U
 8F04: 84 80       ANDA   #$80
-8F06: A7 E2       STA    ,-S
+8F06: A7 E2       STA    ,-S		; [local]
 8F08: E6 48       LDB    $8,U
 8F0A: 1D          SEX
 8F0B: E3 C4       ADDD   ,U
@@ -1414,7 +1414,7 @@ cpu2_irq_8173:  ; [global]
 8F0F: ED 50       STD    -$10,U
 8F11: ED C8 E0    STD    -$20,U
 8F14: C4 80       ANDB   #$80
-8F16: E0 E0       SUBB   ,S+
+8F16: E0 E0       SUBB   ,S+		; [local]
 8F18: 27 35       BEQ    $8F4F
 8F1A: 8E 15 00    LDX    #$1500
 8F1D: D6 B3       LDB    $B3
@@ -1445,6 +1445,7 @@ cpu2_irq_8173:  ; [global]
 8F4B: A7 84       STA    ,X
 8F4D: 0C B3       INC    $B3
 8F4F: 35 90       PULS   X,PC
+
 8F51: EC 1A       LDD    -$6,X
 8F53: 10 83 06 00 CMPD   #$0600
 8F57: 22 11       BHI    $8F6A
@@ -1488,14 +1489,14 @@ cpu2_irq_8173:  ; [global]
 8F9F: E6 45       LDB    $5,U
 8FA1: CB 06       ADDB   #$06
 8FA3: C4 7F       ANDB   #$7F
-8FA5: E7 E2       STB    ,-S
+8FA5: E7 E2       STB    ,-S		; [local]
 8FA7: EC 46       LDD    $6,U
 8FA9: C3 0E 80    ADDD   #$0E80
 8FAC: 84 0F       ANDA   #$0F
 8FAE: C4 80       ANDB   #$80
-8FB0: EB E0       ADDB   ,S+
+8FB0: EB E0       ADDB   ,S+		; [local]
 8FB2: CE 40 00    LDU    #$4000
-8FB5: ED E3       STD    ,--S
+8FB5: ED E3       STD    ,--S		; [local]
 8FB7: EC CB       LDD    D,U
 8FB9: C4 03       ANDB   #$03
 8FBB: 10 83 FF 03 CMPD   #$FF03
@@ -1504,14 +1505,14 @@ cpu2_irq_8173:  ; [global]
 8FC3: 96 83       LDA    $83
 8FC5: 84 07       ANDA   #$07
 8FC7: 26 10       BNE    $8FD9
-8FC9: EC E1       LDD    ,S++
+8FC9: EC E1       LDD    ,S++		; [local]
 8FCB: 83 0D 80    SUBD   #$0D80
 8FCE: 84 0F       ANDA   #$0F
 8FD0: EC CB       LDD    D,U
 8FD2: C4 03       ANDB   #$03
 8FD4: 10 83 FF 03 CMPD   #$FF03
 8FD8: 39          RTS
-8FD9: EC E1       LDD    ,S++
+8FD9: EC E1       LDD    ,S++		; [local]
 8FDB: 83 0E 00    SUBD   #$0E00
 8FDE: 84 0F       ANDA   #$0F
 8FE0: EC CB       LDD    D,U
@@ -1529,10 +1530,10 @@ cpu2_irq_8173:  ; [global]
 8FFB: CE 13 E0    LDU    #$13E0
 8FFE: A6 1B       LDA    -$5,X
 9000: 84 70       ANDA   #$70
-9002: A7 E2       STA    ,-S
+9002: A7 E2       STA    ,-S		; [local]
 9004: A6 41       LDA    $1,U
 9006: 84 70       ANDA   #$70
-9008: AB E0       ADDA   ,S+
+9008: AB E0       ADDA   ,S+		; [local]
 900A: 84 70       ANDA   #$70
 900C: 26 09       BNE    $9017
 900E: CC FE 00    LDD    #$FE00
@@ -1551,7 +1552,7 @@ cpu2_irq_8173:  ; [global]
 902A: DD 88       STD    $88
 902C: A6 41       LDA    $1,U
 902E: 84 80       ANDA   #$80
-9030: A7 E2       STA    ,-S
+9030: A7 E2       STA    ,-S		; [local]
 9032: E6 48       LDB    $8,U
 9034: 50          NEGB
 9035: 1D          SEX
@@ -1560,7 +1561,7 @@ cpu2_irq_8173:  ; [global]
 903A: ED 50       STD    -$10,U
 903C: ED C8 E0    STD    -$20,U
 903F: C4 80       ANDB   #$80
-9041: E0 E0       SUBB   ,S+
+9041: E0 E0       SUBB   ,S+		; [local]
 9043: 27 2F       BEQ    $9074
 9045: 8E 15 00    LDX    #$1500
 9048: D6 B3       LDB    $B3
@@ -1590,12 +1591,12 @@ cpu2_irq_8173:  ; [global]
 9074: 35 90       PULS   X,PC
 9076: DC 86       LDD    $86
 9078: C4 F0       ANDB   #$F0
-907A: ED E3       STD    ,--S
+907A: ED E3       STD    ,--S		; [local]
 907C: DC 86       LDD    $86
 907E: E3 18       ADDD   -$8,X
 9080: DD 86       STD    $86
 9082: C4 F0       ANDB   #$F0
-9084: A3 E1       SUBD   ,S++
+9084: A3 E1       SUBD   ,S++		; [local]
 9086: 27 29       BEQ    $90B1
 9088: 47          ASRA
 9089: 56          RORB
@@ -1666,13 +1667,13 @@ cpu2_irq_8173:  ; [global]
 9107: E6 45       LDB    $5,U
 9109: CB 08       ADDB   #$08
 910B: C4 7F       ANDB   #$7F
-910D: E7 E2       STB    ,-S
+910D: E7 E2       STB    ,-S		; [local]
 910F: EC A5       LDD    B,Y
 9111: C4 03       ANDB   #$03
 9113: 10 83 FF 03 CMPD   #$FF03
-9117: 26 02       BNE    $911B
-9119: 35 82       PULS   A,PC
-911B: E6 E0       LDB    ,S+
+9117: 26 02       BNE    $911B		
+9119: 35 82       PULS   A,PC		; [manual_stack_pull]
+911B: E6 E0       LDB    ,S+		; [local]
 911D: 96 81       LDA    $81
 911F: 84 07       ANDA   #$07
 9121: 26 0D       BNE    $9130
@@ -1726,7 +1727,7 @@ cpu2_irq_8173:  ; [global]
 9188: DD 8A       STD    $8A
 918A: A6 43       LDA    $3,U
 918C: 84 80       ANDA   #$80
-918E: A7 E2       STA    ,-S
+918E: A7 E2       STA    ,-S	; [local]
 9190: E6 49       LDB    $9,U
 9192: 1D          SEX
 9193: E3 42       ADDD   $2,U
@@ -1734,7 +1735,7 @@ cpu2_irq_8173:  ; [global]
 9197: ED 52       STD    -$E,U
 9199: ED C8 E2    STD    -$1E,U
 919C: C4 80       ANDB   #$80
-919E: E0 E0       SUBB   ,S+
+919E: E0 E0       SUBB   ,S+	; [local]
 91A0: 27 30       BEQ    $91D2
 91A2: 8E 15 00    LDX    #$1500
 91A5: D6 B3       LDB    $B3
@@ -1840,13 +1841,13 @@ cpu2_irq_8173:  ; [global]
 926F: E6 45       LDB    $5,U
 9271: CB 08       ADDB   #$08
 9273: C4 7F       ANDB   #$7F
-9275: E7 E2       STB    ,-S
+9275: E7 E2       STB    ,-S	; [local]
 9277: EC A5       LDD    B,Y
 9279: C4 03       ANDB   #$03
 927B: 10 83 FF 03 CMPD   #$FF03
 927F: 26 02       BNE    $9283
-9281: 35 82       PULS   A,PC
-9283: E6 E0       LDB    ,S+
+9281: 35 82       PULS   A,PC	; [manual_stack_pull]
+9283: E6 E0       LDB    ,S+	; [local]
 9285: 96 81       LDA    $81
 9287: 84 07       ANDA   #$07
 9289: 26 0D       BNE    $9298
@@ -1870,7 +1871,7 @@ cpu2_irq_8173:  ; [global]
 92B1: 8D 4F       BSR    $9302
 92B3: C5 06       BITB   #$06
 92B5: 27 49       BEQ    $9300
-92B7: A7 E2       STA    ,-S
+92B7: A7 E2       STA    ,-S	; [local] 
 92B9: 84 EE       ANDA   #$EE
 92BB: 81 20       CMPA   #$20
 92BD: 27 10       BEQ    $92CF
@@ -1879,13 +1880,14 @@ cpu2_irq_8173:  ; [global]
 92C3: 81 2C       CMPA   #$2C
 92C5: 27 04       BEQ    $92CB
 92C7: C5 02       BITB   #$02
-92C9: 35 82       PULS   A,PC
+92C9: 35 82       PULS   A,PC	; [manual_stack_pull]
 92CB: C5 04       BITB   #$04
-92CD: 35 82       PULS   A,PC
+92CD: 35 82       PULS   A,PC	; [manual_stack_pull]
 92CF: C4 C0       ANDB   #$C0
 92D1: E7 05       STB    $5,X
 92D3: 5F          CLRB
-92D4: 35 82       PULS   A,PC
+92D4: 35 82       PULS   A,PC	; [manual_stack_pull]
+
 92D6: CE 13 E0    LDU    #$13E0
 92D9: A6 1D       LDA    -$3,X
 92DB: 84 70       ANDA   #$70
@@ -1896,7 +1898,7 @@ cpu2_irq_8173:  ; [global]
 92E6: 8D 1A       BSR    $9302
 92E8: C5 06       BITB   #$06
 92EA: 27 14       BEQ    $9300
-92EC: A7 E2       STA    ,-S
+92EC: A7 E2       STA    ,-S	; [local] 
 92EE: 84 EE       ANDA   #$EE
 92F0: 81 20       CMPA   #$20
 92F2: 27 DB       BEQ    $92CF
@@ -1905,7 +1907,7 @@ cpu2_irq_8173:  ; [global]
 92F8: 81 2C       CMPA   #$2C
 92FA: 27 CF       BEQ    $92CB
 92FC: C5 02       BITB   #$02
-92FE: 35 82       PULS   A,PC
+92FE: 35 82       PULS   A,PC	; [manual_stack_pull]
 9300: 5F          CLRB
 9301: 39          RTS
 9302: 8D 20       BSR    $9324
@@ -1929,34 +1931,34 @@ cpu2_irq_8173:  ; [global]
 931F: EE C5       LDU    B,U
 9321: E6 C6       LDB    A,U
 9323: 39          RTS
-9324: ED E3       STD    ,--S
+9324: ED E3       STD    ,--S	; [local]
 9326: E6 41       LDB    $1,U
 9328: C4 70       ANDB   #$70
 932A: 1D          SEX
 932B: E3 1A       ADDD   -$6,X
 932D: 58          ASLB
 932E: 49          ROLA
-932F: AB E0       ADDA   ,S+
+932F: AB E0       ADDA   ,S+	; [local]
 9331: 8B 04       ADDA   #$04
 9333: 48          ASLA
 9334: AB 45       ADDA   $5,U
 9336: 84 7E       ANDA   #$7E
-9338: A7 E2       STA    ,-S
+9338: A7 E2       STA    ,-S	; [local]
 933A: E6 43       LDB    $3,U
 933C: C4 70       ANDB   #$70
 933E: 1D          SEX
 933F: E3 1C       ADDD   -$4,X
 9341: 58          ASLB
 9342: 49          ROLA
-9343: AB 61       ADDA   $1,S
-9345: A7 E2       STA    ,-S
+9343: AB 61       ADDA   $1,S	; [local]
+9345: A7 E2       STA    ,-S	; [local]
 9347: 86 1D       LDA    #$1D
-9349: A0 E0       SUBA   ,S+
+9349: A0 E0       SUBA   ,S+	; [local]
 934B: C6 80       LDB    #$80
 934D: 3D          MUL
 934E: E3 46       ADDD   $6,U
 9350: 84 0F       ANDA   #$0F
-9352: EB E1       ADDB   ,S++
+9352: EB E1       ADDB   ,S++	; [local]
 9354: 39          RTS
 9355: 34 10       PSHS   X
 9357: CE 13 E0    LDU    #$13E0
@@ -1968,7 +1970,7 @@ cpu2_irq_8173:  ; [global]
 9366: DD 8A       STD    $8A
 9368: A6 43       LDA    $3,U
 936A: 84 80       ANDA   #$80
-936C: A7 E2       STA    ,-S
+936C: A7 E2       STA    ,-S	; [local]
 936E: E6 49       LDB    $9,U
 9370: 50          NEGB
 9371: 1D          SEX
@@ -1977,7 +1979,7 @@ cpu2_irq_8173:  ; [global]
 9376: ED 52       STD    -$E,U
 9378: ED C8 E2    STD    -$1E,U
 937B: C4 80       ANDB   #$80
-937D: E0 E0       SUBB   ,S+
+937D: E0 E0       SUBB   ,S+	; [local]
 937F: 27 30       BEQ    $93B1
 9381: 8E 15 00    LDX    #$1500
 9384: D6 B3       LDB    $B3
@@ -2110,8 +2112,8 @@ cpu2_irq_8173:  ; [global]
 949B: E3 1A       ADDD   -$6,X
 949D: 10 83 14 00 CMPD   #$1400
 94A1: 2C 36       BGE    $94D9
-94A3: 32 7D       LEAS   -$3,S
-94A5: ED E4       STD    ,S
+94A3: 32 7D       LEAS   -$3,S	; [alloc_locals]
+94A5: ED E4       STD    ,S		; [local]
 94A7: EC 1A       LDD    -$6,X
 94A9: A6 84       LDA    ,X
 94AB: 81 10       CMPA   #$10
@@ -2123,18 +2125,18 @@ cpu2_irq_8173:  ; [global]
 94B8: 26 0C       BNE    $94C6
 94BA: CC 01 00    LDD    #$0100
 94BD: BD 93 02    JSR    $9302
-94C0: A7 62       STA    $2,S
+94C0: A7 62       STA    $2,S	; [local]
 94C2: C4 01       ANDB   #$01
 94C4: 26 20       BNE    $94E6
 94C6: EC 1A       LDD    -$6,X
 94C8: C3 00 10    ADDD   #$0010
 94CB: ED 1A       STD    -$6,X
-94CD: 10 A3 E4    CMPD   ,S
+94CD: 10 A3 E4    CMPD   ,S		; [local]
 94D0: 2F D7       BLE    $94A9
-94D2: EC E1       LDD    ,S++
+94D2: EC E1       LDD    ,S++		; [local]
 94D4: ED 1A       STD    -$6,X
 94D6: 5F          CLRB
-94D7: 35 82       PULS   A,PC
+94D7: 35 82       PULS   A,PC	; [manual_stack_pull]
 94D9: 0A 31       DEC    $31
 94DB: 0A 37       DEC    $37
 94DD: 0A 33       DEC    $33
@@ -2143,7 +2145,7 @@ cpu2_irq_8173:  ; [global]
 94E3: E7 84       STB    ,X
 94E5: 39          RTS
 
-94E6: 32 62       LEAS   $2,S
+94E6: 32 62       LEAS   $2,S	; [free_locals]
 94E8: E6 1B       LDB    -$5,X
 94EA: C4 F0       ANDB   #$F0
 94EC: E7 1B       STB    -$5,X
@@ -2155,7 +2157,7 @@ cpu2_irq_8173:  ; [global]
 94F9: 2A 03       BPL    $94FE
 94FB: 33 C8 10    LEAU   $10,U		; => 955D
 94FE: C6 08       LDB    #$08
-9500: A6 E0       LDA    ,S+
+9500: A6 E0       LDA    ,S+		; [local]
 9502: A1 C1       CMPA   ,U++
 9504: 27 06       BEQ    $950C
 9506: 5A          DECB
@@ -2167,8 +2169,8 @@ cpu2_irq_8173:  ; [global]
 950F: E3 1A       ADDD   -$6,X
 9511: 10 83 FE 00 CMPD   #$FE00
 9515: 2D C2       BLT    $94D9
-9517: 32 7D       LEAS   -$3,S
-9519: ED E4       STD    ,S
+9517: 32 7D       LEAS   -$3,S		; [alloc_locals]
+9519: ED E4       STD    ,S			; [local]
 951B: EC 1A       LDD    -$6,X
 951D: A6 84       LDA    ,X
 951F: 81 10       CMPA   #$10
@@ -2180,26 +2182,26 @@ cpu2_irq_8173:  ; [global]
 952C: 26 0C       BNE    $953A
 952E: CC FE 00    LDD    #$FE00
 9531: BD 93 02    JSR    $9302
-9534: A7 62       STA    $2,S
+9534: A7 62       STA    $2,S	; [local]
 9536: C4 01       ANDB   #$01
 9538: 26 AC       BNE    $94E6
 953A: EC 1A       LDD    -$6,X
 953C: C3 FF F0    ADDD   #$FFF0
 953F: ED 1A       STD    -$6,X
-9541: 10 A3 E4    CMPD   ,S
+9541: 10 A3 E4    CMPD   ,S	; [local]
 9544: 2C D7       BGE    $951D
-9546: EC E1       LDD    ,S++
+9546: EC E1       LDD    ,S++	; [local]
 9548: ED 1A       STD    -$6,X
 954A: 5F          CLRB
-954B: 35 82       PULS   A,PC
+954B: 35 82       PULS   A,PC	; [manual_stack_pull]
 
 956D: EC 18       LDD    -$8,X
 956F: 2F 63       BLE    $95D4
 9571: E3 1C       ADDD   -$4,X
 9573: 10 83 0F 80 CMPD   #$0F80
 9577: 2C 3E       BGE    $95B7
-9579: 32 7D       LEAS   -$3,S
-957B: ED E4       STD    ,S
+9579: 32 7D       LEAS   -$3,S	; [alloc_locals]
+957B: ED E4       STD    ,S		; [local]
 957D: A6 01       LDA    $1,X
 957F: 84 FC       ANDA   #$FC
 9581: 81 28       CMPA   #$28
@@ -2212,21 +2214,21 @@ cpu2_irq_8173:  ; [global]
 9590: 26 0C       BNE    $959E
 9592: CC 00 03    LDD    #$0003
 9595: BD 93 02    JSR    $9302
-9598: A7 62       STA    $2,S
+9598: A7 62       STA    $2,S	; [local]
 959A: C4 08       ANDB   #$08
 959C: 26 26       BNE    $95C4
 959E: EC 1C       LDD    -$4,X
 95A0: C3 00 10    ADDD   #$0010
 95A3: ED 1C       STD    -$4,X
-95A5: 10 A3 E4    CMPD   ,S
+95A5: 10 A3 E4    CMPD   ,S			; [local]
 95A8: 2F DD       BLE    $9587
-95AA: EC E1       LDD    ,S++
+95AA: EC E1       LDD    ,S++	; [local]
 95AC: ED 1C       STD    -$4,X
 95AE: EC 18       LDD    -$8,X
 95B0: E3 12       ADDD   -$E,X
 95B2: ED 18       STD    -$8,X
 95B4: 5F          CLRB
-95B5: 35 82       PULS   A,PC
+95B5: 35 82       PULS   A,PC	; [manual_stack_pull]
 95B7: 0A 31       DEC    $31
 95B9: 0A 37       DEC    $37
 95BB: 0A 33       DEC    $33
@@ -2234,19 +2236,20 @@ cpu2_irq_8173:  ; [global]
 95BF: C6 FF       LDB    #$FF
 95C1: E7 84       STB    ,X
 95C3: 39          RTS
-95C4: 32 62       LEAS   $2,S
+95C4: 32 62       LEAS   $2,S	; [free_locals]
 95C6: A6 1D       LDA    -$3,X
 95C8: 84 F0       ANDA   #$F0
 95CA: A7 1D       STA    -$3,X
 95CC: A6 0C       LDA    $C,X
 95CE: 8A 02       ORA    #$02
 95D0: A7 0C       STA    $C,X
-95D2: 35 82       PULS   A,PC
+95D2: 35 82       PULS   A,PC		; [manual_stack_pull]
+
 95D4: E3 1C       ADDD   -$4,X
 95D6: 10 83 FC 80 CMPD   #$FC80
 95DA: 2D DB       BLT    $95B7
-95DC: 32 7D       LEAS   -$3,S
-95DE: ED E4       STD    ,S
+95DC: 32 7D       LEAS   -$3,S		; [alloc_locals]
+95DE: ED E4       STD    ,S		; [local]
 95E0: EC 1C       LDD    -$4,X
 95E2: CE 13 E0    LDU    #$13E0
 95E5: C4 70       ANDB   #$70
@@ -2255,7 +2258,7 @@ cpu2_irq_8173:  ; [global]
 95EB: 26 24       BNE    $9611
 95ED: CC 00 FF    LDD    #$00FF
 95F0: BD 93 02    JSR    $9302
-95F3: A7 62       STA    $2,S
+95F3: A7 62       STA    $2,S	; [local]
 95F5: C5 06       BITB   #$06
 95F7: 27 18       BEQ    $9611
 95F9: A6 01       LDA    $1,X
@@ -2266,22 +2269,22 @@ cpu2_irq_8173:  ; [global]
 9603: 27 0C       BEQ    $9611
 9605: C4 C0       ANDB   #$C0
 9607: E7 05       STB    $5,X
-9609: A6 62       LDA    $2,S
+9609: A6 62       LDA    $2,S		; [local]
 960B: 84 EE       ANDA   #$EE
 960D: 81 20       CMPA   #$20
 960F: 26 B3       BNE    $95C4
 9611: EC 1C       LDD    -$4,X
 9613: C3 FF F0    ADDD   #$FFF0
 9616: ED 1C       STD    -$4,X
-9618: 10 A3 E4    CMPD   ,S
+9618: 10 A3 E4    CMPD   ,S	; [local]
 961B: 2C C5       BGE    $95E2
-961D: EC E1       LDD    ,S++
+961D: EC E1       LDD    ,S++	; [local]
 961F: ED 1C       STD    -$4,X
 9621: EC 18       LDD    -$8,X
 9623: E3 12       ADDD   -$E,X
 9625: ED 18       STD    -$8,X
 9627: 5F          CLRB
-9628: 35 82       PULS   A,PC
+9628: 35 82       PULS   A,PC	; [manual_stack_pull]
 962A: E6 0D       LDB    $D,X
 962C: 58          ASLB
 962D: EA 0D       ORB    $D,X
@@ -2293,12 +2296,12 @@ cpu2_irq_8173:  ; [global]
 963C: 4F          CLRA
 963D: 58          ASLB
 963E: 49          ROLA
-963F: ED E3       STD    ,--S
+963F: ED E3       STD    ,--S	; [local]
 9641: 58          ASLB
 9642: 49          ROLA
 9643: 58          ASLB
 9644: 49          ROLA
-9645: E3 E1       ADDD   ,S++
+9645: E3 E1       ADDD   ,S++	; [local]
 9647: 31 AB       LEAY   D,Y
 9649: CE E1 40    LDU    #$E140
 964C: E6 0B       LDB    $B,X
@@ -2306,12 +2309,12 @@ cpu2_irq_8173:  ; [global]
 9650: 4F          CLRA
 9651: 58          ASLB
 9652: 49          ROLA
-9653: ED E3       STD    ,--S
+9653: ED E3       STD    ,--S	; [local]
 9655: 58          ASLB
 9656: 49          ROLA
 9657: 58          ASLB
 9658: 49          ROLA
-9659: E3 E1       ADDD   ,S++
+9659: E3 E1       ADDD   ,S++	; [local]
 965B: 33 CB       LEAU   D,U
 965D: 8D 5D       BSR    $96BC
 965F: C5 40       BITB   #$40
@@ -2328,9 +2331,9 @@ cpu2_irq_8173:  ; [global]
 9675: 8B 20       ADDA   #$20
 9677: 97 15       STA    $15
 9679: 9B 14       ADDA   $14
-967B: A7 E2       STA    ,-S
+967B: A7 E2       STA    ,-S	; [local]
 967D: 96 C1       LDA    $C1
-967F: A0 E0       SUBA   ,S+
+967F: A0 E0       SUBA   ,S+	; [local]
 9681: 23 18       BLS    $969B
 9683: 10 8E 13 60 LDY    #$1360
 9687: 96 E4       LDA    $E4
@@ -2508,12 +2511,12 @@ cpu2_irq_8173:  ; [global]
 97E1: 4F          CLRA
 97E2: 58          ASLB
 97E3: 49          ROLA
-97E4: ED E3       STD    ,--S
+97E4: ED E3       STD    ,--S	; [local]
 97E6: 58          ASLB
 97E7: 49          ROLA
 97E8: 58          ASLB
 97E9: 49          ROLA
-97EA: E3 E1       ADDD   ,S++
+97EA: E3 E1       ADDD   ,S++	; [local]
 97EC: 10 8E E1 40 LDY    #$E140
 97F0: 31 AB       LEAY   D,Y
 97F2: 8D 20       BSR    $9814
@@ -3260,12 +3263,12 @@ cpu2_irq_8173:  ; [global]
 9F1A: 10 8E 5F 08 LDY    #$5F08
 9F1E: C6 FC       LDB    #$FC
 9F20: A6 C0       LDA    ,U+
-9F22: A7 E2       STA    ,-S
+9F22: A7 E2       STA    ,-S	; [local]
 9F24: A6 C0       LDA    ,U+
 9F26: ED A1       STD    ,Y++
-9F28: 6A E4       DEC    ,S
+9F28: 6A E4       DEC    ,S	; [local]
 9F2A: 26 F8       BNE    $9F24
-9F2C: A6 E0       LDA    ,S+
+9F2C: A6 E0       LDA    ,S+	; [local]
 9F2E: 10 8E 13 60 LDY    #$1360
 9F32: 96 E4       LDA    $E4
 9F34: C6 04       LDB    #$04
@@ -4697,10 +4700,10 @@ ACC2: 97 61       STA    $61
 ACC4: 20 13       BRA    $ACD9
 ACC6: 96 C8       LDA    $C8
 ACC8: 80 02       SUBA   #$02
-ACCA: A7 E2       STA    ,-S
+ACCA: A7 E2       STA    ,-S	; [local]
 ACCC: DC 80       LDD    $80
 ACCE: C3 00 90    ADDD   #$0090
-ACD1: A1 E0       CMPA   ,S+
+ACD1: A1 E0       CMPA   ,S+	; [local]
 ACD3: 26 04       BNE    $ACD9
 ACD5: 86 02       LDA    #$02
 ACD7: 97 61       STA    $61
@@ -4719,10 +4722,10 @@ ACEE: 97 61       STA    $61
 ACF0: 39          RTS
 ACF1: 96 C9       LDA    $C9
 ACF3: 80 02       SUBA   #$02
-ACF5: A7 E2       STA    ,-S
+ACF5: A7 E2       STA    ,-S	; [local]
 ACF7: DC 82       LDD    $82
 ACF9: C3 00 80    ADDD   #$0080
-ACFC: A1 E0       CMPA   ,S+
+ACFC: A1 E0       CMPA   ,S+	; [local]
 ACFE: 27 01       BEQ    $AD01
 AD00: 39          RTS
 AD01: 96 61       LDA    $61
@@ -5109,7 +5112,7 @@ B06B: 2B 26       BMI    $B093
 B06D: D1 78       CMPB   $78
 B06F: 24 28       BCC    $B099
 B071: 1D          SEX
-B072: ED E3       STD    ,--S
+B072: ED E3       STD    ,--S	; [local]
 B074: CE E8 B0    LDU    #$E8B0
 B077: 96 3C       LDA    $3C
 B079: 48          ASLA
@@ -5122,7 +5125,7 @@ B082: EE C6       LDU    A,U
 B084: 96 63       LDA    $63
 B086: D6 78       LDB    $78
 B088: 3D          MUL
-B089: E3 E1       ADDD   ,S++
+B089: E3 E1       ADDD   ,S++	; [local]
 B08B: 58          ASLB
 B08C: 49          ROLA
 B08D: 10 AE CB    LDY    D,U
@@ -5272,10 +5275,10 @@ B198: 91 79       CMPA   $79
 B19A: 24 19       BCC    $B1B5
 B19C: D6 78       LDB    $78
 B19E: 3D          MUL
-B19F: ED E3       STD    ,--S
+B19F: ED E3       STD    ,--S	; [local]
 B1A1: D6 62       LDB    $62
 B1A3: 1D          SEX
-B1A4: E3 E1       ADDD   ,S++
+B1A4: E3 E1       ADDD   ,S++	; [local]
 B1A6: 58          ASLB
 B1A7: 49          ROLA
 B1A8: 10 AE CB    LDY    D,U
@@ -5294,11 +5297,11 @@ B1C0: 2B 15       BMI    $B1D7
 B1C2: D1 78       CMPB   $78
 B1C4: 24 19       BCC    $B1DF
 B1C6: 1D          SEX
-B1C7: ED E3       STD    ,--S
+B1C7: ED E3       STD    ,--S	; [local]
 B1C9: 96 63       LDA    $63
 B1CB: D6 78       LDB    $78
 B1CD: 3D          MUL
-B1CE: E3 E1       ADDD   ,S++
+B1CE: E3 E1       ADDD   ,S++	; [local]
 B1D0: 58          ASLB
 B1D1: 49          ROLA
 B1D2: 10 AE CB    LDY    D,U
@@ -5325,6 +5328,7 @@ B1FB: 8C 09 00    CMPX   #$0900
 B1FE: 25 EC       BCS    $B1EC
 B200: B7 80 00    STA    watchdog_8000
 B203: 35 D0       PULS   X,U,PC
+
 B205: EC A1       LDD    ,Y++
 B207: 8A 80       ORA    #$80
 B209: A7 84       STA    ,X
@@ -5341,16 +5345,16 @@ B21D: 6F 0E       CLR    $E,X
 B21F: CE E8 E0    LDU    #$E8E0
 B222: A6 84       LDA    ,X
 B224: 84 7C       ANDA   #$7C
-B226: A7 E2       STA    ,-S
+B226: A7 E2       STA    ,-S	; [local]
 B228: A6 02       LDA    $2,X
 B22A: 84 03       ANDA   #$03
-B22C: AB E0       ADDA   ,S+
+B22C: AB E0       ADDA   ,S+	; [local]
 B22E: 48          ASLA
 B22F: EC C6       LDD    A,U
 B231: A7 04       STA    $4,X
 B233: E7 06       STB    $6,X
 B235: CE E9 40    LDU    #$E940
-B238: A6 7F       LDA    -$1,S
+B238: A6 7F       LDA    -$1,S	; [local] 
 B23A: 44          LSRA
 B23B: EC C6       LDD    A,U
 B23D: ED 12       STD    -$E,X
@@ -5541,10 +5545,10 @@ B52B: A6 03       LDA    $3,X
 B52D: 84 30       ANDA   #$30
 B52F: 44          LSRA
 B530: 44          LSRA
-B531: A7 E2       STA    ,-S
+B531: A7 E2       STA    ,-S	; [local] 
 B533: A6 07       LDA    $7,X
 B535: 84 02       ANDA   #$02
-B537: AB E0       ADDA   ,S+
+B537: AB E0       ADDA   ,S+	; [local] 
 B539: EC C6       LDD    A,U
 B53B: A7 08       STA    $8,X
 B53D: 5D          TSTB
@@ -5651,10 +5655,10 @@ B622: CE B6 4F    LDU    #$B64F
 B625: A6 02       LDA    $2,X
 B627: 84 0C       ANDA   #$0C
 B629: 27 17       BEQ    $B642
-B62B: A7 E2       STA    ,-S
+B62B: A7 E2       STA    ,-S	; [local] 
 B62D: 96 0E       LDA    $0E
 B62F: 84 02       ANDA   #$02
-B631: AB E0       ADDA   ,S+
+B631: AB E0       ADDA   ,S+	; [local] 
 B633: 44          LSRA
 B634: E6 C6       LDB    A,U
 B636: C1 0C       CMPB   #$0C
@@ -8580,10 +8584,10 @@ D0A0: EE C6       LDU    A,U
 D0A2: 96 81       LDA    $81
 D0A4: 9B 0F       ADDA   $0F
 D0A6: 84 1C       ANDA   #$1C
-D0A8: A7 E2       STA    ,-S
+D0A8: A7 E2       STA    ,-S	; [local] 
 D0AA: 44          LSRA
 D0AB: 44          LSRA
-D0AC: AB E0       ADDA   ,S+
+D0AC: AB E0       ADDA   ,S+	; [local] 
 D0AE: 33 C6       LEAU   A,U
 D0B0: A6 A4       LDA    ,Y
 D0B2: 81 FF       CMPA   #$FF
@@ -8611,16 +8615,16 @@ D0DE: 10 AF 08    STY    $8,X
 D0E1: CE E8 E0    LDU    #$E8E0
 D0E4: A6 A4       LDA    ,Y
 D0E6: 84 7C       ANDA   #$7C
-D0E8: A7 E2       STA    ,-S
+D0E8: A7 E2       STA    ,-S	; [local] 
 D0EA: AB 22       ADDA   $2,Y
 D0EC: 84 03       ANDA   #$03
-D0EE: AB E0       ADDA   ,S+
+D0EE: AB E0       ADDA   ,S+	; [local] 
 D0F0: 48          ASLA
 D0F1: EC C6       LDD    A,U
 D0F3: A7 24       STA    $4,Y
 D0F5: E7 26       STB    $6,Y
 D0F7: CE E9 40    LDU    #$E940
-D0FA: A6 7F       LDA    -$1,S
+D0FA: A6 7F       LDA    -$1,S	; [local] 
 D0FC: 44          LSRA
 D0FD: EC C6       LDD    A,U
 D0FF: ED 32       STD    -$E,Y
@@ -8641,7 +8645,7 @@ D11E: A7 06       STA    $6,X
 D120: 0C 31       INC    $31
 D122: 0C 37       INC    $37
 D124: 39          RTS
-D125: A7 E2       STA    ,-S
+D125: A7 E2       STA    ,-S	; [local] 
 D127: 86 01       LDA    #$01
 D129: B7 D8 03    STA    bankswitch2_d803
 D12C: 8D 2F       BSR    $D15D
@@ -8652,7 +8656,7 @@ D134: 8B 20       ADDA   #$20
 D136: 1F 03       TFR    D,U
 D138: D6 58       LDB    $58
 D13A: 96 5B       LDA    $5B
-D13C: A7 E4       STA    ,S
+D13C: A7 E4       STA    ,S	; [local] 
 D13E: A6 A0       LDA    ,Y+
 D140: A7 C5       STA    B,U
 D142: 5C          INCB
@@ -8660,7 +8664,7 @@ D143: A6 A0       LDA    ,Y+
 D145: A7 C5       STA    B,U
 D147: 5C          INCB
 D148: C4 7F       ANDB   #$7F
-D14A: 6A E4       DEC    ,S
+D14A: 6A E4       DEC    ,S	; [local] 
 D14C: 26 F0       BNE    $D13E
 D14E: DC 56       LDD    $56
 D150: C3 00 80    ADDD   #$0080
@@ -8668,7 +8672,7 @@ D153: 84 0F       ANDA   #$0F
 D155: DD 56       STD    $56
 D157: 0A 5A       DEC    $5A
 D159: 26 D9       BNE    $D134
-D15B: 35 82       PULS   A,PC
+D15B: 35 82       PULS   A,PC		; [manual_stack_pull]
 D15D: CE 13 C0    LDU    #$13C0
 D160: E6 43       LDB    $3,U
 D162: C4 70       ANDB   #$70
@@ -8676,9 +8680,9 @@ D164: 1D          SEX
 D165: E3 0C       ADDD   $C,X
 D167: 58          ASLB
 D168: 49          ROLA
-D169: A7 E2       STA    ,-S
+D169: A7 E2       STA    ,-S	; [local] 
 D16B: 86 1D       LDA    #$1D
-D16D: A0 E0       SUBA   ,S+
+D16D: A0 E0       SUBA   ,S+	; [local] 
 D16F: 5F          CLRB
 D170: 44          LSRA
 D171: 56          RORB
@@ -9050,34 +9054,34 @@ D471: 54          LSRB
 D472: EE C5       LDU    B,U
 D474: E6 C6       LDB    A,U
 D476: 39          RTS
-D477: ED E3       STD    ,--S
+D477: ED E3       STD    ,--S	; [local] 
 D479: E6 41       LDB    $1,U
 D47B: C4 70       ANDB   #$70
 D47D: 1D          SEX
 D47E: E3 0A       ADDD   $A,X
 D480: 58          ASLB
 D481: 49          ROLA
-D482: AB E0       ADDA   ,S+
+D482: AB E0       ADDA   ,S+	; [local] 
 D484: 8B 04       ADDA   #$04
 D486: 48          ASLA
 D487: AB 45       ADDA   $5,U
 D489: 84 7E       ANDA   #$7E
-D48B: A7 E2       STA    ,-S
+D48B: A7 E2       STA    ,-S	; [local] 
 D48D: E6 43       LDB    $3,U
 D48F: C4 70       ANDB   #$70
 D491: 1D          SEX
 D492: E3 0C       ADDD   $C,X
 D494: 58          ASLB
 D495: 49          ROLA
-D496: AB 61       ADDA   $1,S
-D498: A7 E2       STA    ,-S
+D496: AB 61       ADDA   $1,S	; [local] 
+D498: A7 E2       STA    ,-S	; [local] 
 D49A: 86 1D       LDA    #$1D
-D49C: A0 E0       SUBA   ,S+
+D49C: A0 E0       SUBA   ,S+	; [local] 
 D49E: C6 80       LDB    #$80
 D4A0: 3D          MUL
 D4A1: E3 46       ADDD   $6,U
 D4A3: 84 0F       ANDA   #$0F
-D4A5: EB E1       ADDB   ,S++
+D4A5: EB E1       ADDB   ,S++	; [local] 
 D4A7: 39          RTS
 D4A8: A6 03       LDA    $3,X
 D4AA: 4C          INCA
@@ -9291,12 +9295,12 @@ D687: 26 14       BNE    $D69D
 D689: 4F          CLRA
 D68A: 58          ASLB
 D68B: 49          ROLA
-D68C: ED E3       STD    ,--S
+D68C: ED E3       STD    ,--S	; [local] 
 D68E: 58          ASLB
 D68F: 49          ROLA
 D690: 58          ASLB
 D691: 49          ROLA
-D692: E3 E1       ADDD   ,S++
+D692: E3 E1       ADDD   ,S++	; [local] 
 D694: 10 8E E1 40 LDY    #$E140
 D698: 31 AB       LEAY   D,Y
 D69A: 7E D6 D9    JMP    $D6D9
@@ -9318,12 +9322,12 @@ D6B7: 2B 16       BMI    $D6CF
 D6B9: 4F          CLRA
 D6BA: 58          ASLB
 D6BB: 49          ROLA
-D6BC: ED E3       STD    ,--S
+D6BC: ED E3       STD    ,--S	; [local] 
 D6BE: 58          ASLB
 D6BF: 49          ROLA
 D6C0: 58          ASLB
 D6C1: 49          ROLA
-D6C2: E3 E1       ADDD   ,S++
+D6C2: E3 E1       ADDD   ,S++	; [local] 
 D6C4: 10 8E E1 40 LDY    #$E140
 D6C8: 31 AB       LEAY   D,Y
 D6CA: 8D 0D       BSR    $D6D9
@@ -9417,12 +9421,12 @@ D77B: 26 14       BNE    $D791
 D77D: 4F          CLRA
 D77E: 58          ASLB
 D77F: 49          ROLA
-D780: ED E3       STD    ,--S
+D780: ED E3       STD    ,--S	; [local] 
 D782: 58          ASLB
 D783: 49          ROLA
 D784: 58          ASLB
 D785: 49          ROLA
-D786: E3 E1       ADDD   ,S++
+D786: E3 E1       ADDD   ,S++	; [local] 
 D788: 10 8E E1 40 LDY    #$E140
 D78C: 31 AB       LEAY   D,Y
 D78E: 7E D7 93    JMP    $D793
@@ -9535,12 +9539,12 @@ D865: 26 14       BNE    $D87B
 D867: 4F          CLRA
 D868: 58          ASLB
 D869: 49          ROLA
-D86A: ED E3       STD    ,--S
+D86A: ED E3       STD    ,--S	; [local] 
 D86C: 58          ASLB
 D86D: 49          ROLA
 D86E: 58          ASLB
 D86F: 49          ROLA
-D870: E3 E1       ADDD   ,S++
+D870: E3 E1       ADDD   ,S++	; [local] 
 D872: 10 8E E1 40 LDY    #$E140
 D876: 31 AB       LEAY   D,Y
 D878: 7E D8 7D    JMP    $D87D

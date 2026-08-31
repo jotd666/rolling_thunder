@@ -48,6 +48,9 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("move.w\t(4,a7),d4",lines,i)
     elif address in [0x8592,0x85a1]:
         line = change_instruction("rts",lines,i)  # rti => rts
+    elif address == 0x821d:
+        line = change_instruction("rts",lines,i)  # TEMP disable scrolling routine
+
     return line
 
 sc_cpu2 = SourceChanger()
@@ -151,7 +154,7 @@ def remove_continuing_lines(lines,i):
 
 def check_stack_usage(lines,i):
     line = lines[i]
-    if any(x for x in ("[alloc_locals]","[free_locals]","[local]")):
+    if any(x in line for x in ("[alloc_locals]","[free_locals]","[local]","[pushed_parameter]")):
         for j in range(1,4):
             if "ERROR" in lines[i-j] and " S " in lines[i-j]:
                lines[i-j]=remove_error(lines[i-j],True)
@@ -231,6 +234,7 @@ def doit(cpu):
     "unknown_6600":"",
     "unknown_6C00":"",
     "irq_ack_8400":"",
+    "back_color_a000":"set_back_color",
     "bankswitch_6800":"set_cpu1_bank",
     } if cpu==1 else  {
     "watchdog_8000":"",

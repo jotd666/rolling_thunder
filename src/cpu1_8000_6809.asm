@@ -25,6 +25,7 @@
 ;
 ;	map(0xa000, 0xa000).w(FUNC(namcos86_state::backcolor_w));
 
+bg_tiles_address_0000 = $0
 bankswitch_shadow_19 = $19
 ; anything $68xx switches banks
 bankswitch_6800 = $6800
@@ -35,6 +36,11 @@ unknown_6200 = $6200
 unknown_6600 = $6600
 unknown_6c00 = $6C00
 cpu_sync_5ff0 = $5ff0
+scroll_0_9000 = $9000
+scroll_1_9004 = $9004
+scroll_2_9400 = $9400
+scroll_3_9404 = $9404
+back_color_a000 = $A000
 
 cpu1_boot_8000:    ; [global]
 8000: 1A 10       ORCC   #$10
@@ -170,7 +176,7 @@ cpu1_boot_8000:    ; [global]
 814C: BD 83 C9    JSR    $83C9
 814F: BD 84 13    JSR    $8413
 8152: BD 84 6A    JSR    $846A
-8155: BD 82 1D    JSR    $821D
+8155: BD 82 1D    JSR    update_scroll_layers_821d
 8158: CE 35 20    LDU    #$3520
 815B: B6 5F F1    LDA    $5FF1
 815E: C6 FC       LDB    #$FC
@@ -230,7 +236,7 @@ normal_start_8190:
 81DD: 97 3C       STA    $3C
 81DF: 8D 07       BSR    $81E8
 81E1: 8D 20       BSR    $8203
-81E3: 8D 38       BSR    $821D
+81E3: 8D 38       BSR    update_scroll_layers_821d
 81E5: 7E 82 B8    JMP    $82B8
 81E8: CE 81 FB    LDU    #$81FB
 81EB: B6 42 57    LDA    $4257
@@ -252,8 +258,9 @@ normal_start_8190:
 8212: 97 1E       STA    $1E
 8214: 39          RTS
 
+update_scroll_layers_821d:
 821D: 8E 53 C0    LDX    #$53C0
-8220: CE 83 3A    LDU    #$833A
+8220: CE 83 3A    LDU    #$833A			; table of scrolling register addresses
 8223: B6 5F F6    LDA    $5FF6
 8226: 27 48       BEQ    $8270
 8228: 10 8E 83 22 LDY    #$8322
@@ -294,7 +301,7 @@ normal_start_8190:
 8264: CC 00 00    LDD    #$0000
 8267: FD 5F F8    STD    $5FF8
 826A: 96 95       LDA    $95
-826C: B7 A0 00    STA    $A000
+826C: B7 A0 00    STA    back_color_a000
 826F: 39          RTS
 8270: 10 8E 83 2E LDY    #$832E
 8274: EC 84       LDD    ,X
@@ -334,7 +341,7 @@ normal_start_8190:
 82AC: CC 00 00    LDD    #$0000
 82AF: FD 5F F8    STD    $5FF8
 82B2: 96 95       LDA    $95
-82B4: B7 A0 00    STA    $A000
+82B4: B7 A0 00    STA    back_color_a000
 82B7: 39          RTS
 82B8: 96 02       LDA    $02
 82BA: 81 03       CMPA   #$03
@@ -415,7 +422,7 @@ normal_start_8190:
 837C: A6 84       LDA    ,X
 837E: 84 01       ANDA   #$01
 8380: AA 04       ORA    $4,X
-8382: B7 90 00    STA    $9000
+8382: B7 90 00    STA    scroll_0_9000
 8385: 8E 53 D0    LDX    #$53D0
 8388: 86 03       LDA    #$03
 838A: 48          ASLA
@@ -424,7 +431,7 @@ normal_start_8190:
 838F: A6 84       LDA    ,X
 8391: 84 01       ANDA   #$01
 8393: AA 04       ORA    $4,X
-8395: B7 90 04    STA    $9004
+8395: B7 90 04    STA    scroll_1_9004
 8398: 8E 53 E0    LDX    #$53E0
 839B: 86 05       LDA    #$05
 839D: 48          ASLA
@@ -433,7 +440,7 @@ normal_start_8190:
 83A2: A6 84       LDA    ,X
 83A4: 84 01       ANDA   #$01
 83A6: AA 04       ORA    $4,X
-83A8: B7 94 00    STA    $9400
+83A8: B7 94 00    STA    scroll_2_9400
 83AB: 8E 53 F0    LDX    #$53F0
 83AE: 86 07       LDA    #$07
 83B0: 48          ASLA
@@ -442,7 +449,7 @@ normal_start_8190:
 83B5: A6 84       LDA    ,X
 83B7: 84 01       ANDA   #$01
 83B9: AA 04       ORA    $4,X
-83BB: B7 94 04    STA    $9404
+83BB: B7 94 04    STA    scroll_3_9404
 83BE: 86 10       LDA    #$10
 83C0: 97 95       STA    $95
 83C2: 0C 02       INC    $02
