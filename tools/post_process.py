@@ -50,6 +50,11 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("rts",lines,i)  # rti => rts
     elif address == 0x821d:
         line = change_instruction("rts",lines,i)  # TEMP disable scrolling routine
+    elif address in {0xb643,0xB8A4,0xb8bf}:
+        line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
+    elif address == 0x8008:
+        # skip memory/video memory test of boot
+        line = change_instruction("jra\tnormal_start_8190",lines,i)
     return line
 
 sc_cpu2 = SourceChanger()
@@ -58,10 +63,15 @@ def game_specific_cpu2(address,lines,i):
     line = lines[i]
     if address in [0x8194,0x81ac,0x80A1]:
         line = change_instruction("rts",lines,i)  # rti => rts, also return after init
-    elif address in {0x807C,0x8097,0x806E,0x8061,0x8051,0x8044,0x8034,0x8027,0x800F}:
-        line = change_instruction("nop",lines,i)  # disable shit in init, like rom checksum or sync
-    elif address == 0x8080:
-        line = change_instruction("jra\tl_808a",lines,i)  # checksume always good
+##    elif address in {0x807C,0x8097,0x806E,0x8061,0x8051,0x8044,0x8034,0x8027,0x800F}:
+##        line = change_instruction("nop",lines,i)  # disable shit in init, like rom checksum or sync
+##    elif address == 0x8080:
+##        line = change_instruction("jra\tl_808a",lines,i)  # checksume always good
+    elif address in {0xcf21}:
+        line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
+    elif address == 0x8008:
+        # skip memory/video memory test of boot
+        kill_code(lines,i,0x8097)
     return line
 
 dreg_dict = {'a':'d0','b':'d1'}
@@ -110,6 +120,17 @@ def remove_continuing_lines(lines,i):
         else:
             break
 
+def kill_code(lines,start_line,end_address):
+    rval = lines[start_line]
+    while True:
+        address = get_line_address(lines[start_line])
+        lines[start_line] = remove_instruction(lines,start_line)
+        if "|" not in lines[start_line]:
+            lines[start_line] = ""
+        if address == end_address:
+            break
+        start_line+=1
+    return rval
 
 def get_line_address(line):
     try:
@@ -232,10 +253,10 @@ def doit(cpu):
     # game_specific: replace or remove I/O addresses
     input_dict = {
     "watchdog_8000":"",
-    "unknown_6E00":"",
+    "unknown_6e00":"",
     "unknown_6200":"",
     "unknown_6600":"",
-    "unknown_6C00":"",
+    "unknown_6c00":"",
     "irq_ack_8400":"",
     "back_color_a000":"set_back_color",
     "bankswitch_6800":"set_cpu1_bank",

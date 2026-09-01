@@ -12,13 +12,13 @@ CHIP_BASE = $200
 	IFD	CD32_SLAVE
 EXPMEM = 0
 	ELSE
-EXPMEM = $1E0000
+EXPMEM = $2E0000
 	ENDC
 CHIPSIZE = $1E0000
 
 _base	SLAVE_HEADER					; ws_security + ws_id
 	dc.w	17					; ws_version (was 10)
-	dc.w	WHDLF_NoError
+	dc.w	WHDLF_NoError|WHDLF_ReqAGA
 	dc.l	CHIPSIZE
 	dc.l	0					; ws_execinstall
 	dc.w	start-_base		; ws_gameloader
@@ -42,14 +42,12 @@ _config
 	dc.b	"C1:X:invincible:0;"
 	dc.b	"C1:X:infinite lives:1;"
 	dc.b	"C1:X:infinite time:2;"
-	dc.b	"C1:X:start on second loop:3;"
 	dc.b	"C1:X:cheat keys:4;"
 	dc.b	"C2:X:50 Hz update:0;"
 	dc.b	"C2:X:no level music:2;"
 	dc.b	"C2:X:service mode:3;"
 	dc.b	"C2:X:use up for jump:4;"
 	dc.b	"C2:X:startup menu:5;"
-	;dc.b	"C2:X:skip intro/map sequence:6;"   ; for quick testing purposes, not for operational use
 
 	dc.b	"C3:L:difficulty level:easy,normal,difficult,very difficult;"
 	dc.b	"C4:L:lives:3,4,5,7;"
@@ -62,7 +60,7 @@ _config
 
 
 DECL_VERSION:MACRO
-	dc.b	"1.2"
+	dc.b	"1.0"
 	IFD BARFLY
 		dc.b	" "
 		INCBIN	"T:date"
@@ -73,15 +71,15 @@ DECL_VERSION:MACRO
 	ENDC
 	ENDM
 _data   dc.b    "data",0
-_name	dc.b	"Ghosts'N'Goblins (arcade)"
+_name	dc.b	"Rolling Thunder (arcade)"
 	IFD	CD32_SLAVE
 	dc.b	" (CD32)"
 	ENDC
 	dc.b	0
 _copy	dc.b	'2026 JOTD',0
 _info
-    dc.b    "Music by IM76",10
-    dc.b    "Original 1985 Capcom",0
+    ;dc.b    "Music by no9",10
+    dc.b    "Original 1986 Namco",0
 	dc.b	0
 _kickname   dc.b    0
 ;--- version id
@@ -146,5 +144,5 @@ exe
 	IFD	CD32_SLAVE
 	dc.b	"GhostsNGoblins_cd32",0
 	ELSE
-	dc.b	"GhostsNGoblins_aga",0
+	dc.b	"RollingThunder_AGA",0
 	ENDC

@@ -133,6 +133,7 @@ cpu1_boot_8000:    ; [global]
 80E4: 8A 10       ORA    #$10
 80E6: B7 5F F1    STA    $5FF1
 80E9: 7C 5F F0    INC    cpu_sync_5ff0
+; ROM checksum
 80EC: 5F          CLRB
 80ED: 8E 80 00    LDX    #watchdog_8000
 80F0: B7 80 00    STA    watchdog_8000

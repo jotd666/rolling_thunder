@@ -833,6 +833,7 @@ demo_game:
 	* copy the ROM data
 	add.l	#0x10000,d1
 	move.l 	d1,a1
+	move.l	d1,cpu2_rom_start_8000
 	move.w	#(0x10000-CPU2_ROM_START)/4-1,d0
 	.else
 	* release mode
@@ -870,10 +871,6 @@ demo_game:
 	.endif
 
 
-	* enable interrupts. Game doesn't use them
-	* but relies on vbl sync flags
-	jbsr	cpu_init		| zero most registers
-	moveq	#0,d5			| D5 too
 	
 	jbsr	cache_fg_tiles_address
 	jbsr	cache_bg_tiles_address
@@ -917,6 +914,13 @@ demo_game:
 	pea		level1_interrupt(pc)
 	move.l	(a7)+,(0x64,a1)
 
+	* enable interrupts on the host side
+	* (still off on the target side)
+	jbsr	enable_interrupts
+
+	jbsr	cpu_init		| zero most registers
+	moveq	#0,d5			| D5 too
+
 	moveq	#0,d0
 	jbsr	osd_set_cpu1_bank
 	moveq	#0,d0
@@ -925,9 +929,12 @@ demo_game:
 	* first, call init of cpu 2. We plugged a RTS after init so it doesn't enter the mainloop
 	* and returns there
 	CPU2_GET_MEMORY_START_AND_DP
+	move.l	a6,a5		| DP=0 at start
 	move.b	#1,currently_running_cpu
 	jbsr	cpu2_boot_8000
+	BREAKPOINT	"bOOT2 end"
 	CPU1_GET_MEMORY_START_AND_DP
+	move.l	a6,a5		| DP=0 at start
 	clr.b	currently_running_cpu
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
@@ -1086,7 +1093,10 @@ osd_black_colors:
 	rts
 
 
-	     
+current_context:
+	.word	0
+previous_context:
+	.word	0
 	
 * < D0: context name
 load_context:
@@ -1117,7 +1127,6 @@ load_context:
 	add.w	d0,d0	
 	add.w	d0,d0
 	move.l	(a0,d0.w),a0
-	move.w	#-1,saved_context   | cancel saved context
 	clr.l	context_sprite_table_ptr		| "free" sprites too
 	lea		bg_character_table_buffer,a1
 	move.l	a1,bg_character_table_buffer_ptr
@@ -5443,6 +5452,7 @@ display_slots:
 
 osd_get_last_known_pc:
 	move.w	last_known_m6809_pc,d6
+	move.w	currently_running_cpu,d7
 	rts
 	
 	
@@ -5639,12 +5649,7 @@ music_volume:
 	.align	2
 currently_running_cpu:
 	.word	0
-current_context:
-	.word	-1
-saved_context:
-	.word	-1
-previous_context:
-	.word	-1
+
 
 music_track_start_number:
 	.word	-1
@@ -5654,7 +5659,9 @@ music_tick:
 	.word	0
 last_known_m6809_pc:
 	.word	0xFFFF
+	.word	0xFFFF
 last_bankswitch_pc:
+	.word	0xFFFF
 	.word	0xFFFF
 music_duration:
 	.word	0

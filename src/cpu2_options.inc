@@ -38,7 +38,7 @@ LOG_BUFFER_SIZE = 0x8000
 	.endif
 	* ROM area (not contiguous!)
 	move.l		cpu2_rom_start_8000,a3
-	sub.w	#CPU2_ROM_START,a3
+	sub.l	#CPU2_ROM_START,a3
 	move.l	cpu1_ram_start_0000,a4
 	sub.w	#0x2000,a4			| cpu2 video ram starts at 0x2000
 	.endif	

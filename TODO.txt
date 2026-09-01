@@ -1,3 +1,5 @@
+A5 (DP) set to 0 for cpu1: fails in interrupt!
+
 implement "get_address" properly for both cpus
 fmode=2 (32 bit scroll)
 fmode=3 64 bit sprites
