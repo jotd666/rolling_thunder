@@ -26,12 +26,21 @@ LOG_BUFFER_SIZE = 0x8000
 	.macro	CPU2_GET_MEMORY_START_IN_A6
 	.ifeq	OPT_ALIGNED_MEMORY
 	lea		cpu2_ram_buffer-CPU2_RAM_START,a6
+	* ROM area (not contiguous!)
+	lea		cpu2_rom_buffer-CPU2_ROM_START,a3
+	* videoram area (not continuous!)
+	lea		cpu1_videoram_buffer,a4
 	.else
 	move.l		cpu2_ram_start_0000,a6
 	* adjust offset to avoid subbing at run-time
 	.ifne	CPU2_RAM_START
 	sub.w	#CPU2_RAM_START,a6
 	.endif
+	* ROM area (not contiguous!)
+	move.l		cpu2_rom_start_8000,a3
+	sub.w	#CPU2_ROM_START,a3
+	move.l	cpu1_ram_start_0000,a4
+	sub.w	#0x2000,a4			| cpu2 video ram starts at 0x2000
 	.endif	
 	.endm
 	

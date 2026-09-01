@@ -15,6 +15,7 @@
 watchdog_8000 = $8000
 bankswitch2_d803 = $d803
 cpu_sync_1ff0 = $1ff0
+cpu_sync_1ff3 = $1ff3
 
 cpu2_boot_8000:  ; [global]
 8000: 1A 10       ORCC   #$10		; disable interrupts
@@ -67,6 +68,7 @@ cpu2_boot_8000:  ; [global]
 8069: B6 1F F0    LDA    cpu_sync_1ff0
 806C: 81 07       CMPA   #$07
 806E: 26 F6       BNE    $8066
+; rom checksum
 8070: 8E 80 00    LDX    #watchdog_8000
 8073: 5F          CLRB
 8074: EB 80       ADDB   ,X+
@@ -79,9 +81,9 @@ cpu2_boot_8000:  ; [global]
 8085: 8A 02       ORA    #$02
 8087: B7 1F F1    STA    $1FF1
 808A: 86 01       LDA    #$01
-808C: B7 1F F3    STA    $1FF3
+808C: B7 1F F3    STA    cpu_sync_1ff3
 808F: B7 80 00    STA    watchdog_8000
-8092: B6 1F F3    LDA    $1FF3
+8092: B6 1F F3    LDA    cpu_sync_1ff3
 8095: 81 02       CMPA   #$02
 8097: 26 F6       BNE    $808F
 8099: 0F 00       CLR    $00
@@ -89,7 +91,7 @@ cpu2_boot_8000:  ; [global]
 809D: 0F 05       CLR    $05
 809F: 0F 07       CLR    $07
 80A1: 1C EF       ANDCC  #$EF		; enable interrupts
-mainloop_80a3:
+mainloop_80a3:     ; [global]
 80A3: BD B0 BF    JSR    process_event_b0bf
 80A6: 20 FB       BRA    mainloop_80a3
 

@@ -1,5 +1,5 @@
 PROGNAME = RollingThunder
-DATADIR = ..\
+DATADIR = ../
 MAIN_AGA = $(DATADIR)$(PROGNAME)_aga
 MAIN_CD32 = $(DATADIR)$(PROGNAME)_cd32
 MAIN_OCS = $(DATADIR)$(PROGNAME)_ocs
@@ -37,7 +37,7 @@ WHDASM = vasmm68k_mot -DDATETIME -I$(HDBASE)/amiga39_JFF_OS/include -I$(WHDBASE)
 
 
 # leave MAIN_OBJ first
-MEM_OBJS = cpu1_rom.o cpu1_ram.o cpu2_rom.o cpu2_ram.o cpu1_banks.o cpu2_banks.o
+MEM_OBJS = cpu1_rom.o cpu_ram.o cpu2_rom.o cpu1_banks.o cpu2_banks.o
 HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
 AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
 CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o
@@ -76,10 +76,9 @@ $(MAIN_CD32): $(CD32_OBJS)
 #$(MAIN_OCS): $(OCS_OBJS)
 #	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(MAIN_OCS) $(OCS_OBJS)
 
-cpu1_ram.o: cpu1_ram.68k cpu1_options.inc
-	$(ASM) cpu1_ram.68k -o cpu1_ram.o
-cpu2_ram.o: cpu2_ram.68k cpu2_options.inc
-	$(ASM) cpu2_ram.68k -o cpu2_ram.o
+cpu_ram.o: cpu_ram.68k cpu1_options.inc cpu2_options.inc
+	$(ASM) cpu_ram.68k -o cpu_ram.o
+
 cpu1_rom.o: roms/cpu1_rom.68k
 	$(ASM) roms/cpu1_rom.68k -o cpu1_rom.o
 cpu2_rom.o: roms/cpu2_rom.68k

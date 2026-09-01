@@ -11,6 +11,15 @@
 * conditional compilation to select the proper memory banks at compile time
 * (see my burger time 6502 conversion which does that in RELEASE mode)
 
+*
+* I chose to keep CPU 1 memory linear, but CPU 2 shares memory with CPU 1
+* in various places, so CPU 2 memory cannot be linear. It's split into 4 zones!
+*
+* RAM: base A6
+* video RAM: base A4
+* ROM: base A3
+* and of course banks (a1) and DP (a5) that points on RAM (else it's not supported)
+* 
 	.include 	"cpu2_options.inc"
 	.ifdef	__amiga__
 	* to define BREAKPOINT
@@ -35,10 +44,16 @@
 	jbsr	osd_video_word_dirty_cpu2
 	.endm
 
-* the function that accesses all memory (except banks)
+* the functions that access all memory
 * without any check
 	.macro	GET_UNCHECKED_ADDRESS_FUNC
 	lea	(a6,a0.l),a0
+	.endm
+	.macro	GET_UNCHECKED_ROM_ADDRESS_FUNC
+	lea	(a3,a0.l),a0
+	.endm
+	.macro	GET_UNCHECKED_VIDEO_ADDRESS_FUNC
+	lea	(a4,a0.l),a0
 	.endm
 
 	.ifdef	RELEASE
@@ -50,6 +65,13 @@
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	.endm
 
+	.macro	GET_ROM_ADDRESS_FUNC
+	GET_UNCHECKED_ROM_ADDRESS_FUNC
+	.endm
+	.macro	GET_VIDEO_ADDRESS_FUNC
+	GET_UNCHECKED_VIDEO_ADDRESS_FUNC
+	.endm
+
 	.else
 	* debug mode, using a function
 	.macro	GET_ADDRESS_FUNC
@@ -57,6 +79,12 @@
 	.endm
 	.macro	GET_BANK_ADDRESS_FUNC
 	jbsr	get_bank_address
+	.endm
+	.macro	GET_VIDEO_ADDRESS_FUNC
+	jbsr	get_video_address
+	.endm
+	.macro	GET_ROM_ADDRESS_FUNC
+	jbsr	get_rom_address
 	.endm
 	.endif
 
@@ -128,8 +156,6 @@ okay\@:
 	or.b	#0x11,ccr	| bit 4 = X, bit 0 = C
 	.endm
 
-
-
 	.macro INVERT_XC_FLAGS
 	eor.b	#0x11,ccr
 	.endm
@@ -174,9 +200,11 @@ okay\@:
 
 
 	.macro SET_I_FLAG
+	moveq	#1,d7
 	jbsr	osd_disable_interrupts
 	.endm
 	.macro CLR_I_FLAG
+	moveq	#1,d7
 	jbsr	osd_enable_interrupts
 	.endm
 
@@ -375,7 +403,7 @@ okay\@:
 	swap	d0    | even if now I have set .w on all addq/subq
 	lsl.w    #8,d0
 	move.l    d0,a0  | remove MSB clear & change to move.w if always < 0x8000
-	GET_ADDRESS_FUNC
+	GET_ADDRESS_FUNC	| has to be normal RAM here, else unsupported!
 	move.l	a0,a5
 	STORE_DP_IN_MEMORY
 	lsr.w    #8,d0
@@ -400,18 +428,45 @@ okay\@:
 	GET_ADDRESS_FUNC
 	.endm
 
+	.macro GET_ROM_REG_ADDRESS	offset,reg
+	.ifeq	\offset
+	move.l	\reg,a0
+	.else
+	lea	\offset,a0
+	lea	(a0,\reg\().l),a0
+	.endif
+	GET_ROM_ADDRESS_FUNC
+	.endm
+	
+	.macro GET_VIDEO_REG_ADDRESS	offset,reg
+	.ifeq	\offset
+	move.l	\reg,a0
+	.else
+	lea	\offset,a0
+	lea	(a0,\reg\().l),a0
+	.endif
+	GET_VIDEO_ADDRESS_FUNC
+	.endm
+
 	.macro	GET_SELECT_ADDRESS_FUNC
 	* checks address, slower but can auto-select rom, ram or bank
 	cmp.w	#0x6000,a0
 	jcc		1f
 	cmp.w	#0x4000,a0
 	jcs		1f
-	GET_BANK_ADDRESS_FUNC
+	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	jra		2f
 1:
+	cmp.l	#0x8000,a0
+	jcc		3f
 	GET_ADDRESS_FUNC
+	jra		2f
+3:
+	* ROM
+	GET_ROM_ADDRESS_FUNC
 2:	
 	.endm
+	
 	.macro GET_REG_SELECT_ADDRESS	offset,reg
 	.ifeq	\offset
 	move.l	\reg,a0
@@ -461,6 +516,7 @@ okay\@:
 	READ_BE_WORD	a0
 	GET_ADDRESS_FUNC
 	.endm
+	
 	.macro GET_REG_UNCHECKED_ADDRESS	offset,reg
 	.ifeq	\offset
 	move.l	\reg,a0
@@ -482,14 +538,14 @@ okay\@:
 	GET_BANK_ADDRESS_FUNC
 	.endm
 	.macro	GET_UNCHECKED_BANK_ADDRESS_FUNC
-	lea		(a1,a0.l),a0
+	lea		(a1,a0.w),a0		| a0 < 0x8000
 	.endm
 	.macro GET_REG_BANK_ADDRESS	offset,reg
 	.ifeq	\offset
-	move.l	\reg,a0
+	move.w	\reg,a0
 	.else
 	lea	\offset,a0
-	lea	(a0,\reg\().l),a0
+	lea	(a0,\reg\().w),a0
 	.endif
 	GET_BANK_ADDRESS_FUNC
 	.endm
@@ -498,13 +554,13 @@ okay\@:
 	move.l	\reg,a0
 	.else
 	lea	\offset,a0
-	lea	(a0,\reg\().l),a0
+	lea	(a0,\reg\().w),a0
 	.endif
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	.endm
 	.macro GET_REG_BANK_ADDRESS_FROM_REG	reg,reg2
 	move.l	\reg,a0
-	lea	(a0,\reg2\().l),a0
+	lea	(a0,\reg2\().w),a0
 	GET_BANK_ADDRESS_FUNC
 	.endm
 	***** end bank access *****
@@ -557,35 +613,52 @@ get_address:
 	cmp.w	#0x3000,a0
 	jcc		1f		| above 0x3000: continue
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing videoram 0x2000-0x2FFF, PC in D6"
+	BREAKPOINT	"RAM read: accessing videoram 0x2000-0x2FFF, PC in D6"
 	jra		0f
 1:
 	cmp.w	#0x6000,a0
-	jcc		0f		| above 0x6000: ROM: OK
-	* make it simple: ignore most read/writes
-	* palette: ignored
-	* sound: ignored
-	* scroll: read in memory at each vblank
+	jcs		2f		| below 0x6000, continue
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"RAM read: CPU2 accessing 0x6000-0xFFFF memory, PC in D6"
+	jra		0f
+2:
 	cmp.w	#0x4000,a0
 	jcs		1f
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing bank memory 0x4000-0x6000, PC in D6"
+	BREAKPOINT	"RAM read: CPU2 accessing bank memory 0x4000-0x6000, PC in D6"
 	jra		0f
 1:
-	* zone 0x3000-0x3fff
-	cmp.w	#0x3e00,a0
-	jne		1f
-	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing bankswitch 0x3E00 address, PC in D6"
-	jra		0f
-1:
-	cmp.w	#0x3800,a0
-	jcc		0f			| >= 0x3800, let it live
-	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing range 0x3000-0x37ff, PC in D6"
+
 0:
 	GET_UNCHECKED_ADDRESS_FUNC
 	rts
+	
+get_video_address:
+	cmp.w	#0x2000,a0
+	jcc		1f
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"video read: CPU2 accessing memory 0x0000-0x1FFF, PC in D6"
+	jra		0f
+1:
+	cmp.w	#0x6000,a0
+	jcs		0f
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"video read: CPU2 accessing memory 0x6000-0xFFFF, PC in D6"	
+0:
+	GET_UNCHECKED_VIDEO_ADDRESS_FUNC
+	rts
+	
+get_rom_address:
+	* zone 0x3000-0x3fff
+	cmp.l	#0x8000,a0
+	jcc		0f		| above 0x8000: ROM: OK
+	
+	jbsr	osd_get_last_known_pc
+	BREAKPOINT	"ROM read: CPU2 accessing memory 0x0000-0x7FFF, PC in D6"
+0:
+	GET_UNCHECKED_ROM_ADDRESS_FUNC
+	rts
+
 get_bank_address:
 	cmp.w	#0x4000,a0
 	jcs		0f			| lower than 0x4000: error
@@ -593,27 +666,32 @@ get_bank_address:
 	jcs		1f			| lower than 0x6000: OK
 0:
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"get_bank_address out of 0x4000-0x5FFF range, PC in D6"	
+	BREAKPOINT	"bank read: CPU2 read out of 0x4000-0x5FFF range, PC in D6"	
 1:
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	rts
+	
+	
 	.macro	ENABLE_LOG_REGS
 	moveq	#1,d6		| enable
+	moveq	#1,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm
 	.macro	DISABLE_LOG_REGS
 	moveq	#0,d6		| disable
+	moveq	#1,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm	
 	.macro	REENABLE_LOG_REGS
 	moveq	#2,d6		| enable
+	moveq	#1,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm
 	* to trace at some virtual PCs, insert this macro
 	.macro	LOG_REGS	the_pc
 	move.w	sr,-(a7)
 	move.w	#0x\the_pc,-(a7)
-	move.w	#0,-(a7)
+	move.w	#1,-(a7)		| cpu #2
 	jbsr	osd_log_cpu
 	addq.w	#4,a7
 	move.w	(a7)+,sr
@@ -621,6 +699,7 @@ get_bank_address:
 	.macro	LOG_REGS_QUICK	the_pc
 	move.w	sr,-(a7)
 	move.w	#0x\the_pc,0x100
+	move.w	#1,0x102
 	move.w	(a7)+,sr
 	.endm
 	.endif

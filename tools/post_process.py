@@ -50,15 +50,18 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("rts",lines,i)  # rti => rts
     elif address == 0x821d:
         line = change_instruction("rts",lines,i)  # TEMP disable scrolling routine
-
     return line
 
 sc_cpu2 = SourceChanger()
 
 def game_specific_cpu2(address,lines,i):
     line = lines[i]
-    if address in [0x8194,0x81ac]:
-        line = change_instruction("rts",lines,i)  # rti => rts
+    if address in [0x8194,0x81ac,0x80A1]:
+        line = change_instruction("rts",lines,i)  # rti => rts, also return after init
+    elif address in {0x807C,0x8097,0x806E,0x8061,0x8051,0x8044,0x8034,0x8027,0x800F}:
+        line = change_instruction("nop",lines,i)  # disable shit in init, like rom checksum or sync
+    elif address == 0x8080:
+        line = change_instruction("jra\tl_808a",lines,i)  # checksume always good
     return line
 
 dreg_dict = {'a':'d0','b':'d1'}
@@ -69,13 +72,13 @@ jtre = re.compile("#jump_table_(\w+)")
 def process_jump_table(line):
     m = jtre.search(line)
     if m:
-        # move.w  #jump_table...,dX => lea jump_table...,aX works as X ranges from 2 to 4
+        # move.w  #jump_table...,dX => lea jump_table...,a2
         # in debug mode, leave register address
         line2 = line.replace("jump_table_","0x")
 
         line = f"""\t.ifndef\tRELEASE
 {line2}\t.endif
-""" + line.replace("move.w\t#","lea\t").replace(",d",",a")
+""" + re.sub(r",d\d",",a2",line.replace("move.w\t#","lea\t"))  # using only a2
 
     if "indirect_j" in line:
         # grab original code in comments, dirty but works as long as converter
@@ -92,7 +95,7 @@ def process_jump_table(line):
 
         dreg,areg = toks[1].split(",")
 
-        areg = areg_dict[areg]
+        areg = "a2"   # fixing a2
         line = remove_error(line)
         macro = f"{toks[0].upper()}_{dreg.upper()}_INDEXED"
         line = f"""\t{macro}\t{areg},{nb_entries}  |{comment}

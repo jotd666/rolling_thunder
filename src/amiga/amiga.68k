@@ -481,8 +481,6 @@ apply_settings:
 	sne		infinite_lives_flag
 	btst	#2,d0
 	sne		infinite_time_flag
-	btst	#3,d0
-	sne		skip_first_loop_flag
 	move.b	d0,d1
 	and.b	#3,d1
 	jeq		2f
@@ -497,8 +495,7 @@ apply_settings:
 	move.l	misc_options,d1
 	btst	#0,d1
 	seq		frameskip
-	btst	#6,d1
-	sne		skip_intro_flag
+
 	btst	#2,d1
 	sne		no_level_music_flag
 	btst	#3,d1
@@ -789,7 +786,7 @@ demo_game:
 	* and lower 16-bit match original RAM & even ROM offsets
 	*
 
-	lea		cpu1_dev_ram_buffer,a6
+	lea		cpu_dev_ram_buffer,a6
 	move.l	a6,d0
 	clr.w	d0
 	move.l	d0,d1
@@ -823,19 +820,18 @@ demo_game:
 	* and lower 16-bit match original RAM & even ROM offsets
 	*
 
-	lea		cpu2_dev_ram_buffer,a6
-	move.l	a6,d0
-	clr.w	d0
-	move.l	d0,d1
-	add.l	#0x10000+CPU2_RAM_START,d1
-	move.l	d1,cpu2_ram_start_0000		| memory (0x0000-0xFFFF)
+	move.l	cpu1_ram_start_0000,D1
+	move.l	d1,cpu2_videoram_start_2000		| memory (0x0000-0xFFFF)
+	move.l	d1,d2
+	add.l	#0x4000,d2
+	move.l	d2,cpu2_ram_start_0000
 	
 	* relocate rom tables just after shared RAM
 	* memory is contiguous (only 1 segment of memory RAM+ROM)
 	* and 6809 memory access is way faster (no bank switching)
 	
 	* copy the ROM data
-	add.l	#CPU2_ROM_START-CPU2_RAM_START,d1
+	add.l	#0x10000,d1
 	move.l 	d1,a1
 	move.w	#(0x10000-CPU2_ROM_START)/4-1,d0
 	.else
@@ -852,14 +848,26 @@ demo_game:
 	dbf		d0,0b
 
 	
-	.ifndef	RELEASE
-	* install dump and quit handler
+	.ifndef 	RELEASE
 	pea		dump_and_quit
 	lea		2.W,a0
 	move.l	#0x4AFC4EF9,(a0)+
 	move.l	(a7)+,(a0)+
-	.endif
 	
+	CPU1_GET_MEMORY_START_AND_DP
+	* protect CPU1 & CPU2 ROMs from writing if whdload on
+	move.l	#0x10000,d0
+	move.l	a6,a0
+	add.l	#0x8000,a0
+	move.l  (_resload,pc),a2
+	jsr     (resload_ProtectWrite,a2)
+*	CPU2_GET_MEMORY_START_AND_DP
+*	* protect CPU2 ROM from writing if whdload on
+*	move.l	#0x8000,d0
+*	move.l	a3,a0
+*	move.l  (_resload,pc),a2
+*	jsr     (resload_ProtectWrite,a2)
+	.endif
 
 
 	* enable interrupts. Game doesn't use them
@@ -892,7 +900,8 @@ demo_game:
 	move.l	(a7)+,(0x64,a1)
 	
 	* fire the startup menu
-	jbsr	osd_enable_interrupts
+	moveq	#0,d0
+	jbsr	enable_interrupts
 0:
 	tst.b	startup_menu_done
 	jeq		0b
@@ -1164,7 +1173,7 @@ load_context:
 0:
 	.endif
 	
-	jbsr	osd_enable_interrupts
+	jbsr	enable_interrupts
 
 	movem.l	(a7)+,d0-a6
 	rts
@@ -1338,7 +1347,7 @@ force_all_screen_redraw:
 	.endif
 	dbf		d0,0b
 	
-	jbsr	osd_enable_interrupts
+	jbsr	enable_interrupts
 	
 	rts
 	
@@ -1530,7 +1539,10 @@ call_nmis:
 	rts
 	
 call_nmi_cpu_1:
-	* TODO check if interrupts are enabled for cpu 1
+	tst.b	cpu_interrupts
+	jne		0f
+	rts
+0:
 	* reset most registers (not D5)
 	jbsr	cpu_init
 	* set base for RAM
@@ -1560,7 +1572,10 @@ call_nmi_cpu_1:
 	jra	cpu1_irq_8565
 	
 call_nmi_cpu_2:
-	* TODO check if interrupts are enabled for cpu 2
+	tst.b	cpu_interrupts+1
+	jne		0f
+	rts
+0:
 	* reset most registers (not D5)
 	jbsr	cpu_init
 	* set base for RAM
@@ -3551,12 +3566,22 @@ generate_row_table:
 	rts
 	.endif
 
+
+* enable/disable interrupts for target irqs	
+osd_enable_interrupts:
+	lea	cpu_interrupts,a0
+	st.b	(a0,d7.w)
+	RTS
 	
+osd_disable_interrupts:
+	lea	cpu_interrupts,a0
+	clr.b	(a0,d7.w)
+	RTS
 	
 
 * 60Hz VBLANK interrupt (also keyboard)
 * only called at bootup, not from interrupts (at least!!)
-osd_enable_interrupts:
+enable_interrupts:
 	.if		OPT_BLIT_CHAIN_MODE==1
 	* enable blitter, vblank & software level 1
 	move.w	#0xC06C,_custom+intena
@@ -3565,7 +3590,7 @@ osd_enable_interrupts:
 	move.w	#0xC02C,_custom+intena
 	.endif
 	rts
-osd_disable_interrupts:
+disable_interrupts:
 	.if		OPT_BLIT_CHAIN_MODE==1
 	* leave keyboard
 	move.w	#0x0064,_custom+intena
@@ -5571,6 +5596,8 @@ sprite_mem_name:
 
 	.align	2
 
+cpu_interrupts:
+	.word	0
 looped_sound_enabled:
 	.long	0
 	

@@ -1,11 +1,11 @@
 	.include	"cpu1_options.inc"
+	.include	"cpu2_options.inc"
 
 	.global infinite_lives_flag
 	.global infinite_time_flag
 
 	.global invincible_flag
 	.global start_level_flag
-	.global skip_intro_flag
 	.global up_for_jump_flag
 	.global up_previously_pressed_flag
 	.global skip_first_loop_flag
@@ -17,15 +17,21 @@
 	.global vbl_sync_flag
 	.global no_sync_flag
 	.global cpu1_m6809_direct_page_pointer
+	.global cpu2_m6809_direct_page_pointer
 	.global cpu1_bank_base
 	.global	cpu1_current_bank
+	.global cpu2_bank_base
+	.global	cpu2_current_bank
 
 	.ifeq	OPT_ALIGNED_MEMORY
-	.global	cpu1_ram_buffer
-	.global	cpu1_rom_buffer
+	.global	cpu1_videoram_buffer
+
 	.else
 	.global cpu1_ram_start_0000
-	.global	cpu1_dev_ram_buffer
+	.global cpu2_ram_start_0000
+	.global cpu2_rom_start_8000
+	.global cpu2_videoram_start_2000
+	.global	cpu_dev_ram_buffer
 	.endif
 	
 	.ifdef   __amiga__
@@ -36,26 +42,41 @@
 
 	.align	4
 
+* interleaved mapping that advantages cpu1: its memory is contiguous
+
 	.ifeq	OPT_ALIGNED_MEMORY
-cpu1_ram_buffer:
-	.skip	CPU1_ROM_START
+cpu1_videoram_buffer:  | shared cpu1=0x0000, cpu2=0x2000, size=0x4000
+	.skip	0x4000
+cpu2_ram_buffer:   | shared cpu2=0x0000, cpu1=0x4000, size=0x2000
+	.skip	0x2000
+	.skip	0x2000	| empty (so cpu1 memory is contiguous except for rom banks)
 cpu1_rom_buffer:
 	.skip	0x10000-CPU1_ROM_START
+cpu2_rom_buffer:
+	.skip	0x10000-CPU2_ROM_START
+	
 	.else
-cpu1_dev_ram_buffer:
-	.skip	0x20000
+cpu_dev_ram_buffer:
+	.skip	0x28000
 cpu1_ram_start_0000:
 	.long	0
+cpu2_videoram_start_2000:
+	.long	0
+cpu2_ram_start_0000:
+	.long	0
+cpu2_rom_start_8000:
+	.long	0
 	.endif
-
-high_score_beaten:
-	.word	0
 
 	
 cpu1_bank_base:
 	.long	0
+cpu2_bank_base:
+	.long	0
 | direct page pointer needs to be reloaded in case of irq
 cpu1_m6809_direct_page_pointer:
+	.long	0  | 0xA5A5A5A5
+cpu2_m6809_direct_page_pointer:
 	.long	0  | 0xA5A5A5A5
 
 cpu1_current_bank:
@@ -73,8 +94,6 @@ infinite_time_flag:
 up_previously_pressed_flag:
 	.byte	0
 up_for_jump_flag:
-	.byte	0
-skip_first_loop_flag:
 	.byte	0
 music_off_flag:
 	.byte 	0
@@ -94,10 +113,8 @@ vbl_sync_flag:
 	.byte	0
 vbl_sync_counter:
 	.byte	0
-no_sync_flag:
-	.byte 	0
-break_at_startup_flag:
-	.byte	0
+
+
 
 
 

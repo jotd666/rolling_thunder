@@ -174,9 +174,11 @@ okay\@:
 
 
 	.macro SET_I_FLAG
+	moveq	#0,d7
 	jbsr	osd_disable_interrupts
 	.endm
 	.macro CLR_I_FLAG
+	moveq	#0,d7
 	jbsr	osd_enable_interrupts
 	.endm
 
@@ -482,14 +484,14 @@ okay\@:
 	GET_BANK_ADDRESS_FUNC
 	.endm
 	.macro	GET_UNCHECKED_BANK_ADDRESS_FUNC
-	lea		(a1,a0.l),a0
+	lea		(a1,a0.w),a0		| a0 < 0x8000
 	.endm
 	.macro GET_REG_BANK_ADDRESS	offset,reg
 	.ifeq	\offset
 	move.l	\reg,a0
 	.else
 	lea	\offset,a0
-	lea	(a0,\reg\().l),a0
+	lea	(a0,\reg\().w),a0
 	.endif
 	GET_BANK_ADDRESS_FUNC
 	.endm
@@ -498,13 +500,13 @@ okay\@:
 	move.l	\reg,a0
 	.else
 	lea	\offset,a0
-	lea	(a0,\reg\().l),a0
+	lea	(a0,\reg\().w),a0
 	.endif
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	.endm
 	.macro GET_REG_BANK_ADDRESS_FROM_REG	reg,reg2
 	move.l	\reg,a0
-	lea	(a0,\reg2\().l),a0
+	lea	(a0,\reg2\().w),a0
 	GET_BANK_ADDRESS_FUNC
 	.endm
 	***** end bank access *****
@@ -548,39 +550,25 @@ multiply_ab:
 	move.b	d1,d0
 	ror.w	#8,d1
 	rts
+	
+	
 	.ifndef	RELEASE
 get_address:
-	cmp.w	#0x2000,a0
-	jcs		0f		| below 0x2000: RAM: OK
-	cmp.w	#0x3000,a0
-	jcc		1f		| above 0x3000: continue
+	cmp.w	#0x4000,a0
+	jcc		1f		| above 0x4000
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing videoram 0x2000-0x2FFF, PC in D6"
+	BREAKPOINT	"accessing videoram 0x0000-0x3FFF, PC in D6"
 	jra		0f
 1:
 	cmp.w	#0x6000,a0
-	jcc		0f		| above 0x6000: ROM: OK
-	* make it simple: ignore most read/writes
-	* palette: ignored
-	* sound: ignored
-	* scroll: read in memory at each vblank
-	cmp.w	#0x4000,a0
-	jcs		1f
+	jcs		0f		| below 0x6000: RAM: OK
+
+	cmp.l	#0x8000,a0
+	jcc		0f		| above 0x8000: ROM: OK
+	
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing bank memory 0x4000-0x6000, PC in D6"
+	BREAKPOINT	"accessing bank memory 0x6000-0x7FFF, PC in D6"
 	jra		0f
-1:
-	* zone 0x3000-0x3fff
-	cmp.w	#0x3e00,a0
-	jne		1f
-	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing bankswitch 0x3E00 address, PC in D6"
-	jra		0f
-1:
-	cmp.w	#0x3800,a0
-	jcc		0f			| >= 0x3800, let it live
-	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing range 0x3000-0x37ff, PC in D6"
 0:
 	GET_UNCHECKED_ADDRESS_FUNC
 	rts
@@ -595,23 +583,27 @@ get_bank_address:
 1:
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	rts
+	
 	.macro	ENABLE_LOG_REGS
 	moveq	#1,d6		| enable
+	moveq	#0,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm
 	.macro	DISABLE_LOG_REGS
 	moveq	#0,d6		| disable
+	moveq	#0,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm	
 	.macro	REENABLE_LOG_REGS
 	moveq	#2,d6		| enable
+	moveq	#0,d7		| cpu 1
 	jbsr	osd_cpu_logging_control	
 	.endm
 	* to trace at some virtual PCs, insert this macro
 	.macro	LOG_REGS	the_pc
 	move.w	sr,-(a7)
 	move.w	#0x\the_pc,-(a7)
-	move.w	#0,-(a7)
+	move.w	#0,-(a7)		| cpu #1
 	jbsr	osd_log_cpu
 	addq.w	#4,a7
 	move.w	(a7)+,sr
@@ -619,6 +611,7 @@ get_bank_address:
 	.macro	LOG_REGS_QUICK	the_pc
 	move.w	sr,-(a7)
 	move.w	#0x\the_pc,0x100
+	move.w	#0,0x102
 	move.w	(a7)+,sr
 	.endm
 	.endif
