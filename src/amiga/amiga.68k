@@ -307,7 +307,12 @@ osd_enter_\@:
 	
 	.global	osd_video_byte_dirty_cpu1
 	.global	osd_video_byte_dirty_cpu2
-	
+	.global	osd_video_word_dirty_cpu1
+	.global	osd_video_word_dirty_cpu2
+	.global	osd_set_scroll_0
+	.global	osd_set_scroll_1
+	.global	osd_set_scroll_2
+	.global	osd_set_scroll_3
 
 	.global osd_read_high_scores
 	.global osd_write_high_scores
@@ -929,12 +934,16 @@ demo_game:
 	* first, call init of cpu 2. We plugged a RTS after init so it doesn't enter the mainloop
 	* and returns there
 	CPU2_GET_MEMORY_START_AND_DP
-	move.l	a6,a5		| DP=0 at start
+	move.l	a6,cpu2_m6809_direct_page_pointer		| DP=0 at start
+	move.l	a6,a5
+	
 	move.b	#1,currently_running_cpu
 	jbsr	cpu2_boot_8000
-	BREAKPOINT	"bOOT2 end"
+	move.w	d5,cpu2_target_ssp_value
+	
 	CPU1_GET_MEMORY_START_AND_DP
-	move.l	a6,a5		| DP=0 at start
+	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
+	move.l	a6,a5
 	clr.b	currently_running_cpu
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
@@ -1514,11 +1523,8 @@ osd_set_cpu1_bank:
 	BREAKPOINT	"Bank 1 out of range (d7)"
 0:
 	.endif
-	swap	d7
-	lsr.l	#1,d7	| times 0x2000*4 total
 	lea		cpu1_banks,a0
-	sub.l	#0x6000,d7		| so a1+address points on data
-	lea		(a0,d7.l),a1
+	jbsr	compute_bank_base
 	move.l	a1,cpu1_bank_base
 	rts
 	
@@ -1532,12 +1538,16 @@ osd_set_cpu2_bank:
 	BREAKPOINT	"Bank 2 out of range (d7)"
 0:
 	.endif
-	swap	d7
-	lsr.l	#1,d7	| times 0x2000*4 total
 	lea		cpu2_banks,a0
-	sub.l	#0x6000,d7		| so a1+address points on data
-	lea		(a0,d7.l),a1
+	jbsr	compute_bank_base
 	move.l	a1,cpu2_bank_base
+	rts
+	
+compute_bank_base:
+	swap	d7
+	lsr.l	#3,d7	| times 0x2000 total
+	lea		(a0,d7.l),a1
+	sub.l	#0x6000,a1		| so a1+address points on data
 	rts
 	
 call_nmis:
@@ -1574,7 +1584,7 @@ call_nmi_cpu_1:
 	.ifndef	RELEASE
 	tst.w	d5
 	jne		0f
-	BREAKPOINT	"entering game irq with d5/S=0"
+	BREAKPOINT	"entering cpu 1 irq with d5/S=0"
 0:
 	.endif
 	clr.b	currently_running_cpu+1
@@ -1607,7 +1617,7 @@ call_nmi_cpu_2:
 	.ifndef	RELEASE
 	tst.w	d5
 	jne		0f
-	BREAKPOINT	"entering game irq with d5/S=0"
+	BREAKPOINT	"entering cpu 2 irq with d5/S=0"
 0:
 	.endif
 	
@@ -3608,8 +3618,14 @@ disable_interrupts:
 	.endif
 	rts
 	
-
-
+osd_set_scroll_0:
+osd_set_scroll_1:
+osd_set_scroll_2:
+osd_set_scroll_3:
+	rts 
+	
+osd_video_word_dirty_cpu1:
+	rts
 
 * a0=screen address (preserved)
 * a6=ram base
@@ -3618,6 +3634,8 @@ disable_interrupts:
 * 2000: foreground/HUD (2400: attributes)
 * 2800: background
 osd_video_byte_dirty_cpu1:
+	rts
+	
 	OSD_ENTER
 	movem.l	d0-d7/a0-a2/a5,-(a7)
 	move.b	(a0),d0

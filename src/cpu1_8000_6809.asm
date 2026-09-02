@@ -42,6 +42,20 @@ scroll_2_9400 = $9400
 scroll_3_9404 = $9404
 back_color_a000 = $A000
 
+; DP (56xx)
+
+; game state:
+; 0: ??
+; 1: ??
+; 2: menu/title
+; 3: game demo
+; 4: high scores
+; 5: start game screen/continue
+; 6: game playing
+
+cpu1_game_state_02 = $02
+cpu2_game_state_03 = $03
+
 cpu1_boot_8000:    ; [global]
 8000: 1A 10       ORCC   #$10
 8002: 10 CE 58 00 LDS    #$5800		; set stack to almost top RAM
@@ -174,7 +188,7 @@ cpu1_boot_8000:    ; [global]
 ; service mode or whatever: not good
 8147: 86 01       LDA    #$01
 8149: B7 5F F6    STA    $5FF6
-814C: BD 83 C9    JSR    $83C9
+814C: BD 83 C9    JSR    clear_screen_83c9
 814F: BD 84 13    JSR    $8413
 8152: BD 84 6A    JSR    $846A
 8155: BD 82 1D    JSR    update_scroll_layers_821d
@@ -206,7 +220,7 @@ cpu1_boot_8000:    ; [global]
 818E: 20 FB       BRA    $818B
 
 normal_start_8190:
-; clear memory
+; clear non-video RAM (DP)
 8190: 8E 56 00    LDX    #$5600
 8193: CC 00 00    LDD    #$0000
 8196: ED 81       STD    ,X++
@@ -215,7 +229,7 @@ normal_start_8190:
 819D: 0F D8       CLR    $D8
 819F: 0F D9       CLR    $D9
 81A1: 0F DB       CLR    $DB
-81A3: 0F 02       CLR    $02
+81A3: 0F 02       CLR    cpu1_game_state_02
 81A5: 0F 04       CLR    $04
 81A7: 0F 06       CLR    $06
 81A9: 7F 41 8C    CLR    $418C
@@ -223,9 +237,10 @@ normal_start_8190:
 81AE: B7 41 8D    STA    $418D
 81B1: 7C 5F F3    INC    $5FF3
 81B4: 1C EF       ANDCC  #$EF		; enable interrupts
-81B6: BD B4 0D    JSR    $B40D
+mainloop_81b6:
+81B6: BD B4 0D    JSR    process_event_b40d
 81B9: BD D6 4A    JSR    $D64A
-81BC: 20 F8       BRA    $81B6
+81BC: 20 F8       BRA    mainloop_81b6
 
 81CC: 96 00       LDA    $00
 81CE: 84 FE       ANDA   #$FE
@@ -344,7 +359,7 @@ update_scroll_layers_821d:
 82B2: 96 95       LDA    $95
 82B4: B7 A0 00    STA    back_color_a000
 82B7: 39          RTS
-82B8: 96 02       LDA    $02
+82B8: 96 02       LDA    cpu1_game_state_02
 82BA: 81 03       CMPA   #$03
 82BC: 26 03       BNE    $82C1
 82BE: 0F 0A       CLR    $0A
@@ -405,7 +420,8 @@ update_scroll_layers_821d:
 831F: 97 0A       STA    $0A
 8321: 39          RTS
 
-8355: BD 83 C9    JSR    $83C9
+state_init_8355:
+8355: BD 83 C9    JSR    clear_screen_83c9
 8358: BD 84 13    JSR    $8413
 835B: BD 84 59    JSR    $8459
 835E: BD 84 8C    JSR    $848C
@@ -453,41 +469,48 @@ update_scroll_layers_821d:
 83BB: B7 94 04    STA    scroll_3_9404
 83BE: 86 10       LDA    #$10
 83C0: 97 95       STA    $95
-83C2: 0C 02       INC    $02
+83C2: 0C 02       INC    cpu1_game_state_02
 83C4: 0F 04       CLR    $04
 83C6: 0F 06       CLR    $06
 83C8: 39          RTS
-83C9: 8D 37       BSR    $8402
-83CB: 8D 24       BSR    $83F1
-83CD: 8D 11       BSR    $83E0
+
+clear_screen_83c9:
+83C9: 8D 37       BSR    clear_osd_layer_8402
+83CB: 8D 24       BSR    clear_layer_2_83f1
+83CD: 8D 11       BSR    clear_layer_1_83e0
 83CF: 8E 00 00    LDX    #$0000
 83D2: CC FF 03    LDD    #$FF03
-83D5: ED 81       STD    ,X++
+83D5: ED 81       STD    ,X++		; [video_address]
 83D7: 8C 10 00    CMPX   #$1000
 83DA: 25 F9       BCS    $83D5
 83DC: B7 80 00    STA    watchdog_8000
 83DF: 39          RTS
+
+clear_layer_1_83e0:
 83E0: 8E 10 00    LDX    #$1000
 83E3: CC FF 03    LDD    #$FF03
-83E6: ED 81       STD    ,X++
+83E6: ED 81       STD    ,X++		; [video_address]
 83E8: 8C 20 00    CMPX   #$2000
 83EB: 25 F9       BCS    $83E6
 83ED: B7 80 00    STA    watchdog_8000
 83F0: 39          RTS
+clear_layer_2_83f1:
 83F1: 8E 20 00    LDX    #$2000
 83F4: CC FF 03    LDD    #$FF03
-83F7: ED 81       STD    ,X++
+83F7: ED 81       STD    ,X++		; [video_address]
 83F9: 8C 30 00    CMPX   #$3000
 83FC: 25 F9       BCS    $83F7
 83FE: B7 80 00    STA    watchdog_8000
 8401: 39          RTS
+clear_osd_layer_8402:
 8402: 8E 30 00    LDX    #$3000
 8405: CC FF 03    LDD    #$FF03
-8408: ED 81       STD    ,X++
+8408: ED 81       STD    ,X++		; [video_address]
 840A: 8C 40 00    CMPX   #$4000
 840D: 25 F9       BCS    $8408
 840F: B7 80 00    STA    watchdog_8000
 8412: 39          RTS
+
 8413: 8E 53 C0    LDX    #$53C0
 8416: CC 00 00    LDD    #$0000
 8419: ED 81       STD    ,X++
@@ -640,11 +663,12 @@ cpu1_irq_8565:    ; [global]
 8570: BD AF 16    JSR    $AF16
 8573: BD AF 6C    JSR    $AF6C
 8576: BD AF C9    JSR    $AFC9
-8579: 96 02       LDA    $02
-857B: 91 03       CMPA   $03
+8579: 96 02       LDA    cpu1_game_state_02
+857B: 91 03       CMPA   cpu2_game_state_03
 857D: 22 08       BHI    $8587
+; wait until game states are "synchronized" on both cpus
 857F: CE 85 A2    LDU    #jump_table_85a2
-8582: 96 02       LDA    $02			; global state
+8582: 96 02       LDA    cpu1_game_state_02			; global state
 8584: 48          ASLA
 8585: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=7]
 8587: 96 19       LDA    bankswitch_shadow_19
@@ -659,17 +683,20 @@ cpu1_irq_8565:    ; [global]
 859E: B7 84 00    STA    irq_ack_8400
 85A1: 3B          RTI
 
+; main game state table
 jump_table_85a2:
-	.word	$8355 
-	.word	$85B0 
-	.word	$8F10
-	.word	$90FB
+	.word	state_init_8355 
+	.word	state_init_2_85b0 
+	.word	title_screen_8f10
+	.word	game_demo_90fb
 	.word	$922E
 	.word	$9901
 	.word	$9BEF
 
+state_init_2_85b0:
 85B0: 7D 42 3D    TST    $423D
 85B3: 27 0D       BEQ    $85C2
+; entering service mode (not reached during game)
 85B5: 96 04       LDA    $04
 85B7: 91 05       CMPA   $05
 85B9: 23 01       BLS    $85BC
@@ -677,14 +704,15 @@ jump_table_85a2:
 85BC: CE 85 D4    LDU    #jump_table_85d4
 85BF: 48          ASLA
 85C0: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=2]
-85C2: 0C 02       INC    $02
+
+85C2: 0C 02       INC    cpu1_game_state_02
 85C4: 0F 04       CLR    $04
 85C6: 0F 06       CLR    $06
-85C8: 0C 03       INC    $03
+85C8: 0C 03       INC    cpu2_game_state_03
 85CA: 0F 05       CLR    $05
 85CC: 0F 07       CLR    $07
 85CE: 7F 41 83    CLR    $4183
-85D1: 7E 83 C9    JMP    $83C9
+85D1: 7E 83 C9    JMP    clear_screen_83c9
 
 85D8: 7F 54 2B    CLR    $542B
 85DB: 0C 04       INC    $04
@@ -727,7 +755,7 @@ jump_table_85a2:
 8632: 39          RTS
 8633: 7F 5F F3    CLR    $5FF3
 8636: 7F 5F F0    CLR    cpu_sync_5ff0
-8639: BD 83 C9    JSR    $83C9
+8639: BD 83 C9    JSR    clear_screen_83c9
 863C: BD 84 6A    JSR    $846A
 863F: BD 84 13    JSR    $8413
 8642: 7C 54 2B    INC    $542B
@@ -1403,7 +1431,7 @@ jump_table_85a2:
 8C74: B6 42 68    LDA    $4268
 8C77: 26 01       BNE    $8C7A
 8C79: 39          RTS
-8C7A: BD 83 C9    JSR    $83C9
+8C7A: BD 83 C9    JSR    clear_screen_83c9
 8C7D: BD 84 6A    JSR    $846A
 8C80: BD 85 E0    JSR    $85E0
 8C83: 7C 54 2B    INC    $542B
@@ -1459,6 +1487,7 @@ jump_table_85a2:
 8CEA: ED C4       STD    ,U
 8CEC: 39          RTS
 
+title_screen_8f10:
 8F10: 7D 42 3D    TST    $423D                                        
 8F13: 26 24       BNE    $8F39                                        
 8F15: 96 04       LDA    $04
@@ -1473,18 +1502,18 @@ jump_table_85a2:
 8F27: 39          RTS
 8F28: 0C 18       INC    $18
 8F2A: 86 05       LDA    #$05
-8F2C: 97 02       STA    $02
+8F2C: 97 02       STA    cpu1_game_state_02
 8F2E: 0F 04       CLR    $04
 8F30: 0F 06       CLR    $06
-8F32: 97 03       STA    $03
+8F32: 97 03       STA    cpu2_game_state_03
 8F34: 0F 05       CLR    $05
 8F36: 0F 07       CLR    $07
 8F38: 39          RTS
 8F39: B7 C0 00    STA    $C000
-8F3C: 0F 02       CLR    $02
+8F3C: 0F 02       CLR    cpu1_game_state_02
 8F3E: 0F 04       CLR    $04
 8F40: 0F 06       CLR    $06
-8F42: 0F 03       CLR    $03
+8F42: 0F 03       CLR    cpu2_game_state_03
 8F44: 0F 05       CLR    $05
 8F46: 0F 07       CLR    $07
 8F48: 39          RTS
@@ -1593,10 +1622,10 @@ jump_table_85a2:
 903D: BD B4 B8    JSR    $B4B8
 9040: BD 84 8C    JSR    $848C
 9043: 0C D1       INC    $D1
-9045: 0C 02       INC    $02
+9045: 0C 02       INC    cpu1_game_state_02
 9047: 0F 04       CLR    $04
 9049: 0F 06       CLR    $06
-904B: 0C 03       INC    $03
+904B: 0C 03       INC    cpu2_game_state_03
 904D: 0F 05       CLR    $05
 904F: 0F 07       CLR    $07
 9051: 39          RTS
@@ -1690,6 +1719,7 @@ jump_table_85a2:
 90F8: 32 63       LEAS   $3,S	; [free_locals]
 90FA: 39          RTS
 
+game_demo_90fb:
 90FB: 7D 42 3D    TST    $423D
 90FE: 26 14       BNE    $9114
 9100: 7D 41 A5    TST    $41A5
@@ -1702,11 +1732,11 @@ jump_table_85a2:
 910E: CE 91 24    LDU    #jump_table_9124
 9111: 48          ASLA
 9112: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
-9114: B7 C0 00    STA    $C000
-9117: 0F 02       CLR    $02
+9114: B7 C0 00    STA    $C000		; [breakpoint]
+9117: 0F 02       CLR    cpu1_game_state_02
 9119: 0F 04       CLR    $04
 911B: 0F 06       CLR    $06
-911D: 0F 03       CLR    $03
+911D: 0F 03       CLR    cpu2_game_state_03
 911F: 0F 05       CLR    $05
 9121: 0F 07       CLR    $07
 9123: 39          RTS
@@ -1814,18 +1844,18 @@ jump_table_85a2:
 920B: 7D 41 A5    TST    $41A5
 920E: 26 0F       BNE    $921F
 9210: 86 04       LDA    #$04
-9212: 97 02       STA    $02
+9212: 97 02       STA    cpu1_game_state_02
 9214: 0F 04       CLR    $04
 9216: 0F 06       CLR    $06
-9218: 97 03       STA    $03
+9218: 97 03       STA    cpu2_game_state_03
 921A: 0F 05       CLR    $05
 921C: 0F 07       CLR    $07
 921E: 39          RTS
 921F: 86 05       LDA    #$05
-9221: 97 02       STA    $02
+9221: 97 02       STA    cpu1_game_state_02
 9223: 0F 04       CLR    $04
 9225: 0F 06       CLR    $06
-9227: 97 03       STA    $03
+9227: 97 03       STA    cpu2_game_state_03
 9229: 0F 05       CLR    $05
 922B: 0F 07       CLR    $07
 922D: 39          RTS
@@ -1851,18 +1881,18 @@ jump_table_85a2:
 9258: 86 01       LDA    #$01
 925A: 97 D1       STA    $D1
 925C: 86 05       LDA    #$05
-925E: 97 02       STA    $02
+925E: 97 02       STA    cpu1_game_state_02
 9260: 0F 04       CLR    $04
 9262: 0F 06       CLR    $06
-9264: 97 03       STA    $03
+9264: 97 03       STA    cpu2_game_state_03
 9266: 0F 05       CLR    $05
 9268: 0F 07       CLR    $07
 926A: 39          RTS
 926B: B7 C0 00    STA    $C000
-926E: 0F 02       CLR    $02
+926E: 0F 02       CLR    cpu1_game_state_02
 9270: 0F 04       CLR    $04
 9272: 0F 06       CLR    $06
-9274: 0F 03       CLR    $03
+9274: 0F 03       CLR    cpu2_game_state_03
 9276: 0F 05       CLR    $05
 9278: 0F 07       CLR    $07
 927A: 39          RTS
@@ -1917,10 +1947,10 @@ jump_table_85a2:
 92E3: 7E B4 B8    JMP    $B4B8
 92E6: 0F D1       CLR    $D1
 92E8: 86 02       LDA    #$02
-92EA: 97 02       STA    $02
+92EA: 97 02       STA    cpu1_game_state_02
 92EC: 0F 04       CLR    $04
 92EE: 0F 06       CLR    $06
-92F0: 97 03       STA    $03
+92F0: 97 03       STA    cpu2_game_state_03
 92F2: 0F 05       CLR    $05
 92F4: 0F 07       CLR    $07
 92F6: 39          RTS
@@ -2625,10 +2655,10 @@ jump_table_85a2:
 991A: 48          ASLA
 991B: 6E D6       JMP    [A,U]   ; [indirect_jump] [nb_entries=2]
 991D: B7 C0 00    STA    $C000
-9920: 0F 02       CLR    $02
+9920: 0F 02       CLR    cpu1_game_state_02
 9922: 0F 04       CLR    $04
 9924: 0F 06       CLR    $06
-9926: 0F 03       CLR    $03
+9926: 0F 03       CLR    cpu2_game_state_03
 9928: 0F 05       CLR    $05
 992A: 0F 07       CLR    $07
 992C: 39          RTS
@@ -2746,10 +2776,10 @@ jump_table_85a2:
 9A36: 5A          DECB
 9A37: 26 FB       BNE    $9A34
 9A39: BD 90 85    JSR    $9085
-9A3C: 0C 02       INC    $02
+9A3C: 0C 02       INC    cpu1_game_state_02
 9A3E: 0F 04       CLR    $04
 9A40: 0F 06       CLR    $06
-9A42: 0C 03       INC    $03
+9A42: 0C 03       INC    cpu2_game_state_03
 9A44: 0F 05       CLR    $05
 9A46: 0F 07       CLR    $07
 9A48: 39          RTS
@@ -2930,10 +2960,10 @@ jump_table_85a2:
 9BDC: 5A          DECB
 9BDD: 26 FB       BNE    $9BDA
 9BDF: BD 90 85    JSR    $9085
-9BE2: 0C 02       INC    $02
+9BE2: 0C 02       INC    cpu1_game_state_02
 9BE4: 0F 04       CLR    $04
 9BE6: 0F 06       CLR    $06
-9BE8: 0C 03       INC    $03
+9BE8: 0C 03       INC    cpu2_game_state_03
 9BEA: 0F 05       CLR    $05
 9BEC: 0F 07       CLR    $07
 9BEE: 39          RTS
@@ -2950,7 +2980,7 @@ jump_table_85a2:
 9C04: 0F 02       CLR    $02
 9C06: 0F 04       CLR    $04
 9C08: 0F 06       CLR    $06
-9C0A: 0F 03       CLR    $03
+9C0A: 0F 03       CLR    cpu2_game_state_03
 9C0C: 0F 05       CLR    $05
 9C0E: 0F 07       CLR    $07
 9C10: 39          RTS
@@ -4717,7 +4747,7 @@ AB35: 86 05       LDA    #$05
 AB37: 97 02       STA    $02
 AB39: 0F 04       CLR    $04
 AB3B: 0F 06       CLR    $06
-AB3D: 97 03       STA    $03
+AB3D: 97 03       STA    cpu2_game_state_03
 AB3F: 0F 05       CLR    $05
 AB41: 0F 07       CLR    $07
 AB43: 39          RTS
@@ -4835,7 +4865,7 @@ AC44: 86 02       LDA    #$02
 AC46: 97 02       STA    $02
 AC48: 0F 04       CLR    $04
 AC4A: 0F 06       CLR    $06
-AC4C: 97 03       STA    $03
+AC4C: 97 03       STA    cpu2_game_state_03
 AC4E: 0F 05       CLR    $05
 AC50: 0F 07       CLR    $07
 AC52: 39          RTS
@@ -5135,7 +5165,7 @@ AEF6: 86 05       LDA    #$05
 AEF8: 97 02       STA    $02
 AEFA: 0F 04       CLR    $04
 AEFC: 0F 06       CLR    $06
-AEFE: 97 03       STA    $03
+AEFE: 97 03       STA    cpu2_game_state_03
 AF00: 0F 05       CLR    $05
 AF02: 0F 07       CLR    $07
 AF04: 39          RTS
@@ -5144,7 +5174,7 @@ AF07: 86 02       LDA    #$02
 AF09: 97 02       STA    $02
 AF0B: 0F 04       CLR    $04
 AF0D: 0F 06       CLR    $06
-AF0F: 97 03       STA    $03
+AF0F: 97 03       STA    cpu2_game_state_03
 AF11: 0F 05       CLR    $05
 AF13: 0F 07       CLR    $07
 AF15: 39          RTS
@@ -5537,6 +5567,8 @@ B405: 7E B3 89    JMP    $B389
 B408: A6 E0       LDA    ,S+    ; [local]
 B40A: A7 05       STA    $5,X
 B40C: 39          RTS
+
+process_event_b40d:
 B40D: D6 B4       LDB    $B4
 B40F: D1 B3       CMPB   $B3
 B411: 26 01       BNE    $B414

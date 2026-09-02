@@ -13,9 +13,13 @@
 ;//  { 0xd804, 0xd806 } layer 3 scroll registers would be here
 
 watchdog_8000 = $8000
+
 bankswitch2_d803 = $d803
 cpu_sync_1ff0 = $1ff0
 cpu_sync_1ff3 = $1ff3
+cpu1_game_state_02 = $02
+cpu2_game_state_03 = $03
+irq_ack_8800 = $8800
 
 cpu2_boot_8000:  ; [global]
 8000: 1A 10       ORCC   #$10		; disable interrupts
@@ -87,7 +91,7 @@ cpu2_boot_8000:  ; [global]
 8095: 81 02       CMPA   #$02
 8097: 26 F6       BNE    $808F
 8099: 0F 00       CLR    $00
-809B: 0F 03       CLR    $03
+809B: 0F 03       CLR    cpu2_game_state_03
 809D: 0F 05       CLR    $05
 809F: 0F 07       CLR    $07
 80A1: 1C EF       ANDCC  #$EF		; enable interrupts
@@ -100,7 +104,7 @@ mainloop_80a3:     ; [global]
 80AE: BD 80 FE    JSR    $80FE
 80B1: BD 81 35    JSR    $8135
 80B4: BD 81 60    JSR    $8160
-80B7: 0C 03       INC    $03
+80B7: 0C 03       INC    cpu2_game_state_03
 80B9: 0F 05       CLR    $05
 80BB: 0F 07       CLR    $07
 80BD: 39          RTS
@@ -190,17 +194,18 @@ cpu2_irq_8173:  ; [global]
 8175: 96 00       LDA    $00
 8177: 84 01       ANDA   #$01
 8179: 26 1A       BNE    $8195
-817B: 96 03       LDA    $03
-817D: 91 02       CMPA   $02
+817B: 96 03       LDA    cpu2_game_state_03
+817D: 91 02       CMPA   cpu1_game_state_02
 817F: 22 08       BHI    $8189
+; wait until game states are "synchronized" on both cpus
 8181: 8E 81 AD    LDX    #jump_table_81ad
-8184: 96 03       LDA    $03
+8184: 96 03       LDA    cpu2_game_state_03
 8186: 48          ASLA
 8187: AD 96       JSR    [A,X]        ; [indirect_jump] [nb_entries=9]
 8189: 96 1A       LDA    $1A
 818B: B7 D8 03    STA    bankswitch2_d803
 818E: B7 80 00    STA    watchdog_8000
-8191: B7 88 00    STA    $8800
+8191: B7 88 00    STA    irq_ack_8800
 8194: 3B          RTI
 8195: BD 81 BB    JSR    $81BB
 8198: BD 83 0D    JSR    $830D
@@ -209,7 +214,7 @@ cpu2_irq_8173:  ; [global]
 81A1: 96 1A       LDA    $1A
 81A3: B7 D8 03    STA    bankswitch2_d803
 81A6: B7 80 00    STA    watchdog_8000
-81A9: B7 88 00    STA    $8800
+81A9: B7 88 00    STA    irq_ack_8800
 81AC: 3B          RTI
 
 81BB: 96 52       LDA    $52
@@ -580,7 +585,7 @@ cpu2_irq_8173:  ; [global]
 849A: 39          RTS
 
 84A7: 8E 04 10    LDX    #$0410
-84AA: 96 03       LDA    $03
+84AA: 96 03       LDA    cpu2_game_state_03
 84AC: 81 03       CMPA   #$03
 84AE: 26 06       BNE    $84B6
 84B0: 10 8E 85 0F LDY    #$850F
@@ -4578,7 +4583,7 @@ ABBD: 27 01       BEQ    $ABC0
 ABBF: 39          RTS
 ABC0: 6C 09       INC    $9,X
 ABC2: 39          RTS
-ABC3: 96 03       LDA    $03
+ABC3: 96 03       LDA    cpu2_game_state_03
 ABC5: 81 03       CMPA   #$03
 ABC7: 27 3B       BEQ    $AC04
 ABC9: 6D 1C       TST    -$4,X
@@ -5144,10 +5149,10 @@ B0A3: 97 65       STA    $65
 B0A5: 10 8E 78 3C LDY    #$783C
 B0A9: 96 D1       LDA    $D1
 B0AB: 48          ASLA
-B0AC: 10 AE A6    LDY    A,Y
+B0AC: 10 AE A6    LDY    A,Y	; [bank_address]
 B0AF: 96 62       LDA    $62
 B0B1: 48          ASLA
-B0B2: 10 AE A6    LDY    A,Y
+B0B2: 10 AE A6    LDY    A,Y	; [bank_address]
 B0B5: BD B1 E0    JSR    $B1E0
 B0B8: 0C 62       INC    $62
 B0BA: 0A 65       DEC    $65
@@ -8194,7 +8199,7 @@ CD6C: CE DF 9C    LDU    #$DF9C
 CD6F: 7E 8D E8    JMP    $8DE8
 CD72: 6C 14       INC    -$C,X
 CD74: 39          RTS
-CD75: 96 03       LDA    $03
+CD75: 96 03       LDA    cpu2_game_state_03
 CD77: 81 06       CMPA   #$06
 CD79: 26 0A       BNE    $CD85
 CD7B: 96 05       LDA    $05
@@ -9652,7 +9657,7 @@ jump_table_81ad:
 	dc.w	$852a	; $81af
 	dc.w	$854f	; $81b1
 	dc.w	$8768	; $81b3
-	dc.w	$8800	; $81b5
+	dc.w	irq_ack_8800	; $81b5
 	dc.w	$88c4	; $81b7
 	dc.w	$88e9	; $81b9
 	dc.w	$9652	; $81bb

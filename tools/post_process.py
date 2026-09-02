@@ -52,7 +52,7 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("rts",lines,i)  # TEMP disable scrolling routine
     elif address in {0xb643,0xB8A4,0xb8bf}:
         line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
-    elif address == 0x8008:
+    elif address == 0x800a:
         # skip memory/video memory test of boot
         line = change_instruction("jra\tnormal_start_8190",lines,i)
     return line
@@ -61,8 +61,11 @@ sc_cpu2 = SourceChanger()
 
 def game_specific_cpu2(address,lines,i):
     line = lines[i]
-    if address in [0x8194,0x81ac,0x80A1]:
-        line = change_instruction("rts",lines,i)  # rti => rts, also return after init
+    if address in [0x8194,0x81ac]:
+        line = change_instruction("rts",lines,i)  # rti => rts
+    elif address == 0x80A1:
+    #return after init
+        line += "\trts\n"
 ##    elif address in {0x807C,0x8097,0x806E,0x8061,0x8051,0x8044,0x8034,0x8027,0x800F}:
 ##        line = change_instruction("nop",lines,i)  # disable shit in init, like rom checksum or sync
 ##    elif address == 0x8080:
@@ -258,10 +261,15 @@ def doit(cpu):
     "unknown_6600":"",
     "unknown_6c00":"",
     "irq_ack_8400":"",
+    "scroll_0_9000":"set_scroll_0",
+    "scroll_1_9004":"set_scroll_1",
+    "scroll_2_9400":"set_scroll_2",
+    "scroll_3_9404":"set_scroll_3",
     "back_color_a000":"set_back_color",
     "bankswitch_6800":"set_cpu1_bank",
     } if cpu==1 else  {
     "watchdog_8000":"",
+    "irq_ack_8800":"",
     "bankswitch2_d803":"set_cpu2_bank",
     }
     sc = sc_cpu1 if cpu==1 else sc_cpu2
@@ -292,6 +300,9 @@ def doit(cpu):
 
     ##    if any(x in line for x in ( "check explicit S usage",)):
     ##        line = remove_error(line,ignore_missing=True)
+        if "[breakpoint]" in line:
+            address = get_line_address(line)
+            line = f'\tBREAKPOINT  "{address:04x}"\n'+line
 
         if address in sc.remove_error_in_prev_line:
             lines[i-1] = remove_error(lines[i-1].strip()+f" ({address:04x})")
