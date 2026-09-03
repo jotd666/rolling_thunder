@@ -80,7 +80,7 @@
 	.ifndef	RELEASE
 	cmp.b	#\arg*2,\reg
 	jcs		okay\@
-	BREAKPOINT	"\reg exceeds \arg*2"
+	BREAKPOINT	"CPU1: \reg exceeds \arg*2"
 okay\@:
 	.endif
 	.endm
@@ -557,7 +557,7 @@ get_address:
 	cmp.w	#0x4000,a0
 	jcc		1f		| above 0x4000
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing videoram 0x0000-0x3FFF, PC in D6"
+	BREAKPOINT	"CPU1: accessing videoram 0x0000-0x3FFF, PC in D6"
 	jra		0f
 1:
 	cmp.w	#0x6000,a0

@@ -504,7 +504,7 @@ okay\@:
 	.macro GET_REG_ROM_ADDRESS_FROM_REG	reg,reg2
 	move.l	\reg,a0
 	lea	(a0,\reg2\().l),a0
-	GET_ADDRESS_FUNC
+	GET_ROM_ADDRESS_FUNC
 	.endm
 
 	.macro GET_REG_SELECT_ADDRESS_FROM_REG	reg,reg2

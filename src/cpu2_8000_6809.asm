@@ -5352,7 +5352,7 @@ B21D: 6F 0E       CLR    $E,X
 B21F: CE E8 E0    LDU    #$E8E0
 B222: A6 84       LDA    ,X
 B224: 84 7C       ANDA   #$7C
-B226: A7 E2       STA    ,-S	; [local] [video_address]
+B226: A7 E2       STA    ,-S	; [local]
 B228: A6 02       LDA    $2,X
 B22A: 84 03       ANDA   #$03
 B22C: AB E0       ADDA   ,S+	; [local]

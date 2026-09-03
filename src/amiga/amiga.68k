@@ -1550,14 +1550,14 @@ compute_bank_base:
 	sub.l	#0x6000,a1		| so a1+address points on data
 	rts
 	
-call_nmis:
+call_irqs:
 	move.w	currently_running_cpu,-(a7)
-	jbsr	call_nmi_cpu_1
-	jbsr	call_nmi_cpu_2
+	jbsr	call_irq_cpu_1
+	jbsr	call_irq_cpu_2
 	move.w	(a7)+,currently_running_cpu
 	rts
 	
-call_nmi_cpu_1:
+call_irq_cpu_1:
 	tst.b	cpu_interrupts
 	jne		0f
 	rts
@@ -1590,7 +1590,7 @@ call_nmi_cpu_1:
 	clr.b	currently_running_cpu+1
 	jra	cpu1_irq_8565
 	
-call_nmi_cpu_2:
+call_irq_cpu_2:
 	tst.b	cpu_interrupts+1
 	jne		0f
 	rts
@@ -1602,20 +1602,10 @@ call_nmi_cpu_2:
 	* should we set a saved copy of S or use the one that existed
 	* when the game was interrupted? depends if the game was interrupted
 	* in the original game code or in an osd function
-	cmp.b	#1,osd_entry_count
-	jeq		0f
-	* osd_entry_count > 1: means that we interrupted an osd call
-	* we have to restore d5 as it was on entering the osd call
-	* restore game S (aka d5) so it's used in the irq
-	* we must not change d5 until game irq has been called
-	move.w	cpu2_target_ssp_value,d5
-0:
 
-	swap	d5
-	clr		d5
-	swap 	d5
+	moveq	#0,d5
+	move.w	cpu2_target_ssp_value,d5
 	.ifndef	RELEASE
-	tst.w	d5
 	jne		0f
 	BREAKPOINT	"entering cpu 2 irq with d5/S=0"
 0:
@@ -1720,7 +1710,7 @@ level1_interrupt:
 	addq.b	#1,d0
 	cmp.b	#5,d0
 	bne.b	1f
-	jbsr	call_nmis
+	jbsr	call_irqs
 	clr.b	d0
 1:
 	move.b	d0,mid_screen_interrupt_count
@@ -1728,7 +1718,7 @@ level1_interrupt:
 2:
 
 
-	jbsr	call_nmis
+	jbsr	call_irqs
 
 	CPU1_GET_MEMORY_START_IN_A6
 	

@@ -2138,20 +2138,20 @@ game_demo_90fb:
 947E: 44          LSRA
 947F: 26 06       BNE    $9487
 9481: 86 FF       LDA    #$FF
-9483: ED C1       STD    ,U++
+9483: ED C1       STD    ,U++	; [video_address_word]
 9485: 20 04       BRA    $948B
 9487: 6C E4       INC    ,S	; [local]
-9489: ED C1       STD    ,U++
+9489: ED C1       STD    ,U++	; [video_address_word]
 948B: A6 80       LDA    ,X+
 948D: 84 0F       ANDA   #$0F
 948F: 26 0A       BNE    $949B
 9491: 6D E4       TST    ,S	; [local]
 9493: 26 06       BNE    $949B
 9495: 86 FF       LDA    #$FF
-9497: ED C1       STD    ,U++
+9497: ED C1       STD    ,U++	; [video_address_word]
 9499: 20 04       BRA    $949F
 949B: 6C E4       INC    ,S	; [local]
-949D: ED C1       STD    ,U++
+949D: ED C1       STD    ,U++	; [video_address_word]
 949F: A6 84       LDA    ,X
 94A1: 44          LSRA
 94A2: 44          LSRA
@@ -2161,20 +2161,20 @@ game_demo_90fb:
 94A7: 6D E4       TST    ,S	; [local]
 94A9: 26 06       BNE    $94B1
 94AB: 86 FF       LDA    #$FF
-94AD: ED C1       STD    ,U++
+94AD: ED C1       STD    ,U++	; [video_address_word]
 94AF: 20 04       BRA    $94B5
 94B1: 6C E4       INC    ,S	; [local]
-94B3: ED C1       STD    ,U++
+94B3: ED C1       STD    ,U++	; [video_address_word]
 94B5: A6 80       LDA    ,X+
 94B7: 84 0F       ANDA   #$0F
 94B9: 26 0A       BNE    $94C5
 94BB: 6D E4       TST    ,S	; [local]
 94BD: 26 06       BNE    $94C5
 94BF: 86 FF       LDA    #$FF
-94C1: ED C1       STD    ,U++
+94C1: ED C1       STD    ,U++	; [video_address_word]
 94C3: 20 04       BRA    $94C9
 94C5: 6C E4       INC    ,S	; [local]
-94C7: ED C1       STD    ,U++
+94C7: ED C1       STD    ,U++	; [video_address_word]
 94C9: A6 84       LDA    ,X
 94CB: 44          LSRA
 94CC: 44          LSRA
@@ -2184,12 +2184,12 @@ game_demo_90fb:
 94D1: 6D E4       TST    ,S	; [local]
 94D3: 26 02       BNE    $94D7
 94D5: 86 FF       LDA    #$FF
-94D7: ED C1       STD    ,U++
+94D7: ED C1       STD    ,U++	; [video_address_word]
 94D9: A6 84       LDA    ,X
 94DB: 84 0F       ANDA   #$0F
-94DD: ED C1       STD    ,U++
+94DD: ED C1       STD    ,U++	; [video_address_word]
 94DF: 4F          CLRA
-94E0: ED C4       STD    ,U
+94E0: ED C4       STD    ,U	; [video_address]
 94E2: 35 82       PULS   A,PC	; [free_locals]
 
 94E4: 0D C1       TST    $C1
@@ -2225,12 +2225,12 @@ game_demo_90fb:
 9520: 84 07       ANDA   #$07
 9522: 80 68       SUBA   #$68
 9524: 40          NEGA
-9525: ED 84       STD    ,X
+9525: ED 84       STD    ,X		; [video_address_word]
 9527: 86 61       LDA    #$61
 9529: 8C 3F AC    CMPX   #$3FAC
 952C: 26 01       BNE    $952F
 952E: 39          RTS
-952F: ED 83       STD    ,--X
+952F: ED 83       STD    ,--X		; [video_address_word]
 9531: 20 F6       BRA    $9529
 
 9539: DC 11       LDD    $11
@@ -2267,10 +2267,10 @@ game_demo_90fb:
 9587: 84 0F       ANDA   #$0F
 9589: 26 06       BNE    $9591
 958B: 86 FF       LDA    #$FF
-958D: ED C1       STD    ,U++
+958D: ED C1       STD    ,U++   ; [video_address_word]
 958F: 20 04       BRA    $9595
 9591: 6C E4       INC    ,S		; [local]
-9593: ED C1       STD    ,U++
+9593: ED C1       STD    ,U++   ; [video_address_word]
 9595: A6 84       LDA    ,X
 9597: 44          LSRA
 9598: 44          LSRA
@@ -2280,13 +2280,13 @@ game_demo_90fb:
 959D: 6D E4       TST    ,S		; [local]
 959F: 26 06       BNE    $95A7
 95A1: 86 FF       LDA    #$FF
-95A3: ED C1       STD    ,U++
+95A3: ED C1       STD    ,U++   ; [video_address_word]
 95A5: 20 04       BRA    $95AB
 95A7: 6C E4       INC    ,S		; [local]
-95A9: ED C1       STD    ,U++
+95A9: ED C1       STD    ,U++   ; [video_address_word]
 95AB: A6 80       LDA    ,X+
 95AD: 84 0F       ANDA   #$0F
-95AF: ED C1       STD    ,U++
+95AF: ED C1       STD    ,U++   ; [video_address_word]
 95B1: 35 82       PULS   A,PC	; [manual_stack_pull]
 
 95E3: C6 05       LDB    #$05
@@ -4387,10 +4387,10 @@ A7FC: 44          LSRA
 A7FD: 44          LSRA
 A7FE: 26 02       BNE    $A802
 A800: 86 FF       LDA    #$FF
-A802: ED A4       STD    ,Y
+A802: ED A4       STD    ,Y		; [video_address_word]
 A804: 96 C3       LDA    $C3
 A806: 84 0F       ANDA   #$0F
-A808: ED 22       STD    $2,Y
+A808: ED 22       STD    $2,Y		; [video_address_word]
 A80A: 10 8E 3B 2E LDY    #$3B2E
 A80E: C6 FC       LDB    #$FC
 A810: 96 C5       LDA    $C5
@@ -4400,10 +4400,10 @@ A814: 44          LSRA
 A815: 44          LSRA
 A816: 26 02       BNE    $A81A
 A818: 86 FF       LDA    #$FF
-A81A: ED A4       STD    ,Y
+A81A: ED A4       STD    ,Y		; [video_address_word]
 A81C: 96 C5       LDA    $C5
 A81E: 84 0F       ANDA   #$0F
-A820: ED 22       STD    $2,Y
+A820: ED 22       STD    $2,Y		; [video_address_word]
 A822: BD 93 E4    JSR    $93E4
 A825: BD 93 60    JSR    $9360
 A828: BD 95 07    JSR    $9507
