@@ -3627,6 +3627,9 @@ osd_set_scroll_3:
 osd_video_word_dirty_cpu1:
 	rts
 
+osd_video_byte_dirty_cpu2:
+	rts
+
 * a0=screen address (preserved)
 * a6=ram base
 * should preserve all registers

@@ -31,7 +31,9 @@ bankswitch_shadow_19 = $19
 bankswitch_6800 = $6800
 irq_ack_8400 = $8400
 watchdog_8000 = $8000
+unknown_6000 = $6000
 unknown_6e00 = $6E00
+unknown_6400 = $6400
 unknown_6200 = $6200
 unknown_6600 = $6600
 unknown_6c00 = $6C00
@@ -648,10 +650,10 @@ clear_osd_layer_8402:
 8554: 26 F9       BNE    $854F
 8556: 39          RTS
 8557: 4F          CLRA
-8558: B7 6E 00    STA    $6E00
-855B: B7 60 00    STA    $6000
-855E: B7 64 00    STA    $6400
-8561: B7 6C 00    STA    $6C00
+8558: B7 6E 00    STA    unknown_6e00
+855B: B7 60 00    STA    unknown_6000
+855E: B7 64 00    STA    unknown_6400
+8561: B7 6C 00    STA    unknown_6c00
 8564: 39          RTS
 
 cpu1_irq_8565:    ; [global]
@@ -770,7 +772,7 @@ state_init_2_85b0:
 8656: A6 C0       LDA    ,U+
 8658: A7 E2       STA    ,-S		; [local]
 865A: A6 C0       LDA    ,U+
-865C: ED A1       STD    ,Y++
+865C: ED A1       STD    ,Y++		; [video_address_word]
 865E: 6A E4       DEC    ,S		; [local]
 8660: 26 F8       BNE    $865A
 8662: A6 E0       LDA    ,S+		; [local]
@@ -781,7 +783,7 @@ state_init_2_85b0:
 866F: A6 C0       LDA    ,U+
 8671: A7 E2       STA    ,-S		; [local]
 8673: A6 C0       LDA    ,U+
-8675: ED A1       STD    ,Y++
+8675: ED A1       STD    ,Y++		; [video_address_word]
 8677: 6A E4       DEC    ,S		; [local]
 8679: 26 F8       BNE    $8673
 867B: A6 E0       LDA    ,S+		; [local]
@@ -794,7 +796,7 @@ state_init_2_85b0:
 868D: A6 C0       LDA    ,U+
 868F: A7 E2       STA    ,-S		; [local]
 8691: A6 C0       LDA    ,U+
-8693: ED A1       STD    ,Y++
+8693: ED A1       STD    ,Y++		; [video_address_word]
 8695: 6A E4       DEC    ,S		; [local]
 8697: 26 F8       BNE    $8691
 8699: A6 E0       LDA    ,S+		; [local]
@@ -805,7 +807,7 @@ state_init_2_85b0:
 86A6: A6 C0       LDA    ,U+
 86A8: A7 E2       STA    ,-S		; [local]
 86AA: A6 C0       LDA    ,U+
-86AC: ED A1       STD    ,Y++
+86AC: ED A1       STD    ,Y++		; [video_address_word]
 86AE: 6A E4       DEC    ,S		; [local]
 86B0: 26 F8       BNE    $86AA
 86B2: A6 E0       LDA    ,S+		; [local]
@@ -818,7 +820,7 @@ state_init_2_85b0:
 86C4: A6 C0       LDA    ,U+
 86C6: A7 E2       STA    ,-S		; [local]
 86C8: A6 C0       LDA    ,U+
-86CA: ED A1       STD    ,Y++
+86CA: ED A1       STD    ,Y++		; [video_address_word]
 86CC: 6A E4       DEC    ,S		; [local]
 86CE: 26 F8       BNE    $86C8
 86D0: A6 E0       LDA    ,S+		; [local]
@@ -829,7 +831,7 @@ state_init_2_85b0:
 86DD: A6 C0       LDA    ,U+
 86DF: A7 E2       STA    ,-S		; [local]
 86E1: A6 C0       LDA    ,U+
-86E3: ED A1       STD    ,Y++
+86E3: ED A1       STD    ,Y++		; [video_address_word]
 86E5: 6A E4       DEC    ,S		; [local]
 86E7: 26 F8       BNE    $86E1
 86E9: A6 E0       LDA    ,S+		; [local]
@@ -842,7 +844,7 @@ state_init_2_85b0:
 86FB: A6 C0       LDA    ,U+
 86FD: A7 E2       STA    ,-S		; [local]
 86FF: A6 C0       LDA    ,U+
-8701: ED A1       STD    ,Y++
+8701: ED A1       STD    ,Y++		; [video_address_word]
 8703: 6A E4       DEC    ,S		; [local]
 8705: 26 F8       BNE    $86FF
 8707: A6 E0       LDA    ,S+		; [local]
@@ -853,7 +855,7 @@ state_init_2_85b0:
 8714: A6 C0       LDA    ,U+
 8716: A7 E2       STA    ,-S		; [local]
 8718: A6 C0       LDA    ,U+
-871A: ED A1       STD    ,Y++
+871A: ED A1       STD    ,Y++		; [video_address_word]
 871C: 6A E4       DEC    ,S		; [local]
 871E: 26 F8       BNE    $8718
 8720: A6 E0       LDA    ,S+		; [local]
@@ -863,7 +865,7 @@ state_init_2_85b0:
 872B: A6 C0       LDA    ,U+
 872D: A7 E2       STA    ,-S		; [local]
 872F: A6 C0       LDA    ,U+
-8731: ED A1       STD    ,Y++
+8731: ED A1       STD    ,Y++		; [video_address_word]
 8733: 6A E4       DEC    ,S		; [local]
 8735: 26 F8       BNE    $872F
 8737: A6 E0       LDA    ,S+		; [local]
@@ -873,7 +875,7 @@ state_init_2_85b0:
 8742: A6 C0       LDA    ,U+
 8744: A7 E2       STA    ,-S		; [local]
 8746: A6 C0       LDA    ,U+
-8748: ED A1       STD    ,Y++
+8748: ED A1       STD    ,Y++		; [video_address_word]
 874A: 6A E4       DEC    ,S		; [local]
 874C: 26 F8       BNE    $8746
 874E: A6 E0       LDA    ,S+		; [local]
@@ -883,7 +885,7 @@ state_init_2_85b0:
 8759: A6 C0       LDA    ,U+
 875B: A7 E2       STA    ,-S		; [local]
 875D: A6 C0       LDA    ,U+
-875F: ED A1       STD    ,Y++
+875F: ED A1       STD    ,Y++		; [video_address_word]
 8761: 6A E4       DEC    ,S		; [local]
 8763: 26 F8       BNE    $875D
 8765: A6 E0       LDA    ,S+		; [local]
@@ -893,7 +895,7 @@ state_init_2_85b0:
 8770: A6 C0       LDA    ,U+
 8772: A7 E2       STA    ,-S		; [local]
 8774: A6 C0       LDA    ,U+
-8776: ED A1       STD    ,Y++
+8776: ED A1       STD    ,Y++		; [video_address_word]
 8778: 6A E4       DEC    ,S		; [local]
 877A: 26 F8       BNE    $8774
 877C: A6 E0       LDA    ,S+		; [local]
@@ -903,7 +905,7 @@ state_init_2_85b0:
 8787: A6 C0       LDA    ,U+
 8789: A7 E2       STA    ,-S		; [local]
 878B: A6 C0       LDA    ,U+
-878D: ED A1       STD    ,Y++
+878D: ED A1       STD    ,Y++		; [video_address_word]
 878F: 6A E4       DEC    ,S		; [local]
 8791: 26 F8       BNE    $878B
 8793: A6 E0       LDA    ,S+		; [local]
@@ -913,7 +915,7 @@ state_init_2_85b0:
 879E: A6 C0       LDA    ,U+
 87A0: A7 E2       STA    ,-S		; [local]
 87A2: A6 C0       LDA    ,U+
-87A4: ED A1       STD    ,Y++
+87A4: ED A1       STD    ,Y++		; [video_address_word]
 87A6: 6A E4       DEC    ,S		; [local]
 87A8: 26 F8       BNE    $87A2
 87AA: A6 E0       LDA    ,S+		; [local]
@@ -923,7 +925,7 @@ state_init_2_85b0:
 87B5: A6 C0       LDA    ,U+
 87B7: A7 E2       STA    ,-S		; [local]
 87B9: A6 C0       LDA    ,U+
-87BB: ED A1       STD    ,Y++
+87BB: ED A1       STD    ,Y++		; [video_address_word]
 87BD: 6A E4       DEC    ,S		; [local]
 87BF: 26 F8       BNE    $87B9
 87C1: A6 E0       LDA    ,S+		; [local]
@@ -933,7 +935,7 @@ state_init_2_85b0:
 87CC: A6 C0       LDA    ,U+
 87CE: A7 E2       STA    ,-S		; [local]
 87D0: A6 C0       LDA    ,U+
-87D2: ED A1       STD    ,Y++
+87D2: ED A1       STD    ,Y++		; [video_address_word]
 87D4: 6A E4       DEC    ,S		; [local]
 87D6: 26 F8       BNE    $87D0
 87D8: A6 E0       LDA    ,S+		; [local]
@@ -943,7 +945,7 @@ state_init_2_85b0:
 87E3: A6 C0       LDA    ,U+
 87E5: A7 E2       STA    ,-S		; [local]
 87E7: A6 C0       LDA    ,U+
-87E9: ED A1       STD    ,Y++
+87E9: ED A1       STD    ,Y++		; [video_address_word]
 87EB: 6A E4       DEC    ,S		; [local]
 87ED: 26 F8       BNE    $87E7
 87EF: A6 E0       LDA    ,S+		; [local]
@@ -953,7 +955,7 @@ state_init_2_85b0:
 87FA: A6 C0       LDA    ,U+
 87FC: A7 E2       STA    ,-S		; [local]
 87FE: A6 C0       LDA    ,U+
-8800: ED A1       STD    ,Y++
+8800: ED A1       STD    ,Y++		; [video_address_word]
 8802: 6A E4       DEC    ,S		; [local]
 8804: 26 F8       BNE    $87FE
 8806: A6 E0       LDA    ,S+		; [local]
@@ -963,7 +965,7 @@ state_init_2_85b0:
 8811: A6 C0       LDA    ,U+
 8813: A7 E2       STA    ,-S		; [local]
 8815: A6 C0       LDA    ,U+
-8817: ED A1       STD    ,Y++
+8817: ED A1       STD    ,Y++		; [video_address_word]
 8819: 6A E4       DEC    ,S		; [local]
 881B: 26 F8       BNE    $8815
 881D: A6 E0       LDA    ,S+		; [local]
@@ -973,7 +975,7 @@ state_init_2_85b0:
 8828: A6 C0       LDA    ,U+
 882A: A7 E2       STA    ,-S		; [local]
 882C: A6 C0       LDA    ,U+
-882E: ED A1       STD    ,Y++
+882E: ED A1       STD    ,Y++		; [video_address_word]
 8830: 6A E4       DEC    ,S		; [local]
 8832: 26 F8       BNE    $882C
 8834: A6 E0       LDA    ,S+		; [local]
@@ -983,7 +985,7 @@ state_init_2_85b0:
 883F: A6 C0       LDA    ,U+
 8841: A7 E2       STA    ,-S		; [local]
 8843: A6 C0       LDA    ,U+
-8845: ED A1       STD    ,Y++
+8845: ED A1       STD    ,Y++		; [video_address_word]
 8847: 6A E4       DEC    ,S		; [local]
 8849: 26 F8       BNE    $8843
 884B: A6 E0       LDA    ,S+		; [local]
@@ -996,7 +998,7 @@ state_init_2_85b0:
 8880: A6 C0       LDA    ,U+
 8882: A7 E2       STA    ,-S		; [local]
 8884: A6 C0       LDA    ,U+
-8886: ED A1       STD    ,Y++
+8886: ED A1       STD    ,Y++		; [video_address_word]
 8888: 6A E4       DEC    ,S		; [local]
 888A: 26 F8       BNE    $8884
 888C: A6 E0       LDA    ,S+		; [local]
@@ -1008,7 +1010,7 @@ state_init_2_85b0:
 8898: A6 C0       LDA    ,U+
 889A: A7 E2       STA    ,-S		; [local]
 889C: A6 C0       LDA    ,U+
-889E: ED A1       STD    ,Y++
+889E: ED A1       STD    ,Y++		; [video_address_word]
 88A0: 6A E4       DEC    ,S		; [local]
 88A2: 26 F8       BNE    $889C
 88A4: A6 E0       LDA    ,S+		; [local]
@@ -1019,7 +1021,7 @@ state_init_2_85b0:
 88B0: A6 C0       LDA    ,U+
 88B2: A7 E2       STA    ,-S		; [local]
 88B4: A6 C0       LDA    ,U+
-88B6: ED A1       STD    ,Y++
+88B6: ED A1       STD    ,Y++		; [video_address_word]
 88B8: 6A E4       DEC    ,S		; [local]
 88BA: 26 F8       BNE    $88B4
 88BC: A6 E0       LDA    ,S+		; [local]
@@ -1030,7 +1032,7 @@ state_init_2_85b0:
 88C8: A6 C0       LDA    ,U+
 88CA: A7 E2       STA    ,-S    ; [local]
 88CC: A6 C0       LDA    ,U+
-88CE: ED A1       STD    ,Y++
+88CE: ED A1       STD    ,Y++		; [video_address_word]
 88D0: 6A E4       DEC    ,S    ; [local]
 88D2: 26 F8       BNE    $88CC
 88D4: A6 E0       LDA    ,S+    ; [local]
@@ -1041,7 +1043,7 @@ state_init_2_85b0:
 88E0: A6 C0       LDA    ,U+
 88E2: A7 E2       STA    ,-S    ; [local]
 88E4: A6 C0       LDA    ,U+
-88E6: ED A1       STD    ,Y++
+88E6: ED A1       STD    ,Y++		; [video_address_word]
 88E8: 6A E4       DEC    ,S    ; [local]
 88EA: 26 F8       BNE    $88E4
 88EC: A6 E0       LDA    ,S+    ; [local]
@@ -1052,7 +1054,7 @@ state_init_2_85b0:
 88F8: A6 C0       LDA    ,U+
 88FA: A7 E2       STA    ,-S    ; [local]
 88FC: A6 C0       LDA    ,U+
-88FE: ED A1       STD    ,Y++
+88FE: ED A1       STD    ,Y++		; [video_address_word]
 8900: 6A E4       DEC    ,S    ; [local]
 8902: 26 F8       BNE    $88FC
 8904: A6 E0       LDA    ,S+    ; [local]
@@ -1063,7 +1065,7 @@ state_init_2_85b0:
 8910: A6 C0       LDA    ,U+
 8912: A7 E2       STA    ,-S    ; [local]
 8914: A6 C0       LDA    ,U+
-8916: ED A1       STD    ,Y++
+8916: ED A1       STD    ,Y++		; [video_address_word]
 8918: 6A E4       DEC    ,S    ; [local]
 891A: 26 F8       BNE    $8914
 891C: A6 E0       LDA    ,S+    ; [local]
@@ -1074,7 +1076,7 @@ state_init_2_85b0:
 8928: A6 C0       LDA    ,U+
 892A: A7 E2       STA    ,-S    ; [local]
 892C: A6 C0       LDA    ,U+
-892E: ED A1       STD    ,Y++
+892E: ED A1       STD    ,Y++		; [video_address_word]
 8930: 6A E4       DEC    ,S    ; [local]
 8932: 26 F8       BNE    $892C
 8934: A6 E0       LDA    ,S+    ; [local]
@@ -1122,7 +1124,7 @@ state_init_2_85b0:
 8993: A6 C0       LDA    ,U+
 8995: A7 E2       STA    ,-S    ; [local]
 8997: A6 C0       LDA    ,U+
-8999: ED A1       STD    ,Y++
+8999: ED A1       STD    ,Y++		; [video_address_word]
 899B: 6A E4       DEC    ,S    ; [local]
 899D: 26 F8       BNE    $8997
 899F: A6 E0       LDA    ,S+    ; [local]
@@ -1133,7 +1135,7 @@ state_init_2_85b0:
 89AC: A6 C0       LDA    ,U+
 89AE: A7 E2       STA    ,-S    ; [local]
 89B0: A6 C0       LDA    ,U+
-89B2: ED A1       STD    ,Y++
+89B2: ED A1       STD    ,Y++		; [video_address_word]
 89B4: 6A E4       DEC    ,S    ; [local]
 89B6: 26 F8       BNE    $89B0
 89B8: A6 E0       LDA    ,S+    ; [local]
@@ -1151,7 +1153,7 @@ state_init_2_85b0:
 89D7: A6 C0       LDA    ,U+
 89D9: A7 E2       STA    ,-S    ; [local]
 89DB: A6 C0       LDA    ,U+
-89DD: ED A1       STD    ,Y++
+89DD: ED A1       STD    ,Y++		; [video_address_word]
 89DF: 6A E4       DEC    ,S    ; [local]
 89E1: 26 F8       BNE    $89DB
 89E3: A6 E0       LDA    ,S+    ; [local]
@@ -1162,7 +1164,7 @@ state_init_2_85b0:
 89F0: A6 C0       LDA    ,U+
 89F2: A7 E2       STA    ,-S    ; [local]
 89F4: A6 C0       LDA    ,U+
-89F6: ED A1       STD    ,Y++
+89F6: ED A1       STD    ,Y++		; [video_address_word]
 89F8: 6A E4       DEC    ,S    ; [local]
 89FA: 26 F8       BNE    $89F4
 89FC: A6 E0       LDA    ,S+    ; [local]
@@ -1174,7 +1176,7 @@ state_init_2_85b0:
 8A0C: A6 C0       LDA    ,U+
 8A0E: A7 E2       STA    ,-S    ; [local]
 8A10: A6 C0       LDA    ,U+
-8A12: ED A1       STD    ,Y++
+8A12: ED A1       STD    ,Y++		; [video_address_word]
 8A14: 6A E4       DEC    ,S    ; [local]
 8A16: 26 F8       BNE    $8A10
 8A18: A6 E0       LDA    ,S+    ; [local]
@@ -1185,7 +1187,7 @@ state_init_2_85b0:
 8A25: A6 C0       LDA    ,U+
 8A27: A7 E2       STA    ,-S    ; [local]
 8A29: A6 C0       LDA    ,U+
-8A2B: ED A1       STD    ,Y++
+8A2B: ED A1       STD    ,Y++		; [video_address_word]
 8A2D: 6A E4       DEC    ,S    ; [local]
 8A2F: 26 F8       BNE    $8A29
 8A31: A6 E0       LDA    ,S+    ; [local]
@@ -1197,7 +1199,7 @@ state_init_2_85b0:
 8A41: A6 C0       LDA    ,U+
 8A43: A7 E2       STA    ,-S    ; [local]
 8A45: A6 C0       LDA    ,U+
-8A47: ED A1       STD    ,Y++
+8A47: ED A1       STD    ,Y++		; [video_address_word]
 8A49: 6A E4       DEC    ,S    ; [local]
 8A4B: 26 F8       BNE    $8A45
 8A4D: A6 E0       LDA    ,S+    ; [local]
@@ -1208,7 +1210,7 @@ state_init_2_85b0:
 8A5A: A6 C0       LDA    ,U+
 8A5C: A7 E2       STA    ,-S    ; [local]
 8A5E: A6 C0       LDA    ,U+
-8A60: ED A1       STD    ,Y++
+8A60: ED A1       STD    ,Y++		; [video_address_word]
 8A62: 6A E4       DEC    ,S    ; [local]
 8A64: 26 F8       BNE    $8A5E
 8A66: A6 E0       LDA    ,S+    ; [local]
@@ -1228,7 +1230,7 @@ state_init_2_85b0:
 8A89: A6 C0       LDA    ,U+
 8A8B: A7 E2       STA    ,-S    ; [local]
 8A8D: A6 C0       LDA    ,U+
-8A8F: ED A1       STD    ,Y++
+8A8F: ED A1       STD    ,Y++		; [video_address_word]
 8A91: 6A E4       DEC    ,S    ; [local]
 8A93: 26 F8       BNE    $8A8D
 8A95: A6 E0       LDA    ,S+    ; [local]
@@ -1239,7 +1241,7 @@ state_init_2_85b0:
 8AA2: A6 C0       LDA    ,U+
 8AA4: A7 E2       STA    ,-S    ; [local]
 8AA6: A6 C0       LDA    ,U+
-8AA8: ED A1       STD    ,Y++
+8AA8: ED A1       STD    ,Y++		; [video_address_word]
 8AAA: 6A E4       DEC    ,S    ; [local]
 8AAC: 26 F8       BNE    $8AA6
 8AAE: A6 E0       LDA    ,S+    ; [local]
@@ -1251,7 +1253,7 @@ state_init_2_85b0:
 8ABE: A6 C0       LDA    ,U+
 8AC0: A7 E2       STA    ,-S    ; [local]
 8AC2: A6 C0       LDA    ,U+
-8AC4: ED A1       STD    ,Y++
+8AC4: ED A1       STD    ,Y++		; [video_address_word]
 8AC6: 6A E4       DEC    ,S    ; [local]
 8AC8: 26 F8       BNE    $8AC2
 8ACA: A6 E0       LDA    ,S+    ; [local]
@@ -1262,7 +1264,7 @@ state_init_2_85b0:
 8AD7: A6 C0       LDA    ,U+
 8AD9: A7 E2       STA    ,-S    ; [local]
 8ADB: A6 C0       LDA    ,U+
-8ADD: ED A1       STD    ,Y++
+8ADD: ED A1       STD    ,Y++		; [video_address_word]
 8ADF: 6A E4       DEC    ,S    ; [local]
 8AE1: 26 F8       BNE    $8ADB
 8AE3: A6 E0       LDA    ,S+    ; [local]
@@ -1355,7 +1357,7 @@ state_init_2_85b0:
 8BB6: A6 C0       LDA    ,U+
 8BB8: A7 E2       STA    ,-S    ; [local]
 8BBA: A6 C0       LDA    ,U+
-8BBC: ED A1       STD    ,Y++
+8BBC: ED A1       STD    ,Y++		; [video_address_word]
 8BBE: 6A E4       DEC    ,S    ; [local]
 8BC0: 26 F8       BNE    $8BBA
 8BC2: A6 E0       LDA    ,S+    ; [local]
@@ -1377,7 +1379,7 @@ state_init_2_85b0:
 8BF0: A6 C0       LDA    ,U+
 8BF2: A7 E2       STA    ,-S    ; [local]
 8BF4: A6 C0       LDA    ,U+
-8BF6: ED A1       STD    ,Y++
+8BF6: ED A1       STD    ,Y++		; [video_address_word]
 8BF8: 6A E4       DEC    ,S    ; [local]
 8BFA: 26 F8       BNE    $8BF4
 8BFC: A6 E0       LDA    ,S+    ; [local]
@@ -1397,7 +1399,7 @@ state_init_2_85b0:
 8C23: A6 C0       LDA    ,U+
 8C25: A7 E2       STA    ,-S    ; [local]
 8C27: A6 C0       LDA    ,U+
-8C29: ED A1       STD    ,Y++
+8C29: ED A1       STD    ,Y++		; [video_address_word]
 8C2B: 6A E4       DEC    ,S    ; [local]
 8C2D: 26 F8       BNE    $8C27
 8C2F: A6 E0       LDA    ,S+    ; [local]
@@ -1415,19 +1417,19 @@ state_init_2_85b0:
 8C4E: 26 13       BNE    $8C63
 8C50: 4C          INCA
 8C51: E6 86       LDB    A,X
-8C53: F7 62 00    STB    $6200
+8C53: F7 62 00    STB    unknown_6200
 8C56: 7C 54 2A    INC    $542A
 8C59: B6 54 2A    LDA    $542A
 8C5C: 8A C0       ORA    #$C0
-8C5E: B7 60 00    STA    $6000
+8C5E: B7 60 00    STA    unknown_6000
 8C61: 20 11       BRA    $8C74
 8C63: 4C          INCA
 8C64: E6 86       LDB    A,X
-8C66: F7 66 00    STB    $6600
+8C66: F7 66 00    STB    unknown_6600
 8C69: 7C 54 30    INC    $5430
 8C6C: B6 54 30    LDA    $5430
 8C6F: 8A C0       ORA    #$C0
-8C71: B7 64 00    STA    $6400
+8C71: B7 64 00    STA    unknown_6400
 8C74: B6 42 68    LDA    $4268
 8C77: 26 01       BNE    $8C7A
 8C79: 39          RTS
@@ -1452,7 +1454,7 @@ state_init_2_85b0:
 8CA2: 86 01       LDA    #$01
 8CA4: 20 01       BRA    $8CA7
 8CA6: 4F          CLRA
-8CA7: ED C1       STD    ,U++
+8CA7: ED C1       STD    ,U++		; [video_address_word]
 8CA9: 7A 54 2D    DEC    $542D
 8CAC: 26 ED       BNE    $8C9B
 8CAE: 39          RTS
@@ -1481,10 +1483,10 @@ state_init_2_85b0:
 8CDD: 26 02       BNE    $8CE1
 8CDF: 86 FF       LDA    #$FF
 8CE1: C6 FC       LDB    #$FC
-8CE3: ED C1       STD    ,U++
+8CE3: ED C1       STD    ,U++		; [video_address_word]
 8CE5: B6 54 2D    LDA    $542D
 8CE8: 84 0F       ANDA   #$0F
-8CEA: ED C4       STD    ,U
+8CEA: ED C4       STD    ,U		; [video_address_word]
 8CEC: 39          RTS
 
 title_screen_8f10:
@@ -1528,7 +1530,7 @@ title_screen_8f10:
 8F62: A6 C0       LDA    ,U+
 8F64: A7 E2       STA    ,-S    ; [local]
 8F66: A6 C0       LDA    ,U+
-8F68: ED A1       STD    ,Y++
+8F68: ED A1       STD    ,Y++		; [video_address_word]
 8F6A: 6A E4       DEC    ,S    ; [local]
 8F6C: 26 F8       BNE    $8F66
 8F6E: A6 E0       LDA    ,S+    ; [local]
@@ -1538,7 +1540,7 @@ title_screen_8f10:
 8F79: A6 C0       LDA    ,U+
 8F7B: A7 E2       STA    ,-S    ; [local]
 8F7D: A6 C0       LDA    ,U+
-8F7F: ED A1       STD    ,Y++
+8F7F: ED A1       STD    ,Y++		; [video_address_word]
 8F81: 6A E4       DEC    ,S    ; [local]
 8F83: 26 F8       BNE    $8F7D
 8F85: A6 E0       LDA    ,S+    ; [local]
@@ -1548,7 +1550,7 @@ title_screen_8f10:
 8F90: A6 C0       LDA    ,U+
 8F92: A7 E2       STA    ,-S    ; [local]
 8F94: A6 C0       LDA    ,U+
-8F96: ED A1       STD    ,Y++
+8F96: ED A1       STD    ,Y++		; [video_address_word]
 8F98: 6A E4       DEC    ,S    ; [local]
 8F9A: 26 F8       BNE    $8F94
 8F9C: A6 E0       LDA    ,S+    ; [local]
@@ -1558,7 +1560,7 @@ title_screen_8f10:
 8FA7: A6 C0       LDA    ,U+
 8FA9: A7 E2       STA    ,-S    ; [local]
 8FAB: A6 C0       LDA    ,U+
-8FAD: ED A1       STD    ,Y++
+8FAD: ED A1       STD    ,Y++		; [video_address_word]
 8FAF: 6A E4       DEC    ,S    ; [local]
 8FB1: 26 F8       BNE    $8FAB
 8FB3: A6 E0       LDA    ,S+    ; [local]
@@ -1568,7 +1570,7 @@ title_screen_8f10:
 8FBE: A6 C0       LDA    ,U+
 8FC0: A7 E2       STA    ,-S    ; [local]
 8FC2: A6 C0       LDA    ,U+
-8FC4: ED A1       STD    ,Y++
+8FC4: ED A1       STD    ,Y++		; [video_address_word]
 8FC6: 6A E4       DEC    ,S    ; [local]
 8FC8: 26 F8       BNE    $8FC2
 8FCA: A6 E0       LDA    ,S+    ; [local]
@@ -1578,7 +1580,7 @@ title_screen_8f10:
 8FD5: A6 C0       LDA    ,U+
 8FD7: A7 E2       STA    ,-S    ; [local]
 8FD9: A6 C0       LDA    ,U+
-8FDB: ED A1       STD    ,Y++
+8FDB: ED A1       STD    ,Y++		; [video_address_word]
 8FDD: 6A E4       DEC    ,S    ; [local]
 8FDF: 26 F8       BNE    $8FD9
 8FE1: A6 E0       LDA    ,S+    ; [local]
@@ -1968,7 +1970,7 @@ game_demo_90fb:
 9313: A6 C0       LDA    ,U+
 9315: A7 E2       STA    ,-S    ; [local]
 9317: A6 C0       LDA    ,U+
-9319: ED A1       STD    ,Y++
+9319: ED A1       STD    ,Y++		; [video_address_word]
 931B: 6A E4       DEC    ,S    ; [local]
 931D: 26 F8       BNE    $9317
 931F: A6 E0       LDA    ,S+    ; [local]
@@ -1976,7 +1978,7 @@ game_demo_90fb:
 9323: 10 8E 32 10 LDY    #$3210
 9327: 86 FF       LDA    #$FF
 9329: F6 AF D6    LDB    $AFD6
-932C: A7 A1       STA    ,Y++
+932C: A7 A1       STA    ,Y++		; [video_address_word]
 932E: 5A          DECB
 932F: 26 FB       BNE    $932C
 9331: 20 2D       BRA    $9360
@@ -1989,7 +1991,7 @@ game_demo_90fb:
 9342: A6 C0       LDA    ,U+
 9344: A7 E2       STA    ,-S    ; [local]
 9346: A6 C0       LDA    ,U+
-9348: ED A1       STD    ,Y++
+9348: ED A1       STD    ,Y++		; [video_address_word]
 934A: 6A E4       DEC    ,S    ; [local]
 934C: 26 F8       BNE    $9346
 934E: A6 E0       LDA    ,S+    ; [local]
@@ -1997,7 +1999,7 @@ game_demo_90fb:
 9352: 10 8E 32 42 LDY    #$3242
 9356: 86 FF       LDA    #$FF
 9358: F6 AF E5    LDB    $AFE5
-935B: A7 A1       STA    ,Y++
+935B: A7 A1       STA    ,Y++		; [video_address_word]
 935D: 5A          DECB
 935E: 26 FB       BNE    $935B
 9360: 96 CE       LDA    $CE
@@ -2498,7 +2500,7 @@ game_demo_90fb:
 97DD: A6 C0       LDA    ,U+
 97DF: A7 E2       STA    ,-S    ; [local]
 97E1: A6 C0       LDA    ,U+
-97E3: ED A1       STD    ,Y++
+97E3: ED A1       STD    ,Y++		; [video_address_word]
 97E5: 6A E4       DEC    ,S    ; [local]
 97E7: 26 F8       BNE    $97E1
 97E9: A6 E0       LDA    ,S+    ; [local]
@@ -2508,7 +2510,7 @@ game_demo_90fb:
 97F4: A6 C0       LDA    ,U+
 97F6: A7 E2       STA    ,-S    ; [local]
 97F8: A6 C0       LDA    ,U+
-97FA: ED A1       STD    ,Y++
+97FA: ED A1       STD    ,Y++		; [video_address_word]
 97FC: 6A E4       DEC    ,S    ; [local]
 97FE: 26 F8       BNE    $97F8
 9800: A6 E0       LDA    ,S+    ; [local]
@@ -2518,7 +2520,7 @@ game_demo_90fb:
 980B: A6 C0       LDA    ,U+
 980D: A7 E2       STA    ,-S    ; [local]
 980F: A6 C0       LDA    ,U+
-9811: ED A1       STD    ,Y++
+9811: ED A1       STD    ,Y++		; [video_address_word]
 9813: 6A E4       DEC    ,S    ; [local]
 9815: 26 F8       BNE    $980F
 9817: A6 E0       LDA    ,S+    ; [local]
@@ -2528,7 +2530,7 @@ game_demo_90fb:
 9822: A6 C0       LDA    ,U+
 9824: A7 E2       STA    ,-S    ; [local]
 9826: A6 C0       LDA    ,U+
-9828: ED A1       STD    ,Y++
+9828: ED A1       STD    ,Y++		; [video_address_word]
 982A: 6A E4       DEC    ,S    ; [local]
 982C: 26 F8       BNE    $9826
 982E: A6 E0       LDA    ,S+    ; [local]
@@ -2538,7 +2540,7 @@ game_demo_90fb:
 9839: A6 C0       LDA    ,U+
 983B: A7 E2       STA    ,-S    ; [local]
 983D: A6 C0       LDA    ,U+
-983F: ED A1       STD    ,Y++
+983F: ED A1       STD    ,Y++		; [video_address_word]
 9841: 6A E4       DEC    ,S    ; [local]
 9843: 26 F8       BNE    $983D
 9845: A6 E0       LDA    ,S+    ; [local]
@@ -2548,7 +2550,7 @@ game_demo_90fb:
 9850: A6 C0       LDA    ,U+
 9852: A7 E2       STA    ,-S    ; [local]
 9854: A6 C0       LDA    ,U+
-9856: ED A1       STD    ,Y++
+9856: ED A1       STD    ,Y++		; [video_address_word]
 9858: 6A E4       DEC    ,S    ; [local]
 985A: 26 F8       BNE    $9854
 985C: A6 E0       LDA    ,S+    ; [local]
@@ -2558,7 +2560,7 @@ game_demo_90fb:
 9867: A6 C0       LDA    ,U+
 9869: A7 E2       STA    ,-S    ; [local]
 986B: A6 C0       LDA    ,U+
-986D: ED A1       STD    ,Y++
+986D: ED A1       STD    ,Y++		; [video_address_word]
 986F: 6A E4       DEC    ,S    ; [local]
 9871: 26 F8       BNE    $986B
 9873: A6 E0       LDA    ,S+    ; [local]
@@ -2678,7 +2680,7 @@ game_demo_90fb:
 9956: A6 C0       LDA    ,U+
 9958: A7 E2       STA    ,-S    ; [local]
 995A: A6 C0       LDA    ,U+
-995C: ED A1       STD    ,Y++
+995C: ED A1       STD    ,Y++		; [video_address_word]
 995E: 6A E4       DEC    ,S    ; [local]
 9960: 26 F8       BNE    $995A
 9962: A6 E0       LDA    ,S+    ; [local]
@@ -2688,7 +2690,7 @@ game_demo_90fb:
 996D: A6 C0       LDA    ,U+
 996F: A7 E2       STA    ,-S    ; [local]
 9971: A6 C0       LDA    ,U+
-9973: ED A1       STD    ,Y++
+9973: ED A1       STD    ,Y++		; [video_address_word]
 9975: 6A E4       DEC    ,S    ; [local]
 9977: 26 F8       BNE    $9971
 9979: A6 E0       LDA    ,S+    ; [local]
@@ -2698,7 +2700,7 @@ game_demo_90fb:
 9984: A6 C0       LDA    ,U+
 9986: A7 E2       STA    ,-S    ; [local]
 9988: A6 C0       LDA    ,U+
-998A: ED A1       STD    ,Y++
+998A: ED A1       STD    ,Y++		; [video_address_word]
 998C: 6A E4       DEC    ,S    ; [local]
 998E: 26 F8       BNE    $9988
 9990: A6 E0       LDA    ,S+    ; [local]
@@ -2726,7 +2728,7 @@ game_demo_90fb:
 99C6: A6 C0       LDA    ,U+
 99C8: A7 E2       STA    ,-S    ; [local]
 99CA: A6 C0       LDA    ,U+
-99CC: ED A1       STD    ,Y++
+99CC: ED A1       STD    ,Y++		; [video_address_word]
 99CE: 6A E4       DEC    ,S    ; [local]
 99D0: 26 F8       BNE    $99CA
 99D2: A6 E0       LDA    ,S+    ; [local]
@@ -2737,7 +2739,7 @@ game_demo_90fb:
 99DE: A6 C0       LDA    ,U+
 99E0: A7 E2       STA    ,-S    ; [local]
 99E2: A6 C0       LDA    ,U+
-99E4: ED A1       STD    ,Y++
+99E4: ED A1       STD    ,Y++		; [video_address_word]
 99E6: 6A E4       DEC    ,S    ; [local]
 99E8: 26 F8       BNE    $99E2
 99EA: A6 E0       LDA    ,S+    ; [local]
@@ -2754,25 +2756,25 @@ game_demo_90fb:
 9A01: 10 8E 38 9E LDY    #$389E
 9A05: 86 FF       LDA    #$FF
 9A07: F6 B0 82    LDB    $B082
-9A0A: A7 A1       STA    ,Y++
+9A0A: A7 A1       STA    ,Y++		; [video_address_word]
 9A0C: 5A          DECB
 9A0D: 26 FB       BNE    $9A0A
 9A0F: 10 8E 3C 1E LDY    #$3C1E
 9A13: 86 FF       LDA    #$FF
 9A15: F6 AF EF    LDB    $AFEF
-9A18: A7 A1       STA    ,Y++
+9A18: A7 A1       STA    ,Y++		; [video_address_word]
 9A1A: 5A          DECB
 9A1B: 26 FB       BNE    $9A18
 9A1D: 10 8E 3D 1A LDY    #$3D1A
 9A21: 86 FF       LDA    #$FF
 9A23: F6 AF FD    LDB    $AFFD
-9A26: A7 A1       STA    ,Y++
+9A26: A7 A1       STA    ,Y++		; [video_address_word]
 9A28: 5A          DECB
 9A29: 26 FB       BNE    $9A26
 9A2B: 10 8E 39 96 LDY    #$3996
 9A2F: 86 FF       LDA    #$FF
 9A31: F6 B0 90    LDB    $B090
-9A34: A7 A1       STA    ,Y++
+9A34: A7 A1       STA    ,Y++		; [video_address_word]
 9A36: 5A          DECB
 9A37: 26 FB       BNE    $9A34
 9A39: BD 90 85    JSR    $9085
@@ -2798,7 +2800,7 @@ game_demo_90fb:
 9A6A: A6 C0       LDA    ,U+
 9A6C: A7 E2       STA    ,-S    ; [local]
 9A6E: A6 C0       LDA    ,U+
-9A70: ED A1       STD    ,Y++
+9A70: ED A1       STD    ,Y++		; [video_address_word]
 9A72: 6A E4       DEC    ,S    ; [local]
 9A74: 26 F8       BNE    $9A6E
 9A76: A6 E0       LDA    ,S+    ; [local]
@@ -2808,7 +2810,7 @@ game_demo_90fb:
 9A81: A6 C0       LDA    ,U+
 9A83: A7 E2       STA    ,-S    ; [local]
 9A85: A6 C0       LDA    ,U+
-9A87: ED A1       STD    ,Y++
+9A87: ED A1       STD    ,Y++		; [video_address_word]
 9A89: 6A E4       DEC    ,S    ; [local]
 9A8B: 26 F8       BNE    $9A85
 9A8D: A6 E0       LDA    ,S+    ; [local]
@@ -2818,7 +2820,7 @@ game_demo_90fb:
 9A98: A6 C0       LDA    ,U+
 9A9A: A7 E2       STA    ,-S    ; [local]
 9A9C: A6 C0       LDA    ,U+
-9A9E: ED A1       STD    ,Y++
+9A9E: ED A1       STD    ,Y++		; [video_address_word]
 9AA0: 6A E4       DEC    ,S    ; [local]
 9AA2: 26 F8       BNE    $9A9C
 9AA4: A6 E0       LDA    ,S+    ; [local]
@@ -2828,7 +2830,7 @@ game_demo_90fb:
 9AAF: A6 C0       LDA    ,U+
 9AB1: A7 E2       STA    ,-S    ; [local]
 9AB3: A6 C0       LDA    ,U+
-9AB5: ED A1       STD    ,Y++
+9AB5: ED A1       STD    ,Y++		; [video_address_word]
 9AB7: 6A E4       DEC    ,S    ; [local]
 9AB9: 26 F8       BNE    $9AB3
 9ABB: A6 E0       LDA    ,S+    ; [local]
@@ -2838,7 +2840,7 @@ game_demo_90fb:
 9AC6: A6 C0       LDA    ,U+
 9AC8: A7 E2       STA    ,-S    ; [local]
 9ACA: A6 C0       LDA    ,U+
-9ACC: ED A1       STD    ,Y++
+9ACC: ED A1       STD    ,Y++		; [video_address_word]
 9ACE: 6A E4       DEC    ,S    ; [local]
 9AD0: 26 F8       BNE    $9ACA
 9AD2: A6 E0       LDA    ,S+    ; [local]
@@ -2876,13 +2878,13 @@ game_demo_90fb:
 9B1E: 10 8E 39 A8 LDY    #$39A8
 9B22: 86 FF       LDA    #$FF
 9B24: F6 B0 7D    LDB    $B07D
-9B27: A7 A1       STA    ,Y++
+9B27: A7 A1       STA    ,Y++		; [video_address_word]
 9B29: 5A          DECB
 9B2A: 26 FB       BNE    $9B27
 9B2C: 10 8E 3A 96 LDY    #$3A96
 9B30: 86 FF       LDA    #$FF
 9B32: F6 B0 90    LDB    $B090
-9B35: A7 A1       STA    ,Y++
+9B35: A7 A1       STA    ,Y++		; [video_address_word]
 9B37: 5A          DECB
 9B38: 26 FB       BNE    $9B35
 9B3A: 0F DB       CLR    $DB
@@ -2902,7 +2904,7 @@ game_demo_90fb:
 9B59: A6 C0       LDA    ,U+
 9B5B: A7 E2       STA    ,-S    ; [local]
 9B5D: A6 C0       LDA    ,U+
-9B5F: ED A1       STD    ,Y++
+9B5F: ED A1       STD    ,Y++		; [video_address_word]
 9B61: 6A E4       DEC    ,S    ; [local]
 9B63: 26 F8       BNE    $9B5D
 9B65: A6 E0       LDA    ,S+    ; [local]
@@ -2913,7 +2915,7 @@ game_demo_90fb:
 9B71: A6 C0       LDA    ,U+
 9B73: A7 E2       STA    ,-S    ; [local]
 9B75: A6 C0       LDA    ,U+
-9B77: ED A1       STD    ,Y++
+9B77: ED A1       STD    ,Y++		; [video_address_word]
 9B79: 6A E4       DEC    ,S    ; [local]
 9B7B: 26 F8       BNE    $9B75
 9B7D: A6 E0       LDA    ,S+    ; [local]
@@ -2926,37 +2928,37 @@ game_demo_90fb:
 9B8B: 10 8E 37 24 LDY    #$3724
 9B8F: 86 FF       LDA    #$FF
 9B91: F6 B0 57    LDB    $B057
-9B94: A7 A1       STA    ,Y++
+9B94: A7 A1       STA    ,Y++		; [video_address_word]
 9B96: 5A          DECB
 9B97: 26 FB       BNE    $9B94
 9B99: 10 8E 38 9A LDY    #$389A
 9B9D: 86 FF       LDA    #$FF
 9B9F: F6 B0 60    LDB    $B060
-9BA2: A7 A1       STA    ,Y++
+9BA2: A7 A1       STA    ,Y++		; [video_address_word]
 9BA4: 5A          DECB
 9BA5: 26 FB       BNE    $9BA2
 9BA7: 10 8E 39 A8 LDY    #$39A8
 9BAB: 86 FF       LDA    #$FF
 9BAD: F6 B0 7D    LDB    $B07D
-9BB0: A7 A1       STA    ,Y++
+9BB0: A7 A1       STA    ,Y++		; [video_address_word]
 9BB2: 5A          DECB
 9BB3: 26 FB       BNE    $9BB0
 9BB5: 10 8E 3C 1E LDY    #$3C1E
 9BB9: 86 FF       LDA    #$FF
 9BBB: F6 AF EF    LDB    $AFEF
-9BBE: A7 A1       STA    ,Y++
+9BBE: A7 A1       STA    ,Y++		; [video_address_word]
 9BC0: 5A          DECB
 9BC1: 26 FB       BNE    $9BBE
 9BC3: 10 8E 3D 1A LDY    #$3D1A
 9BC7: 86 FF       LDA    #$FF
 9BC9: F6 AF FD    LDB    $AFFD
-9BCC: A7 A1       STA    ,Y++
+9BCC: A7 A1       STA    ,Y++		; [video_address_word]
 9BCE: 5A          DECB
 9BCF: 26 FB       BNE    $9BCC
 9BD1: 10 8E 3A 96 LDY    #$3A96
 9BD5: 86 FF       LDA    #$FF
 9BD7: F6 B0 90    LDB    $B090
-9BDA: A7 A1       STA    ,Y++
+9BDA: A7 A1       STA    ,Y++		; [video_address_word]
 9BDC: 5A          DECB
 9BDD: 26 FB       BNE    $9BDA
 9BDF: BD 90 85    JSR    $9085
@@ -3133,7 +3135,7 @@ game_demo_90fb:
 9D75: A6 C0       LDA    ,U+
 9D77: A7 E2       STA    ,-S    ; [local]
 9D79: A6 C0       LDA    ,U+
-9D7B: ED A1       STD    ,Y++
+9D7B: ED A1       STD    ,Y++		; [video_address_word]
 9D7D: 6A E4       DEC    ,S    ; [local]
 9D7F: 26 F8       BNE    $9D79
 9D81: A6 E0       LDA    ,S+    ; [local]
@@ -3143,7 +3145,7 @@ game_demo_90fb:
 9D8C: A6 C0       LDA    ,U+
 9D8E: A7 E2       STA    ,-S    ; [local]
 9D90: A6 C0       LDA    ,U+
-9D92: ED A1       STD    ,Y++
+9D92: ED A1       STD    ,Y++		; [video_address_word]
 9D94: 6A E4       DEC    ,S    ; [local]
 9D96: 26 F8       BNE    $9D90
 9D98: A6 E0       LDA    ,S+    ; [local]
@@ -3163,7 +3165,7 @@ game_demo_90fb:
 9DB8: A6 C0       LDA    ,U+
 9DBA: A7 E2       STA    ,-S    ; [local]
 9DBC: A6 C0       LDA    ,U+
-9DBE: ED A1       STD    ,Y++
+9DBE: ED A1       STD    ,Y++		; [video_address_word]
 9DC0: 6A E4       DEC    ,S    ; [local]
 9DC2: 26 F8       BNE    $9DBC
 9DC4: A6 E0       LDA    ,S+    ; [local]
@@ -3173,7 +3175,7 @@ game_demo_90fb:
 9DCF: A6 C0       LDA    ,U+
 9DD1: A7 E2       STA    ,-S    ; [local]
 9DD3: A6 C0       LDA    ,U+
-9DD5: ED A1       STD    ,Y++
+9DD5: ED A1       STD    ,Y++		; [video_address_word]
 9DD7: 6A E4       DEC    ,S    ; [local]
 9DD9: 26 F8       BNE    $9DD3
 9DDB: A6 E0       LDA    ,S+    ; [local]
@@ -3192,7 +3194,7 @@ game_demo_90fb:
 9DF7: A6 C0       LDA    ,U+
 9DF9: A7 E2       STA    ,-S    ; [local]
 9DFB: A6 C0       LDA    ,U+
-9DFD: ED A1       STD    ,Y++
+9DFD: ED A1       STD    ,Y++		; [video_address_word]
 9DFF: 6A E4       DEC    ,S    ; [local]
 9E01: 26 F8       BNE    $9DFB
 9E03: A6 E0       LDA    ,S+    ; [local]
@@ -3202,7 +3204,7 @@ game_demo_90fb:
 9E0E: A6 C0       LDA    ,U+
 9E10: A7 E2       STA    ,-S    ; [local]
 9E12: A6 C0       LDA    ,U+
-9E14: ED A1       STD    ,Y++
+9E14: ED A1       STD    ,Y++		; [video_address_word]
 9E16: 6A E4       DEC    ,S    ; [local]
 9E18: 26 F8       BNE    $9E12
 9E1A: A6 E0       LDA    ,S+    ; [local]
@@ -3249,7 +3251,7 @@ game_demo_90fb:
 9E7C: A6 C0       LDA    ,U+
 9E7E: A7 E2       STA    ,-S    ; [local]
 9E80: A6 C0       LDA    ,U+
-9E82: ED A1       STD    ,Y++
+9E82: ED A1       STD    ,Y++		; [video_address_word]
 9E84: 6A E4       DEC    ,S    ; [local]
 9E86: 26 F8       BNE    $9E80
 9E88: A6 E0       LDA    ,S+    ; [local]
@@ -3259,7 +3261,7 @@ game_demo_90fb:
 9E93: A6 C0       LDA    ,U+
 9E95: A7 E2       STA    ,-S    ; [local]
 9E97: A6 C0       LDA    ,U+
-9E99: ED A1       STD    ,Y++
+9E99: ED A1       STD    ,Y++		; [video_address_word]
 9E9B: 6A E4       DEC    ,S    ; [local]
 9E9D: 26 F8       BNE    $9E97
 9E9F: A6 E0       LDA    ,S+    ; [local]
@@ -3269,7 +3271,7 @@ game_demo_90fb:
 9EAA: A6 C0       LDA    ,U+
 9EAC: A7 E2       STA    ,-S    ; [local]
 9EAE: A6 C0       LDA    ,U+
-9EB0: ED A1       STD    ,Y++
+9EB0: ED A1       STD    ,Y++		; [video_address_word]
 9EB2: 6A E4       DEC    ,S    ; [local]
 9EB4: 26 F8       BNE    $9EAE
 9EB6: A6 E0       LDA    ,S+    ; [local]
@@ -3279,7 +3281,7 @@ game_demo_90fb:
 9EC1: A6 C0       LDA    ,U+
 9EC3: A7 E2       STA    ,-S    ; [local]
 9EC5: A6 C0       LDA    ,U+
-9EC7: ED A1       STD    ,Y++
+9EC7: ED A1       STD    ,Y++		; [video_address_word]
 9EC9: 6A E4       DEC    ,S    ; [local]
 9ECB: 26 F8       BNE    $9EC5
 9ECD: A6 E0       LDA    ,S+    ; [local]
@@ -3289,7 +3291,7 @@ game_demo_90fb:
 9ED8: A6 C0       LDA    ,U+
 9EDA: A7 E2       STA    ,-S    ; [local]
 9EDC: A6 C0       LDA    ,U+
-9EDE: ED A1       STD    ,Y++
+9EDE: ED A1       STD    ,Y++		; [video_address_word]
 9EE0: 6A E4       DEC    ,S    ; [local]
 9EE2: 26 F8       BNE    $9EDC
 9EE4: A6 E0       LDA    ,S+    ; [local]
@@ -3299,7 +3301,7 @@ game_demo_90fb:
 9EEF: A6 C0       LDA    ,U+
 9EF1: A7 E2       STA    ,-S    ; [local]
 9EF3: A6 C0       LDA    ,U+
-9EF5: ED A1       STD    ,Y++
+9EF5: ED A1       STD    ,Y++		; [video_address_word]
 9EF7: 6A E4       DEC    ,S    ; [local]
 9EF9: 26 F8       BNE    $9EF3
 9EFB: A6 E0       LDA    ,S+    ; [local]
@@ -3338,7 +3340,7 @@ game_demo_90fb:
 9F3C: A6 C0       LDA    ,U+
 9F3E: A7 E2       STA    ,-S    ; [local]
 9F40: A6 C0       LDA    ,U+
-9F42: ED A1       STD    ,Y++
+9F42: ED A1       STD    ,Y++		; [video_address_word]
 9F44: 6A E4       DEC    ,S    ; [local]
 9F46: 26 F8       BNE    $9F40
 9F48: A6 E0       LDA    ,S+    ; [local]
@@ -3349,7 +3351,7 @@ game_demo_90fb:
 9F54: A6 C0       LDA    ,U+
 9F56: A7 E2       STA    ,-S    ; [local]
 9F58: A6 C0       LDA    ,U+
-9F5A: ED A1       STD    ,Y++
+9F5A: ED A1       STD    ,Y++		; [video_address_word]
 9F5C: 6A E4       DEC    ,S    ; [local]
 9F5E: 26 F8       BNE    $9F58
 9F60: A6 E0       LDA    ,S+    ; [local]
@@ -3376,7 +3378,7 @@ game_demo_90fb:
 9F92: A6 C0       LDA    ,U+
 9F94: A7 E2       STA    ,-S    ; [local]
 9F96: A6 C0       LDA    ,U+
-9F98: ED A1       STD    ,Y++
+9F98: ED A1       STD    ,Y++		; [video_address_word]
 9F9A: 6A E4       DEC    ,S    ; [local]
 9F9C: 26 F8       BNE    $9F96
 9F9E: A6 E0       LDA    ,S+    ; [local]
@@ -3387,7 +3389,7 @@ game_demo_90fb:
 9FAA: A6 C0       LDA    ,U+
 9FAC: A7 E2       STA    ,-S    ; [local]
 9FAE: A6 C0       LDA    ,U+
-9FB0: ED A1       STD    ,Y++
+9FB0: ED A1       STD    ,Y++		; [video_address_word]
 9FB2: 6A E4       DEC    ,S    ; [local]
 9FB4: 26 F8       BNE    $9FAE
 9FB6: A6 E0       LDA    ,S+    ; [local]
@@ -3410,7 +3412,7 @@ game_demo_90fb:
 9FDF: A6 C0       LDA    ,U+
 9FE1: A7 E2       STA    ,-S    ; [local]
 9FE3: A6 C0       LDA    ,U+
-9FE5: ED A1       STD    ,Y++
+9FE5: ED A1       STD    ,Y++		; [video_address_word]
 9FE7: 6A E4       DEC    ,S    ; [local]
 9FE9: 26 F8       BNE    $9FE3
 9FEB: A6 E0       LDA    ,S+    ; [local]
@@ -3498,7 +3500,7 @@ A084: FD 3F 98    STD    $3F98
 A087: 10 8E 36 A4 LDY    #$36A4
 A08B: 86 FF       LDA    #$FF
 A08D: F6 B0 57    LDB    $B057
-A090: A7 A1       STA    ,Y++
+A090: A7 A1       STA    ,Y++		; [video_address_word]
 A092: 5A          DECB
 A093: 26 FB       BNE    $A090
 A095: 96 0E       LDA    $0E
@@ -3508,37 +3510,37 @@ A09B: 39          RTS
 A09C: 10 8E 38 14 LDY    #$3814
 A0A0: 86 FF       LDA    #$FF
 A0A2: F6 B1 65    LDB    $B165
-A0A5: A7 A1       STA    ,Y++
+A0A5: A7 A1       STA    ,Y++		; [video_address_word]
 A0A7: 5A          DECB
 A0A8: 26 FB       BNE    $A0A5
 A0AA: 10 8E 39 2A LDY    #$392A
 A0AE: 86 FF       LDA    #$FF
 A0B0: F6 B1 7D    LDB    $B17D
-A0B3: A7 A1       STA    ,Y++
+A0B3: A7 A1       STA    ,Y++		; [video_address_word]
 A0B5: 5A          DECB
 A0B6: 26 FB       BNE    $A0B3
 A0B8: 10 8E 3A 14 LDY    #$3A14
 A0BC: 86 FF       LDA    #$FF
 A0BE: F6 B1 80    LDB    $B180
-A0C1: A7 A1       STA    ,Y++
+A0C1: A7 A1       STA    ,Y++		; [video_address_word]
 A0C3: 5A          DECB
 A0C4: 26 FB       BNE    $A0C1
 A0C6: 10 8E 3B 10 LDY    #$3B10
 A0CA: 86 FF       LDA    #$FF
 A0CC: F6 B1 9A    LDB    $B19A
-A0CF: A7 A1       STA    ,Y++
+A0CF: A7 A1       STA    ,Y++		; [video_address_word]
 A0D1: 5A          DECB
 A0D2: 26 FB       BNE    $A0CF
 A0D4: 10 8E 3D A2 LDY    #$3DA2
 A0D8: 86 FF       LDA    #$FF
 A0DA: F6 B0 3F    LDB    $B03F
-A0DD: A7 A1       STA    ,Y++
+A0DD: A7 A1       STA    ,Y++		; [video_address_word]
 A0DF: 5A          DECB
 A0E0: 26 FB       BNE    $A0DD
 A0E2: 10 8E 3C A2 LDY    #$3CA2
 A0E6: 86 FF       LDA    #$FF
 A0E8: F6 B0 BE    LDB    $B0BE
-A0EB: A7 A1       STA    ,Y++
+A0EB: A7 A1       STA    ,Y++		; [video_address_word]
 A0ED: 5A          DECB
 A0EE: 26 FB       BNE    $A0EB
 A0F0: 0C 04       INC    $04
@@ -3834,7 +3836,7 @@ A367: C6 FC       LDB    #$FC
 A369: A6 C0       LDA    ,U+
 A36B: A7 E2       STA    ,-S    ; [local]
 A36D: A6 C0       LDA    ,U+
-A36F: ED A1       STD    ,Y++
+A36F: ED A1       STD    ,Y++		; [video_address_word]
 A371: 6A E4       DEC    ,S    ; [local]
 A373: 26 F8       BNE    $A36D
 A375: A6 E0       LDA    ,S+    ; [local]
@@ -3844,7 +3846,7 @@ A37E: C6 FC       LDB    #$FC
 A380: A6 C0       LDA    ,U+
 A382: A7 E2       STA    ,-S    ; [local]
 A384: A6 C0       LDA    ,U+
-A386: ED A1       STD    ,Y++
+A386: ED A1       STD    ,Y++		; [video_address_word]
 A388: 6A E4       DEC    ,S    ; [local]
 A38A: 26 F8       BNE    $A384
 A38C: A6 E0       LDA    ,S+    ; [local]
@@ -3881,7 +3883,7 @@ A3C9: C6 FC       LDB    #$FC
 A3CB: A6 C0       LDA    ,U+
 A3CD: A7 E2       STA    ,-S    ; [local]
 A3CF: A6 C0       LDA    ,U+
-A3D1: ED A1       STD    ,Y++
+A3D1: ED A1       STD    ,Y++		; [video_address_word]
 A3D3: 6A E4       DEC    ,S    ; [local]
 A3D5: 26 F8       BNE    $A3CF
 A3D7: A6 E0       LDA    ,S+    ; [local]
@@ -3891,7 +3893,7 @@ A3E0: C6 FC       LDB    #$FC
 A3E2: A6 C0       LDA    ,U+
 A3E4: A7 E2       STA    ,-S    ; [local]
 A3E6: A6 C0       LDA    ,U+
-A3E8: ED A1       STD    ,Y++
+A3E8: ED A1       STD    ,Y++		; [video_address_word]
 A3EA: 6A E4       DEC    ,S    ; [local]
 A3EC: 26 F8       BNE    $A3E6
 A3EE: A6 E0       LDA    ,S+    ; [local]
@@ -4272,7 +4274,7 @@ A6FC: C6 FC       LDB    #$FC
 A6FE: A6 C0       LDA    ,U+
 A700: A7 E2       STA    ,-S    ; [local]
 A702: A6 C0       LDA    ,U+
-A704: ED A1       STD    ,Y++
+A704: ED A1       STD    ,Y++		; [video_address_word]
 A706: 6A E4       DEC    ,S    ; [local]
 A708: 26 F8       BNE    $A702
 A70A: A6 E0       LDA    ,S+    ; [local]
@@ -4282,7 +4284,7 @@ A713: C6 FC       LDB    #$FC
 A715: A6 C0       LDA    ,U+
 A717: A7 E2       STA    ,-S    ; [local]
 A719: A6 C0       LDA    ,U+
-A71B: ED A1       STD    ,Y++
+A71B: ED A1       STD    ,Y++		; [video_address_word]
 A71D: 6A E4       DEC    ,S    ; [local]
 A71F: 26 F8       BNE    $A719
 A721: A6 E0       LDA    ,S+    ; [local]
@@ -4292,7 +4294,7 @@ A72A: C6 FC       LDB    #$FC
 A72C: A6 C0       LDA    ,U+
 A72E: A7 E2       STA    ,-S    ; [local]
 A730: A6 C0       LDA    ,U+
-A732: ED A1       STD    ,Y++
+A732: ED A1       STD    ,Y++		; [video_address_word]
 A734: 6A E4       DEC    ,S    ; [local]
 A736: 26 F8       BNE    $A730
 A738: A6 E0       LDA    ,S+    ; [local]
@@ -4302,7 +4304,7 @@ A741: C6 FC       LDB    #$FC
 A743: A6 C0       LDA    ,U+
 A745: A7 E2       STA    ,-S    ; [local]
 A747: A6 C0       LDA    ,U+
-A749: ED A1       STD    ,Y++
+A749: ED A1       STD    ,Y++		; [video_address_word]
 A74B: 6A E4       DEC    ,S    ; [local]
 A74D: 26 F8       BNE    $A747
 A74F: A6 E0       LDA    ,S+    ; [local]
@@ -4312,7 +4314,7 @@ A758: C6 FC       LDB    #$FC
 A75A: A6 C0       LDA    ,U+
 A75C: A7 E2       STA    ,-S    ; [local]
 A75E: A6 C0       LDA    ,U+
-A760: ED A1       STD    ,Y++
+A760: ED A1       STD    ,Y++		; [video_address_word]
 A762: 6A E4       DEC    ,S    ; [local]
 A764: 26 F8       BNE    $A75E
 A766: A6 E0       LDA    ,S+    ; [local]
@@ -4322,7 +4324,7 @@ A76F: C6 FC       LDB    #$FC
 A771: A6 C0       LDA    ,U+
 A773: A7 E2       STA    ,-S    ; [local]
 A775: A6 C0       LDA    ,U+
-A777: ED A1       STD    ,Y++
+A777: ED A1       STD    ,Y++		; [video_address_word]
 A779: 6A E4       DEC    ,S    ; [local]
 A77B: 26 F8       BNE    $A775
 A77D: A6 E0       LDA    ,S+    ; [local]
@@ -4332,7 +4334,7 @@ A786: C6 FC       LDB    #$FC
 A788: A6 C0       LDA    ,U+
 A78A: A7 E2       STA    ,-S    ; [local]
 A78C: A6 C0       LDA    ,U+
-A78E: ED A1       STD    ,Y++
+A78E: ED A1       STD    ,Y++		; [video_address_word]
 A790: 6A E4       DEC    ,S    ; [local]
 A792: 26 F8       BNE    $A78C
 A794: A6 E0       LDA    ,S+    ; [local]
@@ -4342,7 +4344,7 @@ A79D: C6 FC       LDB    #$FC
 A79F: A6 C0       LDA    ,U+
 A7A1: A7 E2       STA    ,-S    ; [local]
 A7A3: A6 C0       LDA    ,U+
-A7A5: ED A1       STD    ,Y++
+A7A5: ED A1       STD    ,Y++		; [video_address_word]
 A7A7: 6A E4       DEC    ,S    ; [local]
 A7A9: 26 F8       BNE    $A7A3
 A7AB: A6 E0       LDA    ,S+    ; [local]
@@ -4352,7 +4354,7 @@ A7B4: C6 FC       LDB    #$FC
 A7B6: A6 C0       LDA    ,U+
 A7B8: A7 E2       STA    ,-S    ; [local]
 A7BA: A6 C0       LDA    ,U+
-A7BC: ED A1       STD    ,Y++
+A7BC: ED A1       STD    ,Y++		; [video_address_word]
 A7BE: 6A E4       DEC    ,S    ; [local]
 A7C0: 26 F8       BNE    $A7BA
 A7C2: A6 E0       LDA    ,S+    ; [local]
@@ -4362,7 +4364,7 @@ A7CB: C6 FC       LDB    #$FC
 A7CD: A6 C0       LDA    ,U+
 A7CF: A7 E2       STA    ,-S    ; [local]
 A7D1: A6 C0       LDA    ,U+
-A7D3: ED A1       STD    ,Y++
+A7D3: ED A1       STD    ,Y++		; [video_address_word]
 A7D5: 6A E4       DEC    ,S    ; [local]
 A7D7: 26 F8       BNE    $A7D1
 A7D9: A6 E0       LDA    ,S+    ; [local]
@@ -4372,7 +4374,7 @@ A7E2: C6 FC       LDB    #$FC
 A7E4: A6 C0       LDA    ,U+
 A7E6: A7 E2       STA    ,-S    ; [local]
 A7E8: A6 C0       LDA    ,U+
-A7EA: ED A1       STD    ,Y++
+A7EA: ED A1       STD    ,Y++		; [video_address_word]
 A7EC: 6A E4       DEC    ,S    ; [local]
 A7EE: 26 F8       BNE    $A7E8
 A7F0: A6 E0       LDA    ,S+    ; [local]
@@ -4416,7 +4418,7 @@ A83D: C6 FC       LDB    #$FC
 A83F: A6 C0       LDA    ,U+
 A841: A7 E2       STA    ,-S    ; [local]
 A843: A6 C0       LDA    ,U+
-A845: ED A1       STD    ,Y++
+A845: ED A1       STD    ,Y++		; [video_address_word]
 A847: 6A E4       DEC    ,S    ; [local]
 A849: 26 F8       BNE    $A843
 A84B: A6 E0       LDA    ,S+    ; [local]
@@ -4427,7 +4429,7 @@ A855: C6 FC       LDB    #$FC
 A857: A6 C0       LDA    ,U+
 A859: A7 E2       STA    ,-S    ; [local]
 A85B: A6 C0       LDA    ,U+
-A85D: ED A1       STD    ,Y++
+A85D: ED A1       STD    ,Y++		; [video_address_word]
 A85F: 6A E4       DEC    ,S    ; [local]
 A861: 26 F8       BNE    $A85B
 A863: A6 E0       LDA    ,S+    ; [local]
@@ -4494,7 +4496,7 @@ A8F5: C6 FC       LDB    #$FC
 A8F7: A6 C0       LDA    ,U+
 A8F9: A7 E2       STA    ,-S    ; [local]
 A8FB: A6 C0       LDA    ,U+
-A8FD: ED A1       STD    ,Y++
+A8FD: ED A1       STD    ,Y++		; [video_address_word]
 A8FF: 6A E4       DEC    ,S    ; [local]
 A901: 26 F8       BNE    $A8FB
 A903: A6 E0       LDA    ,S+    ; [local]
@@ -4504,7 +4506,7 @@ A90C: C6 E4       LDB    #$E4
 A90E: A6 C0       LDA    ,U+
 A910: A7 E2       STA    ,-S    ; [local]
 A912: A6 C0       LDA    ,U+
-A914: ED A1       STD    ,Y++
+A914: ED A1       STD    ,Y++		; [video_address_word]
 A916: 6A E4       DEC    ,S    ; [local]
 A918: 26 F8       BNE    $A912
 A91A: A6 E0       LDA    ,S+    ; [local]
@@ -4518,7 +4520,7 @@ A92A: C6 FC       LDB    #$FC
 A92C: A6 C0       LDA    ,U+
 A92E: A7 E2       STA    ,-S    ; [local]
 A930: A6 C0       LDA    ,U+
-A932: ED A1       STD    ,Y++
+A932: ED A1       STD    ,Y++		; [video_address_word]
 A934: 6A E4       DEC    ,S    ; [local]
 A936: 26 F8       BNE    $A930
 A938: A6 E0       LDA    ,S+    ; [local]
@@ -4528,7 +4530,7 @@ A941: C6 E4       LDB    #$E4
 A943: A6 C0       LDA    ,U+
 A945: A7 E2       STA    ,-S    ; [local]
 A947: A6 C0       LDA    ,U+
-A949: ED A1       STD    ,Y++
+A949: ED A1       STD    ,Y++		; [video_address_word]
 A94B: 6A E4       DEC    ,S    ; [local]
 A94D: 26 F8       BNE    $A947
 A94F: A6 E0       LDA    ,S+    ; [local]
@@ -4542,7 +4544,7 @@ A95D: 39          RTS
 A95E: 10 8E 37 22 LDY    #$3722
 A962: 86 FF       LDA    #$FF
 A964: F6 B0 C9    LDB    $B0C9
-A967: A7 A1       STA    ,Y++
+A967: A7 A1       STA    ,Y++		; [video_address_word]
 A969: 5A          DECB
 A96A: 26 FB       BNE    $A967
 A96C: 10 8E 38 22 LDY    #$3822
@@ -4554,25 +4556,25 @@ A978: 26 FB       BNE    $A975
 A97A: 10 8E 33 0A LDY    #$330A
 A97E: 86 FF       LDA    #$FF
 A980: F6 AF E9    LDB    $AFE9
-A983: A7 A1       STA    ,Y++
+A983: A7 A1       STA    ,Y++		; [video_address_word]
 A985: 5A          DECB
 A986: 26 FB       BNE    $A983
 A988: 10 8E 33 44 LDY    #$3344
 A98C: 86 FF       LDA    #$FF
 A98E: F6 AF E9    LDB    $AFE9
-A991: A7 A1       STA    ,Y++
+A991: A7 A1       STA    ,Y++		; [video_address_word]
 A993: 5A          DECB
 A994: 26 FB       BNE    $A991
 A996: 10 8E 3F 08 LDY    #$3F08
 A99A: 86 FF       LDA    #$FF
 A99C: F6 B1 13    LDB    $B113
-A99F: A7 A1       STA    ,Y++
+A99F: A7 A1       STA    ,Y++		; [video_address_word]
 A9A1: 5A          DECB
 A9A2: 26 FB       BNE    $A99F
 A9A4: 10 8E 3F 88 LDY    #$3F88
 A9A8: 86 FF       LDA    #$FF
 A9AA: F6 B1 08    LDB    $B108
-A9AD: A7 A1       STA    ,Y++
+A9AD: A7 A1       STA    ,Y++		; [video_address_word]
 A9AF: 5A          DECB
 A9B0: 26 FB       BNE    $A9AD
 A9B2: 10 8E 3F A2 LDY    #$3FA2
@@ -4584,7 +4586,7 @@ A9BE: 26 FB       BNE    $A9BB
 A9C0: 10 8E 3F BE LDY    #$3FBE
 A9C4: 86 FF       LDA    #$FF
 A9C6: F6 B1 5C    LDB    $B15C
-A9C9: A7 A1       STA    ,Y++
+A9C9: A7 A1       STA    ,Y++		; [video_address_word]
 A9CB: 5A          DECB
 A9CC: 26 FB       BNE    $A9C9
 A9CE: CE B0 11    LDU    #$B011
@@ -4593,7 +4595,7 @@ A9D5: C6 FC       LDB    #$FC
 A9D7: A6 C0       LDA    ,U+
 A9D9: A7 E2       STA    ,-S    ; [local]
 A9DB: A6 C0       LDA    ,U+
-A9DD: ED A1       STD    ,Y++
+A9DD: ED A1       STD    ,Y++		; [video_address_word]
 A9DF: 6A E4       DEC    ,S    ; [local]
 A9E1: 26 F8       BNE    $A9DB
 A9E3: A6 E0       LDA    ,S+    ; [local]
@@ -4764,7 +4766,7 @@ AB5D: C6 FC       LDB    #$FC
 AB5F: A6 C0       LDA    ,U+
 AB61: A7 E2       STA    ,-S    ; [local]
 AB63: A6 C0       LDA    ,U+
-AB65: ED A1       STD    ,Y++
+AB65: ED A1       STD    ,Y++		; [video_address_word]
 AB67: 6A E4       DEC    ,S    ; [local]
 AB69: 26 F8       BNE    $AB63
 AB6B: A6 E0       LDA    ,S+    ; [local]
@@ -4774,7 +4776,7 @@ AB74: C6 FC       LDB    #$FC
 AB76: A6 C0       LDA    ,U+
 AB78: A7 E2       STA    ,-S    ; [local]
 AB7A: A6 C0       LDA    ,U+
-AB7C: ED A1       STD    ,Y++
+AB7C: ED A1       STD    ,Y++		; [video_address_word]
 AB7E: 6A E4       DEC    ,S    ; [local]
 AB80: 26 F8       BNE    $AB7A
 AB82: A6 E0       LDA    ,S+    ; [local]
@@ -4784,7 +4786,7 @@ AB8B: C6 FC       LDB    #$FC
 AB8D: A6 C0       LDA    ,U+
 AB8F: A7 E2       STA    ,-S    ; [local]
 AB91: A6 C0       LDA    ,U+
-AB93: ED A1       STD    ,Y++
+AB93: ED A1       STD    ,Y++		; [video_address_word]
 AB95: 6A E4       DEC    ,S    ; [local]
 AB97: 26 F8       BNE    $AB91
 AB99: A6 E0       LDA    ,S+    ; [local]
@@ -4794,7 +4796,7 @@ ABA2: C6 FC       LDB    #$FC
 ABA4: A6 C0       LDA    ,U+
 ABA6: A7 E2       STA    ,-S    ; [local]
 ABA8: A6 C0       LDA    ,U+
-ABAA: ED A1       STD    ,Y++
+ABAA: ED A1       STD    ,Y++		; [video_address_word]
 ABAC: 6A E4       DEC    ,S    ; [local]
 ABAE: 26 F8       BNE    $ABA8
 ABB0: A6 E0       LDA    ,S+    ; [local]
@@ -4804,7 +4806,7 @@ ABB9: C6 FC       LDB    #$FC
 ABBB: A6 C0       LDA    ,U+
 ABBD: A7 E2       STA    ,-S    ; [local]
 ABBF: A6 C0       LDA    ,U+
-ABC1: ED A1       STD    ,Y++
+ABC1: ED A1       STD    ,Y++		; [video_address_word]
 ABC3: 6A E4       DEC    ,S    ; [local]
 ABC5: 26 F8       BNE    $ABBF
 ABC7: A6 E0       LDA    ,S+    ; [local]
@@ -4930,7 +4932,7 @@ ACDC: C6 FC       LDB    #$FC
 ACDE: A6 C0       LDA    ,U+
 ACE0: A7 E2       STA    ,-S    ; [local]
 ACE2: A6 C0       LDA    ,U+
-ACE4: ED A1       STD    ,Y++
+ACE4: ED A1       STD    ,Y++		; [video_address_word]
 ACE6: 6A E4       DEC    ,S    ; [local]
 ACE8: 26 F8       BNE    $ACE2
 ACEA: A6 E0       LDA    ,S+    ; [local]
@@ -4945,7 +4947,7 @@ ACFD: C6 FC       LDB    #$FC
 ACFF: A6 C0       LDA    ,U+
 AD01: A7 E2       STA    ,-S    ; [local]
 AD03: A6 C0       LDA    ,U+
-AD05: ED A1       STD    ,Y++
+AD05: ED A1       STD    ,Y++		; [video_address_word]
 AD07: 6A E4       DEC    ,S    ; [local]
 AD09: 26 F8       BNE    $AD03
 AD0B: A6 E0       LDA    ,S+    ; [local]
@@ -4955,7 +4957,7 @@ AD14: C6 FC       LDB    #$FC
 AD16: A6 C0       LDA    ,U+
 AD18: A7 E2       STA    ,-S    ; [local]
 AD1A: A6 C0       LDA    ,U+
-AD1C: ED A1       STD    ,Y++
+AD1C: ED A1       STD    ,Y++		; [video_address_word]
 AD1E: 6A E4       DEC    ,S    ; [local]
 AD20: 26 F8       BNE    $AD1A
 AD22: A6 E0       LDA    ,S+    ; [local]
@@ -4966,7 +4968,7 @@ AD2E: C6 FC       LDB    #$FC
 AD30: A6 C0       LDA    ,U+
 AD32: A7 E2       STA    ,-S    ; [local]
 AD34: A6 C0       LDA    ,U+
-AD36: ED A1       STD    ,Y++
+AD36: ED A1       STD    ,Y++		; [video_address_word]
 AD38: 6A E4       DEC    ,S    ; [local]
 AD3A: 26 F8       BNE    $AD34
 AD3C: A6 E0       LDA    ,S+    ; [local]
@@ -4976,7 +4978,7 @@ AD45: C6 FC       LDB    #$FC
 AD47: A6 C0       LDA    ,U+
 AD49: A7 E2       STA    ,-S    ; [local]
 AD4B: A6 C0       LDA    ,U+
-AD4D: ED A1       STD    ,Y++
+AD4D: ED A1       STD    ,Y++		; [video_address_word]
 AD4F: 6A E4       DEC    ,S    ; [local]
 AD51: 26 F8       BNE    $AD4B
 AD53: A6 E0       LDA    ,S+    ; [local]
@@ -5039,7 +5041,7 @@ ADD6: C6 FC       LDB    #$FC
 ADD8: A6 C0       LDA    ,U+
 ADDA: A7 E2       STA    ,-S    ; [local]
 ADDC: A6 C0       LDA    ,U+
-ADDE: ED A1       STD    ,Y++
+ADDE: ED A1       STD    ,Y++		; [video_address_word]
 ADE0: 6A E4       DEC    ,S    ; [local]
 ADE2: 26 F8       BNE    $ADDC
 ADE4: A6 E0       LDA    ,S+    ; [local]
@@ -5053,7 +5055,7 @@ ADF5: FD 3F 98    STD    $3F98
 ADF8: 10 8E 3F A2 LDY    #$3FA2
 ADFC: 86 FF       LDA    #$FF
 ADFE: F6 B1 1E    LDB    $B11E
-AE01: A7 A1       STA    ,Y++
+AE01: A7 A1       STA    ,Y++		; [video_address_word]
 AE03: 5A          DECB
 AE04: 26 FB       BNE    $AE01
 AE06: 10 8E 3F BE LDY    #$3FBE
@@ -5240,11 +5242,11 @@ AF89: 97 E3       STA    $E3
 AF8B: C5 20       BITB   #$20
 AF8D: 27 0A       BEQ    $AF99
 AF8F: C4 DF       ANDB   #$DF
-AF91: F7 66 00    STB    $6600
-AF94: B7 64 00    STA    $6400
+AF91: F7 66 00    STB    unknown_6600
+AF94: B7 64 00    STA    unknown_6400
 AF97: 20 E7       BRA    $AF80
-AF99: F7 62 00    STB    $6200
-AF9C: B7 60 00    STA    $6000
+AF99: F7 62 00    STB    unknown_6200
+AF9C: B7 60 00    STA    unknown_6000
 AF9F: 20 DF       BRA    $AF80
 AFA1: 39          RTS
 AFA2: 8E 53 A0    LDX    #$53A0
@@ -5259,11 +5261,11 @@ AFB1: 97 E7       STA    $E7
 AFB3: C5 20       BITB   #$20
 AFB5: 27 0A       BEQ    $AFC1
 AFB7: C4 DF       ANDB   #$DF
-AFB9: F7 66 00    STB    $6600
-AFBC: B7 64 00    STA    $6400
+AFB9: F7 66 00    STB    unknown_6600
+AFBC: B7 64 00    STA    unknown_6400
 AFBF: 20 E6       BRA    $AFA7
-AFC1: F7 62 00    STB    $6200
-AFC4: B7 60 00    STA    $6000
+AFC1: F7 62 00    STB    unknown_6200
+AFC4: B7 60 00    STA    unknown_6000
 AFC7: 20 DE       BRA    $AFA7
 AFC9: 96 E8       LDA    $E8
 AFCB: 91 E9       CMPA   $E9

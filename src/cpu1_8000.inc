@@ -567,19 +567,19 @@ get_address:
 	jcc		0f		| above 0x8000: ROM: OK
 	
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"accessing bank memory 0x6000-0x7FFF, PC in D6"
+	BREAKPOINT	"CPU1: accessing bank memory 0x6000-0x7FFF, PC in D6"
 	jra		0f
 0:
 	GET_UNCHECKED_ADDRESS_FUNC
 	rts
 get_bank_address:
-	cmp.w	#0x4000,a0
-	jcs		0f			| lower than 0x4000: error
-	cmp.l	#0x6000,a0
-	jcs		1f			| lower than 0x6000: OK
+	cmp.w	#0x6000,a0
+	jcs		0f			| lower than 0x6000: error
+	cmp.l	#0x8000,a0
+	jcs		1f			| lower than 0x8000: OK
 0:
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"get_bank_address out of 0x4000-0x5FFF range, PC in D6"	
+	BREAKPOINT	"CPU1: get_bank_address out of 0x6000-0x7FFF range, PC in D6"	
 1:
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	rts

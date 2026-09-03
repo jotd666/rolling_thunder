@@ -5318,7 +5318,7 @@ B1D9: D6 62       LDB    $62
 B1DB: E1 02       CMPB   $2,X
 B1DD: 2F D7       BLE    $B1B6
 B1DF: 39          RTS
-B1E0: A6 A0       LDA    ,Y+
+B1E0: A6 A0       LDA    ,Y+	; [bank_address]
 B1E2: 26 01       BNE    $B1E5
 B1E4: 39          RTS
 B1E5: 34 50       PSHS   U,X
@@ -5336,13 +5336,13 @@ B1FE: 25 EC       BCS    $B1EC
 B200: B7 80 00    STA    watchdog_8000
 B203: 35 D0       PULS   X,U,PC
 
-B205: EC A1       LDD    ,Y++
+B205: EC A1       LDD    ,Y++	; [bank_address]
 B207: 8A 80       ORA    #$80
 B209: A7 84       STA    ,X
 B20B: E7 07       STB    $7,X
-B20D: EC A1       LDD    ,Y++
+B20D: EC A1       LDD    ,Y++	; [bank_address]
 B20F: ED 02       STD    $2,X
-B211: A6 A0       LDA    ,Y+
+B211: A6 A0       LDA    ,Y+	; [bank_address]
 B213: A7 05       STA    $5,X
 B215: 86 80       LDA    #$80
 B217: A7 01       STA    $1,X
@@ -5352,21 +5352,21 @@ B21D: 6F 0E       CLR    $E,X
 B21F: CE E8 E0    LDU    #$E8E0
 B222: A6 84       LDA    ,X
 B224: 84 7C       ANDA   #$7C
-B226: A7 E2       STA    ,-S	; [local]
+B226: A7 E2       STA    ,-S	; [local] [video_address]
 B228: A6 02       LDA    $2,X
 B22A: 84 03       ANDA   #$03
 B22C: AB E0       ADDA   ,S+	; [local]
 B22E: 48          ASLA
-B22F: EC C6       LDD    A,U
+B22F: EC C6       LDD    A,U		; [rom_address]
 B231: A7 04       STA    $4,X
 B233: E7 06       STB    $6,X
 B235: CE E9 40    LDU    #$E940
 B238: A6 7F       LDA    -$1,S	; [local] 
 B23A: 44          LSRA
-B23B: EC C6       LDD    A,U
+B23B: EC C6       LDD    A,U		; [rom_address]
 B23D: ED 12       STD    -$E,X
 B23F: 96 62       LDA    $62
-B241: E6 A0       LDB    ,Y+
+B241: E6 A0       LDB    ,Y+	; [bank_address]
 B243: 93 80       SUBD   $80
 B245: 58          ASLB
 B246: 49          ROLA
@@ -5378,7 +5378,7 @@ B24B: 58          ASLB
 B24C: 49          ROLA
 B24D: ED 1A       STD    -$6,X
 B24F: 96 63       LDA    $63
-B251: E6 A0       LDB    ,Y+
+B251: E6 A0       LDB    ,Y+	; [bank_address]
 B253: 93 82       SUBD   $82
 B255: 58          ASLB
 B256: 49          ROLA

@@ -1,4 +1,5 @@
-[bank_address] tags don't work, look at b0a9 on cpu2
+B226 cpu2: S is 57xx inherited from cpu1, stack init doesn't work
+on cpu2 irq
 check that cpu1 & cpu2 irqs work together
 when $3000 contains the OSD data, we can start putting tiles on screen
 

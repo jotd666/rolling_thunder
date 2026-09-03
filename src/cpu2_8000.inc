@@ -448,24 +448,24 @@ okay\@:
 	GET_VIDEO_ADDRESS_FUNC
 	.endm
 
-	.macro	GET_SELECT_ADDRESS_FUNC
-	* checks address, slower but can auto-select rom, ram or bank
-	cmp.w	#0x6000,a0
-	jcc		1f
-	cmp.w	#0x4000,a0
-	jcs		1f
-	GET_UNCHECKED_BANK_ADDRESS_FUNC
-	jra		2f
-1:
-	cmp.l	#0x8000,a0
-	jcc		3f
-	GET_ADDRESS_FUNC
-	jra		2f
-3:
-	* ROM
-	GET_ROM_ADDRESS_FUNC
-2:	
-	.endm
+*	.macro	GET_SELECT_ADDRESS_FUNC
+*	* checks address, slower but can auto-select rom, video, ram or bank
+*	cmp.l	#0x8000,a0
+*	jcc		3f
+*	cmp.w	#0x6000,a0
+*	jcs		1f
+*	GET_UNCHECKED_BANK_ADDRESS_FUNC
+*	jra		2f
+*1:
+*	cmp.l	#0x8000,a0
+*	jcc		3f
+*	GET_ADDRESS_FUNC
+*	jra		2f
+*3:
+*	* ROM
+*	GET_ROM_ADDRESS_FUNC
+*2:	
+*	.endm
 	
 	.macro GET_REG_SELECT_ADDRESS	offset,reg
 	.ifeq	\offset
@@ -501,6 +501,12 @@ okay\@:
 	GET_ADDRESS_FUNC
 	.endm
 
+	.macro GET_REG_ROM_ADDRESS_FROM_REG	reg,reg2
+	move.l	\reg,a0
+	lea	(a0,\reg2\().l),a0
+	GET_ADDRESS_FUNC
+	.endm
+
 	.macro GET_REG_SELECT_ADDRESS_FROM_REG	reg,reg2
 	move.l	\reg,a0
 	lea	(a0,\reg2\().l),a0
@@ -509,6 +515,10 @@ okay\@:
 	.macro GET_ADDRESS	offset
 	lea	\offset,a0
 	GET_ADDRESS_FUNC
+	.endm
+	.macro GET_ROM_ADDRESS	offset
+	lea	\offset,a0
+	GET_ROM_ADDRESS_FUNC
 	.endm
 
 	.macro GET_INDIRECT_ADDRESS	offset
@@ -610,24 +620,23 @@ multiply_ab:
 get_address:
 	cmp.w	#0x2000,a0
 	jcs		0f		| below 0x2000: RAM: OK
-	cmp.w	#0x3000,a0
-	jcc		1f		| above 0x3000: continue
+	cmp.w	#0x6000,a0
+	jcc		1f		| above 0x6000: incorrect, continue for better error
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"RAM read: accessing videoram 0x2000-0x2FFF, PC in D6"
+	BREAKPOINT	"CPU2: accessing videoram 0x2000-0x5FFF, PC in D6"
 	jra		0f
 1:
-	cmp.w	#0x6000,a0
-	jcs		2f		| below 0x6000, continue
+	* this is incorrect, but is it ROM or bank?
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"RAM read: CPU2 accessing 0x6000-0xFFFF memory, PC in D6"
+	cmp.l	#0x8000,a0
+	jcs		3f
+
+	BREAKPOINT	"CPU2: accessing ROM 0x8000-0xFFFF memory, PC in D6"
+	jra		0f
+3:
+	BREAKPOINT	"CPU2: accessing bank 0x6000-0x7FFF memory, PC in D6"
 	jra		0f
 2:
-	cmp.w	#0x4000,a0
-	jcs		1f
-	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"RAM read: CPU2 accessing bank memory 0x4000-0x6000, PC in D6"
-	jra		0f
-1:
 
 0:
 	GET_UNCHECKED_ADDRESS_FUNC
@@ -659,14 +668,15 @@ get_rom_address:
 	GET_UNCHECKED_ROM_ADDRESS_FUNC
 	rts
 
+
 get_bank_address:
-	cmp.w	#0x4000,a0
-	jcs		0f			| lower than 0x4000: error
-	cmp.l	#0x6000,a0
-	jcs		1f			| lower than 0x6000: OK
+	cmp.w	#0x6000,a0
+	jcs		0f			| lower than 0x6000: error
+	cmp.l	#0x8000,a0
+	jcs		1f			| lower than 0x8000: OK
 0:
 	jbsr	osd_get_last_known_pc
-	BREAKPOINT	"bank read: CPU2 read out of 0x4000-0x5FFF range, PC in D6"	
+	BREAKPOINT	"CPU2: get_bank_address out of 0x6000-0x7FFF range, PC in D6"	
 1:
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	rts

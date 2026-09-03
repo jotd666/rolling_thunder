@@ -81,6 +81,8 @@ dreg_dict = {'a':'d0','b':'d1'}
 areg_dict = {'x':'a2','y':'a3','u':'a4'}
 
 jtre = re.compile("#jump_table_(\w+)")
+access_bank = re.compile("GET_ADDRESS\s+0x[6-7]\w\w\w",flags=re.I)
+
 
 def process_jump_table(line):
     m = jtre.search(line)
@@ -212,8 +214,18 @@ def check_stack_usage(lines,i):
 
     return line
 
-def handle_special_addresses(input_dict,lines,i):
+def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
     line = lines[i]
+
+    # pre-add video_address tag if we find a store instruction to an explicit 3000-3FFF address
+    if store_to_video.search(line):
+        line = line.rstrip() + " [video_address]\n"
+    # pre-add bank_address tag if we find a read instruction to an explicit 4000-5FFF address
+    if access_bank.search(line):
+        line = line.rstrip() + " [bank_address]\n"
+    if rom_address and rom_address.search(line):
+        line = line.rstrip() + " [rom_address]\n"
+
     if "GET_ADDRESS" in line:
         val = line.split()[1]
         is_stb = ": stb" in line
@@ -231,9 +243,9 @@ def handle_special_addresses(input_dict,lines,i):
     if "[unchecked_address" in line:
         # give me the original instruction
         line = line.replace("_ADDRESS","_UNCHECKED_ADDRESS")
-    elif "[select_address" in line:
-        # slower but rarely fails
-        line = line.replace("_ADDRESS","_SELECT_ADDRESS")
+    elif "[rom_address" in line:
+        # for cpu2 only
+        line = line.replace("_ADDRESS","_ROM_ADDRESS")
     elif "[video_address" in line:
         # give me the original instruction
         line = line.replace("_ADDRESS","_UNCHECKED_ADDRESS")
@@ -248,6 +260,10 @@ def handle_special_addresses(input_dict,lines,i):
                 else:
                     lines[j] = next_line+"\tVIDEO_BYTE_DIRTY | [...]\n"
                 break
+    if "[bank_address" in line:
+        # give me the original instruction
+        line = line.replace("_ADDRESS","_BANK_ADDRESS")
+
     return line
 
 
@@ -258,8 +274,10 @@ def doit(cpu):
     "watchdog_8000":"",
     "unknown_6e00":"",
     "unknown_6200":"",
+    "unknown_6400":"",
     "unknown_6600":"",
     "unknown_6c00":"",
+    "unknown_6000":"",
     "irq_ack_8400":"",
     "scroll_0_9000":"set_scroll_0",
     "scroll_1_9004":"set_scroll_1",
@@ -273,7 +291,9 @@ def doit(cpu):
     "bankswitch2_d803":"set_cpu2_bank",
     }
     sc = sc_cpu1 if cpu==1 else sc_cpu2
-
+    store_to_video = r"GET_ADDRESS\s+0x[0-3]\w\w\w" if sc_cpu1 else r"GET_ADDRESS\s+0x[2-5]\w\w\w"
+    store_to_video = re.compile(store_to_video,flags=re.I)
+    rom_address = None if cpu==1 else re.compile("GET_ADDRESS\s+0x[89A-F]\w\w\w",flags=re.I)
 
     game_specific = game_specific_cpu1 if cpu==1 else game_specific_cpu2
     # various dirty but at least automatic patches applying on the converted code
@@ -283,7 +303,7 @@ def doit(cpu):
     for i,line in enumerate(lines):
         address = get_line_address(line)
 
-        line = handle_special_addresses(input_dict,lines,i)
+        line = handle_special_addresses(input_dict,store_to_video,rom_address,lines,i)
         lines[i] = line
         line = check_stack_usage(lines,i)
         ###############################################
