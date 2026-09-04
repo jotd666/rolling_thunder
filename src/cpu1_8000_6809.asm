@@ -37,6 +37,8 @@ unknown_6400 = $6400
 unknown_6200 = $6200
 unknown_6600 = $6600
 unknown_6c00 = $6C00
+; written by mcu ??
+nb_credits_418a = $418a
 cpu_sync_5ff0 = $5ff0
 scroll_0_9000 = $9000
 scroll_1_9004 = $9004
@@ -1524,9 +1526,9 @@ title_screen_8f10:
 8F51: 0F 18       CLR    $18
 8F53: BD B4 34    JSR    $B434
 8F56: BD B4 B8    JSR    $B4B8
-8F59: CE AF D6    LDU    #$AFD6
-8F5C: 10 8E 32 10 LDY    #$3210
-8F60: C6 FC       LDB    #$FC
+8F59: CE AF D6    LDU    #$AFD6	; [breakpoint]
+8F5C: 10 8E 32 10 LDY    #$3210		; 1UP position
+8F60: C6 FC       LDB    #$FC		; attribute
 8F62: A6 C0       LDA    ,U+
 8F64: A7 E2       STA    ,-S    ; [local]
 8F66: A6 C0       LDA    ,U+
@@ -1535,7 +1537,7 @@ title_screen_8f10:
 8F6C: 26 F8       BNE    $8F66
 8F6E: A6 E0       LDA    ,S+    ; [local]
 8F70: CE AF DA    LDU    #$AFDA
-8F73: 10 8E 32 22 LDY    #$3222
+8F73: 10 8E 32 22 LDY    #$3222		; high score position
 8F77: C6 FC       LDB    #$FC
 8F79: A6 C0       LDA    ,U+
 8F7B: A7 E2       STA    ,-S    ; [local]
@@ -1603,7 +1605,7 @@ title_screen_8f10:
 900D: 26 02       BNE    $9011
 900F: 86 FF       LDA    #$FF
 9011: FD 3F 96    STD    $3F96
-9014: B6 41 8A    LDA    $418A
+9014: B6 41 8A    LDA    nb_credits_418a
 9017: FD 3F 98    STD    $3F98
 901A: 0C 04       INC    $04
 901C: 0F 06       CLR    $06
@@ -1866,7 +1868,7 @@ game_demo_90fb:
 9233: 26 02       BNE    $9237
 9235: 86 FF       LDA    #$FF
 9237: FD 3F 96    STD    $3F96
-923A: B6 41 8A    LDA    $418A
+923A: B6 41 8A    LDA    nb_credits_418a
 923D: FD 3F 98    STD    $3F98
 9240: 7D 42 3D    TST    $423D
 9243: 26 26       BNE    $926B
@@ -2672,7 +2674,7 @@ game_demo_90fb:
 9940: 26 02       BNE    $9944
 9942: 86 FF       LDA    #$FF
 9944: FD 3F 96    STD    $3F96
-9947: B6 41 8A    LDA    $418A
+9947: B6 41 8A    LDA    nb_credits_418a
 994A: FD 3F 98    STD    $3F98
 994D: CE B0 82    LDU    #$B082
 9950: 10 8E 38 9E LDY    #$389E
@@ -2717,8 +2719,8 @@ game_demo_90fb:
 99A9: 26 02       BNE    $99AD
 99AB: 86 FF       LDA    #$FF
 99AD: FD 3F 96    STD    $3F96
-99B0: B6 41 8A    LDA    $418A
-99B3: FD 3F 98    STD    $3F98
+99B0: B6 41 8A    LDA    nb_credits_418a
+99B3: FD 3F 98    STD    $3F98	; credit digit screen address
 99B6: B6 41 A5    LDA    $41A5
 99B9: 81 01       CMPA   #$01
 99BB: 22 18       BHI    $99D5
@@ -2792,7 +2794,7 @@ game_demo_90fb:
 9A54: 26 02       BNE    $9A58
 9A56: 86 FF       LDA    #$FF
 9A58: FD 3F 96    STD    $3F96
-9A5B: B6 41 8A    LDA    $418A
+9A5B: B6 41 8A    LDA    nb_credits_418a
 9A5E: FD 3F 98    STD    $3F98
 9A61: CE B0 57    LDU    #$B057
 9A64: 10 8E 37 24 LDY    #$3724
@@ -2869,7 +2871,7 @@ game_demo_90fb:
 9B07: 26 02       BNE    $9B0B
 9B09: 86 FF       LDA    #$FF
 9B0B: FD 3F 96    STD    $3F96
-9B0E: B6 41 8A    LDA    $418A
+9B0E: B6 41 8A    LDA    nb_credits_418a
 9B11: FD 3F 98    STD    $3F98
 9B14: 7D 41 8C    TST    $418C
 9B17: 26 67       BNE    $9B80
@@ -3240,7 +3242,7 @@ game_demo_90fb:
 9E60: 26 02       BNE    $9E64
 9E62: 86 FF       LDA    #$FF
 9E64: FD 3F 96    STD    $3F96
-9E67: B6 41 8A    LDA    $418A
+9E67: B6 41 8A    LDA    nb_credits_418a
 9E6A: FD 3F 98    STD    $3F98
 9E6D: 86 10       LDA    #$10
 9E6F: 97 DA       STA    $DA
@@ -3361,7 +3363,7 @@ game_demo_90fb:
 9F68: 26 02       BNE    $9F6C
 9F6A: 86 FF       LDA    #$FF
 9F6C: FD 3F 96    STD    $3F96
-9F6F: B6 41 8A    LDA    $418A
+9F6F: B6 41 8A    LDA    nb_credits_418a
 9F72: FD 3F 98    STD    $3F98
 9F75: BD A0 F9    JSR    $A0F9
 9F78: 27 56       BEQ    $9FD0
@@ -3399,7 +3401,7 @@ game_demo_90fb:
 9FBE: 26 02       BNE    $9FC2
 9FC0: 86 FF       LDA    #$FF
 9FC2: FD 3F 96    STD    $3F96
-9FC5: B6 41 8A    LDA    $418A
+9FC5: B6 41 8A    LDA    nb_credits_418a
 9FC8: FD 3F 98    STD    $3F98
 9FCB: BD A0 F9    JSR    $A0F9
 9FCE: 26 36       BNE    $A006
@@ -3495,7 +3497,7 @@ A077: B6 41 89    LDA    $4189
 A07A: 26 02       BNE    $A07E
 A07C: 86 FF       LDA    #$FF
 A07E: FD 3F 96    STD    $3F96
-A081: B6 41 8A    LDA    $418A
+A081: B6 41 8A    LDA    nb_credits_418a
 A084: FD 3F 98    STD    $3F98
 A087: 10 8E 36 A4 LDY    #$36A4
 A08B: 86 FF       LDA    #$FF
@@ -4255,6 +4257,7 @@ A6D4: 27 01       BEQ    $A6D7
 A6D6: 39          RTS
 A6D7: 0C CF       INC    $CF
 A6D9: 39          RTS
+
 A6DA: CE A6 E2    LDU    #jump_table_a6e2
 A6DD: 96 06       LDA    $06
 A6DF: 48          ASLA
@@ -4604,7 +4607,7 @@ A9E7: B6 41 89    LDA    $4189
 A9EA: 26 02       BNE    $A9EE
 A9EC: 86 FF       LDA    #$FF
 A9EE: FD 3F 96    STD    $3F96
-A9F1: B6 41 8A    LDA    $418A
+A9F1: B6 41 8A    LDA    nb_credits_418a
 A9F4: FD 3F 98    STD    $3F98
 A9F7: 0C 06       INC    $06
 A9F9: 0C 07       INC    $07
@@ -4614,7 +4617,7 @@ AA00: B6 41 89    LDA    $4189
 AA03: 26 02       BNE    $AA07
 AA05: 86 FF       LDA    #$FF
 AA07: FD 3F 96    STD    $3F96
-AA0A: B6 41 8A    LDA    $418A
+AA0A: B6 41 8A    LDA    nb_credits_418a
 AA0D: FD 3F 98    STD    $3F98
 AA10: BD 96 30    JSR    $9630
 AA13: 7D 54 31    TST    $5431
@@ -4628,7 +4631,7 @@ AA20: B6 41 89    LDA    $4189
 AA23: 26 02       BNE    $AA27
 AA25: 86 FF       LDA    #$FF
 AA27: FD 3F 96    STD    $3F96
-AA2A: B6 41 8A    LDA    $418A
+AA2A: B6 41 8A    LDA    nb_credits_418a
 AA2D: FD 3F 98    STD    $3F98
 AA30: BD B4 B8    JSR    $B4B8
 AA33: 86 05       LDA    #$05
@@ -4647,7 +4650,7 @@ AA4D: B6 41 89    LDA    $4189
 AA50: 26 02       BNE    $AA54
 AA52: 86 FF       LDA    #$FF
 AA54: FD 3F 96    STD    $3F96
-AA57: B6 41 8A    LDA    $418A
+AA57: B6 41 8A    LDA    nb_credits_418a
 AA5A: FD 3F 98    STD    $3F98
 AA5D: 0F D2       CLR    $D2
 AA5F: CC 00 00    LDD    #$0000
@@ -4664,7 +4667,7 @@ AA74: B6 41 89    LDA    $4189
 AA77: 26 02       BNE    $AA7B
 AA79: 86 FF       LDA    #$FF
 AA7B: FD 3F 96    STD    $3F96
-AA7E: B6 41 8A    LDA    $418A
+AA7E: B6 41 8A    LDA    nb_credits_418a
 AA81: FD 3F 98    STD    $3F98
 AA84: 0F E8       CLR    $E8
 AA86: BD 84 23    JSR    $8423
@@ -4676,7 +4679,7 @@ AA92: B6 41 89    LDA    $4189
 AA95: 26 02       BNE    $AA99
 AA97: 86 FF       LDA    #$FF
 AA99: FD 3F 96    STD    $3F96
-AA9C: B6 41 8A    LDA    $418A
+AA9C: B6 41 8A    LDA    nb_credits_418a
 AA9F: FD 3F 98    STD    $3F98
 AAA2: BD 84 8C    JSR    $848C
 AAA5: BD 83 CB    JSR    $83CB
@@ -4730,7 +4733,7 @@ AB08: B6 41 89    LDA    $4189
 AB0B: 26 02       BNE    $AB0F
 AB0D: 86 FF       LDA    #$FF
 AB0F: FD 3F 96    STD    $3F96
-AB12: B6 41 8A    LDA    $418A
+AB12: B6 41 8A    LDA    nb_credits_418a
 AB15: FD 3F 98    STD    $3F98
 AB18: 7F 41 8C    CLR    $418C
 AB1B: 86 10       LDA    #$10
@@ -4758,7 +4761,7 @@ AB46: B6 41 89    LDA    $4189
 AB49: 26 02       BNE    $AB4D
 AB4B: 86 FF       LDA    #$FF
 AB4D: FD 3F 96    STD    $3F96
-AB50: B6 41 8A    LDA    $418A
+AB50: B6 41 8A    LDA    nb_credits_418a
 AB53: FD 3F 98    STD    $3F98
 AB56: CE B0 57    LDU    #$B057
 AB59: 10 8E 37 24 LDY    #$3724
@@ -4834,7 +4837,7 @@ ABF6: B6 41 89    LDA    $4189
 ABF9: 26 02       BNE    $ABFD
 ABFB: 86 FF       LDA    #$FF
 ABFD: FD 3F 96    STD    $3F96
-AC00: B6 41 8A    LDA    $418A
+AC00: B6 41 8A    LDA    nb_credits_418a
 AC03: FD 3F 98    STD    $3F98
 AC06: 7D 41 A5    TST    $41A5
 AC09: 10 26 FF 24 LBNE   $AB31
@@ -5050,7 +5053,7 @@ ADE8: B6 41 89    LDA    $4189
 ADEB: 26 02       BNE    $ADEF
 ADED: 86 FF       LDA    #$FF
 ADEF: FD 3F 96    STD    $3F96
-ADF2: B6 41 8A    LDA    $418A
+ADF2: B6 41 8A    LDA    nb_credits_418a
 ADF5: FD 3F 98    STD    $3F98
 ADF8: 10 8E 3F A2 LDY    #$3FA2
 ADFC: 86 FF       LDA    #$FF
@@ -5080,7 +5083,7 @@ AE2F: B6 41 89    LDA    $4189
 AE32: 26 02       BNE    $AE36
 AE34: 86 FF       LDA    #$FF
 AE36: FD 3F 96    STD    $3F96
-AE39: B6 41 8A    LDA    $418A
+AE39: B6 41 8A    LDA    nb_credits_418a
 AE3C: FD 3F 98    STD    $3F98
 AE3F: 7D 43 80    TST    $4380
 AE42: 27 01       BEQ    $AE45
@@ -5093,7 +5096,7 @@ AE4C: B6 41 89    LDA    $4189
 AE4F: 26 02       BNE    $AE53
 AE51: 86 FF       LDA    #$FF
 AE53: FD 3F 96    STD    $3F96
-AE56: B6 41 8A    LDA    $418A
+AE56: B6 41 8A    LDA    nb_credits_418a
 AE59: FD 3F 98    STD    $3F98
 AE5C: 0C 06       INC    $06
 AE5E: 0C 07       INC    $07
@@ -5104,7 +5107,7 @@ AE68: B6 41 89    LDA    $4189
 AE6B: 26 02       BNE    $AE6F
 AE6D: 86 FF       LDA    #$FF
 AE6F: FD 3F 96    STD    $3F96
-AE72: B6 41 8A    LDA    $418A
+AE72: B6 41 8A    LDA    nb_credits_418a
 AE75: FD 3F 98    STD    $3F98
 AE78: BD 96 30    JSR    $9630
 AE7B: B6 54 31    LDA    $5431

@@ -945,6 +945,7 @@ demo_game:
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
 	clr.b	currently_running_cpu
+	BREAKPOINT	"boot"
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
 

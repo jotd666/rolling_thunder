@@ -1,3 +1,5 @@
+check video writes on real game, try to match amiga version (proper values?)
+cpu2 memory mapping possibly off
 
 check that cpu1 & cpu2 irqs work together
 when $3000 contains the OSD data, we can start putting tiles on screen
