@@ -25,8 +25,19 @@
 ;
 ;	map(0xa000, 0xa000).w(FUNC(namcos86_state::backcolor_w));
 
+
+; MAME is using an unusually high CPU interleave factor (800) to avoid hangs
+;  in rthunder. The two 6809 in this game synchronize using a semaphore at
+;  5606/5607 (CPU1) 1606/1607 (CPU2). CPU1 clears 5606, does some quick things,
+; and then increments 5606. While it does its quick things (which require
+;  about 40 clock cycles) it expects CPU2 to clear 5607.
+
 bg_tiles_address_0000 = $0
 bankswitch_shadow_19 = $19
+starting_area_c5 = $c5
+semaphore_06 = $06
+semaphore_07 = $07
+
 ; anything $68xx switches banks
 bankswitch_6800 = $6800
 irq_ack_8400 = $8400
@@ -37,7 +48,8 @@ unknown_6400 = $6400
 unknown_6200 = $6200
 unknown_6600 = $6600
 unknown_6c00 = $6C00
-; written by mcu ??
+; written by mcu at 118a (mcu master address for credits is $80)
+; as soon as this value is > 0 the "press start" screen appears
 nb_credits_418a = $418a
 cpu_sync_5ff0 = $5ff0
 scroll_0_9000 = $9000
@@ -45,6 +57,12 @@ scroll_1_9004 = $9004
 scroll_2_9400 = $9400
 scroll_3_9404 = $9404
 back_color_a000 = $A000
+
+; controls are booleans in this shared "custom" area (directions, jump, fire)
+; but not set or read by CPU1 ????
+controls_shared_ram_4276 = $4276
+jump_flag_4277 = $4277
+shoot_flag_4279 = $4279
 
 ; DP (56xx)
 
@@ -235,7 +253,7 @@ normal_start_8190:
 81A1: 0F DB       CLR    $DB
 81A3: 0F 02       CLR    cpu1_game_state_02
 81A5: 0F 04       CLR    $04
-81A7: 0F 06       CLR    $06
+81A7: 0F 06       CLR    semaphore_06
 81A9: 7F 41 8C    CLR    $418C
 81AC: 86 01       LDA    #$01
 81AE: B7 41 8D    STA    $418D
@@ -368,7 +386,7 @@ update_scroll_layers_821d:
 82BC: 26 03       BNE    $82C1
 82BE: 0F 0A       CLR    $0A
 82C0: 39          RTS
-82C1: 8E 42 76    LDX    #$4276
+82C1: 8E 42 76    LDX    #controls_shared_ram_4276
 82C4: 96 1E       LDA    $1E
 82C6: 26 02       BNE    $82CA
 82C8: 30 14       LEAX   -$C,X
@@ -475,7 +493,7 @@ state_init_8355:
 83C0: 97 95       STA    $95
 83C2: 0C 02       INC    cpu1_game_state_02
 83C4: 0F 04       CLR    $04
-83C6: 0F 06       CLR    $06
+83C6: 0F 06       CLR    semaphore_06
 83C8: 39          RTS
 
 clear_screen_83c9:
@@ -711,16 +729,16 @@ state_init_2_85b0:
 
 85C2: 0C 02       INC    cpu1_game_state_02
 85C4: 0F 04       CLR    $04
-85C6: 0F 06       CLR    $06
+85C6: 0F 06       CLR    semaphore_06
 85C8: 0C 03       INC    cpu2_game_state_03
 85CA: 0F 05       CLR    $05
-85CC: 0F 07       CLR    $07
+85CC: 0F 07       CLR    semaphore_07
 85CE: 7F 41 83    CLR    $4183
 85D1: 7E 83 C9    JMP    clear_screen_83c9
 
 85D8: 7F 54 2B    CLR    $542B
 85DB: 0C 04       INC    $04
-85DD: 0F 06       CLR    $06
+85DD: 0F 06       CLR    semaphore_06
 85DF: 39          RTS
 85E0: 8E 32 08    LDX    #$3208
 85E3: CE 32 88    LDU    #$3288
@@ -1363,7 +1381,7 @@ state_init_2_85b0:
 8BBE: 6A E4       DEC    ,S    ; [local]
 8BC0: 26 F8       BNE    $8BBA
 8BC2: A6 E0       LDA    ,S+    ; [local]
-8BC4: B6 42 76    LDA    $4276
+8BC4: B6 42 76    LDA    controls_shared_ram_4276
 8BC7: BA 42 6A    ORA    $426A
 8BCA: BA 42 78    ORA    $4278
 8BCD: BA 42 6C    ORA    $426C
@@ -1385,7 +1403,7 @@ state_init_2_85b0:
 8BF8: 6A E4       DEC    ,S    ; [local]
 8BFA: 26 F8       BNE    $8BF4
 8BFC: A6 E0       LDA    ,S+    ; [local]
-8BFE: B6 42 76    LDA    $4276
+8BFE: B6 42 76    LDA    controls_shared_ram_4276
 8C01: BA 42 6A    ORA    $426A
 8C04: BA 42 78    ORA    $4278
 8C07: BA 42 6C    ORA    $426C
@@ -1405,7 +1423,7 @@ state_init_2_85b0:
 8C2B: 6A E4       DEC    ,S    ; [local]
 8C2D: 26 F8       BNE    $8C27
 8C2F: A6 E0       LDA    ,S+    ; [local]
-8C31: B6 42 76    LDA    $4276
+8C31: B6 42 76    LDA    controls_shared_ram_4276
 8C34: BA 42 6A    ORA    $426A
 8C37: BA 42 78    ORA    $4278
 8C3A: BA 42 6C    ORA    $426C
@@ -1508,18 +1526,18 @@ title_screen_8f10:
 8F2A: 86 05       LDA    #$05
 8F2C: 97 02       STA    cpu1_game_state_02
 8F2E: 0F 04       CLR    $04
-8F30: 0F 06       CLR    $06
+8F30: 0F 06       CLR    semaphore_06
 8F32: 97 03       STA    cpu2_game_state_03
 8F34: 0F 05       CLR    $05
-8F36: 0F 07       CLR    $07
+8F36: 0F 07       CLR    semaphore_07
 8F38: 39          RTS
 8F39: B7 C0 00    STA    $C000
 8F3C: 0F 02       CLR    cpu1_game_state_02
 8F3E: 0F 04       CLR    $04
-8F40: 0F 06       CLR    $06
+8F40: 0F 06       CLR    semaphore_06
 8F42: 0F 03       CLR    cpu2_game_state_03
 8F44: 0F 05       CLR    $05
-8F46: 0F 07       CLR    $07
+8F46: 0F 07       CLR    semaphore_07
 8F48: 39          RTS
 
 8F4F: 0F D1       CLR    $D1
@@ -1608,18 +1626,19 @@ title_screen_8f10:
 9014: B6 41 8A    LDA    nb_credits_418a
 9017: FD 3F 98    STD    $3F98
 901A: 0C 04       INC    $04
-901C: 0F 06       CLR    $06
+901C: 0F 06       CLR    semaphore_06
 901E: 96 D1       LDA    $D1
 9020: 26 03       BNE    $9025
 9022: 7E 90 CC    JMP    $90CC
 9025: 7E D6 36    JMP    $D636
-9028: 0F 06       CLR    $06
+9028: 0F 06       CLR    semaphore_06
 902A: CC 00 00    LDD    #$0000
 902D: DD 88       STD    $88
 902F: DD 8A       STD    $8A
 9031: BD D8 36    JSR    $D836
-9034: 0C 06       INC    $06
-9036: 96 07       LDA    $07
+; inter-cpu sync
+9034: 0C 06       INC    semaphore_06
+9036: 96 07       LDA    semaphore_07
 9038: 81 01       CMPA   #$01
 903A: 26 FA       BNE    $9036
 903C: 39          RTS
@@ -1628,10 +1647,10 @@ title_screen_8f10:
 9043: 0C D1       INC    $D1
 9045: 0C 02       INC    cpu1_game_state_02
 9047: 0F 04       CLR    $04
-9049: 0F 06       CLR    $06
+9049: 0F 06       CLR    semaphore_06
 904B: 0C 03       INC    cpu2_game_state_03
 904D: 0F 05       CLR    $05
-904F: 0F 07       CLR    $07
+904F: 0F 07       CLR    semaphore_07
 9051: 39          RTS
 9052: 8E 3E A4    LDX    #$3EA4
 9055: CE 3F 24    LDU    #$3F24
@@ -1739,10 +1758,10 @@ game_demo_90fb:
 9114: B7 C0 00    STA    $C000		; [breakpoint]
 9117: 0F 02       CLR    cpu1_game_state_02
 9119: 0F 04       CLR    $04
-911B: 0F 06       CLR    $06
+911B: 0F 06       CLR    semaphore_06
 911D: 0F 03       CLR    cpu2_game_state_03
 911F: 0F 05       CLR    $05
-9121: 0F 07       CLR    $07
+9121: 0F 07       CLR    semaphore_07
 9123: 39          RTS
 
 9138: 86 40       LDA    #$40
@@ -1751,7 +1770,7 @@ game_demo_90fb:
 913E: 0F C4       CLR    $C4
 9140: 86 01       LDA    #$01
 9142: 97 C3       STA    $C3
-9144: 97 C5       STA    $C5
+9144: 97 C5       STA    starting_area_c5
 9146: CC 00 50    LDD    #$0050
 9149: DD CA       STD    $CA
 914B: CC 00 00    LDD    #$0000
@@ -1766,7 +1785,7 @@ game_demo_90fb:
 9160: DD 14       STD    $14
 9162: DD 15       STD    $15
 9164: 0C 04       INC    $04
-9166: 0F 06       CLR    $06
+9166: 0F 06       CLR    semaphore_06
 9168: 39          RTS
 9169: 8E 44 10    LDX    #$4410
 916C: 6F 15       CLR    -$B,X
@@ -1775,14 +1794,14 @@ game_demo_90fb:
 9172: 0F 0D       CLR    $0D
 9174: 6F 14       CLR    -$C,X
 9176: 0C 04       INC    $04
-9178: 0F 06       CLR    $06
+9178: 0F 06       CLR    semaphore_06
 917A: 39          RTS
-917B: 0F 06       CLR    $06
+917B: 0F 06       CLR    semaphore_06
 917D: CC 00 00    LDD    #$0000
 9180: DD 88       STD    $88
 9182: DD 8A       STD    $8A
-9184: 0C 06       INC    $06
-9186: 96 07       LDA    $07
+9184: 0C 06       INC    semaphore_06
+9186: 96 07       LDA    semaphore_07
 9188: 81 01       CMPA   #$01
 918A: 26 FA       BNE    $9186
 918C: 0D 18       TST    $18
@@ -1792,14 +1811,14 @@ game_demo_90fb:
 9194: 0D 91       TST    $91
 9196: 26 38       BNE    $91D0
 9198: BD B6 18    JSR    $B618
-919B: 0C 06       INC    $06
+919B: 0C 06       INC    semaphore_06
 919D: BD DA 88    JSR    $DA88
-91A0: 0C 06       INC    $06
+91A0: 0C 06       INC    semaphore_06
 91A2: BD D8 36    JSR    $D836
-91A5: 0C 06       INC    $06
+91A5: 0C 06       INC    semaphore_06
 91A7: BD D2 71    JSR    $D271
-91AA: 0C 06       INC    $06
-91AC: 96 07       LDA    $07
+91AA: 0C 06       INC    semaphore_06
+91AC: 96 07       LDA    semaphore_07
 91AE: 81 03       CMPA   #$03
 91B0: 25 FA       BCS    $91AC
 91B2: BD D3 85    JSR    $D385
@@ -1819,15 +1838,15 @@ game_demo_90fb:
 91D0: 0C 18       INC    $18
 91D2: 39          RTS
 91D3: 0C 04       INC    $04
-91D5: 0F 06       CLR    $06
+91D5: 0F 06       CLR    semaphore_06
 91D7: 0C 05       INC    $05
-91D9: 0F 07       CLR    $07
+91D9: 0F 07       CLR    semaphore_07
 91DB: 39          RTS
 91DC: 0F E8       CLR    $E8
 91DE: BD 84 E0    JSR    $84E0
 91E1: BD 84 F9    JSR    $84F9
 91E4: 0C 04       INC    $04
-91E6: 0F 06       CLR    $06
+91E6: 0F 06       CLR    semaphore_06
 91E8: 39          RTS
 91E9: 96 B3       LDA    $B3
 91EB: 91 B4       CMPA   $B4
@@ -1836,7 +1855,7 @@ game_demo_90fb:
 91F0: BD 84 23    JSR    $8423
 91F3: BD 84 BA    JSR    $84BA
 91F6: 0C 04       INC    $04
-91F8: 0F 06       CLR    $06
+91F8: 0F 06       CLR    semaphore_06
 91FA: 39          RTS
 91FB: 96 6E       LDA    $6E
 91FD: 91 6F       CMPA   $6F
@@ -1850,18 +1869,18 @@ game_demo_90fb:
 9210: 86 04       LDA    #$04
 9212: 97 02       STA    cpu1_game_state_02
 9214: 0F 04       CLR    $04
-9216: 0F 06       CLR    $06
+9216: 0F 06       CLR    semaphore_06
 9218: 97 03       STA    cpu2_game_state_03
 921A: 0F 05       CLR    $05
-921C: 0F 07       CLR    $07
+921C: 0F 07       CLR    semaphore_07
 921E: 39          RTS
 921F: 86 05       LDA    #$05
 9221: 97 02       STA    cpu1_game_state_02
 9223: 0F 04       CLR    $04
-9225: 0F 06       CLR    $06
+9225: 0F 06       CLR    semaphore_06
 9227: 97 03       STA    cpu2_game_state_03
 9229: 0F 05       CLR    $05
-922B: 0F 07       CLR    $07
+922B: 0F 07       CLR    semaphore_07
 922D: 39          RTS
 922E: C6 FC       LDB    #$FC
 9230: B6 41 89    LDA    $4189
@@ -1887,18 +1906,18 @@ game_demo_90fb:
 925C: 86 05       LDA    #$05
 925E: 97 02       STA    cpu1_game_state_02
 9260: 0F 04       CLR    $04
-9262: 0F 06       CLR    $06
+9262: 0F 06       CLR    semaphore_06
 9264: 97 03       STA    cpu2_game_state_03
 9266: 0F 05       CLR    $05
-9268: 0F 07       CLR    $07
+9268: 0F 07       CLR    semaphore_07
 926A: 39          RTS
 926B: B7 C0 00    STA    $C000
 926E: 0F 02       CLR    cpu1_game_state_02
 9270: 0F 04       CLR    $04
-9272: 0F 06       CLR    $06
+9272: 0F 06       CLR    semaphore_06
 9274: 0F 03       CLR    cpu2_game_state_03
 9276: 0F 05       CLR    $05
-9278: 0F 07       CLR    $07
+9278: 0F 07       CLR    semaphore_07
 927A: 39          RTS
 927B: 92 89       SBCA   $89
 927D: 92 90       SBCA   $90
@@ -1908,7 +1927,7 @@ game_demo_90fb:
 9285: 92 D3       SBCA   $D3
 9287: 92 E6       SBCA   $E6
 9289: 0C 04       INC    $04
-928B: 0F 06       CLR    $06
+928B: 0F 06       CLR    semaphore_06
 928D: 7E B4 34    JMP    $B434
 9290: 0F 0E       CLR    $0E
 9292: 0C 04       INC    $04
@@ -1953,10 +1972,10 @@ game_demo_90fb:
 92E8: 86 02       LDA    #$02
 92EA: 97 02       STA    cpu1_game_state_02
 92EC: 0F 04       CLR    $04
-92EE: 0F 06       CLR    $06
+92EE: 0F 06       CLR    semaphore_06
 92F0: 97 03       STA    cpu2_game_state_03
 92F2: 0F 05       CLR    $05
-92F4: 0F 07       CLR    $07
+92F4: 0F 07       CLR    semaphore_07
 92F6: 39          RTS
 92F7: BD 93 7A    JSR    $937A
 92FA: BD 94 E4    JSR    $94E4
@@ -2346,7 +2365,7 @@ game_demo_90fb:
 9685: ED A1       STD    ,Y++
 9687: A6 C0       LDA    ,U+
 9689: A7 A0       STA    ,Y+
-968B: 96 C5       LDA    $C5
+968B: 96 C5       LDA    starting_area_c5
 968D: A7 A0       STA    ,Y+
 968F: CE 95 E0    LDU    #$95E0
 9692: C6 03       LDB    #$03
@@ -2661,10 +2680,10 @@ game_demo_90fb:
 991D: B7 C0 00    STA    $C000
 9920: 0F 02       CLR    cpu1_game_state_02
 9922: 0F 04       CLR    $04
-9924: 0F 06       CLR    $06
+9924: 0F 06       CLR    semaphore_06
 9926: 0F 03       CLR    cpu2_game_state_03
 9928: 0F 05       CLR    $05
-992A: 0F 07       CLR    $07
+992A: 0F 07       CLR    semaphore_07
 992C: 39          RTS
 
 9935: BD 83 CB    JSR    $83CB
@@ -2710,7 +2729,7 @@ game_demo_90fb:
 9994: BD 90 52    JSR    $9052
 9997: 7F 41 8D    CLR    $418D
 999A: 0C 04       INC    $04
-999C: 0F 06       CLR    $06
+999C: 0F 06       CLR    semaphore_06
 999E: 39          RTS
 999F: 7D 41 8C    TST    $418C
 99A2: 26 49       BNE    $99ED
@@ -2782,10 +2801,10 @@ game_demo_90fb:
 9A39: BD 90 85    JSR    $9085
 9A3C: 0C 02       INC    cpu1_game_state_02
 9A3E: 0F 04       CLR    $04
-9A40: 0F 06       CLR    $06
+9A40: 0F 06       CLR    semaphore_06
 9A42: 0C 03       INC    cpu2_game_state_03
 9A44: 0F 05       CLR    $05
-9A46: 0F 07       CLR    $07
+9A46: 0F 07       CLR    semaphore_07
 9A48: 39          RTS
 9A49: BD 83 CB    JSR    $83CB
 9A4C: BD B4 B8    JSR    $B4B8
@@ -2863,7 +2882,7 @@ game_demo_90fb:
 9AEE: BD 90 52    JSR    $9052
 9AF1: 7F 41 8D    CLR    $418D
 9AF4: 0C 04       INC    $04
-9AF6: 0F 06       CLR    $06
+9AF6: 0F 06       CLR    semaphore_06
 9AF8: 39          RTS
 
 9B02: C6 FC       LDB    #$FC
@@ -2894,8 +2913,8 @@ game_demo_90fb:
 9B3E: 0F D9       CLR    $D9
 9B40: 0F 04       CLR    $04
 9B42: 0F 05       CLR    $05
-9B44: 0F 06       CLR    $06
-9B46: 0F 07       CLR    $07
+9B44: 0F 06       CLR    semaphore_06
+9B46: 0F 07       CLR    semaphore_07
 9B48: 39          RTS
 9B49: B6 41 A5    LDA    $41A5
 9B4C: 81 01       CMPA   #$01
@@ -2966,10 +2985,10 @@ game_demo_90fb:
 9BDF: BD 90 85    JSR    $9085
 9BE2: 0C 02       INC    cpu1_game_state_02
 9BE4: 0F 04       CLR    $04
-9BE6: 0F 06       CLR    $06
+9BE6: 0F 06       CLR    semaphore_06
 9BE8: 0C 03       INC    cpu2_game_state_03
 9BEA: 0F 05       CLR    $05
-9BEC: 0F 07       CLR    $07
+9BEC: 0F 07       CLR    semaphore_07
 9BEE: 39          RTS
 9BEF: 7D 42 3D    TST    $423D
 9BF2: 26 0D       BNE    $9C01
@@ -2983,10 +3002,10 @@ game_demo_90fb:
 9C01: B7 C0 00    STA    $C000
 9C04: 0F 02       CLR    $02
 9C06: 0F 04       CLR    $04
-9C08: 0F 06       CLR    $06
+9C08: 0F 06       CLR    semaphore_06
 9C0A: 0F 03       CLR    cpu2_game_state_03
 9C0C: 0F 05       CLR    $05
-9C0E: 0F 07       CLR    $07
+9C0E: 0F 07       CLR    semaphore_07
 9C10: 39          RTS
 
 9C2B: CE 9C B2    LDU    #$9CB2
@@ -3013,7 +3032,7 @@ game_demo_90fb:
 9C5E: 5A          DECB
 9C5F: 26 FB       BNE    $9C5C
 9C61: 0C 04       INC    $04
-9C63: 0F 06       CLR    $06
+9C63: 0F 06       CLR    semaphore_06
 9C65: 39          RTS
 9C66: 81 01       CMPA   #$01
 9C68: 26 1F       BNE    $9C89
@@ -3029,7 +3048,7 @@ game_demo_90fb:
 9C81: 5A          DECB
 9C82: 26 FB       BNE    $9C7F
 9C84: 0C 04       INC    $04
-9C86: 0F 06       CLR    $06
+9C86: 0F 06       CLR    semaphore_06
 9C88: 39          RTS
 9C89: 7D 41 8E    TST    $418E
 9C8C: 26 15       BNE    $9CA3
@@ -3041,14 +3060,14 @@ game_demo_90fb:
 9C9B: 5A          DECB
 9C9C: 26 FB       BNE    $9C99
 9C9E: 0C 04       INC    $04
-9CA0: 0F 06       CLR    $06
+9CA0: 0F 06       CLR    semaphore_06
 9CA2: 39          RTS
 9CA3: CE 54 A0    LDU    #$54A0
 9CA6: 8D 43       BSR    $9CEB
 9CA8: CE 54 80    LDU    #$5480
 9CAB: 8D 3E       BSR    $9CEB
 9CAD: 0C 04       INC    $04
-9CAF: 0F 06       CLR    $06
+9CAF: 0F 06       CLR    semaphore_06
 9CB1: 39          RTS
 9CB2: 01 20       NEG    $20
 9CB4: 01 50       NEG    $50
@@ -3092,19 +3111,20 @@ game_demo_90fb:
 9D0A: 39          RTS
 9D0B: 03 05       COM    $05
 9D0D: 86 FF       LDA    #$FF
-9D0F: 97 06       STA    $06
+9D0F: 97 06       STA    semaphore_06
 9D11: B7 80 00    STA    watchdog_8000
-9D14: 0D 07       TST    $07
+9D14: 0D 07       TST    semaphore_07
 9D16: 2A F9       BPL    $9D11
-9D18: 0F 07       CLR    $07
-9D1A: 0D 06       TST    $06
+9D18: 0F 07       CLR    semaphore_07
+9D1A: 0D 06       TST    semaphore_06
 9D1C: 26 FC       BNE    $9D1A
 9D1E: CC 00 00    LDD    #$0000
 9D21: DD 88       STD    $88
 9D23: DD 8A       STD    $8A
-9D25: 0C 06       INC    $06
+; cpu sync
+9D25: 0C 06       INC    semaphore_06
 9D27: B7 80 00    STA    watchdog_8000
-9D2A: 96 07       LDA    $07
+9D2A: 96 07       LDA    semaphore_07
 9D2C: 81 01       CMPA   #$01
 9D2E: 25 F7       BCS    $9D27
 9D30: B6 44 10    LDA    $4410
@@ -3115,16 +3135,16 @@ game_demo_90fb:
 9D3B: 0D 1F       TST    $1F
 9D3D: 10 2B 00 A7 LBMI   $9DE8
 9D41: BD B6 18    JSR    $B618
-9D44: 0C 06       INC    $06
+9D44: 0C 06       INC    semaphore_06
 9D46: BD DA 88    JSR    $DA88
-9D49: 0C 06       INC    $06
+9D49: 0C 06       INC    semaphore_06
 9D4B: BD D8 36    JSR    $D836
-9D4E: 0C 06       INC    $06
+9D4E: 0C 06       INC    semaphore_06
 9D50: BD D2 71    JSR    $D271
 9D53: BD A6 C2    JSR    $A6C2
-9D56: 0C 06       INC    $06
+9D56: 0C 06       INC    semaphore_06
 9D58: B7 80 00    STA    watchdog_8000
-9D5B: 96 07       LDA    $07
+9D5B: 96 07       LDA    semaphore_07
 9D5D: 81 04       CMPA   #$04
 9D5F: 25 F7       BCS    $9D58
 9D61: BD 92 F7    JSR    $92F7
@@ -3153,9 +3173,9 @@ game_demo_90fb:
 9D98: A6 E0       LDA    ,S+    ; [local]
 9D9A: 0F 0E       CLR    $0E
 9D9C: 0C 04       INC    $04
-9D9E: 0F 06       CLR    $06
+9D9E: 0F 06       CLR    semaphore_06
 9DA0: 0C 05       INC    $05
-9DA2: 0F 07       CLR    $07
+9DA2: 0F 07       CLR    semaphore_07
 9DA4: 39          RTS
 9DA5: FC 44 0A    LDD    $440A
 9DA8: 10 83 12 80 CMPD   #$1280
@@ -3183,9 +3203,9 @@ game_demo_90fb:
 9DDB: A6 E0       LDA    ,S+    ; [local]
 9DDD: 86 0B       LDA    #$0B
 9DDF: 97 04       STA    $04
-9DE1: 0F 06       CLR    $06
+9DE1: 0F 06       CLR    semaphore_06
 9DE3: 97 05       STA    $05
-9DE5: 0F 07       CLR    $07
+9DE5: 0F 07       CLR    semaphore_07
 9DE7: 39          RTS
 9DE8: 7D 43 80    TST    $4380
 9DEB: 27 01       BEQ    $9DEE
@@ -3212,9 +3232,9 @@ game_demo_90fb:
 9E1A: A6 E0       LDA    ,S+    ; [local]
 9E1C: 86 0C       LDA    #$0C
 9E1E: 97 04       STA    $04
-9E20: 0F 06       CLR    $06
+9E20: 0F 06       CLR    semaphore_06
 9E22: 97 05       STA    $05
-9E24: 0F 07       CLR    $07
+9E24: 0F 07       CLR    semaphore_07
 9E26: 39          RTS
 9E27: 7D 42 55    TST    $4255
 9E2A: 27 1A       BEQ    $9E46
@@ -3228,13 +3248,13 @@ game_demo_90fb:
 9E3A: AA 42       ORA    $2,U
 9E3C: 26 08       BNE    $9E46
 9E3E: CE 9E 53    LDU    #jump_table_9e53
-9E41: 96 06       LDA    $06
+9E41: 96 06       LDA    semaphore_06
 9E43: 48          ASLA
 9E44: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
 9E46: 0C 04       INC    $04
-9E48: 0F 06       CLR    $06
+9E48: 0F 06       CLR    semaphore_06
 9E4A: 0C 05       INC    $05
-9E4C: 0F 07       CLR    $07
+9E4C: 0F 07       CLR    semaphore_07
 9E4E: 39          RTS
 
 9E5B: C6 FC       LDB    #$FC
@@ -3322,7 +3342,7 @@ game_demo_90fb:
 9F13: ED 22       STD    $2,Y
 9F15: 10 8E 3D AE LDY    #$3DAE
 9F19: C6 EC       LDB    #$EC
-9F1B: 96 C5       LDA    $C5
+9F1B: 96 C5       LDA    starting_area_c5
 9F1D: 44          LSRA
 9F1E: 44          LSRA
 9F1F: 44          LSRA
@@ -3330,10 +3350,10 @@ game_demo_90fb:
 9F21: 26 02       BNE    $9F25
 9F23: 86 FF       LDA    #$FF
 9F25: ED A4       STD    ,Y
-9F27: 96 C5       LDA    $C5
+9F27: 96 C5       LDA    starting_area_c5
 9F29: 84 0F       ANDA   #$0F
 9F2B: ED 22       STD    $2,Y
-9F2D: 0C 06       INC    $06
+9F2D: 0C 06       INC    semaphore_06
 9F2F: 0D 01       TST    $01
 9F31: 26 18       BNE    $9F4B
 9F33: CE B0 BE    LDU    #$B0BE
@@ -3371,7 +3391,7 @@ game_demo_90fb:
 9F7D: BA 42 60    ORA    $4260
 9F80: 26 01       BNE    $9F83
 9F82: 39          RTS
-9F83: 0C 06       INC    $06
+9F83: 0C 06       INC    semaphore_06
 9F85: 0D 01       TST    $01
 9F87: 26 18       BNE    $9FA1
 9F89: CE B0 BE    LDU    #$B0BE
@@ -3406,7 +3426,7 @@ game_demo_90fb:
 9FCB: BD A0 F9    JSR    $A0F9
 9FCE: 26 36       BNE    $A006
 9FD0: 86 03       LDA    #$03
-9FD2: 97 06       STA    $06
+9FD2: 97 06       STA    semaphore_06
 9FD4: 0F 0E       CLR    $0E
 9FD6: CE B0 3F    LDU    #$B03F
 9FD9: 10 8E 3D A2 LDY    #$3DA2
@@ -3420,7 +3440,7 @@ game_demo_90fb:
 9FEB: A6 E0       LDA    ,S+    ; [local]
 9FED: 10 8E 3D AE LDY    #$3DAE
 9FF1: C6 FC       LDB    #$FC
-9FF3: 96 C5       LDA    $C5
+9FF3: 96 C5       LDA    starting_area_c5
 9FF5: 44          LSRA
 9FF6: 44          LSRA
 9FF7: 44          LSRA
@@ -3428,19 +3448,19 @@ game_demo_90fb:
 9FF9: 26 02       BNE    $9FFD
 9FFB: 86 FF       LDA    #$FF
 9FFD: ED A4       STD    ,Y
-9FFF: 96 C5       LDA    $C5
+9FFF: 96 C5       LDA    starting_area_c5
 A001: 84 0F       ANDA   #$0F
-A003: ED 22       STD    $2,Y
+A003: ED 22       STD    $2,Y		; [video_address_word]
 A005: 39          RTS
 A006: B6 42 63    LDA    $4263
 A009: BA 42 61    ORA    $4261
 A00C: 27 C2       BEQ    $9FD0
-A00E: CE 42 76    LDU    #$4276
+A00E: CE 42 76    LDU    #controls_shared_ram_4276
 A011: 96 1E       LDA    $1E
 A013: 26 02       BNE    $A017
 A015: 33 54       LEAU   -$C,U
 A017: 6D 48       TST    $8,U
-A019: 26 2E       BNE    $A049
+A019: 26 2E       BNE    increase_starting_area_a049
 A01B: 6D 4A       TST    $A,U
 A01D: 26 01       BNE    $A020
 A01F: 39          RTS
@@ -3449,38 +3469,40 @@ A022: 26 01       BNE    $A025
 A024: 39          RTS
 A025: 0A C4       DEC    $C4
 A027: 0A D1       DEC    $D1
-A029: 96 C5       LDA    $C5
+A029: 96 C5       LDA    starting_area_c5
 A02B: 8B 99       ADDA   #$99
 A02D: 19          DAA
-A02E: 97 C5       STA    $C5
+A02E: 97 C5       STA    starting_area_c5
 A030: 10 8E 3D AE LDY    #$3DAE
 A034: C6 EC       LDB    #$EC
-A036: 96 C5       LDA    $C5
+A036: 96 C5       LDA    starting_area_c5
 A038: 44          LSRA
 A039: 44          LSRA
 A03A: 44          LSRA
 A03B: 44          LSRA
 A03C: 26 02       BNE    $A040
 A03E: 86 FF       LDA    #$FF
-A040: ED A4       STD    ,Y
-A042: 96 C5       LDA    $C5
+A040: ED A4       STD    ,Y		; [video_address_word]
+A042: 96 C5       LDA    starting_area_c5
 A044: 84 0F       ANDA   #$0F
-A046: ED 22       STD    $2,Y
+A046: ED 22       STD    $2,Y		; [video_address_word]
 A048: 39          RTS
+increase_starting_area_a049:
 A049: 96 C4       LDA    $C4
 A04B: 4C          INCA
-A04C: 81 05       CMPA   #$05
+A04C: 81 05       CMPA   #$05		; max selectable area: 4 (area 5)
 A04E: 25 01       BCS    $A051
+; too high: we cannot select higher areas
 A050: 39          RTS
 A051: 97 C4       STA    $C4
 A053: 0C D1       INC    $D1
-A055: 96 C5       LDA    $C5
+A055: 96 C5       LDA    starting_area_c5
 A057: 8B 01       ADDA   #$01
 A059: 19          DAA
-A05A: 97 C5       STA    $C5
+A05A: 97 C5       STA    starting_area_c5
 A05C: 10 8E 3D AE LDY    #$3DAE
 A060: C6 EC       LDB    #$EC
-A062: 96 C5       LDA    $C5
+A062: 96 C5       LDA    starting_area_c5
 A064: 44          LSRA
 A065: 44          LSRA
 A066: 44          LSRA
@@ -3488,7 +3510,7 @@ A067: 44          LSRA
 A068: 26 02       BNE    $A06C
 A06A: 86 FF       LDA    #$FF
 A06C: ED A4       STD    ,Y
-A06E: 96 C5       LDA    $C5
+A06E: 96 C5       LDA    starting_area_c5
 A070: 84 0F       ANDA   #$0F
 A072: ED 22       STD    $2,Y
 A074: 39          RTS
@@ -3546,9 +3568,9 @@ A0EB: A7 A1       STA    ,Y++		; [video_address_word]
 A0ED: 5A          DECB
 A0EE: 26 FB       BNE    $A0EB
 A0F0: 0C 04       INC    $04
-A0F2: 0F 06       CLR    $06
+A0F2: 0F 06       CLR    semaphore_06
 A0F4: 0C 05       INC    $05
-A0F6: 0F 07       CLR    $07
+A0F6: 0F 07       CLR    semaphore_07
 A0F8: 39          RTS
 A0F9: 96 13       LDA    $13
 A0FB: 4C          INCA
@@ -3607,19 +3629,19 @@ A161: 96 0A       LDA    $0A
 A163: 84 FC       ANDA   #$FC
 A165: 97 0A       STA    $0A
 A167: 0C 04       INC    $04
-A169: 0F 06       CLR    $06
+A169: 0F 06       CLR    semaphore_06
 A16B: 0C 05       INC    $05
-A16D: 0F 07       CLR    $07
+A16D: 0F 07       CLR    semaphore_07
 A16F: 39          RTS
-A170: 96 06       LDA    $06
-A172: 91 07       CMPA   $07
+A170: 96 06       LDA    semaphore_06
+A172: 91 07       CMPA   semaphore_07
 A174: 23 01       BLS    $A177
 A176: 39          RTS
 A177: CE A1 7D    LDU    #jump_table_a17d
 A17A: 48          ASLA
 A17B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
 
-A185: 0C 06       INC    $06
+A185: 0C 06       INC    semaphore_06
 A187: 0F E8       CLR    $E8
 A189: BD 84 E0    JSR    $84E0
 A18C: 7E 84 F9    JMP    $84F9
@@ -3627,14 +3649,14 @@ A18F: 96 B3       LDA    $B3
 A191: 91 B4       CMPA   $B4
 A193: 27 01       BEQ    $A196
 A195: 39          RTS
-A196: 0C 06       INC    $06
+A196: 0C 06       INC    semaphore_06
 A198: BD 84 23    JSR    $8423
 A19B: 7E 84 BA    JMP    $84BA
 A19E: 96 6E       LDA    $6E
 A1A0: 91 6F       CMPA   $6F
 A1A2: 27 01       BEQ    $A1A5
 A1A4: 39          RTS
-A1A5: 0C 06       INC    $06
+A1A5: 0C 06       INC    semaphore_06
 A1A7: BD 83 CB    JSR    $83CB
 A1AA: BD 84 CD    JSR    $84CD
 A1AD: 7E 84 8C    JMP    $848C
@@ -3650,8 +3672,8 @@ A1C3: 0D C0       TST    $C0
 A1C5: 26 37       BNE    $A1FE
 A1C7: 0C 04       INC    $04
 A1C9: 0C 05       INC    $05
-A1CB: 0F 06       CLR    $06
-A1CD: 0F 07       CLR    $07
+A1CB: 0F 06       CLR    semaphore_06
+A1CD: 0F 07       CLR    semaphore_07
 A1CF: 39          RTS
 A1D0: 0D 01       TST    $01
 A1D2: 26 16       BNE    $A1EA
@@ -3687,8 +3709,8 @@ A214: 97 15       STA    $15
 A216: 86 01       LDA    #$01
 A218: 97 04       STA    $04
 A21A: 97 05       STA    $05
-A21C: 0F 06       CLR    $06
-A21E: 0F 07       CLR    $07
+A21C: 0F 06       CLR    semaphore_06
+A21E: 0F 07       CLR    semaphore_07
 A220: 39          RTS
 A221: 01 20       NEG    $20
 A223: 01 50       NEG    $50
@@ -3750,9 +3772,9 @@ A29C: 5A          DECB
 A29D: 26 FB       BNE    $A29A
 A29F: BD 90 85    JSR    $9085
 A2A2: 0C 04       INC    $04
-A2A4: 0F 06       CLR    $06
+A2A4: 0F 06       CLR    semaphore_06
 A2A6: 0C 05       INC    $05
-A2A8: 0F 07       CLR    $07
+A2A8: 0F 07       CLR    semaphore_07
 A2AA: 39          RTS
 A2AB: 86 18       LDA    #$18
 A2AD: B7 68 00    STA    bankswitch_6800
@@ -3798,17 +3820,17 @@ A2FF: 58          ASLB
 A300: ED 0A       STD    $A,X
 A302: DF 74       STU    $74
 A304: 0C 04       INC    $04
-A306: 0F 06       CLR    $06
+A306: 0F 06       CLR    semaphore_06
 A308: 39          RTS
-A309: 96 06       LDA    $06
-A30B: 91 07       CMPA   $07
+A309: 96 06       LDA    semaphore_06
+A30B: 91 07       CMPA   semaphore_07
 A30D: 23 01       BLS    $A310
 A30F: 39          RTS
 A310: CE A3 16    LDU    #jump_table_a316
 A313: 48          ASLA
 A314: 6E D6       JMP    [A,U]   ; [indirect_jump] [nb_entries=10]
 
-A32A: 0C 06       INC    $06
+A32A: 0C 06       INC    semaphore_06
 A32C: 0F E8       CLR    $E8
 A32E: BD 84 E0    JSR    $84E0
 A331: 7E 84 F9    JMP    $84F9
@@ -3816,14 +3838,14 @@ A334: 96 B3       LDA    $B3
 A336: 91 B4       CMPA   $B4
 A338: 27 01       BEQ    $A33B
 A33A: 39          RTS
-A33B: 0C 06       INC    $06
+A33B: 0C 06       INC    semaphore_06
 A33D: BD 84 23    JSR    $8423
 A340: 7E 84 BA    JMP    $84BA
 A343: 96 6E       LDA    $6E
 A345: 91 6F       CMPA   $6F
 A347: 27 01       BEQ    $A34A
 A349: 39          RTS
-A34A: 0C 06       INC    $06
+A34A: 0C 06       INC    semaphore_06
 A34C: BD 83 CB    JSR    $83CB
 A34F: BD B4 B8    JSR    $B4B8
 A352: BD 84 CD    JSR    $84CD
@@ -3854,7 +3876,7 @@ A38A: 26 F8       BNE    $A384
 A38C: A6 E0       LDA    ,S+    ; [local]
 A38E: 10 8E 36 A8 LDY    #$36A8
 A392: C6 FC       LDB    #$FC
-A394: 96 C5       LDA    $C5
+A394: 96 C5       LDA    starting_area_c5
 A396: 44          LSRA
 A397: 44          LSRA
 A398: 44          LSRA
@@ -3862,18 +3884,18 @@ A399: 44          LSRA
 A39A: 26 02       BNE    $A39E
 A39C: 86 FF       LDA    #$FF
 A39E: ED A4       STD    ,Y
-A3A0: 96 C5       LDA    $C5
+A3A0: 96 C5       LDA    starting_area_c5
 A3A2: 84 0F       ANDA   #$0F
 A3A4: ED 22       STD    $2,Y
-A3A6: 96 C5       LDA    $C5
+A3A6: 96 C5       LDA    starting_area_c5
 A3A8: 8B 01       ADDA   #$01
 A3AA: 19          DAA
-A3AB: 97 C5       STA    $C5
+A3AB: 97 C5       STA    starting_area_c5
 A3AD: 0F 91       CLR    $91
 A3AF: 0F CF       CLR    $CF
 A3B1: 0F 0E       CLR    $0E
-A3B3: 0C 06       INC    $06
-A3B5: 0C 07       INC    $07
+A3B3: 0C 06       INC    semaphore_06
+A3B5: 0C 07       INC    semaphore_07
 A3B7: 7E B4 34    JMP    $B434
 A3BA: 0C C2       INC    $C2
 A3BC: 96 C2       LDA    $C2
@@ -3917,15 +3939,15 @@ A40A: 8B 01       ADDA   #$01
 A40C: 19          DAA
 A40D: 97 C3       STA    $C3
 A40F: 0F C4       CLR    $C4
-A411: 96 C5       LDA    $C5
+A411: 96 C5       LDA    starting_area_c5
 A413: 8B 01       ADDA   #$01
 A415: 19          DAA
-A416: 97 C5       STA    $C5
+A416: 97 C5       STA    starting_area_c5
 A418: 0F 91       CLR    $91
 A41A: 0F CF       CLR    $CF
 A41C: 0F 0E       CLR    $0E
-A41E: 0C 06       INC    $06
-A420: 0C 07       INC    $07
+A41E: 0C 06       INC    semaphore_06
+A420: 0C 07       INC    semaphore_07
 A422: 7E B4 34    JMP    $B434
 A425: DC 11       LDD    $11
 A427: 27 31       BEQ    $A45A
@@ -3953,8 +3975,8 @@ A45A: 96 0E       LDA    $0E
 A45C: 84 3F       ANDA   #$3F
 A45E: 27 01       BEQ    $A461
 A460: 39          RTS
-A461: 0C 06       INC    $06
-A463: 0C 07       INC    $07
+A461: 0C 06       INC    semaphore_06
+A463: 0C 07       INC    semaphore_07
 A465: 39          RTS
 A466: 96 D1       LDA    $D1
 A468: 81 05       CMPA   #$05
@@ -3973,7 +3995,7 @@ A483: E7 A6       STB    A,Y
 A485: 4C          INCA
 A486: 84 1F       ANDA   #$1F
 A488: 97 E2       STA    $E2
-A48A: 0C 06       INC    $06
+A48A: 0C 06       INC    semaphore_06
 A48C: BD B4 B8    JSR    $B4B8
 A48F: 7E D6 36    JMP    $D636
 A492: 10 8E 53 40 LDY    #$5340
@@ -3992,7 +4014,7 @@ A4AD: E7 A6       STB    A,Y
 A4AF: 4C          INCA
 A4B0: 84 1F       ANDA   #$1F
 A4B2: 97 E2       STA    $E2
-A4B4: 0C 06       INC    $06
+A4B4: 0C 06       INC    semaphore_06
 A4B6: BD B4 B8    JSR    $B4B8
 A4B9: 7E D6 36    JMP    $D636
 A4BC: 0F D2       CLR    $D2
@@ -4021,8 +4043,8 @@ A4EC: 4C          INCA
 A4ED: 84 1F       ANDA   #$1F
 A4EF: 97 E2       STA    $E2
 A4F1: 0C D1       INC    $D1
-A4F3: 0C 06       INC    $06
-A4F5: 0C 07       INC    $07
+A4F3: 0C 06       INC    semaphore_06
+A4F5: 0C 07       INC    semaphore_07
 A4F7: BD B4 B8    JSR    $B4B8
 A4FA: 7E 84 8C    JMP    $848C
 A4FD: CC 00 00    LDD    #$0000
@@ -4041,8 +4063,8 @@ A519: CC 00 50    LDD    #$0050
 A51C: 10 93 CA    CMPD   $CA
 A51F: 23 02       BLS    $A523
 A521: DD CA       STD    $CA
-A523: 0C 06       INC    $06
-A525: 0C 07       INC    $07
+A523: 0C 06       INC    semaphore_06
+A525: 0C 07       INC    semaphore_07
 A527: 0D 01       TST    $01
 A529: 26 06       BNE    $A531
 A52B: CE 54 80    LDU    #$5480
@@ -4055,18 +4077,18 @@ A53B: 0D C4       TST    $C4
 A53D: 27 0D       BEQ    $A54C
 A53F: 86 04       LDA    #$04
 A541: 97 04       STA    $04
-A543: 0F 06       CLR    $06
+A543: 0F 06       CLR    semaphore_06
 A545: 97 05       STA    $05
-A547: 0F 07       CLR    $07
+A547: 0F 07       CLR    semaphore_07
 A549: 7E B4 B8    JMP    $B4B8
 A54C: 86 03       LDA    #$03
 A54E: 97 04       STA    $04
-A550: 0F 06       CLR    $06
+A550: 0F 06       CLR    semaphore_06
 A552: 97 05       STA    $05
-A554: 0F 07       CLR    $07
+A554: 0F 07       CLR    semaphore_07
 A556: 7E B4 B8    JMP    $B4B8
-A559: 96 06       LDA    $06
-A55B: 91 07       CMPA   $07
+A559: 96 06       LDA    semaphore_06
+A55B: 91 07       CMPA   semaphore_07
 A55D: 23 01       BLS    $A560
 A55F: 39          RTS
 A560: CE A5 66    LDU    #jump_table_a566
@@ -4078,7 +4100,7 @@ A56D: BD 84 8C    JSR    $848C
 A570: BD 84 CD    JSR    $84CD
 A573: BD 84 E0    JSR    $84E0
 A576: BD 84 F9    JSR    $84F9
-A579: 0C 06       INC    $06
+A579: 0C 06       INC    semaphore_06
 A57B: 39          RTS
 A57C: 8D 12       BSR    $A590
 A57E: DC C6       LDD    $C6
@@ -4086,9 +4108,9 @@ A580: C3 01 01    ADDD   #$0101
 A583: DD C6       STD    $C6
 A585: DD C8       STD    $C8
 A587: 0C 04       INC    $04
-A589: 0F 06       CLR    $06
+A589: 0F 06       CLR    semaphore_06
 A58B: 0C 05       INC    $05
-A58D: 0F 07       CLR    $07
+A58D: 0F 07       CLR    semaphore_07
 A58F: 39          RTS
 A590: 0D CF       TST    $CF
 A592: 26 08       BNE    $A59C
@@ -4259,7 +4281,7 @@ A6D7: 0C CF       INC    $CF
 A6D9: 39          RTS
 
 A6DA: CE A6 E2    LDU    #jump_table_a6e2
-A6DD: 96 06       LDA    $06
+A6DD: 96 06       LDA    semaphore_06
 A6DF: 48          ASLA
 A6E0: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
@@ -4396,7 +4418,7 @@ A806: 84 0F       ANDA   #$0F
 A808: ED 22       STD    $2,Y		; [video_address_word]
 A80A: 10 8E 3B 2E LDY    #$3B2E
 A80E: C6 FC       LDB    #$FC
-A810: 96 C5       LDA    $C5
+A810: 96 C5       LDA    starting_area_c5
 A812: 44          LSRA
 A813: 44          LSRA
 A814: 44          LSRA
@@ -4404,14 +4426,14 @@ A815: 44          LSRA
 A816: 26 02       BNE    $A81A
 A818: 86 FF       LDA    #$FF
 A81A: ED A4       STD    ,Y		; [video_address_word]
-A81C: 96 C5       LDA    $C5
+A81C: 96 C5       LDA    starting_area_c5
 A81E: 84 0F       ANDA   #$0F
 A820: ED 22       STD    $2,Y		; [video_address_word]
 A822: BD 93 E4    JSR    $93E4
 A825: BD 93 60    JSR    $9360
 A828: BD 95 07    JSR    $9507
 A82B: BD 95 61    JSR    $9561
-A82E: 0C 06       INC    $06
+A82E: 0C 06       INC    semaphore_06
 A830: 0F 0E       CLR    $0E
 A832: 0D 01       TST    $01
 A834: 26 18       BNE    $A84E
@@ -4437,11 +4459,11 @@ A85F: 6A E4       DEC    ,S    ; [local]
 A861: 26 F8       BNE    $A85B
 A863: A6 E0       LDA    ,S+    ; [local]
 A865: 39          RTS
-A866: 06 06       ROR    $06
+A866: 06 06       ROR    semaphore_06
 A868: 0A 0A       DEC    $0A
-A86A: 06 06       ROR    $06
+A86A: 06 06       ROR    semaphore_06
 A86C: 06 0A       ROR    $0A
-A86E: 0A 06       DEC    $06
+A86E: 0A 06       DEC    semaphore_06
 A870: 96 0E       LDA    $0E
 A872: 84 7F       ANDA   #$7F
 A874: 27 01       BEQ    $A877
@@ -4477,12 +4499,12 @@ A8B5: 84 FC       ANDA   #$FC
 A8B7: 97 0A       STA    $0A
 A8B9: BD 93 E4    JSR    $93E4
 A8BC: 0C 04       INC    $04
-A8BE: 0F 06       CLR    $06
+A8BE: 0F 06       CLR    semaphore_06
 A8C0: 0C 05       INC    $05
-A8C2: 0F 07       CLR    $07
+A8C2: 0F 07       CLR    semaphore_07
 A8C4: 39          RTS
-A8C5: 96 06       LDA    $06
-A8C7: 91 07       CMPA   $07
+A8C5: 96 06       LDA    semaphore_06
+A8C7: 91 07       CMPA   semaphore_07
 A8C9: 23 01       BLS    $A8CC
 A8CB: 39          RTS
 A8CC: CE A8 D2    LDU    #jump_table_a8d2
@@ -4514,8 +4536,8 @@ A916: 6A E4       DEC    ,S    ; [local]
 A918: 26 F8       BNE    $A912
 A91A: A6 E0       LDA    ,S+    ; [local]
 A91C: 0F 0E       CLR    $0E
-A91E: 0C 06       INC    $06
-A920: 0C 07       INC    $07
+A91E: 0C 06       INC    semaphore_06
+A920: 0C 07       INC    semaphore_07
 A922: 39          RTS
 A923: CE B0 C9    LDU    #$B0C9
 A926: 10 8E 37 22 LDY    #$3722
@@ -4538,8 +4560,8 @@ A94B: 6A E4       DEC    ,S    ; [local]
 A94D: 26 F8       BNE    $A947
 A94F: A6 E0       LDA    ,S+    ; [local]
 A951: 0F 0E       CLR    $0E
-A953: 0C 06       INC    $06
-A955: 0C 07       INC    $07
+A953: 0C 06       INC    semaphore_06
+A955: 0C 07       INC    semaphore_07
 A957: 39          RTS
 A958: 7D 43 80    TST    $4380
 A95B: 27 01       BEQ    $A95E
@@ -4609,8 +4631,8 @@ A9EC: 86 FF       LDA    #$FF
 A9EE: FD 3F 96    STD    $3F96
 A9F1: B6 41 8A    LDA    nb_credits_418a
 A9F4: FD 3F 98    STD    $3F98
-A9F7: 0C 06       INC    $06
-A9F9: 0C 07       INC    $07
+A9F7: 0C 06       INC    semaphore_06
+A9F9: 0C 07       INC    semaphore_07
 A9FB: 7E B4 34    JMP    $B434
 A9FE: C6 FC       LDB    #$FC
 AA00: B6 41 89    LDA    $4189
@@ -4623,8 +4645,8 @@ AA10: BD 96 30    JSR    $9630
 AA13: 7D 54 31    TST    $5431
 AA16: 27 01       BEQ    $AA19
 AA18: 39          RTS
-AA19: 0C 06       INC    $06
-AA1B: 0C 07       INC    $07
+AA19: 0C 06       INC    semaphore_06
+AA1B: 0C 07       INC    semaphore_07
 AA1D: 39          RTS
 AA1E: C6 FC       LDB    #$FC
 AA20: B6 41 89    LDA    $4189
@@ -4643,7 +4665,7 @@ AA3F: E7 A6       STB    A,Y
 AA41: 4C          INCA
 AA42: 84 1F       ANDA   #$1F
 AA44: 97 E2       STA    $E2
-AA46: 0C 06       INC    $06
+AA46: 0C 06       INC    semaphore_06
 AA48: 7E D6 36    JMP    $D636
 AA4B: C6 FC       LDB    #$FC
 AA4D: B6 41 89    LDA    $4189
@@ -4671,8 +4693,8 @@ AA7E: B6 41 8A    LDA    nb_credits_418a
 AA81: FD 3F 98    STD    $3F98
 AA84: 0F E8       CLR    $E8
 AA86: BD 84 23    JSR    $8423
-AA89: 0C 06       INC    $06
-AA8B: 0C 07       INC    $07
+AA89: 0C 06       INC    semaphore_06
+AA8B: 0C 07       INC    semaphore_07
 AA8D: 7E B4 B8    JMP    $B4B8
 AA90: C6 FC       LDB    #$FC
 AA92: B6 41 89    LDA    $4189
@@ -4705,8 +4727,8 @@ AAD2: 97 15       STA    $15
 AAD4: 86 01       LDA    #$01
 AAD6: 97 04       STA    $04
 AAD8: 97 05       STA    $05
-AADA: 0F 06       CLR    $06
-AADC: 0F 07       CLR    $07
+AADA: 0F 06       CLR    semaphore_06
+AADC: 0F 07       CLR    semaphore_07
 AADE: 39          RTS
 AADF: 7D 54 80    TST    $5480
 AAE2: 26 D2       BNE    $AAB6
@@ -4718,13 +4740,13 @@ AAEC: 2B 0B       BMI    $AAF9
 AAEE: B6 41 8E    LDA    $418E
 AAF1: 4C          INCA
 AAF2: 97 D8       STA    $D8
-AAF4: 0C 06       INC    $06
-AAF6: 0C 07       INC    $07
+AAF4: 0C 06       INC    semaphore_06
+AAF6: 0C 07       INC    semaphore_07
 AAF8: 39          RTS
 AAF9: 0F D8       CLR    $D8
 AAFB: 0F D9       CLR    $D9
-AAFD: 0C 06       INC    $06
-AAFF: 0C 07       INC    $07
+AAFD: 0C 06       INC    semaphore_06
+AAFF: 0C 07       INC    semaphore_07
 AB01: 39          RTS
 AB02: 01 20       NEG    $20
 AB04: 01 50       NEG    $50
@@ -4743,18 +4765,18 @@ AB21: 7D 41 A5    TST    $41A5
 AB24: 26 0B       BNE    $AB31
 AB26: 0D D8       TST    $D8
 AB28: 10 27 01 16 LBEQ   $AC42
-AB2C: 0C 06       INC    $06
-AB2E: 0C 07       INC    $07
+AB2C: 0C 06       INC    semaphore_06
+AB2E: 0C 07       INC    semaphore_07
 AB30: 39          RTS
 AB31: 86 01       LDA    #$01
 AB33: 97 D1       STA    $D1
 AB35: 86 05       LDA    #$05
 AB37: 97 02       STA    $02
 AB39: 0F 04       CLR    $04
-AB3B: 0F 06       CLR    $06
+AB3B: 0F 06       CLR    semaphore_06
 AB3D: 97 03       STA    cpu2_game_state_03
 AB3F: 0F 05       CLR    $05
-AB41: 0F 07       CLR    $07
+AB41: 0F 07       CLR    semaphore_07
 AB43: 39          RTS
 AB44: C6 FC       LDB    #$FC
 AB46: B6 41 89    LDA    $4189
@@ -4828,8 +4850,8 @@ ABDD: 84 0F       ANDA   #$0F
 ABDF: ED 22       STD    $2,Y
 ABE1: C6 E4       LDB    #$E4
 ABE3: BD 90 52    JSR    $9052
-ABE6: 0C 06       INC    $06
-ABE8: 0C 07       INC    $07
+ABE6: 0C 06       INC    semaphore_06
+ABE8: 0C 07       INC    semaphore_07
 ABEA: 39          RTS
 
 ABF4: C6 FC       LDB    #$FC
@@ -4869,10 +4891,10 @@ AC42: 0F D1       CLR    $D1
 AC44: 86 02       LDA    #$02
 AC46: 97 02       STA    $02
 AC48: 0F 04       CLR    $04
-AC4A: 0F 06       CLR    $06
+AC4A: 0F 06       CLR    semaphore_06
 AC4C: 97 03       STA    cpu2_game_state_03
 AC4E: 0F 05       CLR    $05
-AC50: 0F 07       CLR    $07
+AC50: 0F 07       CLR    semaphore_07
 AC52: 39          RTS
 AC53: 96 13       LDA    $13
 AC55: 4C          INCA
@@ -4898,15 +4920,15 @@ AC77: 84 0F       ANDA   #$0F
 AC79: ED 22       STD    $2,Y
 AC7B: 96 DA       LDA    $DA
 AC7D: 39          RTS
-AC7E: 96 06       LDA    $06
-AC80: 91 07       CMPA   $07
+AC7E: 96 06       LDA    semaphore_06
+AC80: 91 07       CMPA   semaphore_07
 AC82: 23 01       BLS    $AC85
 AC84: 39          RTS
 AC85: CE AC 8B    LDU    #jump_table_ac8b
 AC88: 48          ASLA
 AC89: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 
-ACA3: 0C 06       INC    $06
+ACA3: 0C 06       INC    semaphore_06
 ACA5: 0F E8       CLR    $E8
 ACA7: BD 84 E0    JSR    $84E0
 ACAA: 7E 84 F9    JMP    $84F9
@@ -4914,7 +4936,7 @@ ACAD: 96 B3       LDA    $B3
 ACAF: 91 B4       CMPA   $B4
 ACB1: 27 01       BEQ    $ACB4
 ACB3: 39          RTS
-ACB4: 0C 06       INC    $06
+ACB4: 0C 06       INC    semaphore_06
 ACB6: BD 84 23    JSR    $8423
 ACB9: 7E 84 BA    JMP    $84BA
 
@@ -4922,7 +4944,7 @@ ACBC: 96 6E       LDA    $6E
 ACBE: 91 6F       CMPA   $6F
 ACC0: 27 01       BEQ    $ACC3
 ACC2: 39          RTS
-ACC3: 0C 06       INC    $06
+ACC3: 0C 06       INC    semaphore_06
 ACC5: BD 83 CB    JSR    $83CB
 ACC8: BD B4 B8    JSR    $B4B8
 ACCB: BD 84 CD    JSR    $84CD
@@ -4940,8 +4962,8 @@ ACE6: 6A E4       DEC    ,S    ; [local]
 ACE8: 26 F8       BNE    $ACE2
 ACEA: A6 E0       LDA    ,S+    ; [local]
 ACEC: 0F 0E       CLR    $0E
-ACEE: 0C 06       INC    $06
-ACF0: 0C 07       INC    $07
+ACEE: 0C 06       INC    semaphore_06
+ACF0: 0C 07       INC    semaphore_07
 ACF2: 0D 01       TST    $01
 ACF4: 26 31       BNE    $AD27
 ACF6: CE B0 BE    LDU    #$B0BE
@@ -5012,8 +5034,8 @@ AD8D: 81 C0       CMPA   #$C0
 AD8F: 24 01       BCC    $AD92
 AD91: 39          RTS
 AD92: 0F 0E       CLR    $0E
-AD94: 0C 06       INC    $06
-AD96: 0C 07       INC    $07
+AD94: 0C 06       INC    semaphore_06
+AD96: 0C 07       INC    semaphore_07
 AD98: 39          RTS
 AD99: 96 0E       LDA    $0E
 AD9B: 84 7F       ANDA   #$7F
@@ -5027,13 +5049,13 @@ ADA9: 97 C0       STA    $C0
 ADAB: BD 92 F7    JSR    $92F7
 ADAE: 0D 01       TST    $01
 ADB0: 26 0D       BNE    $ADBF
-ADB2: 0C 06       INC    $06
-ADB4: 0C 07       INC    $07
+ADB2: 0C 06       INC    semaphore_06
+ADB4: 0C 07       INC    semaphore_07
 ADB6: CE 54 80    LDU    #$5480
 ADB9: BD A2 25    JSR    $A225
 ADBC: 7E B4 B8    JMP    $B4B8
-ADBF: 0C 06       INC    $06
-ADC1: 0C 07       INC    $07
+ADBF: 0C 06       INC    semaphore_06
+ADC1: 0C 07       INC    semaphore_07
 ADC3: CE 54 A0    LDU    #$54A0
 ADC6: BD A2 25    JSR    $A225
 ADC9: 7E B4 B8    JMP    $B4B8
@@ -5067,7 +5089,7 @@ AE0C: F6 B1 5C    LDB    $B15C
 AE0F: A7 A1       STA    ,Y++
 AE11: 5A          DECB
 AE12: 26 FB       BNE    $AE0F
-AE14: 0C 06       INC    $06
+AE14: 0C 06       INC    semaphore_06
 AE16: 7E D6 36    JMP    $D636
 AE19: 0F D2       CLR    $D2
 AE1B: CC 00 00    LDD    #$0000
@@ -5088,8 +5110,8 @@ AE3C: FD 3F 98    STD    $3F98
 AE3F: 7D 43 80    TST    $4380
 AE42: 27 01       BEQ    $AE45
 AE44: 39          RTS
-AE45: 0C 06       INC    $06
-AE47: 0C 07       INC    $07
+AE45: 0C 06       INC    semaphore_06
+AE47: 0C 07       INC    semaphore_07
 AE49: 39          RTS
 AE4A: C6 FC       LDB    #$FC
 AE4C: B6 41 89    LDA    $4189
@@ -5098,8 +5120,8 @@ AE51: 86 FF       LDA    #$FF
 AE53: FD 3F 96    STD    $3F96
 AE56: B6 41 8A    LDA    nb_credits_418a
 AE59: FD 3F 98    STD    $3F98
-AE5C: 0C 06       INC    $06
-AE5E: 0C 07       INC    $07
+AE5C: 0C 06       INC    semaphore_06
+AE5E: 0C 07       INC    semaphore_07
 AE60: BD B4 B8    JSR    $B4B8
 AE63: 7E 84 8C    JMP    $848C
 AE66: C6 FC       LDB    #$FC
@@ -5114,8 +5136,8 @@ AE7B: B6 54 31    LDA    $5431
 AE7E: 27 01       BEQ    $AE81
 AE80: 39          RTS
 AE81: 0F E8       CLR    $E8
-AE83: 0C 06       INC    $06
-AE85: 0C 07       INC    $07
+AE83: 0C 06       INC    semaphore_06
+AE85: 0C 07       INC    semaphore_07
 AE87: 39          RTS
 AE88: 0F 1F       CLR    $1F
 AE8A: BD B4 B8    JSR    $B4B8
@@ -5145,8 +5167,8 @@ AEC1: 97 15       STA    $15
 AEC3: 86 01       LDA    #$01
 AEC5: 97 04       STA    $04
 AEC7: 97 05       STA    $05
-AEC9: 0F 06       CLR    $06
-AECB: 0F 07       CLR    $07
+AEC9: 0F 06       CLR    semaphore_06
+AECB: 0F 07       CLR    semaphore_07
 AECD: 39          RTS
 AECE: 7F 54 A0    CLR    $54A0
 AED1: 7D 54 80    TST    $5480
@@ -5155,8 +5177,8 @@ AED6: 0F 01       CLR    $01
 AED8: 0F DB       CLR    $DB
 AEDA: 0F D8       CLR    $D8
 AEDC: 0F D9       CLR    $D9
-AEDE: 0C 06       INC    $06
-AEE0: 0C 07       INC    $07
+AEDE: 0C 06       INC    semaphore_06
+AEE0: 0C 07       INC    semaphore_07
 AEE2: 39          RTS
 AEE3: 01 20       NEG    $20
 AEE5: 01 50       NEG    $50
@@ -5169,19 +5191,19 @@ AEF4: 97 D1       STA    $D1
 AEF6: 86 05       LDA    #$05
 AEF8: 97 02       STA    $02
 AEFA: 0F 04       CLR    $04
-AEFC: 0F 06       CLR    $06
+AEFC: 0F 06       CLR    semaphore_06
 AEFE: 97 03       STA    cpu2_game_state_03
 AF00: 0F 05       CLR    $05
-AF02: 0F 07       CLR    $07
+AF02: 0F 07       CLR    semaphore_07
 AF04: 39          RTS
 AF05: 0F D1       CLR    $D1
 AF07: 86 02       LDA    #$02
 AF09: 97 02       STA    $02
 AF0B: 0F 04       CLR    $04
-AF0D: 0F 06       CLR    $06
+AF0D: 0F 06       CLR    semaphore_06
 AF0F: 97 03       STA    cpu2_game_state_03
 AF11: 0F 05       CLR    $05
-AF13: 0F 07       CLR    $07
+AF13: 0F 07       CLR    semaphore_07
 AF15: 39          RTS
 AF16: 7D 42 43    TST    $4243
 AF19: 27 0A       BEQ    $AF25
@@ -9696,7 +9718,7 @@ D5EB: 0C 6D       INC    $6D
 D5ED: 0A 6B       DEC    $6B
 D5EF: 26 F0       BNE    $D5E1
 D5F1: 0C 04       INC    $04
-D5F3: 0F 06       CLR    $06
+D5F3: 0F 06       CLR    semaphore_06
 D5F5: 39          RTS
 D5F6: 96 C6       LDA    $C6
 D5F8: 80 02       SUBA   #$02

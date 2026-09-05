@@ -4,6 +4,8 @@ cpu2 memory mapping possibly off
 check that cpu1 & cpu2 irqs work together
 when $3000 contains the OSD data, we can start putting tiles on screen
 
+check when bullets decrease (check cheat, track down to fire flag)
+
 fmode=2 (32 bit scroll)
 fmode=3 64 bit sprites
 upper & lower HUD use fixed sprites either 4*64 attached either 5*64 with limited colors, check in game

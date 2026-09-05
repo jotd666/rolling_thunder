@@ -1,7 +1,1011 @@
-;	map(0x1000, 0x13ff).rw(m_cus30, FUNC(namco_cus30_device::namcos1_cus30_r), FUNC(namco_cus30_device::namcos1_cus30_w));
+;	map(0x1000, 0x13ff).rw(m_cus30, FUNC(namco_cus30_device::namcos1_cus30_r), FUNC(namco_cus30_device::namcos1_cus30_w)); (shared)
 ;	map(0x1400, 0x1fff).ram();
+;	map(0x2000, 0x2001).rw("ymsnd", FUNC(ym2151_device::read), FUNC(ym2151_device::write));
+;	map(0x2020, 0x2020).portr("IN0");
+;	map(0x2021, 0x2021).portr("IN1");
+;	map(0x2030, 0x2030).r(FUNC(namcos86_state::dsw0_r));
+;	map(0x2031, 0x2031).r(FUNC(namcos86_state::dsw1_r));
+;	map(0x4000, 0xbfff).rom().region("mcusub", 0);
+;	map(0xb000, 0xb000).nopw(); // ??? written (not always) at end of interrupt
+;	map(0xb800, 0xb800).nopw(); // ??? written (not always) at end of interrupt
 
+; there's ram on zero page too but it's not documented (maybe it's included in the MCU directly)
+; and rom seems to continue after BFFF
+; ex: boot is from F000 to FFFF*
+; zero page RAM and higher ROM are included in the MCU, not in memory map.
+
+; for bookkeeping?
 nb_coins_inserted_98 = $98
+; original value that propagates in shared RAM
+nb_credits_80 = $80
+nb_credits_per_coin_86 = $86
+nb_credits_1183 = $1183
+nb_coins_per_credit_85 = $85
+port0_2020 = $2020
+port1_2021 = $2021
+dsw0_2030 = $2030
+dsw1_2031 = $2031
+
+80A4: 4F       clra 
+80A5: 5F       clrb 
+80A6: 97 B0    sta  $B0
+80A8: B7 11 83 sta  $1183
+80AB: FD 11 84 std  $1184
+80AE: 71 7F 14 aim  #$7F,$14
+80B1: 7F 11 82 clr  $1182
+80B4: 8E 13 FF lds  #$13FF
+80B7: 86 00    lda  #$00
+80B9: 97 02    sta  $02
+80BB: 97 00    sta  $00
+80BD: 97 BA    sta  $BA
+80BF: BD F2 98 jsr  $F298
+80C2: BD F1 4A jsr  $F14A
+80C5: DE AE    ldx  $AE
+80C7: EC 2E    ldd  $2E,x
+80C9: DD AA    std  $AA
+80CB: EC 2A    ldd  $2A,x
+80CD: DD AC    std  $AC
+80CF: DE AA    ldx  $AA
+80D1: AD 00    jsr  $00,x
+80D3: 96 08    lda  $08
+80D5: 4F       clra 
+80D6: 5F       clrb 
+80D7: DD 09    std  $09
+80D9: 4C       inca 
+80DA: DD 0B    std  $0B
+80DC: 96 08    lda  $08
+80DE: 8A 08    ora  #$08
+80E0: 97 08    sta  $08
+80E2: 0E       cli  
+80E3: 8D 55    bsr  $813A
+80E5: 7F 11 91 clr  $1191
+80E8: BD F2 0A jsr  $F20A
+80EB: BD F0 B5 jsr  $F0B5
+80EE: 8E 00 C5 lds  #$00C5
+80F1: BD F2 AE jsr  $F2AE
+80F4: DE AE    ldx  $AE
+80F6: AE 12    lds  $12,x
+80F8: DE AE    ldx  $AE
+80FA: EE 1C    ldx  $1C,x
+80FC: AD 00    jsr  $00,x
+80FE: DE AE    ldx  $AE
+8100: EE 28    ldx  $28,x
+8102: AD 00    jsr  $00,x
+8104: BD F2 49 jsr  $F249
+8107: BD 84 56 jsr  $8456
+810A: DE AE    ldx  $AE
+810C: EE 18    ldx  $18,x
+810E: AD 00    jsr  $00,x
+8110: 86 C0    lda  #$C0
+8112: 97 14    sta  $14
+8114: DE AE    ldx  $AE
+8116: 6D 7A    tst  $7A,x
+8118: 27 06    beq  $8120
+811A: 96 82    lda  $82
+811C: 9B 80    adda $80
+811E: 97 80    sta  $80
+8120: 7F 00 82 clr  $0082
+8123: DE AA    ldx  $AA
+8125: AD 00    jsr  $00,x
+8127: 86 A6    lda  #$A6
+8129: B7 11 82 sta  $1182
+812C: DE AE    ldx  $AE
+812E: EE 2C    ldx  $2C,x
+8130: AD 00    jsr  $00,x
+8132: BD 81 B7 jsr  $81B7
+8135: BD 81 4F jsr  $814F
+8138: 20 F8    bra  $8132
+813A: DE AE    ldx  $AE
+813C: A6 32    lda  $32,x
+813E: 5F       clrb 
+813F: C3 14 00 addd #$1400
+8142: DD C6    std  $C6
+8144: CE 14 00 ldx  #$1400
+8147: 6F 00    clr  $00,x
+8149: 08       inx  
+814A: 9C C6    cmpx $C6
+814C: 26 F9    bne  $8147
+814E: 39       rts  
+814F: B6 11 82 lda  $1182
+8152: 81 A6    cmpa #$A6
+8154: 27 03    beq  $8159
+8156: 7E F4 F9 jmp  $F4F9
+8159: F6 11 83 ldb  $1183
+815C: 96 B0    lda  $B0
+815E: 27 03    beq  $8163
+8160: 7E F4 F1 jmp  $F4F1
+8163: 5D       tstb 
+8164: 26 03    bne  $8169
+8166: 7E F4 F9 jmp  $F4F9
+8169: 7F 11 82 clr  $1182
+816C: 8E 13 FF lds  #$13FF
+816F: BD F0 FB jsr  $F0FB
+8172: BD 81 84 jsr  $8184
+8175: BD F2 20 jsr  $F220
+8178: 8E 00 C5 lds  #$00C5
+817B: BD F1 10 jsr  $F110
+817E: BD 81 9A jsr  $819A
+8181: 7E F4 DD jmp  $F4DD
+8184: DE AE    ldx  $AE
+8186: A6 31    lda  $31,x
+8188: 81 80    cmpa #$80
+818A: 27 03    beq  $818F
+818C: 7E F1 24 jmp  $F124
+818F: CC C0 00 ldd  #$C000
+8192: DD A8    std  $A8
+8194: CE 40 00 ldx  #$4000
+8197: 7E F1 37 jmp  $F137
+819A: DE AE    ldx  $AE
+819C: A6 32    lda  $32,x
+819E: 27 11    beq  $81B1
+81A0: EC 35    ldd  $35,x
+81A2: 18       xgdx 
+81A3: 8C 14 00 cmpx #$1400
+81A6: 18       xgdx 
+81A7: 27 08    beq  $81B1
+81A9: CE 14 00 ldx  #$1400
+81AC: BD F2 E3 jsr  $F2E3
+81AF: 25 01    bcs  $81B2
+81B1: 39       rts  
+81B2: C6 04    ldb  #$04
+81B4: 7E F3 3F jmp  $F33F
+81B7: B6 11 82 lda  $1182
+81BA: 81 A6    cmpa #$A6
+81BC: 26 16    bne  $81D4
+81BE: F6 11 91 ldb  $1191
+81C1: 27 11    beq  $81D4
+81C3: C1 08    cmpb #$08
+81C5: 24 0A    bcc  $81D1
+81C7: 5A       decb 
+81C8: 58       aslb 
+81C9: CE F4 53 ldx  #$F453
+81CC: 3A       abx  
+81CD: EE 00    ldx  $00,x
+81CF: AD 00    jsr  $00,x
+81D1: 7F 11 91 clr  $1191
+81D4: 39       rts  
+81D5: B6 11 82 lda  $1182
+81D8: 81 A6    cmpa #$A6
+81DA: 26 4F    bne  $822B
+81DC: 33       pulb 
+81DD: 34       des  
+81DE: 36       psha 
+81DF: DE C6    ldx  $C6
+81E1: 3C       pshx 
+81E2: DE C8    ldx  $C8
+81E4: 3C       pshx 
+81E5: DE CA    ldx  $CA
+81E7: 3C       pshx 
+81E8: DE CC    ldx  $CC
+81EA: 3C       pshx 
+81EB: DE AE    ldx  $AE
+81ED: EE 1E    ldx  $1E,x
+81EF: AD 00    jsr  $00,x
+81F1: DE AA    ldx  $AA
+81F3: AD 00    jsr  $00,x
+81F5: DE AE    ldx  $AE
+81F7: EE 2C    ldx  $2C,x
+81F9: AD 00    jsr  $00,x
+81FB: DE AC    ldx  $AC
+81FD: AD 00    jsr  $00,x
+81FF: DE AE    ldx  $AE
+8201: EE 20    ldx  $20,x
+8203: AD 00    jsr  $00,x
+8205: DE AE    ldx  $AE
+8207: EE 22    ldx  $22,x
+8209: AD 00    jsr  $00,x
+820B: DE AE    ldx  $AE
+820D: EE 24    ldx  $24,x
+820F: AD 00    jsr  $00,x
+8211: DE AE    ldx  $AE
+8213: EE 26    ldx  $26,x
+8215: AD 00    jsr  $00,x
+8217: DE AE    ldx  $AE
+8219: EE 28    ldx  $28,x
+821B: AD 00    jsr  $00,x
+821D: 38       pulx 
+821E: DF CC    stx  $CC
+8220: 38       pulx 
+8221: DF CA    stx  $CA
+8223: 38       pulx 
+8224: DF C8    stx  $C8
+8226: 38       pulx 
+8227: DF C6    stx  $C6
+8229: 33       pulb 
+822A: 3B       rti  
+822B: DE AA    ldx  $AA
+822D: AD 00    jsr  $00,x
+822F: DE AE    ldx  $AE
+8231: EE 2C    ldx  $2C,x
+8233: AD 00    jsr  $00,x
+8235: 3B       rti  
+
+8236: 8D 18    bsr  $8250
+8238: B6 11 82 lda  $1182
+823B: 81 A6    cmpa #$A6
+823D: 27 04    beq  $8243
+823F: 8D 0F    bsr  $8250
+8241: 8D 0D    bsr  $8250
+8243: BD 82 E4 jsr  $82E4
+8246: BD 83 09 jsr  $8309
+8249: BD 83 2F jsr  $832F
+824C: BD 83 38 jsr  $8338
+824F: 39       rts  
+8250: 8D 03    bsr  read_ios_8255
+8252: 8D 44    bsr  $8298
+8254: 39       rts  
+
+read_ios_8255:
+8255: CE 14 00 ldx  #$1400
+8258: DF C8    stx  $C8
+825A: CE 20 30 ldx  #dsw0_2030
+825D: 8D 24    bsr  read_io_8283
+825F: CE 20 31 ldx  #dsw1_2031
+8262: 8D 1F    bsr  read_io_8283
+8264: CE 20 20 ldx  #port0_2020
+8267: 8D 1A    bsr  read_io_8283
+8269: CE 20 21 ldx  #port1_2021
+826C: 8D 15    bsr  read_io_8283
+826E: 96 02    lda  $02
+8270: C6 05    ldb  #$05
+8272: D7 B5    stb  $B5
+8274: DE C8    ldx  $C8
+8276: 49       rola 
+8277: 59       rolb 
+; store in 1420-1424
+8278: E7 00    stb  $00,x
+827A: 08       inx  
+827B: DF C8    stx  $C8
+827D: 7A 00 B5 dec  $00B5
+8280: 26 F2    bne  $8274
+8282: 39       rts  
+
+read_io_8283:
+8283: A6 00    lda  $00,x
+8285: C6 08    ldb  #$08
+8287: D7 B5    stb  $B5
+8289: DE C8    ldx  $C8
+828B: 49       rola 
+828C: 59       rolb 
+828D: E7 00    stb  $00,x
+828F: 08       inx  
+8290: DF C8    stx  $C8
+8292: 7A 00 B5 dec  $00B5
+8295: 26 F2    bne  $8289
+8297: 39       rts  
+8298: CE 14 25 ldx  #$1425
+829B: 7F 00 CD clr  $00CD
+829E: A6 01    lda  $01,x
+82A0: 97 B6    sta  $B6
+82A2: D6 CD    ldb  $CD
+82A4: 8D 24    bsr  $82CA
+82A6: A7 01    sta  $01,x
+82A8: E6 02    ldb  $02,x
+82AA: 53       comb 
+82AB: 9A B6    ora  $B6
+82AD: A4 02    anda $02,x
+82AF: A7 02    sta  $02,x
+82B1: A6 01    lda  $01,x
+82B3: 94 B6    anda $B6
+82B5: AA 02    ora  $02,x
+82B7: A7 02    sta  $02,x
+82B9: E4 02    andb $02,x
+82BB: E7 00    stb  $00,x
+82BD: 08       inx  
+82BE: 08       inx  
+82BF: 08       inx  
+82C0: 7C 00 CD inc  $00CD
+82C3: 96 CD    lda  $CD
+82C5: 81 25    cmpa #$25
+82C7: 26 D5    bne  $829E
+82C9: 39       rts  
+82CA: 3C       pshx 
+82CB: CE 80 7F ldx  #$807F
+82CE: 3A       abx  
+82CF: E6 00    ldb  $00,x
+82D1: CE 14 00 ldx  #$1400
+82D4: 3A       abx  
+82D5: A6 00    lda  $00,x
+82D7: C1 12    cmpb #$12
+82D9: 27 05    beq  $82E0
+82DB: C1 1A    cmpb #$1A
+82DD: 27 01    beq  $82E0
+82DF: 43       coma 
+82E0: 84 01    anda #$01
+82E2: 38       pulx 
+82E3: 39       rts  
+82E4: CE 14 25 ldx  #$1425
+82E7: DF CA    stx  $CA
+82E9: CE 14 94 ldx  #$1494
+82EC: DF C8    stx  $C8
+82EE: C6 25    ldb  #$25
+82F0: D7 CD    stb  $CD
+82F2: DE CA    ldx  $CA
+82F4: EC 00    ldd  $00,x
+82F6: 08       inx  
+82F7: 08       inx  
+82F8: 08       inx  
+82F9: DF CA    stx  $CA
+82FB: DE C8    ldx  $C8
+82FD: ED 00    std  $00,x
+82FF: 08       inx  
+8300: 08       inx  
+8301: DF C8    stx  $C8
+8303: 7A 00 CD dec  $00CD
+8306: 26 EA    bne  $82F2
+8308: 39       rts  
+8309: CE 14 94 ldx  #$1494
+830C: C6 00    ldb  #$00
+830E: 58       aslb 
+830F: 5C       incb 
+8310: 4F       clra 
+8311: C3 14 94 addd #$1494
+8314: DD C6    std  $C6
+8316: C6 11    ldb  #$11
+8318: 58       aslb 
+8319: 5C       incb 
+831A: 4F       clra 
+831B: C3 14 94 addd #$1494
+831E: DD C8    std  $C8
+8320: DE C6    ldx  $C6
+8322: A6 00    lda  $00,x
+8324: DE C8    ldx  $C8
+8326: AA 00    ora  $00,x
+8328: A7 00    sta  $00,x
+832A: DE C6    ldx  $C6
+832C: A7 00    sta  $00,x
+832E: 39       rts  
+832F: B6 11 83 lda  $1183
+8332: 27 03    beq  $8337
+8334: BD F2 49 jsr  $F249
+8337: 39       rts  
+8338: B6 11 83 lda  $1183
+833B: 27 05    beq  $8342
+833D: 7F 00 C6 clr  $00C6
+8340: 20 2E    bra  $8370
+8342: B6 11 8C lda  $118C
+8345: 26 23    bne  $836A
+8347: 86 18    lda  #$18
+8349: 97 C6    sta  $C6
+834B: 96 80    lda  $80
+834D: 27 03    beq  $8352
+834F: 71 17 C6 aim  #$17,$C6
+8352: DE AE    ldx  $AE
+8354: A1 78    cmpa $78,x
+8356: 25 03    bcs  $835B
+8358: 71 0F C6 aim  #$0F,$C6
+835B: 7F 00 03 clr  $0003
+835E: 96 A7    lda  $A7
+8360: 81 1F    cmpa #$1F
+8362: 25 02    bcs  $8366
+8364: 80 1E    suba #$1E
+8366: 81 10    cmpa #$10
+8368: 24 06    bcc  $8370
+836A: 86 18    lda  #$18
+836C: 97 01    sta  $01
+836E: 20 04    bra  $8374
+8370: 96 C6    lda  $C6
+8372: 97 01    sta  $01
+8374: 39       rts  
+8375: BD FD 9D jsr  $FD9D
+8378: 8D 01    bsr  $837B
+837A: 39       rts  
+837B: DE B3    ldx  $B3
+837D: 4F       clra 
+837E: E6 00    ldb  $00,x
+8380: 54       lsrb 
+8381: 49       rola 
+8382: E6 02    ldb  $02,x
+8384: 54       lsrb 
+8385: 49       rola 
+8386: E6 04    ldb  $04,x
+8388: 54       lsrb 
+8389: 49       rola 
+838A: 8D 08    bsr  $8394
+838C: 7F 00 02 clr  $0002
+838F: 97 BA    sta  $BA
+8391: 97 00    sta  $00
+8393: 39       rts  
+8394: 7D 11 83 tst  $1183
+8397: 26 08    bne  $83A1
+8399: D6 80    ldb  $80
+839B: C1 09    cmpb #$09
+839D: 25 02    bcs  $83A1
+839F: 84 FE    anda #$FE
+83A1: 39       rts  
+83A2: DE AE    ldx  $AE
+83A4: EE 55    ldx  $55,x
+83A6: C6 03    ldb  #$03
+83A8: 58       aslb 
+83A9: 3A       abx  
+83AA: A6 01    lda  $01,x
+83AC: DE AE    ldx  $AE
+83AE: EE 4C    ldx  $4C,x
+83B0: A7 42    sta  $42,x
+83B2: 27 19    beq  $83CD
+83B4: A6 41    lda  $41,x
+83B6: 27 15    beq  $83CD
+83B8: DE AE    ldx  $AE
+83BA: EC 46    ldd  $46,x
+83BC: 36       psha 
+83BD: 37       pshb 
+83BE: CC 83 D0 ldd  #$83D0
+83C1: ED 46    std  $46,x
+83C3: BD F7 87 jsr  $F787
+83C6: DE AE    ldx  $AE
+83C8: 33       pulb 
+83C9: 32       pula 
+83CA: ED 46    std  $46,x
+83CC: 39       rts  
+83CD: 7E F7 87 jmp  $F787
+83D0: 00       illegal
+83D1: FF 81 0E stx  $810E
+83D4: 27 13    beq  $83E9
+83D6: DE CA    ldx  $CA
+83D8: E6 01    ldb  $01,x
+83DA: DE C6    ldx  $C6
+83DC: EB 07    addb $07,x
+83DE: E7 07    stb  $07,x
+83E0: 6C 0B    inc  $0B,x
+83E2: 6C 0B    inc  $0B,x
+83E4: 31       ins  
+83E5: 31       ins  
+83E6: 7E F8 F5 jmp  $F8F5
+83E9: DE CA    ldx  $CA
+83EB: E6 01    ldb  $01,x
+83ED: 2D 2E    blt  $841D
+83EF: D7 BF    stb  $BF
+83F1: DE C6    ldx  $C6
+83F3: A6 07    lda  $07,x
+83F5: 97 C8    sta  $C8
+83F7: 84 0F    anda #$0F
+83F9: A7 07    sta  $07,x
+83FB: EC 07    ldd  $07,x
+83FD: E3 08    addd $08,x
+83FF: ED 08    std  $08,x
+8401: A6 07    lda  $07,x
+8403: 89 00    adca #$00
+8405: A7 07    sta  $07,x
+8407: 7A 00 BF dec  $00BF
+840A: 26 EF    bne  $83FB
+840C: 96 C8    lda  $C8
+840E: 84 F0    anda #$F0
+8410: AB 07    adda $07,x
+8412: A7 07    sta  $07,x
+8414: 6C 0B    inc  $0B,x
+8416: 6C 0B    inc  $0B,x
+8418: 31       ins  
+8419: 31       ins  
+841A: 7E F8 F5 jmp  $F8F5
+841D: D7 BF    stb  $BF
+841F: DE C6    ldx  $C6
+8421: A6 07    lda  $07,x
+8423: 97 C8    sta  $C8
+8425: 84 0F    anda #$0F
+8427: A7 07    sta  $07,x
+8429: 7F 00 CA clr  $00CA
+842C: EC 07    ldd  $07,x
+842E: 97 CB    sta  $CB
+8430: 93 CA    subd $CA
+8432: DD CA    std  $CA
+8434: EC 08    ldd  $08,x
+8436: 93 CA    subd $CA
+8438: ED 08    std  $08,x
+843A: A6 07    lda  $07,x
+843C: 82 00    sbca #$00
+843E: A7 07    sta  $07,x
+8440: 7C 00 BF inc  $00BF
+8443: 26 E4    bne  $8429
+8445: 96 C8    lda  $C8
+8447: 84 F0    anda #$F0
+8449: AB 07    adda $07,x
+844B: A7 07    sta  $07,x
+844D: 6C 0B    inc  $0B,x
+844F: 6C 0B    inc  $0B,x
+8451: 31       ins  
+8452: 31       ins  
+8453: 7E F8 F5 jmp  $F8F5
+8456: CC 00 20 ldd  #$0020
+8459: 36       psha 
+845A: B6 20 01 lda  $2001
+845D: 2B FB    bmi  $845A
+845F: F7 20 00 stb  $2000
+8462: 32       pula 
+8463: B7 20 01 sta  $2001
+8466: 5C       incb 
+8467: C1 28    cmpb #$28
+8469: 26 EE    bne  $8459
+846B: CC 7F 78 ldd  #$7F78
+846E: 36       psha 
+846F: B6 20 01 lda  $2001
+8472: 2B FB    bmi  $846F
+8474: F7 20 00 stb  $2000
+8477: 32       pula 
+8478: B7 20 01 sta  $2001
+847B: 5C       incb 
+847C: C1 80    cmpb #$80
+847E: 26 EE    bne  $846E
+8480: 39       rts  
+8481: F6 13 80 ldb  $1380
+8484: 27 D0    beq  $8456
+8486: C1 FF    cmpb #$FF
+8488: 27 2B    beq  $84B5
+848A: 86 00    lda  #$00
+848C: B7 15 8A sta  $158A
+848F: CE 9A D9 ldx  #$9AD9
+8492: 3A       abx  
+8493: 3A       abx  
+8494: EC 00    ldd  $00,x
+8496: FD 15 6E std  $156E
+8499: 86 FF    lda  #$FF
+849B: B7 13 80 sta  $1380
+849E: CE 16 6E ldx  #$166E
+84A1: 4F       clra 
+84A2: A7 00    sta  $00,x
+84A4: A7 03    sta  $03,x
+84A6: A7 06    sta  $06,x
+84A8: A7 09    sta  $09,x
+84AA: A7 0C    sta  $0C,x
+84AC: A7 0F    sta  $0F,x
+84AE: A7 12    sta  $12,x
+84B0: A7 15    sta  $15,x
+84B2: 7E 84 C5 jmp  $84C5
+84B5: B6 13 85 lda  $1385
+84B8: F6 15 72 ldb  $1572
+84BB: 3D       mul  
+84BC: F3 15 76 addd $1576
+84BF: FD 15 76 std  $1576
+84C2: 25 01    bcs  $84C5
+84C4: 39       rts  
+84C5: FE 15 6E ldx  $156E
+84C8: E6 00    ldb  $00,x
+84CA: 08       inx  
+84CB: FF 15 6E stx  $156E
+84CE: F7 13 81 stb  $1381
+84D1: 58       aslb 
+84D2: CE 84 DA ldx  #$84DA
+84D5: 3A       abx  
+84D6: EE 00    ldx  $00,x
+84D8: 6E 00    jmp  $00,x
+84DA: 86 0B    lda  #$0B
+84DC: 87 34    sta  #$34
+84DE: 87 69    sta  #$69
+84E0: 87 7E    sta  #$7E
+84E2: 85 FF    bita #$FF
+84E4: 85 FF    bita #$FF
+84E6: 85 E5    bita #$E5
+84E8: 87 8D    sta  #$8D
+84EA: 86 0C    lda  #$0C
+84EC: 87 A3    sta  #$A3
+84EE: 86 89    lda  #$89
+84F0: 85 FF    bita #$FF
+84F2: 86 D8    lda  #$D8
+84F4: 85 E4    bita #$E4
+84F6: 85 F7    bita #$F7
+84F8: 85 FF    bita #$FF
+84FA: 85 BA    bita #$BA
+84FC: 85 0C    bita #$0C
+84FE: 85 65    bita #$65
+8500: 88 5A    eora #$5A
+8502: 87 06    sta  #$06
+8504: 87 EA    sta  #$EA
+8506: 88 05    eora #$05
+8508: 88 3F    eora #$3F
+850A: 88 22    eora #$22
+850C: CE 16 6E ldx  #$166E
+850F: C6 08    ldb  #$08
+8511: F7 15 7A stb  $157A
+8514: 6D 00    tst  $00,x
+8516: 27 09    beq  $8521
+8518: EC 01    ldd  $01,x
+851A: B3 15 6E subd $156E
+851D: 27 21    beq  $8540
+851F: 20 03    bra  $8524
+8521: FF 16 6C stx  $166C
+8524: 08       inx  
+8525: 08       inx  
+8526: 08       inx  
+8527: 7A 15 7A dec  $157A
+852A: 26 E8    bne  $8514
+852C: FE 16 6C ldx  $166C
+852F: FC 15 6E ldd  $156E
+8532: ED 01    std  $01,x
+8534: 86 01    lda  #$01
+8536: A7 00    sta  $00,x
+8538: FE 15 6E ldx  $156E
+853B: EE 01    ldx  $01,x
+853D: 7E 84 C8 jmp  $84C8
+8540: FF 16 6C stx  $166C
+8543: 6C 00    inc  $00,x
+8545: A6 00    lda  $00,x
+8547: FE 15 6E ldx  $156E
+854A: E6 00    ldb  $00,x
+854C: 08       inx  
+854D: FF 15 6E stx  $156E
+8550: 10       sba  
+8551: 27 05    beq  $8558
+8553: EE 01    ldx  $01,x
+8555: 7E 84 C8 jmp  $84C8
+8558: 08       inx  
+8559: 08       inx  
+855A: FF 15 6E stx  $156E
+855D: FE 16 6C ldx  $166C
+8560: 6F 00    clr  $00,x
+8562: 7E 84 C5 jmp  $84C5
+8565: CE 16 6E ldx  #$166E
+8568: C6 08    ldb  #$08
+856A: F7 15 7A stb  $157A
+856D: 6D 00    tst  $00,x
+856F: 27 09    beq  $857A
+8571: EC 01    ldd  $01,x
+8573: B3 15 6E subd $156E
+8576: 27 22    beq  $859A
+8578: 20 03    bra  $857D
+857A: FF 16 6C stx  $166C
+857D: 08       inx  
+857E: 08       inx  
+857F: 08       inx  
+8580: 7A 15 7A dec  $157A
+8583: 26 E8    bne  $856D
+8585: FE 16 6C ldx  $166C
+8588: FC 15 6E ldd  $156E
+858B: ED 01    std  $01,x
+858D: 86 01    lda  #$01
+858F: A7 00    sta  $00,x
+8591: FE 15 6E ldx  $156E
+8594: 08       inx  
+8595: 08       inx  
+8596: 08       inx  
+8597: 7E 84 C8 jmp  $84C8
+859A: FF 16 6C stx  $166C
+859D: 6C 00    inc  $00,x
+859F: A6 00    lda  $00,x
+85A1: FE 15 6E ldx  $156E
+85A4: E6 00    ldb  $00,x
+85A6: 08       inx  
+85A7: FF 15 6E stx  $156E
+85AA: 10       sba  
+85AB: 27 05    beq  $85B2
+85AD: 08       inx  
+85AE: 08       inx  
+85AF: 7E 84 C8 jmp  $84C8
+85B2: FE 16 6C ldx  $166C
+85B5: 6F 00    clr  $00,x
+85B7: 7E 85 F7 jmp  $85F7
+85BA: FE 15 6E ldx  $156E
+85BD: E6 00    ldb  $00,x
+85BF: 08       inx  
+85C0: FF 15 6E stx  $156E
+85C3: F7 15 7A stb  $157A
+85C6: CC 00 08 ldd  #$0008
+85C9: 78 15 7A asl  $157A
+85CC: 24 0D    bcc  $85DB
+85CE: 36       psha 
+85CF: B6 20 01 lda  $2001
+85D2: 2B FB    bmi  $85CF
+85D4: F7 20 00 stb  $2000
+85D7: 32       pula 
+85D8: B7 20 01 sta  $2001
+85DB: 4C       inca 
+85DC: 7D 15 7A tst  $157A
+85DF: 26 E8    bne  $85C9
+85E1: 7E 84 C5 jmp  $84C5
+85E4: 39       rts  
+85E5: FE 15 6E ldx  $156E
+85E8: E6 00    ldb  $00,x
+85EA: 08       inx  
+85EB: FF 15 6E stx  $156E
+85EE: FF 15 8C stx  $158C
+85F1: 7C 15 8A inc  $158A
+85F4: 7E 84 8F jmp  $848F
+85F7: FE 15 6E ldx  $156E
+85FA: EE 00    ldx  $00,x
+85FC: 7E 84 C8 jmp  $84C8
+85FF: FE 15 6E ldx  $156E
+8602: E6 00    ldb  $00,x
+8604: 08       inx  
+8605: FF 15 6E stx  $156E
+8608: 7E 84 8F jmp  $848F
+860B: 39       rts  
+860C: FE 15 6E ldx  $156E
+860F: E6 00    ldb  $00,x
+8611: 08       inx  
+8612: F7 15 7A stb  $157A
+8615: CC 00 28 ldd  #$0028
+8618: 78 15 7A asl  $157A
+861B: 24 5E    bcc  $867B
+861D: 37       pshb 
+861E: 36       psha 
+861F: CC 02 01 ldd  #$0201
+8622: 36       psha 
+8623: B6 20 01 lda  $2001
+8626: 2B FB    bmi  $8623
+8628: F7 20 00 stb  $2000
+862B: 32       pula 
+862C: B7 20 01 sta  $2001
+862F: CC 00 01 ldd  #$0001
+8632: 36       psha 
+8633: B6 20 01 lda  $2001
+8636: 2B FB    bmi  $8633
+8638: F7 20 00 stb  $2000
+863B: 32       pula 
+863C: B7 20 01 sta  $2001
+863F: 32       pula 
+8640: C6 08    ldb  #$08
+8642: 84 07    anda #$07
+8644: 36       psha 
+8645: B6 20 01 lda  $2001
+8648: 2B FB    bmi  $8645
+864A: F7 20 00 stb  $2000
+864D: 32       pula 
+864E: B7 20 01 sta  $2001
+8651: 33       pulb 
+8652: 36       psha 
+8653: A6 00    lda  $00,x
+8655: 08       inx  
+8656: 81 FF    cmpa #$FF
+8658: 27 2C    beq  $8686
+865A: 36       psha 
+865B: B6 20 01 lda  $2001
+865E: 2B FB    bmi  $865B
+8660: F7 20 00 stb  $2000
+8663: 32       pula 
+8664: B7 20 01 sta  $2001
+8667: 32       pula 
+8668: 37       pshb 
+8669: C6 08    ldb  #$08
+866B: 8A 78    ora  #$78
+866D: 36       psha 
+866E: B6 20 01 lda  $2001
+8671: 2B FB    bmi  $866E
+8673: F7 20 00 stb  $2000
+8676: 32       pula 
+8677: B7 20 01 sta  $2001
+867A: 33       pulb 
+867B: 4C       inca 
+867C: 5C       incb 
+867D: 7D 15 7A tst  $157A
+8680: 26 96    bne  $8618
+8682: FF 15 6E stx  $156E
+8685: 39       rts  
+8686: 32       pula 
+8687: 20 F2    bra  $867B
+8689: FE 15 6E ldx  $156E
+868C: E6 00    ldb  $00,x
+868E: 08       inx  
+868F: F7 15 7A stb  $157A
+8692: 78 15 7A asl  $157A
+8695: 24 04    bcc  $869B
+8697: A6 00    lda  $00,x
+8699: 08       inx  
+869A: 36       psha 
+869B: 7D 15 7A tst  $157A
+869E: 26 F2    bne  $8692
+86A0: FF 15 6E stx  $156E
+86A3: F7 15 7A stb  $157A
+86A6: CE 17 73 ldx  #$1773
+86A9: C6 7F    ldb  #$7F
+86AB: F7 15 7B stb  $157B
+86AE: 74 15 7A lsr  $157A
+86B1: 24 19    bcc  $86CC
+86B3: 33       pulb 
+86B4: E7 00    stb  $00,x
+86B6: B6 15 84 lda  $1584
+86B9: 3D       mul  
+86BA: 43       coma 
+86BB: 44       lsra 
+86BC: F6 15 7B ldb  $157B
+86BF: 36       psha 
+86C0: B6 20 01 lda  $2001
+86C3: 2B FB    bmi  $86C0
+86C5: F7 20 00 stb  $2000
+86C8: 32       pula 
+86C9: B7 20 01 sta  $2001
+86CC: 7A 15 7B dec  $157B
+86CF: 09       dex  
+86D0: 7D 15 7A tst  $157A
+86D3: 26 D9    bne  $86AE
+86D5: 7E 84 C5 jmp  $84C5
+86D8: FE 15 6E ldx  $156E
+86DB: E6 00    ldb  $00,x
+86DD: 08       inx  
+86DE: F7 15 7A stb  $157A
+86E1: C6 30    ldb  #$30
+86E3: 78 15 7A asl  $157A
+86E6: 24 12    bcc  $86FA
+86E8: A6 00    lda  $00,x
+86EA: 08       inx  
+86EB: 84 FC    anda #$FC
+86ED: 36       psha 
+86EE: B6 20 01 lda  $2001
+86F1: 2B FB    bmi  $86EE
+86F3: F7 20 00 stb  $2000
+86F6: 32       pula 
+86F7: B7 20 01 sta  $2001
+86FA: 5C       incb 
+86FB: 7D 15 7A tst  $157A
+86FE: 26 E3    bne  $86E3
+8700: FF 15 6E stx  $156E
+8703: 7E 84 C5 jmp  $84C5
+8706: FE 15 6E ldx  $156E
+8709: E6 00    ldb  $00,x
+870B: 08       inx  
+870C: F7 15 7A stb  $157A
+870F: C6 38    ldb  #$38
+8711: 78 15 7A asl  $157A
+8714: 24 12    bcc  $8728
+8716: A6 00    lda  $00,x
+8718: 08       inx  
+8719: 84 73    anda #$73
+871B: 36       psha 
+871C: B6 20 01 lda  $2001
+871F: 2B FB    bmi  $871C
+8721: F7 20 00 stb  $2000
+8724: 32       pula 
+8725: B7 20 01 sta  $2001
+8728: 5C       incb 
+8729: 7D 15 7A tst  $157A
+872C: 26 E3    bne  $8711
+872E: FF 15 6E stx  $156E
+8731: 7E 84 C5 jmp  $84C5
+8734: FE 15 6E ldx  $156E
+8737: E6 00    ldb  $00,x
+8739: 08       inx  
+873A: FF 15 6E stx  $156E
+873D: F7 15 84 stb  $1584
+8740: CE 17 6C ldx  #$176C
+8743: C6 78    ldb  #$78
+8745: F7 15 7B stb  $157B
+8748: E6 00    ldb  $00,x
+874A: B6 15 84 lda  $1584
+874D: 3D       mul  
+874E: 43       coma 
+874F: 44       lsra 
+8750: F6 15 7B ldb  $157B
+8753: 36       psha 
+8754: B6 20 01 lda  $2001
+8757: 2B FB    bmi  $8754
+8759: F7 20 00 stb  $2000
+875C: 32       pula 
+875D: B7 20 01 sta  $2001
+8760: 08       inx  
+8761: 5C       incb 
+8762: C1 80    cmpb #$80
+8764: 26 DF    bne  $8745
+8766: 7E 84 C5 jmp  $84C5
+8769: CC 00 00 ldd  #$0000
+876C: FD 15 76 std  $1576
+876F: FE 15 6E ldx  $156E
+8772: E6 00    ldb  $00,x
+8774: 08       inx  
+8775: FF 15 6E stx  $156E
+8778: F7 13 85 stb  $1385
+877B: 7E 84 C5 jmp  $84C5
+877E: FE 15 6E ldx  $156E
+8781: E6 00    ldb  $00,x
+8783: 08       inx  
+8784: FF 15 6E stx  $156E
+8787: F7 15 72 stb  $1572
+878A: 7E 84 C5 jmp  $84C5
+878D: B6 15 8A lda  $158A
+8790: 26 05    bne  $8797
+8792: 4F       clra 
+8793: B7 13 80 sta  $1380
+8796: 39       rts  
+8797: 7A 15 8A dec  $158A
+879A: FE 15 8C ldx  $158C
+879D: FF 15 6E stx  $156E
+87A0: 7E 84 C5 jmp  $84C5
+87A3: FE 15 6E ldx  $156E
+87A6: E6 00    ldb  $00,x
+87A8: 08       inx  
+87A9: FF 15 6E stx  $156E
+87AC: F7 15 7A stb  $157A
+87AF: C6 20    ldb  #$20
+87B1: 78 15 7A asl  $157A
+87B4: 25 09    bcs  $87BF
+87B6: 5C       incb 
+87B7: 7D 15 7A tst  $157A
+87BA: 26 F5    bne  $87B1
+87BC: 7E 84 C5 jmp  $84C5
+87BF: 37       pshb 
+87C0: FE 15 6E ldx  $156E
+87C3: E6 00    ldb  $00,x
+87C5: 08       inx  
+87C6: FF 15 6E stx  $156E
+87C9: 86 20    lda  #$20
+87CB: 3D       mul  
+87CC: C3 88 99 addd #$8899
+87CF: 18       xgdx 
+87D0: 33       pulb 
+87D1: 37       pshb 
+87D2: A6 00    lda  $00,x
+87D4: 08       inx  
+87D5: 36       psha 
+87D6: B6 20 01 lda  $2001
+87D9: 2B FB    bmi  $87D6
+87DB: F7 20 00 stb  $2000
+87DE: 32       pula 
+87DF: B7 20 01 sta  $2001
+87E2: CB 08    addb #$08
+87E4: 24 EC    bcc  $87D2
+87E6: 33       pulb 
+87E7: 7E 87 B6 jmp  $87B6
+87EA: FE 15 6E ldx  $156E
+87ED: C6 18    ldb  #$18
+87EF: A6 00    lda  $00,x
+87F1: 08       inx  
+87F2: 36       psha 
+87F3: B6 20 01 lda  $2001
+87F6: 2B FB    bmi  $87F3
+87F8: F7 20 00 stb  $2000
+87FB: 32       pula 
+87FC: B7 20 01 sta  $2001
+87FF: FF 15 6E stx  $156E
+8802: 7E 84 C5 jmp  $84C5
+8805: FE 15 6E ldx  $156E
+8808: C6 19    ldb  #$19
+880A: A6 00    lda  $00,x
+880C: 8A 80    ora  #$80
+880E: 08       inx  
+880F: 36       psha 
+8810: B6 20 01 lda  $2001
+8813: 2B FB    bmi  $8810
+8815: F7 20 00 stb  $2000
+8818: 32       pula 
+8819: B7 20 01 sta  $2001
+881C: FF 15 6E stx  $156E
+881F: 7E 84 C5 jmp  $84C5
+8822: FE 15 6E ldx  $156E
+8825: C6 19    ldb  #$19
+8827: A6 00    lda  $00,x
+8829: 84 7F    anda #$7F
+882B: 08       inx  
+882C: 36       psha 
+882D: B6 20 01 lda  $2001
+8830: 2B FB    bmi  $882D
+8832: F7 20 00 stb  $2000
+8835: 32       pula 
+8836: B7 20 01 sta  $2001
+8839: FF 15 6E stx  $156E
+883C: 7E 84 C5 jmp  $84C5
+883F: FE 15 6E ldx  $156E
+8842: C6 1B    ldb  #$1B
+8844: A6 00    lda  $00,x
+8846: 36       psha 
+8847: B6 20 01 lda  $2001
+884A: 2B FB    bmi  $8847
+884C: F7 20 00 stb  $2000
+884F: 32       pula 
+8850: B7 20 01 sta  $2001
+8853: 08       inx  
+8854: FF 15 6E stx  $156E
+8857: 7E 84 C5 jmp  $84C5
+885A: FE 15 6E ldx  $156E
+885D: E6 00    ldb  $00,x
+885F: 08       inx  
+8860: F7 15 7A stb  $157A
+8863: CC 00 28 ldd  #$0028
+8866: 78 15 7A asl  $157A
+8869: 24 16    bcc  $8881
+886B: 36       psha 
+886C: A6 00    lda  $00,x
+886E: 08       inx  
+886F: 81 FF    cmpa #$FF
+8871: 27 1B    beq  $888E
+8873: 36       psha 
+8874: B6 20 01 lda  $2001
+8877: 2B FB    bmi  $8874
+8879: F7 20 00 stb  $2000
+887C: 32       pula 
+887D: B7 20 01 sta  $2001
+8880: 32       pula 
+8881: 4C       inca 
+8882: 5C       incb 
+8883: 7D 15 7A tst  $157A
+8886: 26 DE    bne  $8866
+8888: FF 15 6E stx  $156E
+888B: 7E 84 C5 jmp  $84C5
 
 F000: 4F       clra 
 F001: 5F       clrb 
@@ -55,8 +1059,8 @@ F069: DE AE    ldx  $AE
 F06B: 6D 7A    tst  $7A,x
 F06D: 27 06    beq  $F075
 F06F: 96 82    lda  $82
-F071: 9B 80    adda $80
-F073: 97 80    sta  $80
+F071: 9B 80    adda nb_credits_80
+F073: 97 80    sta  nb_credits_80
 F075: 7F 00 82 clr  $0082
 F078: DE AA    ldx  $AA
 F07A: AD 00    jsr  $00,x
@@ -317,7 +1321,7 @@ F266: 3C       pshx
 F267: EE 6E    ldx  $6E,x
 F269: 3A       abx  
 F26A: DC 87    ldd  $87
-F26C: DD 85    std  $85
+F26C: DD 85    std  nb_coins_per_credit_85
 F26E: EC 00    ldd  $00,x
 F270: DD 87    std  $87
 F272: 38       pulx 
@@ -340,7 +1344,7 @@ F28B: 16       tab
 F28C: 39       rts  
 F28D: EE 6C    ldx  $6C,x
 F28F: EC 00    ldd  $00,x
-F291: DD 85    std  $85
+F291: DD 85    std  nb_coins_per_credit_85
 F293: EC 02    ldd  $02,x
 F295: DD 87    std  $87
 F297: 39       rts  
@@ -475,7 +1479,7 @@ F364: DE C6    ldx  $C6
 F366: A6 00    lda  $00,x
 F368: 08       inx  
 F369: DF C6    stx  $C6
-F36B: DE C8    ldx  $C8
+F36B: DE C8    ldx  $C8		; pointer
 F36D: A7 00    sta  $00,x
 F36F: 08       inx  
 F370: DF C8    stx  $C8
@@ -708,7 +1712,8 @@ F51D: 27 05    beq  $F524
 F51F: 7F 00 80 clr  $0080
 F522: 31       ins  
 F523: 39       rts  
-F524: 96 80    lda  $80
+
+F524: 96 80    lda  nb_credits_80
 F526: 97 81    sta  $81
 F528: DE AE    ldx  $AE
 F52A: A1 77    cmpa $77,x
@@ -721,16 +1726,17 @@ F538: EE 57    ldx  $57,x
 F53A: DF C6    stx  $C6
 F53C: 58       aslb 
 F53D: 3A       abx  
-F53E: A6 00    lda  $00,x
+F53E: A6 00    lda  $00,x		; 14BE
 F540: 27 28    beq  $F56A
+; coin inserted
 F542: 7C 00 83 inc  $0083
 F545: 96 83    lda  $83
-F547: 91 85    cmpa $85
+F547: 91 85    cmpa nb_coins_per_credit_85
 F549: 25 09    bcs  $F554
 F54B: 7F 00 83 clr  $0083
-F54E: 96 86    lda  $86
-F550: 9B 80    adda $80
-F552: 97 80    sta  $80
+F54E: 96 86    lda  nb_credits_per_coin_86
+F550: 9B 80    adda nb_credits_80
+F552: 97 80    sta  nb_credits_80
 F554: DE AE    ldx  $AE
 F556: E6 62    ldb  $62,x
 F558: DE C8    ldx  $C8
@@ -757,8 +1763,8 @@ F57B: 91 87    cmpa $87
 F57D: 25 09    bcs  $F588
 F57F: 7F 00 84 clr  $0084
 F582: 96 88    lda  $88
-F584: 9B 80    adda $80
-F586: 97 80    sta  $80
+F584: 9B 80    adda nb_credits_80
+F586: 97 80    sta  nb_credits_80
 F588: DE AE    ldx  $AE
 F58A: E6 63    ldb  $63,x
 F58C: DE C8    ldx  $C8
@@ -772,14 +1778,14 @@ F597: 96 99    lda  $99
 F599: 89 00    adca #$00
 F59B: 19       daa  
 F59C: DD 99    std  $99
-F59E: 96 80    lda  $80
+F59E: 96 80    lda  nb_credits_80
 F5A0: DE AE    ldx  $AE
 F5A2: A1 77    cmpa $77,x
 F5A4: 24 1F    bcc  $F5C5
 F5A6: 32       pula 
 F5A7: 34       des  
-F5A8: 9B 80    adda $80
-F5AA: 97 80    sta  $80
+F5A8: 9B 80    adda nb_credits_80
+F5AA: 97 80    sta  nb_credits_80
 F5AC: A1 77    cmpa $77,x
 F5AE: 24 15    bcc  $F5C5
 F5B0: E6 64    ldb  $64,x
@@ -789,12 +1795,12 @@ F5B5: 3A       abx
 F5B6: A6 00    lda  $00,x
 F5B8: 27 0D    beq  $F5C7
 F5BA: 7C 00 80 inc  $0080
-F5BD: D6 80    ldb  $80
+F5BD: D6 80    ldb  nb_credits_80
 F5BF: DE AE    ldx  $AE
 F5C1: E1 77    cmpb $77,x
 F5C3: 25 02    bcs  $F5C7
 F5C5: 8D 18    bsr  $F5DF
-F5C7: D6 80    ldb  $80
+F5C7: D6 80    ldb  nb_credits_80
 F5C9: 17       tba  
 F5CA: 90 81    suba $81
 F5CC: 25 06    bcs  $F5D4
@@ -813,19 +1819,21 @@ F5E4: EE 5D    ldx  $5D,x
 F5E6: 3A       abx  
 F5E7: A7 00    sta  $00,x
 F5E9: 39       rts  
+
 F5EA: 86 FF    lda  #$FF
 F5EC: 4C       inca 
 F5ED: C0 0A    subb #$0A
 F5EF: 24 FB    bcc  $F5EC
 F5F1: CB 0A    addb #$0A
 F5F3: 39       rts  
+
 F5F4: B6 11 83 lda  nb_credits_1183
 F5F7: BA 11 9B ora  $119B
 F5FA: BA 11 8C ora  $118C
 F5FD: BA 11 8D ora  $118D
 F600: 26 5B    bne  $F65D
 F602: 97 82    sta  $82
-F604: 96 80    lda  $80
+F604: 96 80    lda  nb_credits_80
 F606: 27 55    beq  $F65D
 F608: DE AE    ldx  $AE
 F60A: E6 67    ldb  $67,x
@@ -834,7 +1842,7 @@ F60E: 58       aslb
 F60F: 3A       abx  
 F610: A6 00    lda  $00,x
 F612: 26 2B    bne  $F63F
-F614: 96 80    lda  $80
+F614: 96 80    lda  nb_credits_80
 F616: DE AE    ldx  $AE
 F618: A1 78    cmpa $78,x
 F61A: 25 41    bcs  $F65D
@@ -848,9 +1856,9 @@ F626: 27 35    beq  $F65D
 F628: DE AE    ldx  $AE
 F62A: E6 78    ldb  $78,x
 F62C: D7 82    stb  $82
-F62E: 96 80    lda  $80
+F62E: 96 80    lda  nb_credits_80
 F630: 10       sba  
-F631: 97 80    sta  $80
+F631: 97 80    sta  nb_credits_80
 F633: 86 01    lda  #$01
 F635: B7 11 8E sta  $118E
 F638: DE 8D    ldx  $8D
@@ -908,11 +1916,11 @@ F6A0: A6 1A    lda  $1A,x
 F6A2: 6F 1A    clr  $1A,x
 F6A4: 4D       tsta 
 F6A5: 27 21    beq  $F6C8
-F6A7: 96 80    lda  $80
+F6A7: 96 80    lda  nb_credits_80
 F6A9: 10       sba  
 F6AA: 25 4B    bcs  $F6F7
 F6AC: D7 82    stb  $82
-F6AE: 97 80    sta  $80
+F6AE: 97 80    sta  nb_credits_80
 F6B0: 96 A7    lda  $A7
 F6B2: 81 3D    cmpa #$3D
 F6B4: 25 01    bcs  $F6B7
@@ -2033,117 +3041,7 @@ FED4: D7 00    stb  $00
 FED6: 84 1F    anda #$1F
 FED8: 38       pulx 
 FED9: 39       rts  
-FEDA: 00       illegal
-FEDB: 02       illegal
-FEDC: 01       nop  
-FEDD: 03       illegal
-FEDE: 04       lsrd 
-FEDF: 06       tap  
-FEE0: 05       asld 
-FEE1: 07       tpa  
-FEE2: 00       illegal
-FEE3: 04       lsrd 
-FEE4: 02       illegal
-FEE5: 06       tap  
-FEE6: 01       nop  
-FEE7: 05       asld 
-FEE8: 03       illegal
-FEE9: 07       tpa  
-FEEA: 01       nop  
-FEEB: 00       illegal
-FEEC: 01       nop  
-FEED: 00       illegal
-FEEE: 00       illegal
-FEEF: 00       illegal
-FEF0: 01       nop  
-FEF1: 00       illegal
-FEF2: FF FE F5 stx  $FEF5
-FEF5: 0F       sei  
-FEF6: 16       tab  
-FEF7: 04       lsrd 
-FEF8: 12       asx1 1,s
-FEF9: 13       asx2 1,s
-FEFA: 28 13    bvc  $FF0F
-FEFC: 5C       incb 
-FEFD: 02       illegal
-FEFE: 02       illegal
-FEFF: 00       illegal
-FF00: 00       illegal
-FF01: FF 05 FF stx  $05FF
-FF04: 54       lsrb 
-FF05: FF 12 04 stx  $1204
-FF08: 06       tap  
-FF09: 00       illegal
-FF0A: 00       illegal
-FF0B: FF 33 05 stx  $3305
-FF0E: 16       tab  
-FF0F: 00       illegal
-FF10: 00       illegal
-FF11: 11       cba  
-FF12: 03       illegal
-FF13: 08       inx  
-FF14: B4 08 03 anda $0803
-FF17: 08       inx  
-FF18: 23 08    bls  $FF22
-FF1A: 43       coma 
-FF1B: 08       inx  
-FF1C: 53       comb 
-FF1D: 08       inx  
-FF1E: 23 08    bls  $FF28
-FF20: 43       coma 
-FF21: 08       inx  
-FF22: 43       coma 
-FF23: 08       inx  
-FF24: 23 08    bls  $FF2E
-FF26: 53       comb 
-FF27: 08       inx  
-FF28: 43       coma 
-FF29: 08       inx  
-FF2A: 23 08    bls  $FF34
-FF2C: 03       illegal
-FF2D: 08       inx  
-FF2E: B4 08 03 anda $0803
-FF31: 08       inx  
-FF32: E0 03    subb $03,x
-FF34: 08       inx  
-FF35: 23 08    bls  $FF3F
-FF37: 43       coma 
-FF38: 08       inx  
-FF39: 53       comb 
-FF3A: 08       inx  
-FF3B: 73 08 93 com  $0893
-FF3E: 08       inx  
-FF3F: B3 08 02 subd $0802
-FF42: 08       inx  
-FF43: 02       illegal
-FF44: 08       inx  
-FF45: B3 08 93 subd $0893
-FF48: 08       inx  
-FF49: 73 08 53 com  $0853
-FF4C: 08       inx  
-FF4D: 43       coma 
-FF4E: 08       inx  
-FF4F: 23 08    bls  $FF59
-FF51: 03       illegal
-FF52: 08       inx  
-FF53: E0 FF    subb $FF,x
-FF55: 5B       illegal
-FF56: 01       nop  
-FF57: 09       dex  
-FF58: 00       illegal
-FF59: 00       illegal
-FF5A: 11       cba  
-FF5B: EA 20    orb  $20,x
-FF5D: 08       inx  
-FF5E: 40       nega 
-FF5F: 08       inx  
-FF60: 80 08    suba #$08
-FF62: 00       illegal
-FF63: E0 00    subb $00,x
-FF65: 11       cba  
-FF66: 22 33    bhi  $FF9B
-FF68: 44       lsra 
-FF69: 55       illegal
+
 FF6A: 66 77    ror  $77,x
 FF6C: 88 99    eora #$99
 FF6E: AA BB    ora  $BB,x
