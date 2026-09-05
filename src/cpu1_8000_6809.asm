@@ -37,6 +37,9 @@ bankswitch_shadow_19 = $19
 starting_area_c5 = $c5
 semaphore_06 = $06
 semaphore_07 = $07
+energy_c1 = $c1
+; managed by cpu2
+bullets_cb = $cb
 
 ; anything $68xx switches banks
 bankswitch_6800 = $6800
@@ -1765,7 +1768,7 @@ game_demo_90fb:
 9123: 39          RTS
 
 9138: 86 40       LDA    #$40
-913A: 97 C1       STA    $C1
+913A: 97 C1       STA    energy_c1
 913C: 0F C2       CLR    $C2
 913E: 0F C4       CLR    $C4
 9140: 86 01       LDA    #$01
@@ -1806,7 +1809,7 @@ game_demo_90fb:
 918A: 26 FA       BNE    $9186
 918C: 0D 18       TST    $18
 918E: 26 43       BNE    $91D3
-9190: 0D C1       TST    $C1
+9190: 0D C1       TST    energy_c1
 9192: 27 3C       BEQ    $91D0
 9194: 0D 91       TST    $91
 9196: 26 38       BNE    $91D0
@@ -2213,7 +2216,7 @@ game_demo_90fb:
 94E0: ED C4       STD    ,U	; [video_address]
 94E2: 35 82       PULS   A,PC	; [free_locals]
 
-94E4: 0D C1       TST    $C1
+94E4: 0D C1       TST    energy_c1
 94E6: 27 1F       BEQ    $9507
 94E8: 7D 44 0C    TST    $440C
 94EB: 2B 08       BMI    $94F5
@@ -2224,20 +2227,20 @@ game_demo_90fb:
 94F5: 0D 14       TST    $14
 94F7: 27 06       BEQ    $94FF
 94F9: 0A 14       DEC    $14
-94FB: 0A C1       DEC    $C1
+94FB: 0A C1       DEC    energy_c1
 94FD: 20 08       BRA    $9507
 94FF: 0D 15       TST    $15
 9501: 27 04       BEQ    $9507
-9503: 0A C1       DEC    $C1
+9503: 0A C1       DEC    energy_c1
 9505: 0A 15       DEC    $15
 9507: 8E 3F AC    LDX    #$3FAC
-950A: D6 C1       LDB    $C1
+950A: D6 C1       LDB    energy_c1
 950C: C4 78       ANDB   #$78
 950E: 54          LSRB
 950F: 54          LSRB
 9510: 3A          ABX
 9511: CE 95 33    LDU    #$9533
-9514: 96 C1       LDA    $C1
+9514: 96 C1       LDA    energy_c1
 9516: A1 C1       CMPA   ,U++
 9518: 25 FC       BCS    $9516
 951A: E6 5F       LDB    -$1,U
@@ -3459,10 +3462,10 @@ A00E: CE 42 76    LDU    #controls_shared_ram_4276
 A011: 96 1E       LDA    $1E
 A013: 26 02       BNE    $A017
 A015: 33 54       LEAU   -$C,U
-A017: 6D 48       TST    $8,U
+A017: 6D 48       TST    $8,U		; 427E: 1 if right pressed
 A019: 26 2E       BNE    increase_starting_area_a049
 A01B: 6D 4A       TST    $A,U
-A01D: 26 01       BNE    $A020
+A01D: 26 01       BNE    $A020		; 4280: 1 if left pressed
 A01F: 39          RTS
 A020: 96 C4       LDA    $C4
 A022: 26 01       BNE    $A025
@@ -3661,7 +3664,7 @@ A1A7: BD 83 CB    JSR    $83CB
 A1AA: BD 84 CD    JSR    $84CD
 A1AD: 7E 84 8C    JMP    $848C
 A1B0: 86 40       LDA    #$40
-A1B2: 97 C1       STA    $C1
+A1B2: 97 C1       STA    energy_c1
 A1B4: CC 00 50    LDD    #$0050
 A1B7: DD CA       STD    $CA
 A1B9: 7D 41 8E    TST    $418E
@@ -4058,7 +4061,7 @@ A510: 48          ASLA
 A511: EC C6       LDD    A,U
 A513: DD 11       STD    $11
 A515: 86 40       LDA    #$40
-A517: 97 C1       STA    $C1
+A517: 97 C1       STA    energy_c1
 A519: CC 00 50    LDD    #$0050
 A51C: 10 93 CA    CMPD   $CA
 A51F: 23 02       BLS    $A523
@@ -7004,7 +7007,7 @@ BD23: 8B 20       ADDA   #$20
 BD25: 97 14       STA    $14
 BD27: 9B 15       ADDA   $15
 BD29: A7 E2       STA    ,-S    ; [local]
-BD2B: 96 C1       LDA    $C1
+BD2B: 96 C1       LDA    energy_c1
 BD2D: A0 E0       SUBA   ,S+	; [local]
 BD2F: 23 18       BLS    $BD49
 BD31: 10 8E 53 40 LDY    #$5340

@@ -14,12 +14,17 @@
 
 watchdog_8000 = $8000
 
+irq_ack_8800 = $8800
 bankswitch2_d803 = $d803
 cpu_sync_1ff0 = $1ff0
 cpu_sync_1ff3 = $1ff3
+
+; page $16
 cpu1_game_state_02 = $02
 cpu2_game_state_03 = $03
-irq_ack_8800 = $8800
+semaphore_06 = $06
+semaphore_07 = $07
+bullets_cb = $cb
 
 cpu2_boot_8000:  ; [global]
 8000: 1A 10       ORCC   #$10		; disable interrupts
@@ -93,7 +98,7 @@ cpu2_boot_8000:  ; [global]
 8099: 0F 00       CLR    $00
 809B: 0F 03       CLR    cpu2_game_state_03
 809D: 0F 05       CLR    $05
-809F: 0F 07       CLR    $07
+809F: 0F 07       CLR    semaphore_07
 80A1: 1C EF       ANDCC  #$EF		; enable interrupts
 mainloop_80a3:     ; [global]
 80A3: BD B0 BF    JSR    process_event_b0bf
@@ -106,7 +111,7 @@ mainloop_80a3:     ; [global]
 80B4: BD 81 60    JSR    $8160
 80B7: 0C 03       INC    cpu2_game_state_03
 80B9: 0F 05       CLR    $05
-80BB: 0F 07       CLR    $07
+80BB: 0F 07       CLR    semaphore_07
 80BD: 39          RTS
 
 80BE: 8E 18 00    LDX    #$1800
@@ -609,7 +614,7 @@ cpu2_irq_8173:  ; [global]
 84D9: ED 12       STD    -$E,X
 84DB: BD B0 35    JSR    $B035
 84DE: 0C 05       INC    $05
-84E0: 0F 07       CLR    $07
+84E0: 0F 07       CLR    semaphore_07
 84E2: 39          RTS
 
 852A: 96 05       LDA    $05
@@ -621,7 +626,7 @@ cpu2_irq_8173:  ; [global]
 8535: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 853B: 0C 05       INC    $05
-853D: 0F 07       CLR    $07
+853D: 0F 07       CLR    semaphore_07
 853F: BD 80 BE    JSR    $80BE
 8542: BD 80 E9    JSR    $80E9
 8545: BD 80 FE    JSR    $80FE
@@ -640,7 +645,7 @@ cpu2_irq_8173:  ; [global]
 855F: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=3]
 
 8567: 0C 05       INC    $05
-8569: 0F 07       CLR    $07
+8569: 0F 07       CLR    semaphore_07
 856B: CC 00 00    LDD    #$0000
 856E: DD 80       STD    $80
 8570: C6 08       LDB    #$08
@@ -654,10 +659,11 @@ cpu2_irq_8173:  ; [global]
 8584: BD 81 35    JSR    $8135
 8587: BD 81 60    JSR    $8160
 858A: 7E B0 9A    JMP    $B09A
-858D: 96 06       LDA    $06
+; wait for sync from cpu1
+858D: 96 06       LDA    semaphore_06
 858F: 26 FC       BNE    $858D
-8591: 0F 07       CLR    $07
-8593: 96 06       LDA    $06
+8591: 0F 07       CLR    semaphore_07
+8593: 96 06       LDA    semaphore_06
 8595: 81 01       CMPA   #$01
 8597: 26 FA       BNE    $8593
 8599: BD 85 DA    JSR    $85DA
@@ -670,18 +676,18 @@ cpu2_irq_8173:  ; [global]
 85AB: 84 3F       ANDA   #$3F
 85AD: 97 13       STA    $13
 85AF: 27 03       BEQ    $85B4
-85B1: 0C 07       INC    $07
+85B1: 0C 07       INC    semaphore_07
 85B3: 39          RTS
 85B4: CE 16 11    LDU    #$1611
 85B7: CC 99 99    LDD    #$9999
 85BA: BD 88 B2    JSR    $88B2
 85BD: DC 11       LDD    $11
 85BF: 27 03       BEQ    $85C4
-85C1: 0C 07       INC    $07
+85C1: 0C 07       INC    semaphore_07
 85C3: 39          RTS
 85C4: 0C 04       INC    $04
 85C6: 0C 05       INC    $05
-85C8: 0C 07       INC    $07
+85C8: 0C 07       INC    semaphore_07
 85CA: 39          RTS
 85CB: BD 80 BE    JSR    $80BE
 85CE: BD 80 E9    JSR    $80E9
@@ -786,45 +792,45 @@ cpu2_irq_8173:  ; [global]
 
 8789: 0F 91       CLR    $91
 878B: 0C 05       INC    $05
-878D: 0F 07       CLR    $07
+878D: 0F 07       CLR    semaphore_07
 878F: 39          RTS
 8790: 86 03       LDA    #$03
 8792: B7 04 10    STA    $0410
 8795: 0C 05       INC    $05
-8797: 0F 07       CLR    $07
+8797: 0F 07       CLR    semaphore_07
 8799: 39          RTS
-879A: 0F 07       CLR    $07
-879C: 96 06       LDA    $06
+879A: 0F 07       CLR    semaphore_07
+879C: 96 06       LDA    semaphore_06
 879E: 81 01       CMPA   #$01
 87A0: 26 FA       BNE    $879C
 87A2: BD 98 9D    JSR    $989D
-87A5: 0C 07       INC    $07
+87A5: 0C 07       INC    semaphore_07
 87A7: 0D 18       TST    $18
 87A9: 27 01       BEQ    $87AC
 87AB: 39          RTS
 87AC: BD B2 78    JSR    $B278
-87AF: 0C 07       INC    $07
+87AF: 0C 07       INC    semaphore_07
 87B1: BD CE A3    JSR    $CEA3
-87B4: 0C 07       INC    $07
-87B6: 96 06       LDA    $06
+87B4: 0C 07       INC    semaphore_07
+87B6: 96 06       LDA    semaphore_06
 87B8: 81 02       CMPA   #$02
 87BA: 25 FA       BCS    $87B6
 87BC: BD D1 B2    JSR    $D1B2
-87BF: 0C 07       INC    $07
+87BF: 0C 07       INC    semaphore_07
 87C1: BD AC AC    JSR    $ACAC
-87C4: 0C 07       INC    $07
-87C6: 96 06       LDA    $06
+87C4: 0C 07       INC    semaphore_07
+87C6: 96 06       LDA    semaphore_06
 87C8: 81 03       CMPA   #$03
 87CA: 25 FA       BCS    $87C6
 87CC: BD 81 BB    JSR    $81BB
 87CF: BD 83 0D    JSR    $830D
 87D2: BD 84 8B    JSR    $848B
 87D5: B7 1F F2    STA    $1FF2
-87D8: 0C 07       INC    $07
+87D8: 0C 07       INC    semaphore_07
 87DA: BD AD C0    JSR    $ADC0
 87DD: 7E AD 08    JMP    $AD08
 87E0: 0C 05       INC    $05
-87E2: 0F 07       CLR    $07
+87E2: 0F 07       CLR    semaphore_07
 87E4: 39          RTS
 87E5: 96 67       LDA    $67
 87E7: 91 68       CMPA   $68
@@ -832,7 +838,7 @@ cpu2_irq_8173:  ; [global]
 87EB: 39          RTS
 87EC: BD 81 60    JSR    $8160
 87EF: 0C 05       INC    $05
-87F1: 0F 07       CLR    $07
+87F1: 0F 07       CLR    semaphore_07
 87F3: 39          RTS
 87F4: BD 80 BE    JSR    $80BE
 87F7: BD 80 E9    JSR    $80E9
@@ -847,7 +853,7 @@ cpu2_irq_8173:  ; [global]
 880B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=7]
 
 881B: 0C 05       INC    $05
-881D: 0F 07       CLR    $07
+881D: 0F 07       CLR    semaphore_07
 881F: BD 80 BE    JSR    $80BE
 8822: BD 80 E9    JSR    $80E9
 8825: BD 80 FE    JSR    $80FE
@@ -867,7 +873,7 @@ cpu2_irq_8173:  ; [global]
 8846: BD 80 FE    JSR    $80FE
 8849: BD 81 35    JSR    $8135
 884C: 0C 05       INC    $05
-884E: 0F 07       CLR    $07
+884E: 0F 07       CLR    semaphore_07
 8850: 7E B0 9A    JMP    $B09A
 8853: 96 D2       LDA    $D2
 8855: 81 01       CMPA   #$01
@@ -892,9 +898,9 @@ cpu2_irq_8173:  ; [global]
 8881: 0C D2       INC    $D2
 8883: 39          RTS
 8884: 0C 04       INC    $04
-8886: 0F 06       CLR    $06
+8886: 0F 06       CLR    semaphore_06
 8888: 0C 05       INC    $05
-888A: 0F 07       CLR    $07
+888A: 0F 07       CLR    semaphore_07
 888C: 0C D2       INC    $D2
 888E: 39          RTS
 888F: BD 80 E9    JSR    $80E9
@@ -915,8 +921,9 @@ cpu2_irq_8173:  ; [global]
 88AB: 89 00       ADCA   #$00
 88AD: 19          DAA
 88AE: A7 C4       STA    ,U
-88B0: 35 86       PULS   D,PC
-88B2: 34 06       PSHS   D
+88B0: 35 86       PULS   D,PC	; [manual_stack_pull]
+
+88B2: 34 06       PSHS   D	; [manual_stack_push]
 88B4: A6 41       LDA    $1,U
 88B6: AB 61       ADDA   $1,S		; [local]
 88B8: 19          DAA
@@ -936,7 +943,7 @@ cpu2_irq_8173:  ; [global]
 88CF: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
 88D5: 0C 05       INC    $05
-88D7: 0F 07       CLR    $07
+88D7: 0F 07       CLR    semaphore_07
 88D9: BD 80 BE    JSR    $80BE
 88DC: BD 80 E9    JSR    $80E9
 88DF: BD 80 FE    JSR    $80FE
@@ -953,22 +960,22 @@ cpu2_irq_8173:  ; [global]
 
 8910: 0F 91       CLR    $91
 8912: 0C 05       INC    $05
-8914: 0F 07       CLR    $07
+8914: 0F 07       CLR    semaphore_07
 8916: 39          RTS
 8917: 86 FF       LDA    #$FF
-8919: 97 07       STA    $07
+8919: 97 07       STA    semaphore_07
 891B: B7 80 00    STA    watchdog_8000
-891E: 96 06       LDA    $06
+891E: 96 06       LDA    semaphore_06
 8920: 2A F9       BPL    $891B
-8922: 0F 06       CLR    $06
-8924: 0D 07       TST    $07
+8922: 0F 06       CLR    semaphore_06
+8924: 0D 07       TST    semaphore_07
 8926: 26 FC       BNE    $8924
 8928: B7 80 00    STA    watchdog_8000
-892B: 96 06       LDA    $06
+892B: 96 06       LDA    semaphore_06
 892D: 81 01       CMPA   #$01
 892F: 25 F7       BCS    $8928
 8931: BD 98 9D    JSR    $989D
-8934: 0C 07       INC    $07
+8934: 0C 07       INC    semaphore_07
 8936: B6 04 10    LDA    $0410
 8939: 81 FF       CMPA   #$FF
 893B: 27 45       BEQ    $8982
@@ -977,29 +984,29 @@ cpu2_irq_8173:  ; [global]
 8941: 0D 91       TST    $91
 8943: 26 3D       BNE    $8982
 8945: BD B2 78    JSR    $B278
-8948: 0C 07       INC    $07
+8948: 0C 07       INC    semaphore_07
 894A: BD CE A3    JSR    $CEA3
-894D: 0C 07       INC    $07
+894D: 0C 07       INC    semaphore_07
 894F: B7 80 00    STA    watchdog_8000
-8952: 96 06       LDA    $06
+8952: 96 06       LDA    semaphore_06
 8954: 81 02       CMPA   #$02
 8956: 25 F7       BCS    $894F
 8958: BD D1 B2    JSR    $D1B2
-895B: 0C 07       INC    $07
+895B: 0C 07       INC    semaphore_07
 895D: BD AC AC    JSR    $ACAC
-8960: 0C 07       INC    $07
+8960: 0C 07       INC    semaphore_07
 8962: B7 80 00    STA    watchdog_8000
-8965: 96 06       LDA    $06
+8965: 96 06       LDA    semaphore_06
 8967: 81 04       CMPA   #$04
 8969: 25 F7       BCS    $8962
 896B: BD 81 BB    JSR    $81BB
 896E: BD 83 0D    JSR    $830D
 8971: BD 84 8B    JSR    $848B
 8974: B7 1F F2    STA    $1FF2
-8977: 0C 07       INC    $07
+8977: 0C 07       INC    semaphore_07
 8979: BD AD C0    JSR    $ADC0
 897C: BD AD 08    JSR    $AD08
-897F: 0C 07       INC    $07
+897F: 0C 07       INC    semaphore_07
 8981: 39          RTS
 8982: BD 81 BB    JSR    $81BB
 8985: BD 83 0D    JSR    $830D
@@ -1008,22 +1015,22 @@ cpu2_irq_8173:  ; [global]
 898E: 39          RTS
 898F: 39          RTS
 8990: CE 89 9D    LDU    #jump_table_899d
-8993: 96 07       LDA    $07
-8995: 91 06       CMPA   $06
+8993: 96 07       LDA    semaphore_07
+8995: 91 06       CMPA   semaphore_06
 8997: 23 01       BLS    $899A
 8999: 39          RTS
 899A: 48          ASLA
 899B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
 
-89A5: 0C 07       INC    $07
+89A5: 0C 07       INC    semaphore_07
 89A7: 39          RTS
 89A8: 96 67       LDA    $67
 89AA: 91 68       CMPA   $68
 89AC: 27 01       BEQ    $89AF
 89AE: 39          RTS
-89AF: 0C 07       INC    $07
+89AF: 0C 07       INC    semaphore_07
 89B1: 7E 81 60    JMP    $8160
-89B4: 0C 07       INC    $07
+89B4: 0C 07       INC    semaphore_07
 89B6: BD 80 E9    JSR    $80E9
 89B9: BD 80 BE    JSR    $80BE
 89BC: BD 80 FE    JSR    $80FE
@@ -1032,32 +1039,32 @@ cpu2_irq_8173:  ; [global]
 89C3: 39          RTS
 89C4: 39          RTS
 89C5: 0C 05       INC    $05
-89C7: 0F 07       CLR    $07
+89C7: 0F 07       CLR    semaphore_07
 89C9: 39          RTS
-89CA: 96 07       LDA    $07
-89CC: 91 06       CMPA   $06
+89CA: 96 07       LDA    semaphore_07
+89CC: 91 06       CMPA   semaphore_06
 89CE: 23 01       BLS    $89D1
 89D0: 39          RTS
 89D1: CE 89 D7    LDU    #jump_table_89d7
 89D4: 48          ASLA
 89D5: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=10]
 
-89EB: 0C 07       INC    $07
+89EB: 0C 07       INC    semaphore_07
 89ED: 39          RTS
 89EE: 96 67       LDA    $67
 89F0: 91 68       CMPA   $68
 89F2: 27 01       BEQ    $89F5
 89F4: 39          RTS
-89F5: 0C 07       INC    $07
+89F5: 0C 07       INC    semaphore_07
 89F7: 7E 81 60    JMP    $8160
-89FA: 0C 07       INC    $07
+89FA: 0C 07       INC    semaphore_07
 89FC: BD 80 E9    JSR    $80E9
 89FF: BD 80 BE    JSR    $80BE
 8A02: BD 80 FE    JSR    $80FE
 8A05: 7E 81 35    JMP    $8135
 8A08: 39          RTS
 8A09: 39          RTS
-8A0A: 0C 07       INC    $07
+8A0A: 0C 07       INC    semaphore_07
 8A0C: CC 00 00    LDD    #$0000
 8A0F: DD 80       STD    $80
 8A11: C6 08       LDB    #$08
@@ -1093,8 +1100,8 @@ cpu2_irq_8173:  ; [global]
 8A5A: 27 03       BEQ    $8A5F
 8A5C: 0C D2       INC    $D2
 8A5E: 39          RTS
-8A5F: 0C 06       INC    $06
-8A61: 0C 07       INC    $07
+8A5F: 0C 06       INC    semaphore_06
+8A61: 0C 07       INC    semaphore_07
 8A63: 0C D2       INC    $D2
 8A65: 39          RTS
 8A66: BD 80 BE    JSR    $80BE
@@ -1102,15 +1109,15 @@ cpu2_irq_8173:  ; [global]
 8A6C: 7E 80 FE    JMP    $80FE
 8A6F: 39          RTS
 8A70: 39          RTS
-8A71: 96 07       LDA    $07
-8A73: 91 06       CMPA   $06
+8A71: 96 07       LDA    semaphore_07
+8A73: 91 06       CMPA   semaphore_06
 8A75: 23 01       BLS    $8A78
 8A77: 39          RTS
 8A78: CE 8A 7E    LDU    #jump_table_8a7e
 8A7B: 48          ASLA
 8A7C: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=2]
 
-8A82: 0C 07       INC    $07
+8A82: 0C 07       INC    semaphore_07
 8A84: BD 80 BE    JSR    $80BE
 8A87: BD 80 E9    JSR    $80E9
 8A8A: BD 80 FE    JSR    $80FE
@@ -1118,8 +1125,8 @@ cpu2_irq_8173:  ; [global]
 8A90: 7E 81 60    JMP    $8160
 8A93: 39          RTS
 8A94: 39          RTS
-8A95: 96 07       LDA    $07
-8A97: 91 06       CMPA   $06
+8A95: 96 07       LDA    semaphore_07
+8A97: 91 06       CMPA   semaphore_06
 8A99: 23 01       BLS    $8A9C
 8A9B: 39          RTS
 8A9C: CE 8A A2    LDU    #jump_table_8aa2
@@ -1129,7 +1136,7 @@ cpu2_irq_8173:  ; [global]
 8AB6: 39          RTS
 8AB7: 39          RTS
 8AB8: 39          RTS
-8AB9: 0C 07       INC    $07
+8AB9: 0C 07       INC    semaphore_07
 8ABB: CC 00 00    LDD    #$0000
 8ABE: DD 80       STD    $80
 8AC0: C6 08       LDB    #$08
@@ -1164,8 +1171,8 @@ cpu2_irq_8173:  ; [global]
 8B06: 27 03       BEQ    $8B0B
 8B08: 0C D2       INC    $D2
 8B0A: 39          RTS
-8B0B: 0C 06       INC    $06
-8B0D: 0C 07       INC    $07
+8B0B: 0C 06       INC    semaphore_06
+8B0D: 0C 07       INC    semaphore_07
 8B0F: 0C D2       INC    $D2
 8B11: 39          RTS
 8B12: BD 80 BE    JSR    $80BE
@@ -1175,23 +1182,23 @@ cpu2_irq_8173:  ; [global]
 8B1C: 39          RTS
 8B1D: 39          RTS
 8B1E: 39          RTS
-8B1F: 96 07       LDA    $07
-8B21: 91 06       CMPA   $06
+8B1F: 96 07       LDA    semaphore_07
+8B21: 91 06       CMPA   semaphore_06
 8B23: 23 01       BLS    $8B26
 8B25: 39          RTS
 8B26: CE 8B 2C    LDU    #jump_table_8b2c
 8B29: 48          ASLA
 8B2A: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=12]
 
-8B44: 0C 07       INC    $07
+8B44: 0C 07       INC    semaphore_07
 8B46: 39          RTS
 8B47: 96 67       LDA    $67
 8B49: 91 68       CMPA   $68
 8B4B: 27 01       BEQ    $8B4E
 8B4D: 39          RTS
-8B4E: 0C 07       INC    $07
+8B4E: 0C 07       INC    semaphore_07
 8B50: 7E 81 60    JMP    $8160
-8B53: 0C 07       INC    $07
+8B53: 0C 07       INC    semaphore_07
 8B55: BD 80 E9    JSR    $80E9
 8B58: BD 80 BE    JSR    $80BE
 8B5B: BD 80 FE    JSR    $80FE
@@ -1199,7 +1206,7 @@ cpu2_irq_8173:  ; [global]
 8B61: 39          RTS
 8B62: 39          RTS
 8B63: 39          RTS
-8B64: 0C 07       INC    $07
+8B64: 0C 07       INC    semaphore_07
 8B66: CC 00 00    LDD    #$0000
 8B69: DD 80       STD    $80
 8B6B: C6 08       LDB    #$08
@@ -1258,6 +1265,7 @@ cpu2_irq_8173:  ; [global]
 8DC3: 6F 0E       CLR    $E,X
 8DC5: 0C 31       INC    $31
 8DC7: 39          RTS
+
 8DC8: 6F 09       CLR    $9,X
 8DCA: CE 8D FB    LDU    #$8DFB
 8DCD: A6 84       LDA    ,X
@@ -1363,6 +1371,7 @@ cpu2_irq_8173:  ; [global]
 8E91: 10 83 FF 03 CMPD   #$FF03
 8E95: 26 02       BNE    $8E99
 8E97: 35 86       PULS   D,PC
+
 8E99: 96 83       LDA    $83
 8E9B: 84 07       ANDA   #$07
 8E9D: 26 10       BNE    $8EAF
@@ -3517,6 +3526,8 @@ A16A: CE E0 50    LDU    #$E050
 A16D: 7E 99 37    JMP    $9937
 A170: 6C 14       INC    -$C,X
 A172: 39          RTS
+
+player_shoots_a173:
 A173: 96 CE       LDA    $CE
 A175: 81 01       CMPA   #$01
 A177: 27 10       BEQ    $A189
@@ -3621,6 +3632,7 @@ A250: CE E0 64    LDU    #$E064
 A253: 7E 99 37    JMP    $9937
 A256: 6C 14       INC    -$C,X
 A258: 39          RTS
+
 A259: DC CA       LDD    $CA
 A25B: 27 17       BEQ    $A274
 A25D: CE 09 00    LDU    #$0900
@@ -9873,7 +9885,7 @@ jump_table_9951:
 	dc.w	$9e2f	; $99c1
 	dc.w	$a131	; $99c3
 	dc.w	$a134	; $99c5
-	dc.w	$a173	; $99c7
+	dc.w	player_shoots_a173	; $99c7
 	dc.w	$a366	; $99c9
 	dc.w	$a813	; $99cb
 	dc.w	$a813	; $99cd
@@ -9884,7 +9896,7 @@ jump_table_9951:
 	dc.w	$8dc8	; $99d7
 	dc.w	$8dc8	; $99d9
 	dc.w	$9a3c	; $99db
-	dc.w	$a173	; $99dd
+	dc.w	player_shoots_a173	; $99dd
 	dc.w	$8dc8	; $99df
 	dc.w	$9b86	; $99e1
 	dc.w	$9bbe	; $99e3
@@ -9907,7 +9919,7 @@ jump_table_9951:
 	dc.w	$8dc8	; $9a05
 	dc.w	$8dc8	; $9a07
 	dc.w	$9a3c	; $9a09
-	dc.w	$a173	; $9a0b
+	dc.w	player_shoots_a173	; $9a0b
 	dc.w	$a366	; $9a0d
 	dc.w	$8dc8	; $9a0f
 	dc.w	$8dc8	; $9a11
@@ -9927,7 +9939,7 @@ jump_table_99bb:
 	dc.w	$9e2f	; $99c1
 	dc.w	$a131	; $99c3
 	dc.w	$a134	; $99c5
-	dc.w	$a173	; $99c7
+	dc.w	player_shoots_a173	; $99c7
 	dc.w	$a366	; $99c9
 	dc.w	$a813	; $99cb
 	dc.w	$a813	; $99cd
@@ -9938,7 +9950,7 @@ jump_table_99bb:
 	dc.w	$8dc8	; $99d7
 	dc.w	$8dc8	; $99d9
 	dc.w	$9a3c	; $99db
-	dc.w	$a173	; $99dd
+	dc.w	player_shoots_a173	; $99dd
 	dc.w	$8dc8	; $99df
 	dc.w	$9b86	; $99e1
 	dc.w	$9bbe	; $99e3
@@ -9961,7 +9973,7 @@ jump_table_99bb:
 	dc.w	$8dc8	; $9a05
 	dc.w	$8dc8	; $9a07
 	dc.w	$9a3c	; $9a09
-	dc.w	$a173	; $9a0b
+	dc.w	player_shoots_a173	; $9a0b
 	dc.w	$a366	; $9a0d
 	dc.w	$8dc8	; $9a0f
 	dc.w	$8dc8	; $9a11
