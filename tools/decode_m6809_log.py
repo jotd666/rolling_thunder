@@ -127,5 +127,5 @@ def load_mame_log(in_log,out_log,pcs,excluded_pcs=set(),avoid_regs = "",sorted_c
 pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=0)
 
 # trace rolling.tr,,,{tracelog "A=%02X, B=%02X, D=%04X, X=%04X, Y=%04X, U=%04X ",a,b,d,x,y,u}
-load_mame_log(r"K:\Emulation\MAME\rolling.tr","rolling.tr",pcs)
+load_mame_log(r"K:\Emulation\MAME\mame.tr","rolling.tr",pcs)
 

@@ -1550,7 +1550,7 @@ title_screen_8f10:
 8F51: 0F 18       CLR    $18
 8F53: BD B4 34    JSR    $B434
 8F56: BD B4 B8    JSR    $B4B8
-8F59: CE AF D6    LDU    #$AFD6	; [breakpoint]
+8F59: CE AF D6    LDU    #$AFD6
 8F5C: 10 8E 32 10 LDY    #$3210		; 1UP position
 8F60: C6 FC       LDB    #$FC		; attribute
 8F62: A6 C0       LDA    ,U+
@@ -1663,40 +1663,40 @@ title_screen_8f10:
 9052: 8E 3E A4    LDX    #$3EA4
 9055: CE 3F 24    LDU    #$3F24
 9058: 86 40       LDA    #$40
-905A: ED 81       STD    ,X++
+905A: ED 81       STD    ,X++	; [video_address_word]
 905C: 4C          INCA
-905D: ED 81       STD    ,X++
+905D: ED 81       STD    ,X++	; [video_address_word]
 905F: 4C          INCA
-9060: ED C1       STD    ,U++
+9060: ED C1       STD    ,U++	; [video_address_word]
 9062: 4C          INCA
-9063: ED C1       STD    ,U++
+9063: ED C1       STD    ,U++	; [video_address_word]
 9065: 4C          INCA
-9066: ED 81       STD    ,X++
+9066: ED 81       STD    ,X++	; [video_address_word]
 9068: 4C          INCA
-9069: ED 81       STD    ,X++
+9069: ED 81       STD    ,X++	; [video_address_word]
 906B: 4C          INCA
-906C: ED C1       STD    ,U++
+906C: ED C1       STD    ,U++	; [video_address_word]
 906E: 4C          INCA
-906F: ED C1       STD    ,U++
+906F: ED C1       STD    ,U++	; [video_address_word]
 9071: 4C          INCA
-9072: ED 81       STD    ,X++
+9072: ED 81       STD    ,X++	; [video_address_word]
 9074: 4C          INCA
-9075: ED 81       STD    ,X++
+9075: ED 81       STD    ,X++	; [video_address_word]
 9077: 4C          INCA
-9078: ED C1       STD    ,U++
+9078: ED C1       STD    ,U++	; [video_address_word]
 907A: 4C          INCA
-907B: ED C1       STD    ,U++
+907B: ED C1       STD    ,U++	; [video_address_word]
 907D: 4C          INCA
-907E: ED 84       STD    ,X
+907E: ED 84       STD    ,X	; [video_address_word]
 9080: 8B 02       ADDA   #$02
-9082: ED C4       STD    ,U
+9082: ED C4       STD    ,U	; [video_address_word]
 9084: 39          RTS
 
 9085: 8E 3E A4    LDX    #$3EA4
 9088: CE 3F 24    LDU    #$3F24
 908B: CC FF 00    LDD    #$FF00
-908E: ED 81       STD    ,X++
-9090: ED C1       STD    ,U++
+908E: ED 81       STD    ,X++	; [video_address_word]
+9090: ED C1       STD    ,U++	; [video_address_word]
 9092: 8C 3E B2    CMPX   #$3EB2
 9095: 25 F7       BCS    $908E
 9097: 39          RTS
@@ -1712,7 +1712,7 @@ title_screen_8f10:
 90AB: A6 61       LDA    $1,S   ; [local]
 90AD: A7 E4       STA    ,S   ; [local]
 90AF: A6 C0       LDA    ,U+
-90B1: ED 81       STD    ,X++
+90B1: ED 81       STD    ,X++	; [video_address_word]
 90B3: 6A E4       DEC    ,S    ; [local]
 90B5: 26 F8       BNE    $90AF
 90B7: E7 E4       STB    ,S   ; [local]
@@ -1737,7 +1737,7 @@ title_screen_8f10:
 90DE: A6 61       LDA    $1,S		    ; [local]
 90E0: A7 E4       STA    ,S    ; [local]
 90E2: EC C1       LDD    ,U++
-90E4: ED 81       STD    ,X++
+90E4: ED 81       STD    ,X++	; [video_address_word]
 90E6: 6A E4       DEC    ,S    ; [local]
 90E8: 26 F8       BNE    $90E2
 90EA: C6 80       LDB    #$80
