@@ -94,18 +94,18 @@ MIRROR_BUFFER_SIZE = 0x15000
 	
 SCORE_FILE_SIZE = 90
 
-LOG_BUFFER_SIZE = 0x100000
+LOG_BUFFER_SIZE = 0x10000
 
-FG_TILE_NB_CLUTS_POW = 4
+FG_TILE_NB_CLUTS_POW = 8
 FG_TILE_NB_CLUTS = 1<<FG_TILE_NB_CLUTS_POW
-FG_TILE_COUNT = 0x400
+FG_TILE_COUNT = 0x800
 
-BG_TILE_NB_CLUTS_POW = 3
+BG_TILE_NB_CLUTS_POW = 8
 BG_TILE_NB_CLUTS = 1<<BG_TILE_NB_CLUTS_POW
-BG_TILE_COUNT = 0x400
+BG_TILE_COUNT = 0x1000
 SPRITE_COUNT = 0x400
 
-SPRITE_NB_CLUTS_POW = 2
+SPRITE_NB_CLUTS_POW = 7
 SPRITE_NB_CLUTS = 1<<SPRITE_NB_CLUTS_POW
 
 HW_SPRITE_BUFFER_SIZE = (2*8*256+16*2)
@@ -125,8 +125,8 @@ NTSC_Y_SHIFT = 12
 
 AGA_X_SHIFT = 0x37
 
-FG_SCREEN_TILE_ADDRESS = 0x2000
-FG_SCREEN_COLOR_ADDRESS = 0x2400
+FG_SCREEN_TILE_ADDRESS = 0x3000
+FG_SCREEN_START_OFFSET = 0x208
 BG_SCREEN_TILE_ADDRESS = 0x2800
 BG_SCREEN_COLOR_ADDRESS = 0x2C00
 SPRITE_ADDRESS = 0x1E00  | to 0x1FFF
@@ -1211,7 +1211,7 @@ relocate_tiles_file:
 	move.l	d1,a1
 
 	* relocate pointers on bitplane list in clut table
-	moveq	#BG_TILE_NB_CLUTS-1,d6
+	move.w	#BG_TILE_NB_CLUTS-1,d6
 1:
 	move.l	(a1)+,d2
 	jeq		5f
@@ -3665,8 +3665,7 @@ osd_video_byte_dirty_cpu1:
 
 	lea		(FG_SCREEN_TILE_ADDRESS,a6),a0
 	move.b	(a0,d7.w),d0
-	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d1
+	move.b	(1,a0,d7.w),d1
 
 
 
@@ -4663,6 +4662,15 @@ level2_interrupt:
 *			0);
 *}
 
+* HUD:
+* start address: [3208-3250[ (first row)
+*                [3F88-3FD0[ (last row)
+* row offset: 0x80
+* code: offset 0
+* attr: bits 7-2
+* code+0x100: bits 0-1: 0: 0x400, 1: 0x500 ... 3: 0x700
+* but then how to access tiles 0-3FF?
+* (ask chatgpt?)
 
 	.ifne	OPT_ENABLE_LOGGING
 log_used_fg_tiles:
@@ -4670,8 +4678,7 @@ log_used_fg_tiles:
 	* main screen
 
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(FG_SCREEN_TILE_ADDRESS,a6),a5
-	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a4
+	lea		(FG_SCREEN_TILE_ADDRESS+FG_SCREEN_START_OFFSET,a6),a5
 	lea		fg_tile_log_table,a0
 	move	#(1<<FG_TILE_NB_CLUTS_POW)-1,d4		| clut mask
 	move	#FG_TILE_NB_CLUTS_POW,d5		| nb clut pow

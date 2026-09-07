@@ -1,11 +1,5 @@
-trace cpu from boot (cpu1) from amiga and MAME (reaches 8F4F) (with loop) see where it diverges
-bank overflow: trace cpu in A656
-
-check video writes on real game, try to match amiga version (proper values?)
-cpu2 memory mapping possibly off
-
-check that cpu1 & cpu2 irqs work together
-when $3000 contains the OSD data, we can start putting tiles on screen
+- implement HUD with 4-color sprites ignore clut atm
+- rip cluts using Rally-X method (too many cluts)
 
 check when bullets decrease (check cheat, track down to fire flag)
 
