@@ -945,7 +945,6 @@ demo_game:
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
 	clr.b	currently_running_cpu
-	BREAKPOINT	"boot"
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
 
@@ -1519,11 +1518,13 @@ osd_set_cpu1_bank:
 	moveq	#0,d7
 	move.b	d0,d7
 	.ifndef	RELEASE
-	cmp.w	#0x14,d7
+	* max is 0x1F but there's only 0xFF after 0x1A so...
+	cmp.w	#0x1A,d7
 	jcs 	0f
-	BREAKPOINT	"Bank 1 out of range (d7)"
+	BREAKPOINT	"CPU1: Bank out of range (d7)"
 0:
 	.endif
+
 	lea		cpu1_banks,a0
 	jbsr	compute_bank_base
 	move.l	a1,cpu1_bank_base
@@ -5473,23 +5474,29 @@ osd_get_last_known_pc:
 * 2 is useful because you can 1) disable and 2) reenable
 * if was not already enabled, reenable will do nothing
 osd_cpu_logging_control:
+	movem.l	a0-a1,-(a7)
+	lea		cpu_log_enable,a0
+	lea		cpu_log_prev_state,a1
+	add.w	d7,a0		| select cpu
+	add.w	d7,a1		| select cpu
 	cmp.b	#2,d6
 	jeq		1f
 	* it's essential that we skip a second enable while active
 	* or disable while inactive
 	* else it kills the "reenable" feature, overwriting previous
-	cmp.b	cpu_log_enable,d6
-	jeq		2f		| enabled/disabled twice: skip
+	cmp.b	(a0),d6
+	jeq		lcout		| enabled/disabled twice: skip
 	* 0 or 1: save previous state	
-	move.b	cpu_log_enable,cpu_log_prev_state
-	move.b	d6,cpu_log_enable
+	move.b	(a0),(a1) | cpu_log_enable -> cpu_log_prev_state
+	move.b	d6,(a0)
+lcout:
+	movem.l	(a7)+,a0-a1
 	rts
 1:
 	* 2: reenable: put previous state, reenabling if needed
-	move.b	cpu_log_prev_state,cpu_log_enable
-2:
-	rts
-	
+	move.b	(a1),(a0)
+	jra		lcout
+
 	.macro	CHECK_ZERO_MSW	reg
 	swap	\reg
 	tst		\reg
@@ -5513,17 +5520,20 @@ osd_log_cpu:
 
 
 	move.w	(6,a7),last_known_m6809_pc
-	
 	move.w	last_known_m6809_pc,0x100
+	move.w	(4,a7),0x102   | last active cpu
 	
 	move.l	a6,-(a7)
+	lea		cpu_log_enable,a0
+	add.w 	(8,a7),a0		| cpu #
 	* check if cpu log is enabled
-	tst.b	cpu_log_enable
+	tst.b	(a0)
 	jeq		445f
 	COLOR0_FLASH	0x0F0
 
 	move.l	log_ptr,a6
 	move.w	(10,a7),(a6)+	| the PC
+	move.w 	(8,a7),(a6)+	| cpu #
 	move.l	d1,-(a7)
 	rol.w	#8,d1
 	move.b	d0,d1

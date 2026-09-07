@@ -60,6 +60,8 @@ scroll_1_9004 = $9004
 scroll_2_9400 = $9400
 scroll_3_9404 = $9404
 back_color_a000 = $A000
+tilebank_select_8800 = $8800
+tilebank_select_8c00 = $8c00
 
 ; controls are booleans in this shared "custom" area (directions, jump, fire)
 ; but not set or read by CPU1 ????
@@ -701,6 +703,7 @@ cpu1_irq_8565:    ; [global]
 858C: B7 80 00    STA    watchdog_8000
 858F: B7 84 00    STA    irq_ack_8400
 8592: 3B          RTI
+
 8593: BD 81 CC    JSR    $81CC
 8596: 96 19       LDA    bankswitch_shadow_19
 8598: B7 68 00    STA    bankswitch_6800
@@ -1519,9 +1522,9 @@ title_screen_8f10:
 8F17: 91 05       CMPA   $05
 8F19: 23 01       BLS    $8F1C
 8F1B: 39          RTS
-8F1C: CE 8F 49    LDU    #jump_table_8fa9
+8F1C: CE 8F 49    LDU    #jump_table_8f49
 8F1F: 48          ASLA
-8F20: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=2]
+8F20: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=3]
 8F22: 7D 41 A5    TST    $41A5
 8F25: 26 01       BNE    $8F28
 8F27: 39          RTS
@@ -1634,6 +1637,7 @@ title_screen_8f10:
 9020: 26 03       BNE    $9025
 9022: 7E 90 CC    JMP    $90CC
 9025: 7E D6 36    JMP    $D636
+
 9028: 0F 06       CLR    semaphore_06
 902A: CC 00 00    LDD    #$0000
 902D: DD 88       STD    $88
@@ -1645,6 +1649,7 @@ title_screen_8f10:
 9038: 81 01       CMPA   #$01
 903A: 26 FA       BNE    $9036
 903C: 39          RTS
+
 903D: BD B4 B8    JSR    $B4B8
 9040: BD 84 8C    JSR    $848C
 9043: 0C D1       INC    $D1
@@ -3795,9 +3800,9 @@ A2C3: EC C1       LDD    ,U++
 A2C5: DD 78       STD    $78
 A2C7: A6 C0       LDA    ,U+
 A2C9: 26 05       BNE    $A2D0
-A2CB: B7 88 00    STA    $8800
+A2CB: B7 88 00    STA    tilebank_select_8800
 A2CE: 20 03       BRA    $A2D3
-A2D0: B7 8C 00    STA    $8C00
+A2D0: B7 8C 00    STA    tilebank_select_8c00
 A2D3: EC C1       LDD    ,U++
 A2D5: DD 7A       STD    $7A
 A2D7: EC C1       LDD    ,U++
@@ -4216,13 +4221,13 @@ A650: BD B5 31    JSR    $B531
 A653: BD B5 6D    JSR    $B56D
 A656: DE A6       LDU    $A6
 A658: 96 A8       LDA    $A8
-A65A: EC C6       LDD    A,U
+A65A: EC C6       LDD    A,U	; [bank_address]
 A65C: ED E3       STD    ,--S    ; [local]
 A65E: DE A9       LDU    $A9
 A660: A6 05       LDA    $5,X
 A662: 33 C6       LEAU   A,U
 A664: EC E1       LDD    ,S++    ; [local]
-A666: ED C4       STD    ,U
+A666: ED C4       STD    ,U		; [video_address_word]
 A668: 0A B2       DEC    $B2
 A66A: 27 2B       BEQ    $A697
 A66C: A6 05       LDA    $5,X
@@ -4252,7 +4257,7 @@ A69B: DE A9       LDU    $A9
 A69D: A6 05       LDA    $5,X
 A69F: 33 C6       LEAU   A,U
 A6A1: CC FF 03    LDD    #$FF03
-A6A4: ED C4       STD    ,U
+A6A4: ED C4       STD    ,U		; [video_address_word]
 A6A6: 0A B2       DEC    $B2
 A6A8: 27 17       BEQ    $A6C1
 A6AA: A6 05       LDA    $5,X
@@ -5621,18 +5626,18 @@ B433: 39          RTS
 B434: 86 18       LDA    #$18
 B436: B7 68 00    STA    bankswitch_6800
 B439: CE 63 B3    LDU    #$63B3
-B43C: EC C1       LDD    ,U++
+B43C: EC C1       LDD    ,U++		; [bank_address]
 B43E: DD 78       STD    $78
-B440: A6 C0       LDA    ,U+
+B440: A6 C0       LDA    ,U+		; [bank_address]
 B442: 26 05       BNE    $B449
-B444: B7 88 00    STA    $8800
+B444: B7 88 00    STA    tilebank_select_8800
 B447: 20 03       BRA    $B44C
-B449: B7 8C 00    STA    $8C00
-B44C: EC C1       LDD    ,U++
+B449: B7 8C 00    STA    tilebank_select_8c00
+B44C: EC C1       LDD    ,U++		; [bank_address]
 B44E: DD 7A       STD    $7A
-B450: EC C1       LDD    ,U++
+B450: EC C1       LDD    ,U++		; [bank_address]
 B452: DD 7C       STD    $7C
-B454: EC C1       LDD    ,U++
+B454: EC C1       LDD    ,U++		; [bank_address]
 B456: DD 7E       STD    $7E
 B458: 8E 53 C0    LDX    #$53C0
 B45B: CC 10 10    LDD    #$1010
@@ -5640,13 +5645,13 @@ B45E: ED 08       STD    $8,X
 B460: CC 20 20    LDD    #$2020
 B463: ED 0A       STD    $A,X
 B465: 8E 53 D0    LDX    #$53D0
-B468: EC C1       LDD    ,U++
+B468: EC C1       LDD    ,U++		; [bank_address]
 B46A: ED 08       STD    $8,X
 B46C: 48          ASLA
 B46D: 58          ASLB
 B46E: ED 0A       STD    $A,X
 B470: 8E 53 E0    LDX    #$53E0
-B473: EC C1       LDD    ,U++
+B473: EC C1       LDD    ,U++		; [bank_address]
 B475: ED 08       STD    $8,X
 B477: 48          ASLA
 B478: 58          ASLB
@@ -5679,6 +5684,7 @@ B4AE: 10 8E 53 C0 LDY    #$53C0
 B4B2: 4F          CLRA
 B4B3: A7 84       STA    ,X
 B4B5: 7E A5 C7    JMP    $A5C7
+
 B4B8: 8E 34 10    LDX    #$3410
 B4BB: 32 7E       LEAS   -$2,S	; [alloc_locals]
 B4BD: 86 0C       LDA    #$0C
@@ -5686,7 +5692,7 @@ B4BF: A7 61       STA    $1,S	; [local]
 B4C1: 86 1C       LDA    #$1C
 B4C3: A7 E4       STA    ,S		; [local]
 B4C5: CC FF 00    LDD    #$FF00
-B4C8: ED 81       STD    ,X++
+B4C8: ED 81       STD    ,X++	; [video_address_word]
 B4CA: 6A E4       DEC    ,S    ; [local]
 B4CC: 26 FA       BNE    $B4C8
 B4CE: 30 88 48    LEAX   $48,X
@@ -5719,8 +5725,8 @@ B4FD: D0 AC       SUBB   $AC
 B4FF: 48          ASLA
 B500: 3D          MUL
 B501: EB E0       ADDB   ,S+    ; [local]
-B503: EE CB       LDU    D,U
-B505: A6 C0       LDA    ,U+
+B503: EE CB       LDU    D,U	; [bank_address]
+B505: A6 C0       LDA    ,U+	; [bank_address]
 B507: 27 E0       BEQ    $B4E9
 B509: A7 E2       STA    ,-S    ; [local]
 B50B: A6 84       LDA    ,X
@@ -5728,7 +5734,7 @@ B50D: 84 03       ANDA   #$03
 B50F: A1 E0       CMPA   ,S+	; [local]
 B511: 24 07       BCC    $B51A
 B513: 48          ASLA
-B514: EC C6       LDD    A,U
+B514: EC C6       LDD    A,U	; [bank_address]
 B516: DD A2       STD    $A2
 B518: 4F          CLRA
 B519: 39          RTS
@@ -5764,7 +5770,7 @@ B546: 97 19       STA    bankswitch_shadow_19
 B548: B7 68 00    STA    bankswitch_6800
 B54B: EC E1       LDD    ,S++		; [local]
 B54D: 84 1F       ANDA   #$1F
-B54F: EC CB       LDD    D,U
+B54F: EC CB       LDD    D,U	; [bank_address]
 B551: ED E3       STD    ,--S	; [local]
 B553: 1F 89       TFR    A,B
 B555: A6 84       LDA    ,X
@@ -10753,9 +10759,11 @@ jump_table_886f:
 	dc.w	$ce8d	; $8877
 
 
-jump_table_8fa9:
-	dc.w	$a7e2	; $8fa9
-	dc.w	$a6c0	; $8fab
+jump_table_8f49:
+    dc.w	$8f4f 	; $8f49
+	dc.w	$9028 	; $8f4b
+	dc.w	$903d 	; $8f4d
+ 
 jump_table_9124:
 	dc.w	$9138	; $9124
 	dc.w	$a24b	; $9126

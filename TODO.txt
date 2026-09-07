@@ -1,3 +1,6 @@
+trace cpu from boot (cpu1) from amiga and MAME (reaches 8F4F) (with loop) see where it diverges
+bank overflow: trace cpu in A656
+
 check video writes on real game, try to match amiga version (proper values?)
 cpu2 memory mapping possibly off
 

@@ -285,6 +285,8 @@ def doit(cpu):
     "scroll_3_9404":"set_scroll_3",
     "back_color_a000":"set_back_color",
     "bankswitch_6800":"set_cpu1_bank",
+    "tilebank_select_8800":"",
+    "tilebank_select_8c00":"",  # temp tile bank select disabled
     } if cpu==1 else  {
     "watchdog_8000":"",
     "irq_ack_8800":"",
