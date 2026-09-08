@@ -96,11 +96,11 @@ SCORE_FILE_SIZE = 90
 
 LOG_BUFFER_SIZE = 0x10000
 
-FG_TILE_NB_CLUTS_POW = 8
+FG_TILE_NB_CLUTS_POW = 6
 FG_TILE_NB_CLUTS = 1<<FG_TILE_NB_CLUTS_POW
-FG_TILE_COUNT = 0x800
+FG_TILE_COUNT = 0x400  | seems that first tiles aren't reachable?
 
-BG_TILE_NB_CLUTS_POW = 8
+BG_TILE_NB_CLUTS_POW = 6
 BG_TILE_NB_CLUTS = 1<<BG_TILE_NB_CLUTS_POW
 BG_TILE_COUNT = 0x1000
 SPRITE_COUNT = 0x400
@@ -4667,7 +4667,7 @@ level2_interrupt:
 *                [3F88-3FD0[ (last row)
 * row offset: 0x80
 * code: offset 0
-* attr: bits 7-2
+* attr: bits 7-2 (64 values)
 * code+0x100: bits 0-1: 0: 0x400, 1: 0x500 ... 3: 0x700
 * but then how to access tiles 0-3FF?
 * (ask chatgpt?)
@@ -4682,9 +4682,34 @@ log_used_fg_tiles:
 	lea		fg_tile_log_table,a0
 	move	#(1<<FG_TILE_NB_CLUTS_POW)-1,d4		| clut mask
 	move	#FG_TILE_NB_CLUTS_POW,d5		| nb clut pow
-	jra		log_any_tiles
+	moveq 	#0,d7
+0:
+	moveq	#0,d1
+	moveq	#0,d0
+	move.b	(a5,d7.w),d0	| tile code
+	move.b	(1,a5,d7.w),d1	| tile attribute
+
+	moveq	#0,d2
+	moveq	#0,d3
+	move.b	d0,d2	| code
+	move.b	d1,d3	| attribute + tile msbits
+	and.w	#0x3,d3
+	lsl.w	#8,d3	| tile offset (tile 0x400 is first)
+	add.w	d3,d2	| extended tile code
+	lsr.w	#2,d1	| clut
+
+	lsl.l	d5,d2			| tile code * NB_CLUTS (long!)
+	add.l	d1,d2			| add clut
+	st.b	(a0,d2.l)
+20:
+	addq	#2,d7
+	cmp.w	#0x1000,d7
+	jne		0b
+	rts	
 	
 log_used_bg_tiles:
+	rts
+
 	* scan the whole screen, see what was updated
 	* main screen
 
@@ -4732,7 +4757,8 @@ log_any_tiles:
 	
 * sprite_log, log_sprites
 log_used_sprites:
-
+	rts
+	
 	* scan the whole screen, see what was updated
 	* main screen
 	
