@@ -18,11 +18,12 @@ used_sprite_cluts_file = this_dir / "used_sprite_cluts.json"
 fg_used_tile_cluts_file = this_dir / "fg_used_tile_cluts.json"
 used_graphics_dir = this_dir / "used_graphics"
 
-SPRITE_NB_TILES = 0x100
-FG_NB_TILES = 0x200
+FG_NB_TILES = 0x400
 FG_NB_CLUTS = 64
+
+SPRITE_NB_TILES = 0x100
 BG_NB_TILES = 0x200
-BG_NB_CLUTS = 0x80  # in 4 color banks
+BG_NB_CLUTS = 0x80
 SPRITE_NB_CLUTS = 16
 
 

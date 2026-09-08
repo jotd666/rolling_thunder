@@ -890,7 +890,7 @@ demo_game:
 	* first initialize buffer address
 	.ifne		OPT_SPRITE_MIRRORING
 	move.l	#mirror_buffer,mirror_buffer_ptr
-	jbsr	mirror_common_sprites
+	*jbsr	mirror_common_sprites
 	.endif
 	
 	tst.b	startup_menu_flag
@@ -1275,7 +1275,7 @@ relocate_sprites_file:
 
 
 
-	jbsr	compute_mirror_bitplanes
+	*jbsr	compute_mirror_bitplanes
 5:
 	dbf		d6,1b
 10:
