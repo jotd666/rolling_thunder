@@ -13,7 +13,9 @@ import gen_cluts
 
 
 # theoritically: could generate 64 tilemaps
-
+# hud=True makes it a special case
+# 1) upper half tiles are discarded
+# 2) 256 cluts => 64 cluts one out of 4
 
 def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,dump_it=False):
     cluts = gen_cluts.doit(nb_colors)
@@ -34,10 +36,11 @@ def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,dump_it=False):
     # the other cluts (mame gfx save only saves up to 32 cluts, we need 64)
     ref_clut = cluts[ref_clut_index]
     for i in range(0,nb_cluts):
-        if i%4==0:
+        if not hud or i%4==0:
             this_clut = cluts[i]
             dest = Image.new("RGB",source.size)
-            i //= 4
+            if hud:
+                i //= 4
             if len(set(this_clut))>1:  # avoid all black
                 rep_dict = {k:v for k,v in zip(ref_clut,this_clut)}
                 rep_dict[magenta] = magenta
