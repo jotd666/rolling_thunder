@@ -3674,9 +3674,9 @@ video_word_dirty_cpu1:
 	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
 	jcs		osd_w_videoram_out			| ATM only HUD tiles
 	
-	lea		(FG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0		| code
-	move.b	(1,a0,d7.w),d1		| attribute
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
 
 	jbsr	update_fg_tile
 
@@ -4218,7 +4218,6 @@ compute_fg_tile_xy:
 * < D1: tile attribute
 
 update_fg_tile:
-	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
 	* if < 0x208 bail out as not visible
 	cmp.w	#0x208,d7
 	jcc		0f
@@ -4250,7 +4249,7 @@ update_fg_tile:
 
 	
 	and.w	#0x7,d0		| dest X offset
-	lsl.w	#4,d1		| dest Y offset (8*2 pixels per row)
+	lsl.w	#7,d1		| dest Y offset (8*8*2 pixels per row)
 	add.w	d0,d1
 	add.w	#0x10,d1	| skip control word
 	

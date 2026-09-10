@@ -1,5 +1,4 @@
-- implement HUD with 4-color sprites, remove most colors from sprite sheet automatically (when loading hud pic)
-  keep only black/white/non white and do proper non-white with copper
+- implement HUD with 4-color sprites: half of the pic is displaying, debug 2UP
 
 check when bullets decrease (check cheat, track down to fire flag)
 
