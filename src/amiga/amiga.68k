@@ -1090,16 +1090,6 @@ make_automatic_sound_channels:
 	jne		1b
 	rts
 
-osd_black_colors:
-	lea		sprite_palette,a0
-	move.l	color_copper_pointers,a1	| tile entries 0-32
-	move.w	#TOTAL_NB_COLORS/2-1,d0
-1:
-	addq.w	#2,a1
-	clr.w	(a1)+
-	dbf		d0,1b
-2:
-	rts
 
 
 current_context:
@@ -3356,7 +3346,7 @@ platform_init:
 	
 	lea		hw_sprite_ram_buffer,a0
 	jbsr	align_for_fmode
-	moveq	#7,d0
+	moveq	#7,d0   | only 5 sprites are needed
 	lea		hw_sprite_pointers,a1
 0:
 	move.l	a0,(a1)+
@@ -3411,10 +3401,10 @@ platform_init:
 	cmp.l	#game_sprites_end,a2
 	bcs		1b
 2:
-	* compute control words for each sprite pair
+	* compute control words for each sprite
 	lea		hw_sprite_pointers,a0
 	lea		HW_SpriteYTable_256,a1
-	moveq	#3,d7
+	moveq	#4,d7  | only 5 first sprites are used
 	moveq	#0x3F,d2	| sprite X start
 0:
 	move.w	d2,d0
@@ -3427,31 +3417,32 @@ platform_init:
 	add.w	#64,d2		| advance X
 	
 	* store control word
-	.rept	2
 	move.l	(a0)+,a2
 	move.w	d0,(8,a2)
 	swap 	d0
 	move.w	d0,(a2)
-	swap	d0
-	bset	#7,d0		| attach bit
 	addq	#8,a2
-	.endr
 	
 	dbf	d7,0b
 
+	* 3 last sprites are not displayed
+	.rept	3
+	clr.w	(a2)
+	clr.w	(8,a2)
+	addq	#8,a2
+	.endr
 	
-	* load attached sprites palette
-	lea		fg_tile_upper_palette,a0
+	* load sprites palette
+	lea		fg_tile_palette,a0
 	move.l	color_copper_pointers+TOTAL_NB_COLORS*4,a1	| entries 64-80
-	move.w	#16,d0
+	move.w	#4,d0
 	jbsr	load_palette
 		
-
 	
-	lea		sprite_palette,a0
-	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64
-	move.w	#TOTAL_NB_COLORS/2,d0
-	jbsr	load_palette
+*	lea		sprite_palette,a0
+*	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64
+*	move.w	#TOTAL_NB_COLORS/2,d0
+*	jbsr	load_palette
 	
 	
 	jbsr		set_bobs_bitplanes
@@ -3616,10 +3607,28 @@ osd_set_scroll_2:
 osd_set_scroll_3:
 	rts 
 	
-osd_video_word_dirty_cpu1:
+* a0=screen address
+* we need to update code+attr anyway
+osd_video_byte_dirty_cpu1:
+	OSD_ENTER
+	movem.l	d0-d7/a0-a2/a5,-(a7)
+	move.l	a0,d7
+	bclr	#0,d7
+	move.l	d7,a0
+	jbsr 	video_word_dirty_cpu1
+	movem.l	(a7)+,d0-d7/a0-a2/a5
+	OSD_EXIT
 	rts
-
+	
 osd_video_byte_dirty_cpu2:
+	OSD_ENTER
+	movem.l	d0-d7/a0-a2/a5,-(a7)
+	move.l	a0,d7
+	bclr	#0,d7
+	move.l	d7,a0
+	jbsr 	video_word_dirty_cpu2
+	movem.l	(a7)+,d0-d7/a0-a2/a5
+	OSD_EXIT
 	rts
 
 * a0=screen address (preserved)
@@ -3628,52 +3637,50 @@ osd_video_byte_dirty_cpu2:
 * allows 2000-3000 range
 * 2000: foreground/HUD (2400: attributes)
 * 2800: background
-osd_video_byte_dirty_cpu1:
-	rts
-	
+osd_video_word_dirty_cpu1:
 	OSD_ENTER
 	movem.l	d0-d7/a0-a2/a5,-(a7)
-	move.b	(a0),d0
+	jbsr	video_word_dirty_cpu1
+	movem.l	(a7)+,d0-d7/a0-a2/a5
+	OSD_EXIT
+	rts
+	
+osd_video_word_dirty_cpu2:
+	OSD_ENTER
+	movem.l	d0-d7/a0-a2/a5,-(a7)
+	movem.l	(a7)+,d0-d7/a0-a2/a5
+	OSD_EXIT
+	rts
+
+video_word_dirty_cpu2:
+	rts
+	
+video_word_dirty_cpu1:
 	move.l	a0,d7		| save address
 	sub.l	a6,d7
 	jmi		osd_w_videoram_out
 
-	* we now suppose that we're in 2000-3000
+	* we now suppose that we're in 0-4000
 	* check that in debug mode
 	.ifndef		RELEASE
 	cmp.w	#FG_SCREEN_TILE_ADDRESS+0x1000,d7
 	jcs		0f
 1:
 	BREAKPOINT	"write videoram out of range (D7)"
-	bra.b	osd_w_videoram_out	
+	jra	osd_w_videoram_out	
 0:
 	.endif
 	
-	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
-	.ifndef	RELEASE
-	jpl		0f
-	add.w	#FG_SCREEN_TILE_ADDRESS,d7
-	BREAKPOINT	"write videoram out of range (D7)"
-	jra		osd_w_videoram_out
-0:
-	.endif
+	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
+	jcs		osd_w_videoram_out			| ATM only HUD tiles
 	
-	cmp.w	#BG_SCREEN_TILE_ADDRESS-FG_SCREEN_TILE_ADDRESS,d7
-	jcc		bg_tile
-	
-	and.w	#0x3FF,d7
-
 	lea		(FG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	move.b	(1,a0,d7.w),d1
-
-
+	move.b	(a0,d7.w),d0		| code
+	move.b	(1,a0,d7.w),d1		| attribute
 
 	jbsr	update_fg_tile
 
 osd_w_videoram_out:
-	movem.l	(a7)+,d0-d7/a0-a2/a5
-	OSD_EXIT
 	rts	
 	
 bg_tile:
@@ -4152,26 +4159,36 @@ cache_fg_tiles_address:
 	move.b	d0,(a0)+		| store offset
 	move.b	d1,(a0)+		| store offset
 
-	addq.w	#1,d7
-	cmp.w	#0x400,d7
+	addq.w	#2,d7
+	cmp.w	#0x1000,d7
 	jne		0b
 	rts
 
 
-* < D7: 0-0x400
-* > D0/D1: coords 
+* < D7: 0-0x1000
+* > D0/D1: screen X/Y coords 
 compute_fg_tile_xy:
 	moveq	#0,d0
 	move.b	d7,d0
 	
-	and.b	#0x1F,d0	| x
+	and.b	#0x7F,d0	| x
+	sub.b	#8,d0
+	jmi		0f
+	cmp.b	#70,d0
+	jcc		0f
+	lsr.b	#1,d0		| divide by 2: X in [0..35]
+	
 	move.w	d7,d1
-	lsr.w	#5,d1		| Y
-	and.b	#0x1F,d1	| Y
-	subq	#2,d1		| 2 first rows aren't visible
-	lsl.w	#3,d1		| times 8
+	lsr.w	#7,d1		| Y
+	cmp.w	#4,d1		| first 4 rows aren't visible
+	jcs		0f
 	rts
-
+0:
+	* invalid
+	moveq	#-1,d0
+	moveq	#-1,d1
+	rts
+	
 *compute_tile_xy_portrait:
 *	moveq	#0,d0
 *	moveq	#0,d1
@@ -4196,43 +4213,39 @@ compute_fg_tile_xy:
 	move.l	d0,a0
 	.endm
 
-* < D7: 0-0x400 offset
+* < D7: 0x3000-0x3FFF offset
 * < D0: tile code
 * < D1: tile attribute
 
 update_fg_tile:
-	* if < 0x40 bail out as not visible
-	cmp.w	#0x40,d7
+	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
+	* if < 0x208 bail out as not visible
+	cmp.w	#0x208,d7
 	jcc		0f
 	rts
 0:
+	
 	moveq	#0,d2
 	moveq	#0,d3
 	move.b	d0,d2	| code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	#0xC0,d3
-	lsl.w	#2,d3
-	add.w	d3,d2	| extended tile code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	#0xF,d3	| clut
+	move.b	d1,d3	| attribute+tile extend bits
+	lsr.b	#2,d3	| attribute
+	and.b	#3,d1	| tile upper select 0-3
+	lsl.w	#8,d1	| *256
+	add.w	d1,d2	| extended tile code
 
-
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
 	lea		fg_tile_address_table,a1
-	.ifdef	NO68020
-	add.w	d7,d7
 	move.w	(a1,d7.w),d0
-	.else
-	move.w	(a1,d7.w*2),d0
-	.endif
 	moveq	#0,d1
 	move.b	d0,d1
-	lsr.w	#8,d0
+	lsr.w	#8,d0		| X
 	
-	* select which destination sprites (0-3)
+	* select which destination sprite (0-5)
 	move.w	d0,d4
 	lea		hw_sprite_pointers,a1
-	and.w	#0xF8,d4		| divide by 8
-							| then multiply by 8 (sprite go by pairs)
+	and.w	#0xF8,d4		| divide by 8 (8*8=64 pixels)
+	lsr.w 	#1,d4			| then multiply by 4 to get proper sprite number
 	lea	(a1,d4.w),a1
 
 	
@@ -4241,21 +4254,15 @@ update_fg_tile:
 	add.w	d0,d1
 	add.w	#0x10,d1	| skip control word
 	
-	* get 2 pointers for 2 attached sprites
-	move.l	(a1)+,a2
+	* get 1 pointer for 1 sprite
 	move.l	(a1),a1
 	
-
-	exg		a1,a2
 	* add offset to destination
-	add.w	d1,a2
 	add.w	d1,a1
 	
 	* now get source data
 	lea		fg_character_table,a0
-	
 
-20:
 
 	* updating bitplanes
 
@@ -4310,22 +4317,6 @@ update_fg_tile:
 	.rept	8
 	move.b	(a0)+,d0
 	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
-	* third plane: second sprite
-	NEXT_SOURCE_PLANE
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
-	.set	offset,offset+16
-	.endr
-	* second plane: second sprite, with a 8 offset
-	NEXT_SOURCE_PLANE
-	.set	offset,8
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
 	.set	offset,offset+16
 	.endr
 
@@ -6054,7 +6045,7 @@ bg_character_table_buffer:
 	.skip	BG_TILE_FILE_MAX_SIZE
 	
 fg_tile_address_table:
-	.skip	0x400*2
+	.skip	0x800*2
 
 
 	

@@ -38,12 +38,12 @@ WHDASM = vasmm68k_mot -DDATETIME -I$(HDBASE)/amiga39_JFF_OS/include -I$(WHDBASE)
 
 # leave MAIN_OBJ first
 MEM_OBJS = cpu1_rom.o cpu_ram.o cpu2_rom.o cpu1_banks.o cpu2_banks.o
-HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
-AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o 
-CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics_aga.o vbr.o ReadJoyPad.o ptplayer.o
+HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics.o vbr.o ReadJoyPad.o ptplayer.o 
+AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o 
+CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o
 
 #../data/hw_tester
-all:  $(HW_TESTER_AGA) $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics_aga.68k $(AMIGASRC)/sounds.68k
+all:  $(HW_TESTER_AGA) $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
 
 
 
@@ -56,7 +56,7 @@ clean:
 	
 shell.o: $(AMIGASRC)/shell.68k
 	$(ASM_000) -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/shell.68k -o shell.o
-$(AMIGASRC)/palette.68k:
+$(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k: $(ASSETS)/convert_graphics.py
 	cmd /c $(ASSETS)\convert_graphics.py
 
 #$(AMIGASRC)/sounds.68k: $(ASSETS)/convert_sounds.py 
@@ -105,11 +105,11 @@ cpu2_8000_020.o: cpu2_8000.68k cpu2_options.inc cpu2_8000.inc cpu2_data.inc
 	$(ASM_020) cpu2_8000.68k -o cpu2_8000_020.o
 
 	
-hw_tester.o: $(AMIGASRC)/hw_tester.68k cpu1_options.inc cpu1_8000.inc cpu1_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics_aga.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+hw_tester.o: $(AMIGASRC)/hw_tester.68k cpu1_options.inc cpu1_8000.inc cpu1_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 	$(ASM_020) -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/hw_tester.68k -o hw_tester.o
-amiga_aga.o: $(AMIGASRC)/amiga.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics_aga.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+amiga_aga.o: $(AMIGASRC)/amiga.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 	$(ASM_020) --defsym OPT_CD32_VERSION=0 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_aga.o
-#amiga_cd32.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/context.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics_aga.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+#amiga_cd32.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/context.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 #	$(ASM_020) --defsym OPT_CD32_VERSION=1 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_cd32.o
 #amiga_ocs.o: $(AMIGASRC)/amiga.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/ocs/palette.68k $(AMIGASRC)/sound_entries.68k $(AMIGASRC)/scroll_table_16.68k
 #	$(ASM_000) -I$(AMIGASRC)/ocs -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_ocs.o
@@ -121,10 +121,9 @@ sounds.o: $(AMIGASRC)/sounds.68k
 	$(ASM) -I$(AMIGASRC) $(AMIGASRC)/sounds.68k -o sounds.o
 ReadJoyPad.o: $(AMIGASRC)/ReadJoyPad.68k amiga/ReadJoyPad.i
 	$(ASM) -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/ReadJoyPad.68k -o ReadJoyPad.o
-graphics_aga.o: $(AMIGASRC)/graphics_aga.68k
-	$(ASM) $(AMIGASRC)/graphics_aga.68k -o graphics_aga.o
-graphics_ocs.o: $(AMIGASRC)/ocs/graphics.68k
-	$(ASM) $(AMIGASRC)/ocs/graphics.68k -o graphics_ocs.o
+graphics.o: $(AMIGASRC)/graphics.68k
+	$(ASM) $(AMIGASRC)/graphics.68k -o graphics.o
+
 
 
 $(WHDLOADER_AGA) : $(AMIGASRC)/$(PROGNAME)HD.s
