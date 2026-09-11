@@ -266,6 +266,19 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
 
     return line
 
+def handle_semwait(cpu,lines,i):
+    line = lines[i]
+    if "[semwait]" in line:
+        # sync point between 2 irqs, if branches, means infinite loop
+        toks = line.split()
+        label = toks[1]
+        lines.append(f"""
+wait_{label}:
+\tjra\t{label}
+
+""")
+        line = line.replace(label,f"wait_{label}")
+    return line
 
 def doit(cpu):
     global_symbols = []
@@ -304,6 +317,8 @@ def doit(cpu):
 
     for i,line in enumerate(lines):
         address = get_line_address(line)
+
+        lines[i] = handle_semwait(cpu,lines,i)
 
         line = handle_special_addresses(input_dict,store_to_video,rom_address,lines,i)
         lines[i] = line

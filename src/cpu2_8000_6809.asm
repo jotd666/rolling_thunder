@@ -661,11 +661,11 @@ cpu2_irq_8173:  ; [global]
 858A: 7E B0 9A    JMP    $B09A
 ; wait for sync from cpu1 (during irq, argh)
 858D: 96 06       LDA    semaphore_06
-858F: 26 FC       BNE    $858D
+858F: 26 FC       BNE    $858D			; [semwait]
 8591: 0F 07       CLR    semaphore_07
 8593: 96 06       LDA    semaphore_06
 8595: 81 01       CMPA   #$01
-8597: 26 FA       BNE    $8593
+8597: 26 FA       BNE    $8593			; [semwait]
 8599: BD 85 DA    JSR    $85DA
 859C: BD 81 BB    JSR    $81BB
 859F: BD 83 0D    JSR    $830D
@@ -802,7 +802,7 @@ cpu2_irq_8173:  ; [global]
 879A: 0F 07       CLR    semaphore_07
 879C: 96 06       LDA    semaphore_06
 879E: 81 01       CMPA   #$01
-87A0: 26 FA       BNE    $879C
+87A0: 26 FA       BNE    $879C			; [semwait]
 87A2: BD 98 9D    JSR    $989D
 87A5: 0C 07       INC    semaphore_07
 87A7: 0D 18       TST    $18
@@ -814,14 +814,14 @@ cpu2_irq_8173:  ; [global]
 87B4: 0C 07       INC    semaphore_07
 87B6: 96 06       LDA    semaphore_06
 87B8: 81 02       CMPA   #$02
-87BA: 25 FA       BCS    $87B6
+87BA: 25 FA       BCS    $87B6			; [semwait]	
 87BC: BD D1 B2    JSR    $D1B2
 87BF: 0C 07       INC    semaphore_07
 87C1: BD AC AC    JSR    $ACAC
 87C4: 0C 07       INC    semaphore_07
 87C6: 96 06       LDA    semaphore_06
 87C8: 81 03       CMPA   #$03
-87CA: 25 FA       BCS    $87C6
+87CA: 25 FA       BCS    $87C6			; [semwait]	
 87CC: BD 81 BB    JSR    $81BB
 87CF: BD 83 0D    JSR    $830D
 87D2: BD 84 8B    JSR    $848B
@@ -966,14 +966,14 @@ cpu2_irq_8173:  ; [global]
 8919: 97 07       STA    semaphore_07
 891B: B7 80 00    STA    watchdog_8000
 891E: 96 06       LDA    semaphore_06
-8920: 2A F9       BPL    $891B
+8920: 2A F9       BPL    $891B		; [semwait]
 8922: 0F 06       CLR    semaphore_06
 8924: 0D 07       TST    semaphore_07
-8926: 26 FC       BNE    $8924
+8926: 26 FC       BNE    $8924		; [semwait]
 8928: B7 80 00    STA    watchdog_8000
 892B: 96 06       LDA    semaphore_06
 892D: 81 01       CMPA   #$01
-892F: 25 F7       BCS    $8928
+892F: 25 F7       BCS    $8928		; [semwait]
 8931: BD 98 9D    JSR    $989D
 8934: 0C 07       INC    semaphore_07
 8936: B6 04 10    LDA    $0410
@@ -990,7 +990,7 @@ cpu2_irq_8173:  ; [global]
 894F: B7 80 00    STA    watchdog_8000
 8952: 96 06       LDA    semaphore_06
 8954: 81 02       CMPA   #$02
-8956: 25 F7       BCS    $894F
+8956: 25 F7       BCS    $894F		; [semwait]
 8958: BD D1 B2    JSR    $D1B2
 895B: 0C 07       INC    semaphore_07
 895D: BD AC AC    JSR    $ACAC
@@ -998,7 +998,7 @@ cpu2_irq_8173:  ; [global]
 8962: B7 80 00    STA    watchdog_8000
 8965: 96 06       LDA    semaphore_06
 8967: 81 04       CMPA   #$04
-8969: 25 F7       BCS    $8962
+8969: 25 F7       BCS    $8962		; [semwait]
 896B: BD 81 BB    JSR    $81BB
 896E: BD 83 0D    JSR    $830D
 8971: BD 84 8B    JSR    $848B
@@ -1017,7 +1017,7 @@ cpu2_irq_8173:  ; [global]
 8990: CE 89 9D    LDU    #jump_table_899d
 8993: 96 07       LDA    semaphore_07
 8995: 91 06       CMPA   semaphore_06
-8997: 23 01       BLS    $899A
+8997: 23 01       BLS    $899A		; [no_semwait]
 8999: 39          RTS
 899A: 48          ASLA
 899B: 6E D6       JMP    [A,U]        ; [indirect_jump] [nb_entries=4]
@@ -1043,7 +1043,7 @@ cpu2_irq_8173:  ; [global]
 89C9: 39          RTS
 89CA: 96 07       LDA    semaphore_07
 89CC: 91 06       CMPA   semaphore_06
-89CE: 23 01       BLS    $89D1
+89CE: 23 01       BLS    $89D1				; [no_semwait]
 89D0: 39          RTS
 89D1: CE 89 D7    LDU    #jump_table_89d7
 89D4: 48          ASLA
@@ -1111,7 +1111,7 @@ cpu2_irq_8173:  ; [global]
 8A70: 39          RTS
 8A71: 96 07       LDA    semaphore_07
 8A73: 91 06       CMPA   semaphore_06
-8A75: 23 01       BLS    $8A78
+8A75: 23 01       BLS    $8A78		; [no_semwait]
 8A77: 39          RTS
 8A78: CE 8A 7E    LDU    #jump_table_8a7e
 8A7B: 48          ASLA
@@ -1127,7 +1127,7 @@ cpu2_irq_8173:  ; [global]
 8A94: 39          RTS
 8A95: 96 07       LDA    semaphore_07
 8A97: 91 06       CMPA   semaphore_06
-8A99: 23 01       BLS    $8A9C
+8A99: 23 01       BLS    $8A9C		; [no_semwait]
 8A9B: 39          RTS
 8A9C: CE 8A A2    LDU    #jump_table_8aa2
 8A9F: 48          ASLA
@@ -1182,9 +1182,10 @@ cpu2_irq_8173:  ; [global]
 8B1C: 39          RTS
 8B1D: 39          RTS
 8B1E: 39          RTS
+
 8B1F: 96 07       LDA    semaphore_07
 8B21: 91 06       CMPA   semaphore_06
-8B23: 23 01       BLS    $8B26
+8B23: 23 01       BLS    $8B26		; [no_semwait] Branch taken when semaphore_07 <= semaphore_06
 8B25: 39          RTS
 8B26: CE 8B 2C    LDU    #jump_table_8b2c
 8B29: 48          ASLA
@@ -1192,12 +1193,14 @@ cpu2_irq_8173:  ; [global]
 
 8B44: 0C 07       INC    semaphore_07
 8B46: 39          RTS
+
 8B47: 96 67       LDA    $67
 8B49: 91 68       CMPA   $68
 8B4B: 27 01       BEQ    $8B4E
 8B4D: 39          RTS
 8B4E: 0C 07       INC    semaphore_07
 8B50: 7E 81 60    JMP    $8160
+
 8B53: 0C 07       INC    semaphore_07
 8B55: BD 80 E9    JSR    $80E9
 8B58: BD 80 BE    JSR    $80BE
@@ -1206,6 +1209,7 @@ cpu2_irq_8173:  ; [global]
 8B61: 39          RTS
 8B62: 39          RTS
 8B63: 39          RTS
+
 8B64: 0C 07       INC    semaphore_07
 8B66: CC 00 00    LDD    #$0000
 8B69: DD 80       STD    $80

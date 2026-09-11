@@ -1647,7 +1647,7 @@ title_screen_8f10:
 9034: 0C 06       INC    semaphore_06
 9036: 96 07       LDA    semaphore_07
 9038: 81 01       CMPA   #$01
-903A: 26 FA       BNE    $9036
+903A: 26 FA       BNE    $9036		; [semwait]
 903C: 39          RTS
 
 903D: BD B4 B8    JSR    $B4B8
@@ -1811,7 +1811,7 @@ game_demo_90fb:
 9184: 0C 06       INC    semaphore_06
 9186: 96 07       LDA    semaphore_07
 9188: 81 01       CMPA   #$01
-918A: 26 FA       BNE    $9186
+918A: 26 FA       BNE    $9186		; [semwait]
 918C: 0D 18       TST    $18
 918E: 26 43       BNE    $91D3
 9190: 0D C1       TST    energy_c1
@@ -1828,7 +1828,7 @@ game_demo_90fb:
 91AA: 0C 06       INC    semaphore_06
 91AC: 96 07       LDA    semaphore_07
 91AE: 81 03       CMPA   #$03
-91B0: 25 FA       BCS    $91AC
+91B0: 25 FA       BCS    $91AC		; [semwait]
 91B2: BD D3 85    JSR    $D385
 91B5: BD D2 CD    JSR    $D2CD
 91B8: 96 13       LDA    $13
@@ -3123,7 +3123,7 @@ write_to_screen_9477:
 9D0F: 97 06       STA    semaphore_06
 9D11: B7 80 00    STA    watchdog_8000
 9D14: 0D 07       TST    semaphore_07
-9D16: 2A F9       BPL    $9D11
+9D16: 2A F9       BPL    $9D11		; [semwait]
 9D18: 0F 07       CLR    semaphore_07
 9D1A: 0D 06       TST    semaphore_06
 9D1C: 26 FC       BNE    $9D1A
@@ -3644,7 +3644,7 @@ A16D: 0F 07       CLR    semaphore_07
 A16F: 39          RTS
 A170: 96 06       LDA    semaphore_06
 A172: 91 07       CMPA   semaphore_07
-A174: 23 01       BLS    $A177
+A174: 23 01       BLS    $A177		; [no_semwait]
 A176: 39          RTS
 A177: CE A1 7D    LDU    #jump_table_a17d
 A17A: 48          ASLA
@@ -3833,7 +3833,7 @@ A306: 0F 06       CLR    semaphore_06
 A308: 39          RTS
 A309: 96 06       LDA    semaphore_06
 A30B: 91 07       CMPA   semaphore_07
-A30D: 23 01       BLS    $A310
+A30D: 23 01       BLS    $A310		; [no_semwait]
 A30F: 39          RTS
 A310: CE A3 16    LDU    #jump_table_a316
 A313: 48          ASLA
@@ -4098,7 +4098,7 @@ A554: 0F 07       CLR    semaphore_07
 A556: 7E B4 B8    JMP    $B4B8
 A559: 96 06       LDA    semaphore_06
 A55B: 91 07       CMPA   semaphore_07
-A55D: 23 01       BLS    $A560
+A55D: 23 01       BLS    $A560		; [no_semwait]
 A55F: 39          RTS
 A560: CE A5 66    LDU    #jump_table_a566
 A563: 48          ASLA
@@ -4516,7 +4516,7 @@ A8C2: 0F 07       CLR    semaphore_07
 A8C4: 39          RTS
 A8C5: 96 06       LDA    semaphore_06
 A8C7: 91 07       CMPA   semaphore_07
-A8C9: 23 01       BLS    $A8CC
+A8C9: 23 01       BLS    $A8CC		; [no_semwait]
 A8CB: 39          RTS
 A8CC: CE A8 D2    LDU    #jump_table_a8d2
 A8CF: 48          ASLA
@@ -4933,7 +4933,7 @@ AC7B: 96 DA       LDA    $DA
 AC7D: 39          RTS
 AC7E: 96 06       LDA    semaphore_06
 AC80: 91 07       CMPA   semaphore_07
-AC82: 23 01       BLS    $AC85
+AC82: 23 01       BLS    $AC85		; [no_semwait]
 AC84: 39          RTS
 AC85: CE AC 8B    LDU    #jump_table_ac8b
 AC88: 48          ASLA

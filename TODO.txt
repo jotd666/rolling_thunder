@@ -9,6 +9,12 @@ cpu2 lockup
 
 check when bullets decrease (check cheat, track down to fire flag)
 
+global irq:
+=> init context for irq2
+=> jump irq1
+=> osd_cpu_switch (avec param!) switch cpus
+=> si arrive au bout de irq2, check irq1 fini si oui global irq ends sinon switch irq1
+=> idem pour irq1
 
 fmode=2 (32 bit scroll)
 fmode=3 64 bit sprites
