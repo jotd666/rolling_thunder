@@ -1615,22 +1615,22 @@ title_screen_8f10:
 8FE7: 8E 54 54    LDX    #$5454
 8FEA: CE 32 8C    LDU    #$328C
 8FED: C6 FC       LDB    #$FC
-8FEF: BD 94 77    JSR    $9477
+8FEF: BD 94 77    JSR    write_to_screen_9477	; display player 1 score (00)
 8FF2: 8E 54 50    LDX    #$5450
 8FF5: CE 32 A4    LDU    #$32A4
-8FF8: C6 E4       LDB    #$E4
-8FFA: BD 94 77    JSR    $9477
+8FF8: C6 E4       LDB    #$E4		
+8FFA: BD 94 77    JSR    write_to_screen_9477	; display high score (30000)
 8FFD: 8E 54 58    LDX    #$5458
 9000: CE 32 BE    LDU    #$32BE
 9003: C6 FC       LDB    #$FC
-9005: BD 94 77    JSR    $9477
+9005: BD 94 77    JSR    write_to_screen_9477	; display player 2 score (00)
 9008: C6 FC       LDB    #$FC
 900A: B6 41 89    LDA    $4189
 900D: 26 02       BNE    $9011
 900F: 86 FF       LDA    #$FF
 9011: FD 3F 96    STD    $3F96
 9014: B6 41 8A    LDA    nb_credits_418a
-9017: FD 3F 98    STD    $3F98
+9017: FD 3F 98    STD    $3F98			; number of credits on screen
 901A: 0C 04       INC    $04
 901C: 0F 06       CLR    semaphore_06
 901E: 96 D1       LDA    $D1
@@ -1736,7 +1736,7 @@ title_screen_8f10:
 90DC: 6F E2       CLR    ,-S		    ; [local]
 90DE: A6 61       LDA    $1,S		    ; [local]
 90E0: A7 E4       STA    ,S    ; [local]
-90E2: EC C1       LDD    ,U++
+90E2: EC C1       LDD    ,U++	; [bank_address]
 90E4: ED 81       STD    ,X++	; [video_address_word]
 90E6: 6A E4       DEC    ,S    ; [local]
 90E8: 26 F8       BNE    $90E2
@@ -2093,15 +2093,15 @@ game_demo_90fb:
 93E4: 8E 54 54    LDX    #$5454
 93E7: CE 32 8C    LDU    #$328C
 93EA: C6 FC       LDB    #$FC
-93EC: BD 94 77    JSR    $9477
+93EC: BD 94 77    JSR    write_to_screen_9477
 93EF: 8E 54 50    LDX    #$5450
 93F2: CE 32 A4    LDU    #$32A4
 93F5: C6 E4       LDB    #$E4
-93F7: BD 94 77    JSR    $9477
+93F7: BD 94 77    JSR    write_to_screen_9477
 93FA: 8E 54 58    LDX    #$5458
 93FD: CE 32 BE    LDU    #$32BE
 9400: C6 FC       LDB    #$FC
-9402: BD 94 77    JSR    $9477
+9402: BD 94 77    JSR    write_to_screen_9477
 9405: 0D 01       TST    $01
 9407: 26 33       BNE    $943C
 9409: 10 8E 33 10 LDY    #$3310
@@ -2159,6 +2159,7 @@ game_demo_90fb:
 946C: ED 22       STD    $2,Y
 946E: 39          RTS
 
+write_to_screen_9477:
 9477: 6F E2       CLR    ,-S		; [alloc_locals]
 9479: A6 84       LDA    ,X
 947B: 44          LSRA
@@ -2219,7 +2220,7 @@ game_demo_90fb:
 94DD: ED C1       STD    ,U++	; [video_address_word]
 94DF: 4F          CLRA
 94E0: ED C4       STD    ,U	; [video_address]
-94E2: 35 82       PULS   A,PC	; [free_locals]
+94E2: 35 82       PULS   A,PC	; [manual_stack_pull]
 
 94E4: 0D C1       TST    energy_c1
 94E6: 27 1F       BEQ    $9507
@@ -4210,6 +4211,7 @@ A638: 97 AE       STA    $AE
 A63A: 0A B1       DEC    $B1
 A63C: 26 BB       BNE    $A5F9
 A63E: 39          RTS
+
 A63F: 86 2C       LDA    #$2C
 A641: 97 B2       STA    $B2
 A643: BD B4 D7    JSR    $B4D7
@@ -4253,6 +4255,7 @@ A693: 0F AD       CLR    $AD
 A695: 20 AC       BRA    $A643
 A697: B7 80 00    STA    watchdog_8000
 A69A: 39          RTS
+
 A69B: DE A9       LDU    $A9
 A69D: A6 05       LDA    $5,X
 A69F: 33 C6       LEAU   A,U

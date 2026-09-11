@@ -3291,7 +3291,7 @@ platform_init:
 
  	*         VVHH
     move.w #0x89+((Y_START+0x10)<<8),d0
-    move.w #0x99+((Y_START-0x10)<<8),d1
+    move.w #0x99+((Y_START)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
 	sub.w	#NTSC_Y_SHIFT<<8,d0
@@ -3408,11 +3408,11 @@ platform_init:
 	moveq	#0x1F,d2	| sprite X start
 0:
 	move.w	d2,d0
-	move.w	#0x14,d1
-	tst.b	ntsc_flag
-	jeq		1f
-	sub.w	#12,d1		| sprites slightly higher
-1:
+	move.w	#0x0,d1
+*	tst.b	ntsc_flag
+*	jeq		1f
+*	sub.w	#d1		| sprites slightly higher
+*1:
 	jbsr	store_sprite_pos
 	add.w	#64,d2		| advance X
 	
