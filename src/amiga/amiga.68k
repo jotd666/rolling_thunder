@@ -1645,7 +1645,12 @@ level3_interrupt:
 	bne.b	0f
 	jbsr		toggle_pause
 0:
-
+	.ifne	OPT_ENABLE_LOGGING
+	jbsr	log_used_fg_tiles
+	jbsr	log_used_bg_tiles
+	jbsr	log_used_sprites
+	lea		_custom,a5
+	.endif
 	
 	* ack vbl twice (040/pistorm bug)
 	move.w	#0x20,(intreq,a5)
@@ -1850,11 +1855,7 @@ level1_interrupt:
 	* so skip the refresh
 	move.b	#1,flip_flop
 23:
-	.ifne	OPT_ENABLE_LOGGING
-	jbsr	log_used_fg_tiles
-	jbsr	log_used_bg_tiles
-	jbsr	log_used_sprites
-	.endif
+
 3:
     movem.l (a7)+,d0-d7/a0-a6
 	* enable osd context switch
@@ -4677,6 +4678,10 @@ log_used_fg_tiles:
 	move	#FG_TILE_NB_CLUTS_POW,d5		| nb clut pow
 	moveq 	#0,d7
 0:
+	cmp.w	#0x514,d7
+	jne		44f
+	move.b	#0,0x110
+44:
 	moveq	#0,d1
 	moveq	#0,d0
 	move.b	(a5,d7.w),d0	| tile code
@@ -6117,6 +6122,11 @@ sprite_log_table_end:
 	.set	y_pos,y_pos+1
 	.endm
 	
+	.macro	TITLE_SPRITE_COLOR	wait,col
+	.word	\wait,0xFFFE
+	.word	color+4,\col
+	.word	color+4+8,\col
+	.endm
 	
 blank_sprite:
 	.long	0,0
@@ -6169,13 +6179,46 @@ bobs_bitplanes:
 	.word	bplcon1
 fine_x_scroll_value:
 	.word	0
+	
+	.set	offset, 0
+	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
+	TITLE_SPRITE_COLOR	0x6A01,0x445
+	.set	offset,offset+8
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x556
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x667
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x778
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x99A
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x889
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0xBBC
+
+	
 	* here was first_rows (before I disabled it)
 	* mid-line wait & extra interrupt
 	.word	0x8001,0xFFFE
 pal_intreq_block_game:
 	.word	 intreq,0x8014  | call level 1 interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
 	* here was second_rows (before I disabled it)
+
+	.set	offset,offset+36
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x889
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x99A
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x778
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x667
+	.set	offset,offset+2
+	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x556
+	.set	offset,offset+2
 	
+	* reset to white
+
+	TITLE_SPRITE_COLOR	0xB001,0xDDD
 	
 	* pal limit
 	.if		NB_PLAYFIELD_PLANES>6

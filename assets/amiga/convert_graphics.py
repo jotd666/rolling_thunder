@@ -473,13 +473,13 @@ def dump_tile_layer(tile_table,prefix,relative_root=None):
     return i+1
 
 
-def apply_color_replacement(sprite_set_list,quantized):
+def apply_color_replacement(sprite_set_list,quantized,subset=slice(None)):
     """ change colors for list of tilesets (tiles, sprites)
     quantized: RGB => RGB color replacement dictionary
     """
 
     for sset in sprite_set_list:
-        for tile in sset:
+        for tile in sset[subset]:
             if tile:
                 bitplanelib.replace_color_from_dict(tile,quantized)
 
@@ -584,6 +584,10 @@ colors_to_replace = [x for x in fg_tile_palette if x not in [black,white,magenta
 fg_replacement_dict = {k:(255,0,0) for k in colors_to_replace}
 
 apply_color_replacement(fg_tile_set_list,fg_replacement_dict)
+# title tiles (Rolling Thunder tiles) are white or black WTF black won't be visible so screw it
+# we'll use copper dyn colors anyway
+fg_replacement_dict[black] = white
+apply_color_replacement(fg_tile_set_list,fg_replacement_dict,subset=slice(0x200,0x400))
 
 ### recompute new fg palette
 fg_tile_palette = set()

@@ -659,7 +659,7 @@ cpu2_irq_8173:  ; [global]
 8584: BD 81 35    JSR    $8135
 8587: BD 81 60    JSR    $8160
 858A: 7E B0 9A    JMP    $B09A
-; wait for sync from cpu1
+; wait for sync from cpu1 (during irq, argh)
 858D: 96 06       LDA    semaphore_06
 858F: 26 FC       BNE    $858D
 8591: 0F 07       CLR    semaphore_07
