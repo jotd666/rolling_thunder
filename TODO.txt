@@ -1,4 +1,4 @@
-- implement HUD with 4-color sprites: half of the pic is displaying, debug 2UP
+- implement HUD with 4-color sprites: debug 2UP "00" part not shown
 
 check when bullets decrease (check cheat, track down to fire flag)
 

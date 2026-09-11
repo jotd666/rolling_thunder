@@ -3291,7 +3291,7 @@ platform_init:
 
  	*         VVHH
     move.w #0x89+((Y_START+0x10)<<8),d0
-    move.w #0x89+((Y_START-0x10)<<8),d1
+    move.w #0x99+((Y_START-0x10)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
 	sub.w	#NTSC_Y_SHIFT<<8,d0
@@ -3405,7 +3405,7 @@ platform_init:
 	lea		hw_sprite_pointers,a0
 	lea		HW_SpriteYTable_256,a1
 	moveq	#4,d7  | only 5 first sprites are used
-	moveq	#0x3F,d2	| sprite X start
+	moveq	#0x1F,d2	| sprite X start
 0:
 	move.w	d2,d0
 	move.w	#0x14,d1
@@ -3433,11 +3433,14 @@ platform_init:
 	.endr
 	
 	* load sprites palette
-	lea		fg_tile_palette,a0
 	move.l	color_copper_pointers+TOTAL_NB_COLORS*4,a1	| entries 64-80
+	moveq	#2,d7
+0:
+	lea		fg_tile_palette,a0
 	move.w	#4,d0
 	jbsr	load_palette
-		
+	dbf		d7,0b
+	
 	
 *	lea		sprite_palette,a0
 *	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64

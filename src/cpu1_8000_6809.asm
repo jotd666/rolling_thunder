@@ -1562,16 +1562,16 @@ title_screen_8f10:
 8F6E: A6 E0       LDA    ,S+    ; [local]
 8F70: CE AF DA    LDU    #$AFDA
 8F73: 10 8E 32 22 LDY    #$3222		; high score position
-8F77: C6 FC       LDB    #$FC
-8F79: A6 C0       LDA    ,U+
+8F77: C6 FC       LDB    #$FC		; attribute
+8F79: A6 C0       LDA    ,U+	; string size
 8F7B: A7 E2       STA    ,-S    ; [local]
-8F7D: A6 C0       LDA    ,U+
-8F7F: ED A1       STD    ,Y++		; [video_address_word]
+8F7D: A6 C0       LDA    ,U+	; string data
+8F7F: ED A1       STD    ,Y++	; [video_address_word]
 8F81: 6A E4       DEC    ,S    ; [local]
 8F83: 26 F8       BNE    $8F7D
 8F85: A6 E0       LDA    ,S+    ; [local]
 8F87: CE AF E5    LDU    #$AFE5
-8F8A: 10 8E 32 42 LDY    #$3242
+8F8A: 10 8E 32 42 LDY    #$3242		; 2UP position
 8F8E: C6 FC       LDB    #$FC
 8F90: A6 C0       LDA    ,U+
 8F92: A7 E2       STA    ,-S    ; [local]
