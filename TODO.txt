@@ -1,5 +1,6 @@
 
-cpu2 lockup: 8853 after demo
+cpu2 lockup: 8853 after demo: don't forget to run the cpu2 event loop
+hook cpu2 event loop sometime in the cpu1 event loop / do a cpu switch when semaphore sync
 
 check when bullets decrease (check cheat, track down to fire flag)
 
@@ -12,11 +13,8 @@ global irq:
 
 fmode=2 (32 bit scroll)
 fmode=3 64 bit sprites
-upper & lower HUD use fixed sprites either 4*64 attached either 5*64 with limited colors, check in game
-main playfield would use 64 colors
-write mockups for all layers
 
-hook cpu2 event loop sometime in the cpu1 event loop / do a cpu switch when semaphore sync
+
 
 0x1000 tiles for layers 1,2,3
 0x800 tiles for HUD layer 4 (first 0x400 unreachable?)
