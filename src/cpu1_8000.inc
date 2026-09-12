@@ -530,6 +530,14 @@ okay\@:
 	GET_UNCHECKED_ADDRESS_FUNC
 	.endm
 
+	* for cpu1 video=unchecked, which isn't the case for cpu2
+	.macro GET_VIDEO_ADDRESS	offset
+	GET_UNCHECKED_ADDRESS	\offset
+	.endm
+	.macro GET_REG_VIDEO_ADDRESS	offset,reg
+	GET_REG_UNCHECKED_ADDRESS	\offset,\reg
+	.endm
+	
 	.macro GET_UNCHECKED_ADDRESS	offset
 	lea	\offset,a0
 	GET_UNCHECKED_ADDRESS_FUNC

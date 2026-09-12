@@ -447,6 +447,19 @@ okay\@:
 	.endif
 	GET_VIDEO_ADDRESS_FUNC
 	.endm
+	
+	* for cpu1 video=unchecked, which isn't the case for cpu2
+	.macro GET_VIDEO_ADDRESS	offset
+	lea	\offset,a0
+	GET_VIDEO_ADDRESS_FUNC
+	.endm
+	
+
+	.macro    GET_REG_REG_INDIRECT_VIDEO_ADDRESS reg1,reg2
+	GET_INDIRECT_ADDRESS_REGS	\reg1,\reg2,d6
+	move.w	d6,a0
+	GET_VIDEO_ADDRESS_FUNC
+	.endm
 
 *	.macro	GET_SELECT_ADDRESS_FUNC
 *	* checks address, slower but can auto-select rom, video, ram or bank
@@ -486,6 +499,11 @@ okay\@:
 	GET_REG_ADDRESS	\offset,\reg
 	READ_BE_WORD	a0
 	GET_BANK_ADDRESS_FUNC
+	.endm
+	.macro GET_REG_INDIRECT_VIDEO_ADDRESS	offset,reg
+	GET_REG_ADDRESS	\offset,\reg
+	READ_BE_WORD	a0
+	GET_VIDEO_ADDRESS_FUNC
 	.endm
 
 	.macro    GET_REG_REG_INDIRECT_ADDRESS reg1,reg2
@@ -537,6 +555,16 @@ okay\@:
 	GET_UNCHECKED_ADDRESS_FUNC
 	.endm
 
+	.macro GET_REG_ROM_ADDRESS	offset,reg
+	.ifeq	\offset
+	move.w	\reg,a0
+	.else
+	lea	\offset,a0
+	lea	(a0,\reg\().w),a0
+	.endif
+	GET_ROM_ADDRESS_FUNC
+	.endm
+
 	***** bank access *****
 	.macro GET_BANK_ADDRESS	offset
 	lea	\offset,a0
@@ -550,6 +578,7 @@ okay\@:
 	.macro	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	lea		(a1,a0.w),a0		| a0 < 0x8000
 	.endm
+	
 	.macro GET_REG_BANK_ADDRESS	offset,reg
 	.ifeq	\offset
 	move.w	\reg,a0
@@ -559,6 +588,7 @@ okay\@:
 	.endif
 	GET_BANK_ADDRESS_FUNC
 	.endm
+	
 	.macro GET_REG_UNCHECKED_BANK_ADDRESS	offset,reg
 	.ifeq	\offset
 	move.l	\reg,a0

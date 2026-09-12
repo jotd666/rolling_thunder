@@ -412,7 +412,7 @@ cpu2_irq_8173:  ; [global]
 834A: A6 C4       LDA    ,U
 834C: 44          LSRA
 834D: 44          LSRA
-834E: A6 86       LDA    A,X
+834E: A6 86       LDA    A,X		; [rom_address]
 8350: B7 D8 03    STA    bankswitch2_d803
 8353: AE 5E       LDX    -$2,U
 8355: A6 80       LDA    ,X+
@@ -531,7 +531,7 @@ cpu2_irq_8173:  ; [global]
 8429: B7 D8 03    STA    bankswitch2_d803
 842C: AE 4E       LDX    $E,U
 842E: 27 59       BEQ    $8489
-8430: A6 80       LDA    ,X+
+8430: A6 80       LDA    ,X+	; [bank_address]
 8432: 97 25       STA    $25
 8434: EC 4A       LDD    $A,U
 8436: 47          ASRA
@@ -553,9 +553,9 @@ cpu2_irq_8173:  ; [global]
 8448: 47          ASRA
 8449: 56          RORB
 844A: DD 28       STD    $28
-844C: EC 84       LDD    ,X
+844C: EC 84       LDD    ,X	; [bank_address]
 844E: ED 24       STD    $4,Y
-8450: E6 03       LDB    $3,X
+8450: E6 03       LDB    $3,X	; [bank_address]
 8452: 1D          SEX
 8453: D3 26       ADDD   $26
 8455: 10 83 01 1F CMPD   #$011F
@@ -565,22 +565,23 @@ cpu2_irq_8173:  ; [global]
 8461: 84 01       ANDA   #$01
 8463: AA 45       ORA    $5,U
 8465: ED 26       STD    $6,Y
-8467: E6 04       LDB    $4,X
+8467: E6 04       LDB    $4,X	; [bank_address]
 8469: 1D          SEX
 846A: D3 28       ADDD   $28
 846C: 10 83 00 DF CMPD   #$00DF
 8470: 2E 11       BGT    $8483
 8472: 10 83 FF E1 CMPD   #$FFE1
 8476: 2D 0B       BLT    $8483
-8478: A6 02       LDA    $2,X
+8478: A6 02       LDA    $2,X	; [bank_address]
 847A: AA 44       ORA    $4,U
 847C: ED 28       STD    $8,Y
 847E: 0C 24       INC    $24
 8480: 31 A8 10    LEAY   $10,Y
-8483: 30 05       LEAX   $5,X
+8483: 30 05       LEAX   $5,X	; [bank_address]
 8485: 0A 25       DEC    $25
 8487: 26 C3       BNE    $844C
 8489: 35 90       PULS   X,PC
+
 848B: 31 29       LEAY   $9,Y
 848D: 86 E0       LDA    #$E0
 848F: A7 A4       STA    ,Y
@@ -606,9 +607,9 @@ cpu2_irq_8173:  ; [global]
 84C6: 10 AE A6    LDY    A,Y
 84C9: BD 8D 9E    JSR    $8D9E
 84CC: 6F 04       CLR    $4,X
-84CE: EC A1       LDD    ,Y++
+84CE: EC A1       LDD    ,Y++	; [rom_address]
 84D0: ED 1A       STD    -$6,X
-84D2: EC A4       LDD    ,Y
+84D2: EC A4       LDD    ,Y	; [rom_address]
 84D4: ED 1C       STD    -$4,X
 84D6: CC FF F8    LDD    #$FFF8
 84D9: ED 12       STD    -$E,X
@@ -844,6 +845,7 @@ cpu2_irq_8173:  ; [global]
 87F7: BD 80 E9    JSR    $80E9
 87FA: BD 80 FE    JSR    $80FE
 87FD: 7E 81 35    JMP    $8135
+
 8800: 96 05       LDA    $05
 8802: 91 04       CMPA   $04
 8804: 23 01       BLS    $8807
@@ -1253,13 +1255,13 @@ cpu2_irq_8173:  ; [global]
 8DA2: 27 05       BEQ    $8DA9
 8DA4: 30 88 20    LEAX   $20,X
 8DA7: 20 F5       BRA    $8D9E
-8DA9: EC A1       LDD    ,Y++
+8DA9: EC A1       LDD    ,Y++	; [rom_address]
 8DAB: 8A 80       ORA    #$80
 8DAD: A7 84       STA    ,X
 8DAF: E7 07       STB    $7,X
-8DB1: EC A1       LDD    ,Y++
+8DB1: EC A1       LDD    ,Y++	; [rom_address]
 8DB3: ED 02       STD    $2,X
-8DB5: A6 A0       LDA    ,Y+
+8DB5: A6 A0       LDA    ,Y+	; [rom_address]
 8DB7: A7 05       STA    $5,X
 8DB9: 86 80       LDA    #$80
 8DBB: A7 01       STA    $1,X
@@ -1275,27 +1277,28 @@ cpu2_irq_8173:  ; [global]
 8DCD: A6 84       LDA    ,X
 8DCF: 84 7C       ANDA   #$7C
 8DD1: 44          LSRA
-8DD2: EE C6       LDU    A,U
+8DD2: EE C6       LDU    A,U	; [rom_address]
 8DD4: E6 07       LDB    $7,X
 8DD6: E7 01       STB    $1,X
 8DD8: C4 FC       ANDB   #$FC
 8DDA: 54          LSRB
-8DDB: EE C5       LDU    B,U
-8DDD: EC C1       LDD    ,U++
+8DDB: EE C5       LDU    B,U	; [rom_address]
+8DDD: EC C1       LDD    ,U++	; [rom_address]
 8DDF: A7 0A       STA    $A,X
 8DE1: E7 0B       STB    $B,X
-8DE3: EC C4       LDD    ,U
+8DE3: EC C4       LDD    ,U			; [rom_address]
 8DE5: ED 1E       STD    -$2,X
 8DE7: 39          RTS
+
 8DE8: 6C 09       INC    $9,X
 8DEA: E6 09       LDB    $9,X
 8DEC: 58          ASLB
 8DED: 58          ASLB
 8DEE: 33 C5       LEAU   B,U
-8DF0: EC C1       LDD    ,U++
+8DF0: EC C1       LDD    ,U++		; [rom_address]
 8DF2: A7 0A       STA    $A,X
 8DF4: E7 0B       STB    $B,X
-8DF6: EC C4       LDD    ,U
+8DF6: EC C4       LDD    ,U		; [rom_address]
 8DF8: ED 1E       STD    -$2,X
 8DFA: 39          RTS
 
@@ -2385,13 +2388,13 @@ cpu2_irq_8173:  ; [global]
 96BA: 5F          CLRB
 96BB: 39          RTS
 96BC: FC 04 0C    LDD    $040C
-96BF: E3 A4       ADDD   ,Y
+96BF: E3 A4       ADDD   ,Y		; [rom_address]
 96C1: A3 1C       SUBD   -$4,X
-96C3: A3 C4       SUBD   ,U
+96C3: A3 C4       SUBD   ,U		; [rom_address]
 96C5: 2B 23       BMI    $96EA
 96C7: 10 83 05 00 CMPD   #$0500
 96CB: 2E 15       BGT    $96E2
-96CD: 10 A3 42    CMPD   $2,U
+96CD: 10 A3 42    CMPD   $2,U		; [rom_address]
 96D0: 2E 08       BGT    $96DA
 96D2: E6 0D       LDB    $D,X
 96D4: CA 61       ORB    #$61
@@ -2408,7 +2411,7 @@ cpu2_irq_8173:  ; [global]
 96EA: 53          COMB
 96EB: 43          COMA
 96EC: C3 00 01    ADDD   #$0001
-96EF: 10 A3 22    CMPD   $2,Y
+96EF: 10 A3 22    CMPD   $2,Y		; [rom_address]
 96F2: 2E 06       BGT    $96FA
 96F4: E6 0D       LDB    $D,X
 96F6: CA 61       ORB    #$61
@@ -2426,30 +2429,30 @@ cpu2_irq_8173:  ; [global]
 9710: 2B 75       BMI    $9787
 9712: 20 2B       BRA    $973F
 9714: FC 04 0A    LDD    $040A
-9717: E3 24       ADDD   $4,Y
+9717: E3 24       ADDD   $4,Y		; [rom_address]
 9719: A3 1A       SUBD   -$6,X
-971B: A3 46       SUBD   $6,U
+971B: A3 46       SUBD   $6,U		; [rom_address]
 971D: 2B 68       BMI    $9787
 971F: 20 1E       BRA    $973F
 9721: A6 01       LDA    $1,X
 9723: 84 02       ANDA   #$02
 9725: 26 0D       BNE    $9734
 9727: FC 04 0A    LDD    $040A
-972A: E3 26       ADDD   $6,Y
+972A: E3 26       ADDD   $6,Y		; [rom_address]
 972C: A3 1A       SUBD   -$6,X
-972E: A3 44       SUBD   $4,U
+972E: A3 44       SUBD   $4,U		; [rom_address]
 9730: 2B 55       BMI    $9787
 9732: 20 0B       BRA    $973F
 9734: FC 04 0A    LDD    $040A
-9737: E3 26       ADDD   $6,Y
+9737: E3 26       ADDD   $6,Y		; [rom_address]
 9739: A3 1A       SUBD   -$6,X
-973B: A3 46       SUBD   $6,U
+973B: A3 46       SUBD   $6,U		; [rom_address]
 973D: 2B 48       BMI    $9787
-973F: 10 A3 48    CMPD   $8,U
+973F: 10 A3 48    CMPD   $8,U		; [rom_address]
 9742: 2E 19       BGT    $975D
 9744: CE 04 10    LDU    #$0410
 9747: A6 05       LDA    $5,X
-9749: A1 45       CMPA   $5,U
+9749: A1 45       CMPA   $5,U		; [rom_address]
 974B: 26 07       BNE    $9754
 974D: E6 0D       LDB    $D,X
 974F: CA 14       ORB    #$14
@@ -2485,7 +2488,7 @@ cpu2_irq_8173:  ; [global]
 9787: 53          COMB
 9788: 43          COMA
 9789: C3 00 01    ADDD   #$0001
-978C: 10 A3 28    CMPD   $8,Y
+978C: 10 A3 28    CMPD   $8,Y		;  [rom_address]
 978F: 2E 19       BGT    $97AA
 9791: CE 04 10    LDU    #$0410
 9794: A6 05       LDA    $5,X
@@ -3261,7 +3264,7 @@ cpu2_irq_8173:  ; [global]
 9EF0: 44          LSRA
 9EF1: 44          LSRA
 9EF2: 44          LSRA
-9EF3: A6 A6       LDA    A,Y
+9EF3: A6 A6       LDA    A,Y		; [rom_address]
 9EF5: A7 0A       STA    $A,X
 9EF7: 10 8E 13 60 LDY    #$1360
 9EFB: 96 E4       LDA    $E4
@@ -3276,15 +3279,15 @@ cpu2_irq_8173:  ; [global]
 9F0D: 84 18       ANDA   #$18
 9F0F: 44          LSRA
 9F10: 44          LSRA
-9F11: EC A6       LDD    A,Y
+9F11: EC A6       LDD    A,Y		; [rom_address]
 9F13: 97 CE       STA    $CE
 9F15: E7 0A       STB    $A,X
 9F17: CE 8C E9    LDU    #$8CE9
 9F1A: 10 8E 5F 08 LDY    #$5F08
 9F1E: C6 FC       LDB    #$FC
-9F20: A6 C0       LDA    ,U+
+9F20: A6 C0       LDA    ,U+	; [rom_address]
 9F22: A7 E2       STA    ,-S	; [local]
-9F24: A6 C0       LDA    ,U+
+9F24: A6 C0       LDA    ,U+	; [rom_address]
 9F26: ED A1       STD    ,Y++
 9F28: 6A E4       DEC    ,S	; [local]
 9F2A: 26 F8       BNE    $9F24
@@ -5141,17 +5144,17 @@ B077: 96 3C       LDA    $3C
 B079: 48          ASLA
 B07A: 9B C2       ADDA   $C2
 B07C: 48          ASLA
-B07D: EE C6       LDU    A,U
+B07D: EE C6       LDU    A,U	; [rom_address]
 B07F: 96 C4       LDA    $C4
 B081: 48          ASLA
-B082: EE C6       LDU    A,U
+B082: EE C6       LDU    A,U	; [rom_address]
 B084: 96 63       LDA    $63
 B086: D6 78       LDB    $78
 B088: 3D          MUL
 B089: E3 E1       ADDD   ,S++	; [local]
 B08B: 58          ASLB
 B08C: 49          ROLA
-B08D: 10 AE CB    LDY    D,U
+B08D: 10 AE CB    LDY    D,U	; [bank_address]
 B090: BD B1 E0    JSR    $B1E0
 B093: 0C 62       INC    $62
 B095: 0A 65       DEC    $65
@@ -5572,7 +5575,7 @@ B531: A7 E2       STA    ,-S	; [local]
 B533: A6 07       LDA    $7,X
 B535: 84 02       ANDA   #$02
 B537: AB E0       ADDA   ,S+	; [local] 
-B539: EC C6       LDD    A,U
+B539: EC C6       LDD    A,U	; [rom_address]
 B53B: A7 08       STA    $8,X
 B53D: 5D          TSTB
 B53E: 1D          SEX
@@ -8416,7 +8419,7 @@ CF24: A6 01       LDA    $1,X
 CF26: 84 01       ANDA   #$01
 CF28: 48          ASLA
 CF29: EE C6       LDU    A,U		; select proper table of jump tables among 2
-CF2B: A6 02       LDA    $2,X		; [breakpoint]
+CF2B: A6 02       LDA    $2,X
 CF2D: 48          ASLA
 CF2E: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=5]
 
@@ -9673,7 +9676,7 @@ jump_table_81ad:
 	dc.w	$852a	; $81af
 	dc.w	$854f	; $81b1
 	dc.w	$8768	; $81b3
-	dc.w	irq_ack_8800	; $81b5
+	dc.w	$8800	; $81b5
 	dc.w	$88c4	; $81b7
 	dc.w	$88e9	; $81b9
 	dc.w	$9652	; $81bb

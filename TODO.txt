@@ -1,11 +1,5 @@
-- implement HUD with 4-color sprites:
 
-cpu2 lockup
-858D: 96 06       LDA    semaphore_06
-858F: 26 FC       BNE    $858D
-8591: 0F 07       CLR    semaphore_07
-8593: 96 06       LDA    semaphore_06
-8595: 81 01       CMPA   #$01
+cpu2 lockup: 8853 after demo
 
 check when bullets decrease (check cheat, track down to fire flag)
 

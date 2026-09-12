@@ -70,8 +70,14 @@ def game_specific_cpu2(address,lines,i):
 ##        line = change_instruction("nop",lines,i)  # disable shit in init, like rom checksum or sync
 ##    elif address == 0x8080:
 ##        line = change_instruction("jra\tl_808a",lines,i)  # checksume always good
-    elif address in {0xcf21}:
+    elif address in {}:
         line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
+    elif address == 0xcf21:
+        line = change_instruction("lea\ttable_of_jump_tables_cf30,a2",lines,i)+"\tmoveq\t#0,d0\n"
+    elif address == 0xcf28:
+        line = change_instruction("asl.b\t#2,d0",lines,i)
+    elif address == 0xcf29:
+        line = change_instruction("move.l\t(a2,d0.w),a2",lines,i)
     elif address == 0x8008:
         # skip memory/video memory test of boot
         kill_code(lines,i,0x8097)
@@ -248,7 +254,7 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
         line = line.replace("_ADDRESS","_ROM_ADDRESS")
     elif "[video_address" in line:
         # give me the original instruction
-        line = line.replace("_ADDRESS","_UNCHECKED_ADDRESS")
+        line = line.replace("_ADDRESS","_VIDEO_ADDRESS")
         # if it's a write, insert a "VIDEO_DIRTY" macro after the write
         for j in range(i+1,len(lines)):
             next_line = lines[j]
@@ -279,6 +285,11 @@ wait_{label}:
 """)
         line = line.replace(label,f"wait_{label}")
     return line
+def handle_semwait(cpu,lines,i):
+    line = lines[i]
+    if "[semwait]" in line:
+        line = remove_instruction(lines,i)
+    return line
 
 def doit(cpu):
     global_symbols = []
@@ -306,7 +317,7 @@ def doit(cpu):
     "bankswitch2_d803":"set_cpu2_bank",
     }
     sc = sc_cpu1 if cpu==1 else sc_cpu2
-    store_to_video = r"GET_ADDRESS\s+0x[0-3]\w\w\w" if sc_cpu1 else r"GET_ADDRESS\s+0x[2-5]\w\w\w"
+    store_to_video = r"GET_ADDRESS\s+0x[0-3]\w\w\w" if cpu==1 else r"GET_ADDRESS\s+0x[2-5]\w\w\w"
     store_to_video = re.compile(store_to_video,flags=re.I)
     rom_address = None if cpu==1 else re.compile("GET_ADDRESS\s+0x[89A-F]\w\w\w",flags=re.I)
 

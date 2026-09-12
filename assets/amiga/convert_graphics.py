@@ -315,15 +315,15 @@ for g in group_sprite_pairs:
 # some tiles are hard to display... We know they are there, we force them
 # instead of trying to trigger them by playing to death :)
 
-##alphanum_tile_codes = list(range(0,10)) + list(range(ord('A'),ord('Z')+1)) + list(range(ord('a'),ord('z')+1))+ list(range(ord('0'),ord('9')+1))
-##used_cluts = set()
-##for atc in alphanum_tile_codes:
+alphanum_tile_codes = list(range(0,36))
+used_cluts = set()
+for atc in alphanum_tile_codes:
 ##    cluts = fg_tile_cluts.get(atc)
 ##    if cluts:
-##        used_cluts.update(cluts)
-### now set cluts for all alphanum tiles
-##for atc in alphanum_tile_codes:
-##    fg_tile_cluts[atc] = sorted(used_cluts)
+    used_cluts.update([0x3F,0x39])
+# now set cluts for all alphanum tiles
+for atc in alphanum_tile_codes:
+    fg_tile_cluts[atc] = sorted(used_cluts)
 
 
 plane_orientations = [("standard",lambda x:x),

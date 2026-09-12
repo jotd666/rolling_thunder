@@ -2601,18 +2601,18 @@ write_to_screen_9477:
 9880: 34 44       PSHS   U,B
 9882: 8E 00 03    LDX    #$0003
 9885: BD 98 B0    JSR    $98B0
-9888: 6F C4       CLR    ,U
+9888: 6F C4       CLR    ,U		; [video_address]
 988A: 86 FC       LDA    #$FC
-988C: A7 41       STA    $1,U
+988C: A7 41       STA    $1,U		; [video_address]
 988E: 33 48       LEAU   $8,U
 9890: 8E 00 01    LDX    #$0001
 9893: BD 98 B0    JSR    $98B0
 9896: 33 48       LEAU   $8,U
 9898: C6 03       LDB    #$03
 989A: A6 A0       LDA    ,Y+
-989C: A7 C0       STA    ,U+
+989C: A7 C0       STA    ,U+		; [video_address]
 989E: 86 FC       LDA    #$FC
-98A0: A7 C0       STA    ,U+
+98A0: A7 C0       STA    ,U+		; [video_address]
 98A2: 5A          DECB
 98A3: 26 F5       BNE    $989A
 98A5: 35 44       PULS   B,U
@@ -2640,9 +2640,9 @@ write_to_screen_9477:
 98CA: 5D          TSTB
 98CB: 26 02       BNE    $98CF
 98CD: 86 FF       LDA    #$FF
-98CF: A7 C0       STA    ,U+
+98CF: A7 C0       STA    ,U+	; [video_address]
 98D1: 86 FC       LDA    #$FC
-98D3: A7 C0       STA    ,U+
+98D3: A7 C0       STA    ,U+	; [video_address]
 98D5: 39          RTS
 
 98D6: 34 06       PSHS   D		; [manual_stack_push]
@@ -3745,38 +3745,38 @@ A24A: 39          RTS
 A24B: 86 18       LDA    #$18
 A24D: B7 68 00    STA    bankswitch_6800
 A250: CE 60 00    LDU    #$6000
-A253: A6 C0       LDA    ,U+
+A253: A6 C0       LDA    ,U+		; [bank_address]
 A255: 97 70       STA    $70
 A257: 91 C2       CMPA   $C2
 A259: 22 02       BHI    $A25D
 A25B: 0A C2       DEC    $C2
 A25D: 96 C2       LDA    $C2
 A25F: 48          ASLA
-A260: EC C6       LDD    A,U
+A260: EC C6       LDD    A,U		; [bank_address]
 A262: DD 72       STD    $72
 A264: BD 83 CB    JSR    $83CB
 A267: 10 8E 38 9E LDY    #$389E
 A26B: 86 FF       LDA    #$FF
 A26D: F6 B0 82    LDB    $B082
-A270: A7 A1       STA    ,Y++
+A270: A7 A1       STA    ,Y++	; [video_address]
 A272: 5A          DECB
 A273: 26 FB       BNE    $A270
 A275: 10 8E 3C 1E LDY    #$3C1E
 A279: 86 FF       LDA    #$FF
 A27B: F6 AF EF    LDB    $AFEF
-A27E: A7 A1       STA    ,Y++
+A27E: A7 A1       STA    ,Y++	; [video_address]
 A280: 5A          DECB
 A281: 26 FB       BNE    $A27E
 A283: 10 8E 3D 1A LDY    #$3D1A
 A287: 86 FF       LDA    #$FF
 A289: F6 AF FD    LDB    $AFFD
-A28C: A7 A1       STA    ,Y++
+A28C: A7 A1       STA    ,Y++	; [video_address]
 A28E: 5A          DECB
 A28F: 26 FB       BNE    $A28C
 A291: 10 8E 39 96 LDY    #$3996
 A295: 86 FF       LDA    #$FF
 A297: F6 B0 90    LDB    $B090
-A29A: A7 A1       STA    ,Y++
+A29A: A7 A1       STA    ,Y++	; [video_address]
 A29C: 5A          DECB
 A29D: 26 FB       BNE    $A29A
 A29F: BD 90 85    JSR    $9085
@@ -3788,7 +3788,7 @@ A2AA: 39          RTS
 A2AB: 86 18       LDA    #$18
 A2AD: B7 68 00    STA    bankswitch_6800
 A2B0: DE 72       LDU    $72
-A2B2: A6 C0       LDA    ,U+
+A2B2: A6 C0       LDA    ,U+	; [bank_address]
 A2B4: 97 71       STA    $71
 A2B6: 91 C4       CMPA   $C4
 A2B8: 22 02       BHI    $A2BC
@@ -3796,19 +3796,19 @@ A2BA: 0A C4       DEC    $C4
 A2BC: 96 C4       LDA    $C4
 A2BE: 96 C4       LDA    $C4
 A2C0: 48          ASLA
-A2C1: EE C6       LDU    A,U
-A2C3: EC C1       LDD    ,U++
+A2C1: EE C6       LDU    A,U	; [bank_address]
+A2C3: EC C1       LDD    ,U++	; [bank_address]
 A2C5: DD 78       STD    $78
-A2C7: A6 C0       LDA    ,U+
+A2C7: A6 C0       LDA    ,U+	; [bank_address]
 A2C9: 26 05       BNE    $A2D0
 A2CB: B7 88 00    STA    tilebank_select_8800
 A2CE: 20 03       BRA    $A2D3
 A2D0: B7 8C 00    STA    tilebank_select_8c00
-A2D3: EC C1       LDD    ,U++
+A2D3: EC C1       LDD    ,U++	; [bank_address]
 A2D5: DD 7A       STD    $7A
-A2D7: EC C1       LDD    ,U++
+A2D7: EC C1       LDD    ,U++	; [bank_address]
 A2D9: DD 7C       STD    $7C
-A2DB: EC C1       LDD    ,U++
+A2DB: EC C1       LDD    ,U++	; [bank_address]
 A2DD: DD 7E       STD    $7E
 A2DF: 8E 53 C0    LDX    #$53C0
 A2E2: CC 10 10    LDD    #$1010
@@ -3816,13 +3816,13 @@ A2E5: ED 08       STD    $8,X
 A2E7: CC 20 20    LDD    #$2020
 A2EA: ED 0A       STD    $A,X
 A2EC: 8E 53 D0    LDX    #$53D0
-A2EF: EC C1       LDD    ,U++
+A2EF: EC C1       LDD    ,U++	; [bank_address]
 A2F1: ED 08       STD    $8,X
 A2F3: 48          ASLA
 A2F4: 58          ASLB
 A2F5: ED 0A       STD    $A,X
 A2F7: 8E 53 E0    LDX    #$53E0
-A2FA: EC C1       LDD    ,U++
+A2FA: EC C1       LDD    ,U++	; [bank_address]
 A2FC: ED 08       STD    $8,X
 A2FE: 48          ASLA
 A2FF: 58          ASLB
