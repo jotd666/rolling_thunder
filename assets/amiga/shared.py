@@ -21,10 +21,11 @@ used_graphics_dir = this_dir / "used_graphics"
 FG_NB_TILES = 0x400
 FG_NB_CLUTS = 64
 
-SPRITE_NB_TILES = 0x100
-BG_NB_TILES = 0x200
-BG_NB_CLUTS = 0x80
-SPRITE_NB_CLUTS = 16
+BG_NB_TILES = 0x1000
+BG_NB_CLUTS = 0x40
+
+SPRITE_NB_CLUTS = 128
+SPRITE_NB_TILES = 0x400
 
 
 def palette_pad(palette,pad_nb):

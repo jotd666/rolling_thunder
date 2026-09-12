@@ -96,13 +96,14 @@ SCORE_FILE_SIZE = 90
 
 LOG_BUFFER_SIZE = 0x10000
 
-FG_TILE_NB_CLUTS_POW = 6
-FG_TILE_NB_CLUTS = 1<<FG_TILE_NB_CLUTS_POW
-FG_TILE_COUNT = 0x400  | seems that first tiles aren't reachable?
+HUD_TILE_NB_CLUTS_POW = 6
+HUD_TILE_NB_CLUTS = 1<<HUD_TILE_NB_CLUTS_POW
+HUD_TILE_COUNT = 0x400  | seems that first tiles aren't reachable?
 
 BG_TILE_NB_CLUTS_POW = 6
 BG_TILE_NB_CLUTS = 1<<BG_TILE_NB_CLUTS_POW
 BG_TILE_COUNT = 0x1000
+
 SPRITE_COUNT = 0x400
 
 SPRITE_NB_CLUTS_POW = 7
@@ -111,7 +112,7 @@ SPRITE_NB_CLUTS = 1<<SPRITE_NB_CLUTS_POW
 HW_SPRITE_BUFFER_SIZE = (2*8*256+16*2)
 
 SPRITE_LOG_LENGTH = SPRITE_COUNT*SPRITE_NB_CLUTS
-FG_TILE_LOG_LENGTH = FG_TILE_NB_CLUTS*FG_TILE_COUNT
+HUD_TILE_LOG_LENGTH = HUD_TILE_NB_CLUTS*HUD_TILE_COUNT
 BG_TILE_LOG_LENGTH = BG_TILE_NB_CLUTS*BG_TILE_COUNT
 
 SPRITE_X_CORRECTION = 0
@@ -1109,10 +1110,10 @@ load_context:
 	
 	.ifne	OPT_ENABLE_LOGGING
 	* reset logged tiles
-	lea	bg_tile_log_table,a0
+	lea	bg0_tile_log_table,a0
 0:
 	clr.l	(a0)+
-	cmp.l	#bg_tile_log_table_end,A0
+	cmp.l	#bg0_tile_log_table_end,A0
 	jne	0b
 	.endif
 	
@@ -1646,8 +1647,8 @@ level3_interrupt:
 	jbsr		toggle_pause
 0:
 	.ifne	OPT_ENABLE_LOGGING
-	jbsr	log_used_fg_tiles
-	jbsr	log_used_bg_tiles
+	jbsr	log_used_hud_tiles
+	jbsr	log_used_bg0_tiles
 	jbsr	log_used_sprites
 	lea		_custom,a5
 	.endif
@@ -4479,8 +4480,8 @@ osd_read_p2_inputs:
 	.ifne	OPT_ENABLE_LOGGING
 purge_tile_log_data:
 	movem.l	d0-a6,-(a7)
-	lea		fg_tile_log_table,a0
-	lea		fg_tile_log_table_end,a1
+	lea		hud_tile_log_table,a0
+	lea		hud_tile_log_table_end,a1
 0:
 	clr.l (a0)+
 	cmp.l	a0,a1
@@ -4667,21 +4668,18 @@ level2_interrupt:
 * (ask chatgpt?)
 
 	.ifne	OPT_ENABLE_LOGGING
-log_used_fg_tiles:
+log_used_hud_tiles:
 	* scan the whole screen, see what was updated
 	* main screen
 
 	CPU1_GET_MEMORY_START_IN_A6
 	lea		(FG_SCREEN_TILE_ADDRESS+FG_SCREEN_START_OFFSET,a6),a5
-	lea		fg_tile_log_table,a0
-	move	#(1<<FG_TILE_NB_CLUTS_POW)-1,d4		| clut mask
-	move	#FG_TILE_NB_CLUTS_POW,d5		| nb clut pow
+	lea		hud_tile_log_table,a0
+	move	#(1<<HUD_TILE_NB_CLUTS_POW)-1,d4		| clut mask
+	move	#HUD_TILE_NB_CLUTS_POW,d5		| nb clut pow
 	moveq 	#0,d7
 0:
-	cmp.w	#0x514,d7
-	jne		44f
-	move.b	#0,0x110
-44:
+
 	moveq	#0,d1
 	moveq	#0,d0
 	move.b	(a5,d7.w),d0	| tile code
@@ -4705,52 +4703,41 @@ log_used_fg_tiles:
 	jne		0b
 	rts	
 	
-log_used_bg_tiles:
-	rts
-
+log_used_bg0_tiles:
 	* scan the whole screen, see what was updated
 	* main screen
 
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(BG_SCREEN_TILE_ADDRESS,a6),a5
-	lea		(BG_SCREEN_COLOR_ADDRESS,a6),a4
-	lea		bg_tile_log_table,a0
+	move.l	a6,a5		| starts at 0 on cpu1
+	lea		bg0_tile_log_table,a0
 	move	#(1<<BG_TILE_NB_CLUTS_POW)-1,d4		| clut mask
 	move	#BG_TILE_NB_CLUTS_POW,d5		| nb clut pow
 
-log_any_tiles:
-	move.w	#0x800-1,d7
+
+	moveq 	#0,d7
 0:
-	tst.b	must_mirror_y_tiles
-	jne		1f
-	* if Y is > 0x10 don't log (that will be trash from previous level)
-	move.w	d7,d0
-	and.w	#0x1F,d0
-	cmp.w	#0x10,d0
-	jcs		1f
-	sub.w	#0x10,d7		| skip 10 rows
-1:
+
 	moveq	#0,d1
 	moveq	#0,d0
 	move.b	(a5,d7.w),d0	| tile code
-	move.b	(a4,d7.w),d1	| tile attribute
+	move.b	(1,a5,d7.w),d1	| tile attribute
 
 	moveq	#0,d2
 	moveq	#0,d3
 	move.b	d0,d2	| code
 	move.b	d1,d3	| attribute + tile msbits
-	and.w	#0xC0,d3
-	lsl.w	#2,d3
+	and.w	#0x3,d3
+	lsl.w	#8,d3	| tile offset (tile 0x400 is first)
 	add.w	d3,d2	| extended tile code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	d4,d3	| clut masked
+	lsr.w	#2,d1	| clut
 
-	| remove flip/mirror
 	lsl.l	d5,d2			| tile code * NB_CLUTS (long!)
-	add.l	d3,d2			| add clut
+	add.l	d1,d2			| add clut
 	st.b	(a0,d2.l)
 20:
-	dbf		d7,0b
+	addq	#2,d7
+	cmp.w	#0x1000,d7
+	jne		0b
 	rts
 	
 * sprite_log, log_sprites
@@ -5597,13 +5584,13 @@ osd_dump_logs:
 	jbsr	save_cpu_log
 
 	move.l	_resload,a2
-	lea		fg_tile_log_table,a1
-	lea		fg_tile_log_name(pc),a0
-	move.l	#FG_TILE_LOG_LENGTH,d0
+	lea		hud_tile_log_table,a1
+	lea		hud_tile_log_name(pc),a0
+	move.l	#HUD_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	
-	lea		bg_tile_log_table,a1
-	lea		bg_tile_log_name(pc),a0
+	lea		bg0_tile_log_table,a1
+	lea		bg0_tile_log_name(pc),a0
 	move.l	#BG_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	
@@ -5644,10 +5631,10 @@ save_cpu_log:
 
 cpu_log_name:
 	.asciz	"cpu_log"
-fg_tile_log_name:
-	.asciz	"fg_used_tiles"
-bg_tile_log_name:
-	.asciz	"bg_used_tiles"
+hud_tile_log_name:
+	.asciz	"hud_used_tiles"
+bg0_tile_log_name:
+	.asciz	"bg0_used_tiles"
 sprite_log_name:
 	.asciz	"used_sprites"
 sprite_mem_name:
@@ -6062,14 +6049,14 @@ log_buffer:
 log_buffer_end:
 	.skip	16
 
-fg_tile_log_table:
+hud_tile_log_table:
 	* a lot of combinations aren't used (fortunately!)
-	.skip	FG_TILE_LOG_LENGTH
-fg_tile_log_table_end:
-bg_tile_log_table:
+	.skip	HUD_TILE_LOG_LENGTH
+hud_tile_log_table_end:
+bg0_tile_log_table:
 	* a lot of combinations aren't used (fortunately!)
 	.skip	BG_TILE_LOG_LENGTH
-bg_tile_log_table_end:
+bg0_tile_log_table_end:
 
 sprite_log_table:
 	* a lot of combinations aren't used (fortunately!)
