@@ -284,7 +284,46 @@ osd_enter_\@:
 	.endm
 	
 	
+	* for tile display
+	.macro	NEXT_SOURCE_PLANE
+	move.l	(a4)+,d0		| next plane
+	jne		5f
+	move.l	#empty_row,d0
+5:	
+	move.l	d0,a0
+	.endm
 
+	.macro	DECODE_CODE_AND_ATTRIBUTES
+	moveq	#0,d2
+	moveq	#0,d3
+	move.b	d0,d2	| code
+	move.b	d1,d3	| attribute+tile extend bits
+	lsr.b	#2,d3	| attribute
+	and.b	#3,d1	| tile upper select 0-3
+	lsl.w	#8,d1	| *256
+	add.w	d1,d2	| extended tile code
+	.endm
+	
+	.macro	COPY_TILE8_PLANE_ROW
+	move.b	d0,(offset,a1)  | buffer
+	.endm
+	
+	.macro	CLEAR_TILE8_PLANE
+	.set	offset,0
+	.rept	8
+	clr.b	(offset,a1)
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr	
+	.endm
+	
+	.macro	TILE8_NEXT_PLANE
+	add.l	d5,a1	| bitplane
+	add.l	d5,a3   | restore buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.l	d5,a4	| double buffered bitplane
+	.endif
+	.endm
+	
 * exports
 
 	.global		_user
@@ -1329,7 +1368,7 @@ force_all_screen_redraw:
 	movem.l	d1-d2/d5-d6,-(a7)
 	move.b	(a0),d0
 	move.b	(0x400,a0),d1
-	jbsr	update_bg_tile	
+	jbsr	update_bg0_tile	
 	movem.l	(a7)+,d1-d2/d5-d6
 	
 	add.w	#0x1,d7		| next X
@@ -1396,7 +1435,7 @@ draw_column_tiles:
 	move.b	(0x400,a0),d1
 
 	move.w	d2,-(a7)
-	jbsr	update_bg_tile
+	jbsr	update_bg0_tile
 	move.w	(a7)+,d2
 	
 	addq	#1,d7			| next Y
@@ -1404,6 +1443,9 @@ draw_column_tiles:
 	rts
 
 set_scroll_values:
+	rts
+	
+	
 	* update host scroll
 	* handle 2 wrap points
 	move.w	game_scroll_x,d0
@@ -3444,10 +3486,10 @@ platform_init:
 	dbf		d7,0b
 	
 	
-*	lea		sprite_palette,a0
-*	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64
-*	move.w	#TOTAL_NB_COLORS/2,d0
-*	jbsr	load_palette
+	lea		bg_tile_palette,a0
+	move.l	color_copper_pointers,a1	| entries 0-64
+	move.w	#TOTAL_NB_COLORS,d0
+	jbsr	load_palette
 	
 	
 	jbsr		set_bobs_bitplanes
@@ -3677,14 +3719,28 @@ video_word_dirty_cpu1:
 	.endif
 	
 	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
-	jcs		osd_w_videoram_out			| ATM only HUD tiles
+	jcs		0f
 	
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
 	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
 
-	jbsr	update_fg_tile
-
+	jra	update_fg_tile
+0:
+	* background tiles have 3 layers, not sure all 3 layers are active
+	* simultaneously fortunately!
+	* layer 0: background
+	* layer 1: used for ramps
+	* layer 2: used for intro computer room
+	cmp.w	#0x1000,d7
+	jcc		0f
+	
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
+	
+	jra		update_bg0_tile
+0:
 osd_w_videoram_out:
 	rts	
 	
@@ -3710,27 +3766,12 @@ bg_tile:
 	* here we have to compute x_offset, this is the game displaying a random
 	* tile on screen
 
-	jbsr	update_bg_tile
+	jbsr	update_bg0_tile
 
 	jra		osd_w_videoram_out
 	
 	
-	.macro	COPY_TILE8_PLANE_ROW
-	move.b	d0,(offset,a1)  | buffer
-	.endm
-	
-	.macro	CLEAR_TILE8_PLANE
-	.set	offset,0
-	.rept	8
-	clr.b	(offset,a1)
-	.set	offset,offset+FG_NB_BYTES_PER_ROW
-	.endr	
-	.endm
-	
-	.macro	TILE8_NEXT_PLANE
-	add.l	d5,a1
-	add.l	d5,a2
-	.endm
+
 
 * compute X offset (0,0x40,0x80 ...) that makes up for
 * corkscrew effect
@@ -3786,42 +3827,7 @@ compute_x_offset:
 	moveq	#-1,d0
 	jra		2b
 	
-* create 2 caches
 
-cache_bg_tiles_address:
-	* 1 cache: tile-accurate X,Y => address
-	lea		bg_tile_xy2address_cache,a0
-	moveq	#0,d1
-0:
-	moveq	#0,d0
-1:
-	move.w	d0,d2
-	lsl.w	#5,d2		| X*32
-	add.w	d1,d2		| plus Y
-	move.w	d2,(a0)+
-	addq	#1,d0
-	cmp.w	#0x20,d0
-	jne		1b
-	addq	#1,d1
-	cmp.w	#0x20,d1
-	jne		0b
-	
-	* 2 cache: address => tile-accurate X,Y
-	lea		bg_tile_address2xy_cache,a0
-	move.w	#0,d7
-0:
-	move.w	d7,d0
-	lsr.w	#5,d0
-	lsl.w	#8,d0
-	move.w	d7,d1
-	and.b	#0x1F,d1
-	or.b	d1,d0
-	move.w	d0,(a0)+
-	addq	#1,d7
-	cmp.w	#0x400,d7
-	jne		0b
-	
-	rts
 	
 	.macro	COPY_TILE16_PLANE_ROW
 	move.w	d0,(offset,a1)  | buffer
@@ -3862,46 +3868,24 @@ cache_bg_tiles_address:
 	.endif
 	.endm
 	
-* < D7: 0-0x400 address
+* < D7: 0-0xFFF address
 * < D0: tile code
 * < D1: color code
 * uses x_offset computed from scrolling current params
 
-update_bg_tile:
-	moveq	#0,d2			| mask up to 255
-	move.b	d0,d2			| tile code
-	moveq	#0,d3
-	move.b	d1,d3			| CLUT & tile code & flags
-
-	move.w	d3,d4
-	and.b	#0xC0,d4
-	add.w	d4,d4
-	add.w	d4,d4
-	add.w	d4,d2			| full tile code
-
+update_bg0_tile:
+	DECODE_CODE_AND_ATTRIBUTES
+	
 	* compute address
 	
-	move.w	d7,d0
-	lsr.w	#5,d0	| divide by 0x20
-	add.w	d0,d0	| 16 pixels
-	add.w 	x_offset,d0		| add corkscrew makeup offset
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
+	lea		fg_tile_address_table,a1
+	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
+	moveq	#0,d1
+	move.b	d0,d1
+	lsr.w	#8,d0		| X
 
-	move.w	d7,d1
-	subq.w	#1,d1		| first row is not shown with y scroll = 0
-	and.w	#0x1F,d1	| modulus 0x20
-	tst.b	must_mirror_y_tiles
-	jeq		666f
-	cmp.w	#0x10,d1
-	scs		d6			| repeat tile draw if Y tile  < 0x10
-	jra		667f
-666:
-	* full horizontal level: don't draw anything below tile 0x10, don't mirror
-	sf		d6
-	cmp.w	#0x10,d1
-	jcs		667f
-	* do nothing, this tile will never be shown
-	rts
-667:
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
 	move.l	#BG_SCREEN_PLANE_SIZE,d5
@@ -3939,9 +3923,10 @@ update_bg_tile:
 	
 	*cmp.b	#0x20,d2
 	*jeq		11f				| optim: blank tile
-	move.l		bg_tile_character_table,d0
-	jeq		100f			| no context loaded: out
-	move.l	d0,a0
+	*move.l		bg_tile_character_table,d0
+	*jeq		100f			| no context loaded: out
+	*move.l	d0,a0
+	lea		bg0_character_table,a0
 	.ifdef	NO68020
 	add.w	d2,d2
 	add.w	d2,d2	
@@ -3964,11 +3949,6 @@ update_bg_tile:
 12:
 	.endif
 	move.l	d0,a2
-	move.w	d3,d1		| save attributes
-	lsr.w	#4,d1
-	and.w	#3,d1		| mirror/flip
-	
-	and.w	#0x7,d3
 	.ifdef	NO68020
 	add.w	d3,d3
 	add.w	d3,d3
@@ -3982,8 +3962,6 @@ update_bg_tile:
 	jne		12f
 	move.w	d7,-(a7)
 	add.w	#BG_SCREEN_TILE_ADDRESS,d7
-	lsr.w	#2,d2
-	lsr.w	#2,d3
 	*COLOR0_FLASH	0xFF0
 	move.w	(a7)+,d7
 	jra		11f
@@ -3992,25 +3970,26 @@ update_bg_tile:
 	move.l	d0,a2					| pointer on bitplanes
 
 
-	lea		mirror_jump_table,a0
-	.ifdef	NO68020
-	add.w	d1,d1
-	add.w	d1,d1
-	move.l	(a0,d1.w),a0
-	.else
-	move.l	(a0,d1.w*4),a0
-	.endif
+	*lea		mirror_jump_table,a0
+	*.ifdef	NO68020
+	*add.w	d1,d1
+	*add.w	d1,d1
+	*move.l	(a0,d1.w),a0
+	*.else
+	*move.l	(a0,d1.w*4),a0
+	*.endif
 	
 	* we wait just in case a blitter operation is in progress
-	* it rarely conflicts, as only animated tiles are the windows at level 2
-	* from where the flying small pests arrive
+	* it rarely conflicts
 	*lea		_custom,a5
 	*REALLY_WAIT_BLIT
+	
+	
 	tst.b 	d6
-	jeq		0f
+	jra		0f
 	movem.l	d0-D3/a0-a6,-(a7)
 	jsr		(a0)
-	* lower part too
+	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
 	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
 	add.w	d6,a1
@@ -4020,140 +3999,32 @@ update_bg_tile:
 	.endif
 	move.w	#NB_BG_PLANES-1,d4
 0:
-	jmp		(a0)
+	*jmp		(a0)
 
-standard_tile16:
+standard_tile:
 
 	* just copy
-
 4:
 	move.l	(a2)+,d0		| next plane
 	jeq		5f
 	move.l	d0,a0
 	.set	offset,0
-	.rept	16
-	move.w	(a0)+,d0
-	COPY_TILE16_PLANE_ROW
+	.rept	8
+	move.b	(a0)+,d0
+	COPY_TILE8_PLANE_ROW
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
 41:
-	TILE16_NEXT_PLANE
+	TILE8_NEXT_PLANE
 	dbf		d4,4b
 	
 100:
 	rts
 5:
-	CLEAR_TILE16_PLANE
+	CLEAR_TILE8_PLANE
 	jra		41b
 
 
-flipped_tile16:
-4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
-	move.l	d0,a0
-	.set	offset,16*BG_NB_BYTES_PER_ROW
-	.rept	16
-	.set	offset,offset-BG_NB_BYTES_PER_ROW
-	move.w	(a0)+,d0
-	COPY_TILE16_PLANE_ROW
-	.endr
-41:
-	TILE16_NEXT_PLANE
-	dbf		d4,4b
-	
-0:
-	rts
-5:
-	CLEAR_TILE16_PLANE
-	jra		41b
-
-	
-mirror_tile16:
-	move.l	a5,-(a7)
-	lea		mirror_table,a5
-	.ifdef	MC68020
-	moveq	#0,d1
-	.endif
-4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
-	move.l	d0,a0
-	.set	offset,0
-	.rept	16
-	.ifdef	MC68020
-	move.w	(a0)+,d1
-	move.w	(a5,d1.l*2),d0	| mirror
-	.else
-	moveq	#0,d1	
-	move.w	(a0)+,d1
-	add.l	d1,d1
-	move.w	(a5,d1.l),d0	| mirror
-	.endif
-	COPY_TILE16_PLANE_ROW
-
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-41:
-	TILE16_NEXT_PLANE
-	dbf		d4,4b
-	move.l	(a7)+,a5
-	rts
-
-5:
-	CLEAR_TILE16_PLANE
-	jra		41b
-	
-mirror_flipped_tile16:
-	move.l	a5,-(a7)
-	lea		mirror_table,a5
-	.ifdef	MC68020
-	moveq	#0,d1
-	.endif
-4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
-	move.l	d0,a0
-	.set	offset,16*BG_NB_BYTES_PER_ROW
-	.rept	16
-	.set	offset,offset-BG_NB_BYTES_PER_ROW
-	.ifdef	MC68020
-	move.w	(a0)+,d1
-	move.w	(a5,d1.l*2),d0	| mirror
-	.else
-	moveq	#0,d1	
-	move.w	(a0)+,d1
-	add.l	d1,d1
-	move.w	(a5,d1.l),d0	| mirror
-	.endif
-	COPY_TILE16_PLANE_ROW
-	.endr
-41:
-	TILE16_NEXT_PLANE
-	dbf		d4,4b
-	move.l	(a7)+,a5
-	rts
-
-5:
-	CLEAR_TILE16_PLANE
-	jra		41b
-
-	* clear tile
-
-11:
-111:
-	CLEAR_TILE16_PLANE
-	TILE16_NEXT_PLANE
-	dbf		d4,111b
-2:
-	rts
-
-mirror_jump_table:
-	.long	standard_tile16
-	.long	mirror_tile16
-	.long	flipped_tile16             | those aren't used in the game
-	.long	mirror_flipped_tile16      | same
-	
 	
 cache_fg_tiles_address:
 	moveq	#0,d7
@@ -4194,30 +4065,45 @@ compute_fg_tile_xy:
 	moveq	#-1,d1
 	rts
 	
-*compute_tile_xy_portrait:
-*	moveq	#0,d0
-*	moveq	#0,d1
-*	move.w	d7,d1
-*	lsr.w	#5,d7		| this is X
-*	neg.w	d7
-*	add.w	#32,d7
-*	and.w	#0x1F,d1	| this is Y
-*	*addq.w	#2,d1
-*
-*	move.b	d7,d0		| this is X
-*	lsl.b	#3,d1		| Y times 8
-*	rts
+cache_bg_tiles_address:
+	moveq	#0,d7
+	lea		bg_tile_address_table,a0
+0:
+	jbsr	compute_bg_tile_xy
+
+	move.b	d0,(a0)+		| store offset
+	move.b	d1,(a0)+		| store offset
+
+	addq.w	#2,d7
+	cmp.w	#0x1000,d7
+	jne		0b
+	rts
+
+
+* < D7: 0-0x1000
+* > D0/D1: screen X/Y coords 
+compute_bg_tile_xy:
+	moveq	#0,d0
+	move.b	d7,d0
+	
+	and.b	#0x7F,d0	| x
+	lsr.b	#1,d0		| divide by 2: X in [0..63]
+	
+	move.w	d7,d1
+	lsr.w	#7,d1		| Y
+	cmp.w	#4,d1		| first 4 rows aren't visible
+	jcs		0f
+	rts
+0:
+	* invalid
+	moveq	#-1,d0
+	moveq	#-1,d1
+	rts
+	
 
 
 
-	.macro	NEXT_SOURCE_PLANE
-	move.l	(a4)+,d0		| next plane
-	jne		5f
-	move.l	#empty_row,d0
-5:	
-	move.l	d0,a0
-	.endm
-
+	
 * < D7: 0x3000-0x3FFF offset
 * < D0: tile code
 * < D1: tile attribute
@@ -4228,19 +4114,12 @@ update_fg_tile:
 	jcc		0f
 	rts
 0:
-	
-	moveq	#0,d2
-	moveq	#0,d3
-	move.b	d0,d2	| code
-	move.b	d1,d3	| attribute+tile extend bits
-	lsr.b	#2,d3	| attribute
-	and.b	#3,d1	| tile upper select 0-3
-	lsl.w	#8,d1	| *256
-	add.w	d1,d2	| extended tile code
+	DECODE_CODE_AND_ATTRIBUTES
 
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
 	lea		fg_tile_address_table,a1
 	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
 	moveq	#0,d1
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
@@ -4779,6 +4658,7 @@ log_used_sprites:
 	.endif
 	
 redraw_bg_tiles:
+	BREAKPOINT	"redraw bg tiles"
 	movem.l	d0-a6,-(a7)
 	jbsr 	force_all_screen_redraw
 	movem.l	(a7)+,d0-a6
@@ -5789,11 +5669,6 @@ diff_very_difficult:
 	
 	.align	2
 	
-
-bg_tile_xy2address_cache:
-	.skip	0x800
-bg_tile_address2xy_cache:
-	.skip	0x800
 	
 old_intena:
 	.long	0
@@ -6039,6 +5914,8 @@ bg_character_table_buffer:
 	.skip	BG_TILE_FILE_MAX_SIZE
 	
 fg_tile_address_table:
+	.skip	0x800*2
+bg_tile_address_table:
 	.skip	0x800*2
 
 
