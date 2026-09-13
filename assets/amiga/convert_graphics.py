@@ -614,7 +614,7 @@ print(f"Used fg tile colors: {len(fg_tile_palette)}")
 # background
 ###############
 
-bg0_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_16x16())}
+bg0_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8())}
 
 bg0_tile_cluts = {}
 read_used_tiles("bg0_used_tiles",bg0_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
@@ -624,15 +624,9 @@ bg0_tile_set_list = []
 
 
 for i,tsd in bg0_tile_sheet_dict.items():
-    tp,tile_set = load_tileset(tsd,i,16,16,"bg_tiles",dump_dir,dump=dump_it,
+    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles",dump_dir,dump=dump_it,
     cluts=bg0_tile_cluts,
     name_dict=None)
-    for j,tile in enumerate(tile_set):
-        if tile:
-            # images are mirrored & flipped, fix this here
-            tile = ImageOps.mirror(tile)
-            tile = ImageOps.flip(tile)
-            tile_set[j] = tile
 
     bg0_tile_set_list.append(tile_set)
     bg_tile_palette.update(tp)
