@@ -300,12 +300,20 @@ osd_enter_\@:
 	
 	.macro	COPY_TILE8_PLANE_ROW
 	move.b	d0,(offset,a1)  | buffer
+	move.b	d0,(offset,a3)  | buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	move.b	d0,(offset,a4)  | buffer
+	.endif
 	.endm
 	
 	.macro	CLEAR_TILE8_PLANE
 	.set	offset,0
 	.rept	8
 	clr.b	(offset,a1)
+	clr.b	(offset,a3)
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	clr.b	(offset,a4)
+	.endif
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr	
 	.endm
@@ -1695,6 +1703,7 @@ level3_interrupt:
 	* log fg_tiles/bg_tiles
 	jbsr	log_used_hud_tiles
 	jbsr	log_used_bg0_tiles
+	jbsr	log_used_bg1_tiles
 	jbsr	log_used_bg2_tiles
 	jbsr	log_used_sprites
 	lea		_custom,a5
@@ -3725,9 +3734,15 @@ video_word_dirty_cpu1:
 	
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
-	
 	jra		update_bg0_tile
 0:
+	* layer 1 & 2: same processing
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	and.w	#0xFFF,d7
+	rts
+	jra		update_bg12_tile
+	
 osd_w_videoram_out:
 	rts	
 	
@@ -3825,8 +3840,6 @@ compute_x_offset:
 update_bg0_tile:
 	DECODE_CODE_AND_ATTRIBUTES
 
-	*move.w	#0x23D,d2
-	*move.w	#0x82,d3   | temp
 	* compute address
 	
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
@@ -3958,7 +3971,166 @@ update_bg0_tile:
 0:
 	*jmp		(a0)
 
-standard_tile:
+
+	* just copy
+4:
+	move.l	(a2)+,d0		| next plane
+	jeq		5f
+	move.l	d0,a0
+	.set	offset,0
+	.rept	8
+	move.b	(a0)+,d0
+	COPY_TILE8_PLANE_ROW
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
+41:
+	TILE8_NEXT_PLANE
+	dbf		d4,4b
+	
+100:
+	rts
+5:
+	CLEAR_TILE8_PLANE
+	jra		41b
+	
+* < D7: 0-0xFFF address
+* < D0: tile code
+* < D1: color code
+* uses x_offset computed from scrolling current params
+
+update_bg12_tile:
+	DECODE_CODE_AND_ATTRIBUTES
+
+	* compute address
+	
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
+	lea		bg_tile_address_table,a1
+	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
+	moveq	#0,d1
+	move.b	d0,d1
+	lsr.w	#8,d0		| X
+
+	* temp clip!!!
+	cmp.w	#0x20,d0
+	jcc		11f
+	cmp.w	#0x20,d1
+	jcc		11f
+	
+	* updating bitplanes
+	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
+	move.l	#BG_SCREEN_PLANE_SIZE,d5
+	.else
+	move.w	#BG_SCREEN_PLANE_SIZE,d5
+	.endif
+	
+	move.l		playfield_drawn_screen_ptr,a1
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.else 
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a4
+	.endif
+	
+	moveq	#NB_BG_PLANES-1,d4   | needed even if no tile
+	lea		mulBG_NB_BYTES_PER_ROW_table,A2
+	.ifdef	NO68020
+	add.w	d1,d1
+	move.w	(a2,d1.w),d1
+	.else
+	move.w	(a2,d1.w*2),d1
+	.endif
+	lsl.w	#3,d1	| 8 pixels
+	add.w	d1,d0
+	add.w	d0,a1
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.else 
+	* double buffering
+	add.w	d0,a4
+	.endif
+
+	lea		background_restore_buffer,a3
+	add.w	d0,a3
+
+	
+	*cmp.b	#0x20,d2
+	*jeq		11f				| optim: blank tile
+	*move.l		bg_tile_character_table,d0
+	*jeq		100f			| no context loaded: out
+	*move.l	d0,a0
+	lea		bg12_character_table,a0
+	.ifdef	NO68020
+	add.w	d2,d2
+	add.w	d2,d2	
+	move.l	(a0,d2.w),d0		| tile pointer
+	.else
+	move.l	(a0,d2.w*4),d0		| tile pointer
+	.endif
+	.ifdef	RELEASE
+	jeq		11f					| clear tile, no error (release)
+	.else
+	jne		12f
+	move.w	d7,-(a7)
+	add.w	#BG_SCREEN_TILE_ADDRESS,d7
+	.ifdef	NO68020
+	lsr.w	#2,d2
+	.endif
+	*COLOR0_FLASH	0xF0F
+	move.w	(a7)+,d7
+	jra		11f
+12:
+	.endif
+	move.l	d0,a2
+	.ifdef	NO68020
+	add.w	d3,d3
+	add.w	d3,d3
+	move.l	(a2,d3.w),d0			| pointer on tile bitplanes for that CLUT
+	.else
+	move.l	(a2,d3.w*4),d0			| pointer on tile bitplanes for that CLUT	
+	.endif
+	.ifdef	RELEASE
+	jeq		11f						| not necessarily a problem
+	.else
+	jne		12f
+	move.w	d7,-(a7)
+	add.w	#BG_SCREEN_TILE_ADDRESS,d7
+	*COLOR0_FLASH	0xFF0
+	move.w	(a7)+,d7
+	jra		11f
+	.endif
+12:
+	move.l	d0,a2					| pointer on bitplanes
+
+
+	*lea		mirror_jump_table,a0
+	*.ifdef	NO68020
+	*add.w	d1,d1
+	*add.w	d1,d1
+	*move.l	(a0,d1.w),a0
+	*.else
+	*move.l	(a0,d1.w*4),a0
+	*.endif
+	
+	* we wait just in case a blitter operation is in progress
+	* it rarely conflicts
+	*lea		_custom,a5
+	*REALLY_WAIT_BLIT
+	
+	
+	tst.b 	d6
+	jra		0f
+	movem.l	d0-D3/a0-a6,-(a7)
+	jsr		(a0)
+	* lower part too TODO
+	movem.l	(a7)+,d0-D3/a0-a6
+	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
+	add.w	d6,a1
+	add.w	d6,a3
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.w	d6,a4
+	.endif
+	move.w	#NB_BG_PLANES-1,d4
+0:
+	*jmp		(a0)
 
 	* just copy
 4:
@@ -4546,6 +4718,15 @@ log_used_bg0_tiles:
 	CPU1_GET_MEMORY_START_IN_A6
 	move.l	a6,a5		| starts at 0 on cpu1
 	lea		bg0_tile_log_table,a0
+	jra	log_used_bgx_tiles
+	
+log_used_bg1_tiles:
+	* scan the whole screen, see what was updated
+	* main screen
+
+	CPU1_GET_MEMORY_START_IN_A6
+	lea	(0x1000,a6),a5		| starts at 0x2000 on cpu1
+	lea		bg1_tile_log_table,a0
 	jra	log_used_bgx_tiles
 	
 log_used_bg2_tiles:
@@ -5442,6 +5623,11 @@ osd_dump_logs:
 	
 	lea		bg0_tile_log_table,a1
 	lea		bg0_tile_log_name(pc),a0
+	move.l	#BG_TILE_LOG_LENGTH,d0
+	jbsr	resload_SaveFile(a2)
+	
+	lea		bg1_tile_log_table,a1
+	lea		bg1_tile_log_name(pc),a0
 	move.l	#BG_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	

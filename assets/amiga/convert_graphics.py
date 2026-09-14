@@ -334,9 +334,10 @@ plane_orientations = [("standard",lambda x:x),
 
 
 
-def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cluts,mask_color,next_cache_id = 1):
+def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cluts,mask_color,generate_mask=False,next_cache_id = 1):
     nb_planes = int(math.log2(len(palette)))
-
+    if is_bob:
+        generate_mask=True
     tile_table = []
     for n,img_set in enumerate(img_set_list):
         tile_entry = []
@@ -356,9 +357,9 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
 
                         wtile = plane_func(tile)
 
-                        if is_bob:
+                        if generate_mask:
                             actual_nb_planes += 1
-
+                        if is_bob:
 
                             # only 4 planes + mask => 5 planes
                             orig_wtile = wtile
@@ -375,11 +376,10 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
 ##                                # void the blitter data
 ##                                bitplane_data = b''
                         else:
-                            # 4 planes, no mask
                             height = 8
                             width = 1
                             y_start = 0
-                            bitplane_data = bitplanelib.palette_image2raw(wtile,None,palette,mask_color=mask_color)
+                            bitplane_data = bitplanelib.palette_image2raw(wtile,None,palette,generate_mask=generate_mask,mask_color=mask_color)
 
                         plane_size = len(bitplane_data) // actual_nb_planes
                         bitplane_plane_ids = []
@@ -407,7 +407,7 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
 
     new_tile_table = [[[] for _ in range(nb_cluts)] for _ in range(len(tile_table[0]))]
 
-    # reorder/transpose. We have 16 * 256 we need 256 * 16
+    # reorder/transpose. We have clut * tile we need tile * clut
     for i,u in enumerate(tile_table):
         for j,v in enumerate(u):
             new_tile_table[j][i] = v
@@ -415,7 +415,7 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
     return new_tile_table,next_cache_id
 
 
-def dump_tile_layer(tile_table,prefix,relative_root=None):
+def dump_tile_layer(tile_table,prefix,bp_prefix,relative_root=None):
     item_decl = "\t.long\t"
     if relative_root:
         f.write(f"{relative_root}:\n")
@@ -458,7 +458,7 @@ def dump_tile_layer(tile_table,prefix,relative_root=None):
                             for bitplane_id in data["bitplanes"]:
                                 f.write(item_decl)
                                 if bitplane_id:
-                                    f.write(f"{prefix}tile_plane_{bitplane_id:02d}")
+                                    f.write(f"{bp_prefix}tile_plane_{bitplane_id:02d}")
                                     if relative_root:
                                         f.write(f"-{relative_root}")
                                 else:
@@ -614,22 +614,39 @@ print(f"Used fg tile colors: {len(fg_tile_palette)}")
 # background
 ###############
 
-bg0_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8())}
+bg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8())}
 
 bg0_tile_cluts = {}
 read_used_tiles("bg0_used_tiles",bg0_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
+bg1_tile_cluts = {}
+read_used_tiles("bg1_used_tiles",bg1_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
+bg2_tile_cluts = {}
+read_used_tiles("bg2_used_tiles",bg2_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
+
 
 bg_tile_palette = set()
 bg0_tile_set_list = []
+bg12_tile_set_list = []
 
-
-for i,tsd in bg0_tile_sheet_dict.items():
+# layer 0: pure copy, layer 1 & 2: masked copies
+# so we need to generate the graphics separately, but the palette is shared
+# (also shared with the sprites)
+for i,tsd in bg_tile_sheet_dict.items():
     tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles",dump_dir,dump=dump_it,
     cluts=bg0_tile_cluts,
     name_dict=None)
 
     bg0_tile_set_list.append(tile_set)
     bg_tile_palette.update(tp)
+
+for i,tsd in bg_tile_sheet_dict.items():
+    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles",dump_dir,dump=dump_it,
+    cluts=bg1_tile_cluts|bg2_tile_cluts,
+    name_dict=None)
+
+    bg12_tile_set_list.append(tile_set)
+    bg_tile_palette.update(tp)
+
 ##
 ##sprite_set_list = []
 ##for i,tsd in sprite_sheet_dict.items():
@@ -643,23 +660,23 @@ for i,tsd in bg0_tile_sheet_dict.items():
 ##
 
 
-##if len(bg_tile_palette)>total_nb_colors:
-##    print(f"Too many colors in sprite tiles ({len(sprite_palette)}), quantizing")
-##    # if we specify 32 right away, the algorithm can provide less colors than 32, wasting entries
-##    # by attempting to quantize with higher values, we guarantee not to waste colors
-##    for attempt_nb_colors in [total_nb_colors+3,total_nb_colors+2,total_nb_colors+1,total_nb_colors]:
-##        sprite_replacement_dict = quantize_palette(bg_tile_palette,"sprite_tiles",attempt_nb_colors,dump_it=dump_it)
-##        new_sprite_palette = sorted(set(sprite_replacement_dict.values()))
-##        if len(new_sprite_palette)<=total_nb_colors:
-##            print(f"Quantization achieved {len(new_sprite_palette)} colors with start colors = {attempt_nb_colors}")
-##            bg_tile_palette = new_sprite_palette
-##            break
-##    else:
-##        raise Exception("quantize error")  # not really possible since we try 32 as last chance!
-##
-##    apply_color_replacement(bg_tile_set_list,sprite_replacement_dict)
-##    apply_color_replacement(sprite_set_list,sprite_replacement_dict)
-##else:
+if len(bg_tile_palette)>total_nb_colors:
+    print(f"Too many colors in sprite tiles ({len(bg_tile_palette)}), quantizing")
+    # if we specify 64 right away, the algorithm can provide less colors than 64, wasting entries
+    # by attempting to quantize with higher values, we guarantee not to waste colors
+    for attempt_nb_colors in [total_nb_colors+3,total_nb_colors+2,total_nb_colors+1,total_nb_colors]:
+        sprite_replacement_dict = quantize_palette(bg_tile_palette,"sprite_tiles",attempt_nb_colors,dump_it=dump_it)
+        new_sprite_palette = sorted(set(sprite_replacement_dict.values()))
+        if len(new_sprite_palette)<=total_nb_colors:
+            print(f"Quantization achieved {len(new_sprite_palette)} colors with start colors = {attempt_nb_colors}")
+            bg_tile_palette = new_sprite_palette
+            break
+    else:
+        raise Exception("quantize error")  # not really possible since we try 32 as last chance!
+
+    apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
+    apply_color_replacement(bg12_tile_set_list,sprite_replacement_dict)
+    #apply_color_replacement(sprite_set_list,sprite_replacement_dict)
 
 
 # pad if needed
@@ -683,11 +700,19 @@ if dump_it:
         with open(dump_dir / "used_bg0_tiles.json","w") as f:
             bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg0_tile_cluts.items() if v}
             json.dump(bg_tile_cluts_dict,f,indent=2)
+        with open(dump_dir / "used_bg1_tiles.json","w") as f:
+            bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg1_tile_cluts.items() if v}
+            json.dump(bg_tile_cluts_dict,f,indent=2)
+        with open(dump_dir / "used_bg2_tiles.json","w") as f:
+            bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg2_tile_cluts.items() if v}
+            json.dump(bg_tile_cluts_dict,f,indent=2)
 
 bg_tile_plane_cache = {}
 
 bg0_tile_table,next_bg_id = read_tileset(bg0_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
 is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black)
+bg12_tile_table,next_bg_id = read_tileset(bg12_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
+is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
 
 
 
@@ -756,11 +781,12 @@ with open(src_dir / "graphics.68k","w") as f:
     f.write(generated_message)
     f.write("\t.global\tfg_character_table\n")
     f.write("\t.global\tbg0_character_table\n")
+    f.write("\t.global\tbg12_character_table\n")
     f.write("\t.global\tshared_bob_table\n")
     f.write("\t.global\tend_tables\n")
     f.write("fg_character_table:\n")
 
-    offset = dump_tile_layer(fg_tile_table,"fg_")
+    offset = dump_tile_layer(fg_tile_table,"fg_","fg_")
 
 
     for k,v in tile_plane_cache.items():
@@ -768,7 +794,10 @@ with open(src_dir / "graphics.68k","w") as f:
         dump_asm_bytes(k,f)
 
     f.write("bg0_character_table:\n")
-    dump_tile_layer(bg0_tile_table,"bg_")
+    dump_tile_layer(bg0_tile_table,"bg0_","bg_")
+
+    f.write("bg12_character_table:\n")
+    dump_tile_layer(bg12_tile_table,"bg12_","bg_")
 
     for k,v in bg_tile_plane_cache.items():
         f.write(f"bg_tile_plane_{v:02d}:")
