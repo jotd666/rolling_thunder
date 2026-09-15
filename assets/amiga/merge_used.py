@@ -46,5 +46,5 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False):
 merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
-merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
+####merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=True)
 ##merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False)

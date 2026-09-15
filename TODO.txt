@@ -1,6 +1,8 @@
 log used sprites
 display sprites
-debug upper layers
+debug upper layers: those aren't the proper tiles 
+(better example: ramps in-game)
+upper layer (& lower layer): optimize: blank tile
 
 cpu2 lockup: 8853 after demo: don't forget to run the cpu2 event loop
 hook cpu2 event loop sometime in the cpu1 event loop / do a cpu switch when semaphore sync

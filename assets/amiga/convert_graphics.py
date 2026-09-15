@@ -620,19 +620,23 @@ bg0_tile_cluts = {}
 read_used_tiles("bg0_used_tiles",bg0_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
 bg1_tile_cluts = {}
 read_used_tiles("bg1_used_tiles",bg1_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
-bg2_tile_cluts = {}
-read_used_tiles("bg2_used_tiles",bg2_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
+##bg2_tile_cluts = {}
+##read_used_tiles("bg2_used_tiles",bg2_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
 
 
 bg_tile_palette = set()
 bg0_tile_set_list = []
-bg12_tile_set_list = []
+bg1_tile_set_list = []
 
 # layer 0: pure copy, layer 1 & 2: masked copies
 # so we need to generate the graphics separately, but the palette is shared
 # (also shared with the sprites)
+#
+# ATM we drop layer 2, too many problems, we'll workaround this
+# (layer 2 is only used in the big computer frame at start)
+
 for i,tsd in bg_tile_sheet_dict.items():
-    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles",dump_dir,dump=dump_it,
+    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_0",dump_dir,dump=dump_it,
     cluts=bg0_tile_cluts,
     name_dict=None)
 
@@ -640,11 +644,11 @@ for i,tsd in bg_tile_sheet_dict.items():
     bg_tile_palette.update(tp)
 
 for i,tsd in bg_tile_sheet_dict.items():
-    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles",dump_dir,dump=dump_it,
-    cluts=bg1_tile_cluts|bg2_tile_cluts,
+    tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_1",dump_dir,dump=dump_it,
+    cluts=bg1_tile_cluts,
     name_dict=None)
 
-    bg12_tile_set_list.append(tile_set)
+    bg1_tile_set_list.append(tile_set)
     bg_tile_palette.update(tp)
 
 ##
@@ -675,7 +679,7 @@ if len(bg_tile_palette)>total_nb_colors:
         raise Exception("quantize error")  # not really possible since we try 32 as last chance!
 
     apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
-    apply_color_replacement(bg12_tile_set_list,sprite_replacement_dict)
+    apply_color_replacement(bg1_tile_set_list,sprite_replacement_dict)
     #apply_color_replacement(sprite_set_list,sprite_replacement_dict)
 
 
@@ -703,15 +707,15 @@ if dump_it:
         with open(dump_dir / "used_bg1_tiles.json","w") as f:
             bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg1_tile_cluts.items() if v}
             json.dump(bg_tile_cluts_dict,f,indent=2)
-        with open(dump_dir / "used_bg2_tiles.json","w") as f:
-            bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg2_tile_cluts.items() if v}
-            json.dump(bg_tile_cluts_dict,f,indent=2)
+##        with open(dump_dir / "used_bg2_tiles.json","w") as f:
+##            bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg2_tile_cluts.items() if v}
+##            json.dump(bg_tile_cluts_dict,f,indent=2)
 
 bg_tile_plane_cache = {}
 
 bg0_tile_table,next_bg_id = read_tileset(bg0_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
 is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black)
-bg12_tile_table,next_bg_id = read_tileset(bg12_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
+bg1_tile_table,next_bg_id = read_tileset(bg1_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
 is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
 
 
@@ -781,7 +785,7 @@ with open(src_dir / "graphics.68k","w") as f:
     f.write(generated_message)
     f.write("\t.global\tfg_character_table\n")
     f.write("\t.global\tbg0_character_table\n")
-    f.write("\t.global\tbg12_character_table\n")
+    f.write("\t.global\tbg1_character_table\n")
     f.write("\t.global\tshared_bob_table\n")
     f.write("\t.global\tend_tables\n")
     f.write("fg_character_table:\n")
@@ -796,8 +800,8 @@ with open(src_dir / "graphics.68k","w") as f:
     f.write("bg0_character_table:\n")
     dump_tile_layer(bg0_tile_table,"bg0_","bg_")
 
-    f.write("bg12_character_table:\n")
-    dump_tile_layer(bg12_tile_table,"bg12_","bg_")
+    f.write("bg1_character_table:\n")
+    dump_tile_layer(bg1_tile_table,"bg1_","bg_")
 
     for k,v in bg_tile_plane_cache.items():
         f.write(f"bg_tile_plane_{v:02d}:")

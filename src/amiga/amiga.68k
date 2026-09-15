@@ -306,6 +306,19 @@ osd_enter_\@:
 	.endif
 	.endm
 	
+	.macro	MASK_TILE8_PLANE_ROW
+	move.b	(offset,a1),d1	| read previous value
+	move.b	(a5)+,d2		| get mask value
+	not.b	d2				| invert bits
+	and.b	d2,d1			| keep only bits outside mask
+	or.b	d1,d0			| merge with input data
+	move.b	d0,(offset,a1)  | buffer
+	move.b	d0,(offset,a3)  | buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	move.b	d0,(offset,a4)  | buffer
+	.endif
+	.endm
+	
 	.macro	CLEAR_TILE8_PLANE
 	.set	offset,0
 	.rept	8
@@ -3655,23 +3668,23 @@ osd_set_scroll_3:
 * we need to update code+attr anyway
 osd_video_byte_dirty_cpu1:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a5,-(a7)
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
 	move.l	a0,d7
 	bclr	#0,d7
 	move.l	d7,a0
 	jbsr 	video_word_dirty_cpu1
-	movem.l	(a7)+,d0-d7/a0-a2/a5
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
 	OSD_EXIT
 	rts
 	
 osd_video_byte_dirty_cpu2:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a5,-(a7)
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
 	move.l	a0,d7
 	bclr	#0,d7
 	move.l	d7,a0
 	jbsr 	video_word_dirty_cpu2
-	movem.l	(a7)+,d0-d7/a0-a2/a5
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
 	OSD_EXIT
 	rts
 
@@ -3683,22 +3696,22 @@ osd_video_byte_dirty_cpu2:
 * 2800: background
 osd_video_word_dirty_cpu1:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a5,-(a7)
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
 	jbsr	video_word_dirty_cpu1
-	movem.l	(a7)+,d0-d7/a0-a2/a5
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
 	OSD_EXIT
 	rts
 	
 osd_video_word_dirty_cpu2:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a5,-(a7)
-	movem.l	(a7)+,d0-d7/a0-a2/a5
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
+	jbsr 	video_word_dirty_cpu2
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
 	OSD_EXIT
 	rts
 
 video_word_dirty_cpu2:
-	rts
-	
+	move.l	a4,a6		| set video base (which is cpu1 ram zero address)
 video_word_dirty_cpu1:
 	move.l	a0,d7		| save address
 	sub.l	a6,d7
@@ -3736,18 +3749,22 @@ video_word_dirty_cpu1:
 	move.b	(1,a6,d7.w),d1		| attribute
 	jra		update_bg0_tile
 0:
+	cmp.w	#0x2000,d7
+	jcc		osd_w_videoram_out
 	* layer 1 & 2: same processing
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
+	cmp.b	#0xFF,d0
+	jeq		osd_w_videoram_out
+
 	and.w	#0xFFF,d7
-	rts
-	jra		update_bg12_tile
+	jra		update_bg1_tile
 	
 osd_w_videoram_out:
 	rts	
 	
 bg_tile:
-	and.w	#0x3FF,d7
+	and.w	#0xFFF,d7
 	
 	* we need to see if the tile is on screen considering X scolling
 	* positions. Compute first X & last X coord visible
@@ -3998,9 +4015,11 @@ update_bg0_tile:
 * < D1: color code
 * uses x_offset computed from scrolling current params
 
-update_bg12_tile:
+update_bg1_tile:
 	DECODE_CODE_AND_ATTRIBUTES
-
+	
+	add.w	#0x400,d2
+	
 	* compute address
 	
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
@@ -4048,16 +4067,20 @@ update_bg12_tile:
 	add.w	d0,a4
 	.endif
 
+	* save address of layer 1 restore buffer
+	* (we just don't have enough registers)
+	lea		layer_1_restore_buffer,a3
+	add.w	d0,a3
+	move.l	a3,layer_1_restore_screen_pointer
+	
 	lea		background_restore_buffer,a3
 	add.w	d0,a3
 
 	
-	*cmp.b	#0x20,d2
-	*jeq		11f				| optim: blank tile
 	*move.l		bg_tile_character_table,d0
 	*jeq		100f			| no context loaded: out
 	*move.l	d0,a0
-	lea		bg12_character_table,a0
+	lea		bg1_character_table,a0
 	.ifdef	NO68020
 	add.w	d2,d2
 	add.w	d2,d2	
@@ -4101,25 +4124,16 @@ update_bg12_tile:
 	move.l	d0,a2					| pointer on bitplanes
 
 
-	*lea		mirror_jump_table,a0
-	*.ifdef	NO68020
-	*add.w	d1,d1
-	*add.w	d1,d1
-	*move.l	(a0,d1.w),a0
-	*.else
-	*move.l	(a0,d1.w*4),a0
-	*.endif
-	
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
 	*lea		_custom,a5
 	*REALLY_WAIT_BLIT
 	
-	
+	lea		(a2,4*NB_PLAYFIELD_PLANES),a6	| mask plane address, fixed
 	tst.b 	d6
 	jra		0f
 	movem.l	d0-D3/a0-a6,-(a7)
-	jsr		(a0)
+	jsr		4f
 	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
 	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
@@ -4136,22 +4150,52 @@ update_bg12_tile:
 4:
 	move.l	(a2)+,d0		| next plane
 	jeq		5f
+	move.l	(a6),a5			| reload plane mask
 	move.l	d0,a0
 	.set	offset,0
 	.rept	8
 	move.b	(a0)+,d0
-	COPY_TILE8_PLANE_ROW
+	MASK_TILE8_PLANE_ROW
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
 41:
 	TILE8_NEXT_PLANE
 	dbf		d4,4b
 	
+	* now same thing for layer 1 restore
+	move.l 	layer_1_restore_screen_pointer,a1
+	lea		(a6,-4*NB_PLAYFIELD_PLANES),a2	| happy to restore input data
+	move.w	#NB_BG_PLANES-1,d4
+
+14:
+	move.l	(a2)+,d0		| next plane
+	jeq		15f
+	move.l	d0,a0
+	.set	offset,0
+	.rept	8
+	move.b	(a0)+,(offset,a1)  | layer 1 buffer
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
+141:
+	TILE8_NEXT_PLANE
+	dbf		d4,14b
+	* last plane: mask data for later blit
+	move.l	(a6),a5			| reload plane mask
+	.set	offset,0
+	.rept	8
+	move.b	(a5)+,(offset,a1)
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
+	
 100:
 	rts
 5:
 	CLEAR_TILE8_PLANE
 	jra		41b
+
+15:
+	CLEAR_TILE8_PLANE
+	jra		141b
 
 
 	
@@ -4726,7 +4770,7 @@ log_used_bg1_tiles:
 
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	(0x1000,a6),a5		| starts at 0x2000 on cpu1
-	lea		bg1_tile_log_table,a0
+	lea		bg1_tile_log_table+0x400*BG_TILE_NB_CLUTS,a0
 	jra	log_used_bgx_tiles
 	
 log_used_bg2_tiles:
@@ -4735,7 +4779,7 @@ log_used_bg2_tiles:
 
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	(0x2000,a6),a5		| starts at 0x2000 on cpu1
-	lea		bg2_tile_log_table,a0
+	lea		bg2_tile_log_table+0x400*BG_TILE_NB_CLUTS,a0
 	jra	log_used_bgx_tiles
 	
 	
@@ -5696,7 +5740,9 @@ cpu_interrupts:
 	.word	0
 looped_sound_enabled:
 	.long	0
-	
+
+layer_1_restore_screen_pointer:
+	.long	0
 return_address:
 	.long	0
 	
@@ -6305,7 +6351,11 @@ hw_sprite_ram_buffer:
 background_restore_buffer:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
-		
+layer_1_restore_buffer:
+	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
+	.skip	BG_SCREEN_SIZE
+	.skip	BG_SCREEN_PLANE_SIZE		| plus mask!
+	
 bobs_screen_buffer_1:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
