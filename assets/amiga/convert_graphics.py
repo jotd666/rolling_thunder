@@ -297,7 +297,8 @@ all_tile_cluts = False
 sprite_cluts = {}
 fg_tile_cluts = {}
 
-total_nb_colors = 64
+nb_bg_layer_planes = 6
+total_nb_colors = 1<<nb_bg_layer_planes
 
 read_used_tiles("hud_used_tiles",fg_tile_cluts,FG_NB_TILES,FG_NB_CLUTS)
 
@@ -550,6 +551,7 @@ if dump_it:
 
 
 
+title_layers = Image.open(sheets_path / "title_layers.png")
 
 #sprite_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_sprites_16x16())}
 fg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_hud_tiles())}
@@ -651,6 +653,7 @@ for i,tsd in bg_tile_sheet_dict.items():
     bg1_tile_set_list.append(tile_set)
     bg_tile_palette.update(tp)
 
+bg_tile_palette.update(bitplanelib.palette_extract(title_layers))
 ##
 ##sprite_set_list = []
 ##for i,tsd in sprite_sheet_dict.items():
@@ -681,7 +684,7 @@ if len(bg_tile_palette)>total_nb_colors:
     apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
     apply_color_replacement(bg1_tile_set_list,sprite_replacement_dict)
     #apply_color_replacement(sprite_set_list,sprite_replacement_dict)
-
+    bitplanelib.replace_color_from_dict(title_layers,sprite_replacement_dict)
 
 # pad if needed
 #bg_tile_palette.remove(magenta)
@@ -734,6 +737,8 @@ fg_tile_table,_ = read_tileset(fg_tile_set_list,fg_tile_palette,[True,False,Fals
 
 #sprite_table,_ = read_tileset(sprite_set_list,bg_tile_palette,[True,False,False,False],cache=bob_plane_cache, is_bob=True, mask_color=magenta, nb_cluts=SPRITE_NB_CLUTS)
 
+title_raw = bitplanelib.palette_image2raw(title_layers,None,bg_tile_palette)
+title_raw_plane_len = len(title_raw)//nb_bg_layer_planes
 
 
 with open(src_dir / "palette.68k","w") as f:
@@ -783,6 +788,7 @@ fg_tile_table = fg_tile_table
 
 with open(src_dir / "graphics.68k","w") as f:
     f.write(generated_message)
+    f.write("\t.global\ttitle_pic\n")
     f.write("\t.global\tfg_character_table\n")
     f.write("\t.global\tbg0_character_table\n")
     f.write("\t.global\tbg1_character_table\n")
@@ -807,9 +813,18 @@ with open(src_dir / "graphics.68k","w") as f:
         f.write(f"bg_tile_plane_{v:02d}:")
         dump_asm_bytes(k,f)
 
+    f.write("title_pic:\n")
+    for i in range(nb_bg_layer_planes):
+        f.write(f"\t.long\ttitle_pic_plane_{i}\n")
+
     f.write("shared_bob_table:\n")
 ##    dump_bob_layer(sprite_table,f)
 
+    f.write("\t.section\t.datachip\n")
+
+    for i in range(nb_bg_layer_planes):
+        f.write(f"title_pic_plane_{i}:\n")
+        bitplanelib.dump_asm_bytes(title_raw[i*title_raw_plane_len:(i+1)*title_raw_plane_len],f,mit_format=True)
 
 
 

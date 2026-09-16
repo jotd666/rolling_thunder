@@ -15,7 +15,7 @@ Crop modes:
     --full       no crop, keep the whole 512x256 tilemap
 """
 
-# working setup: ..\amiga\merge_layers.py --rect 0,24,320,256 -o title_layers.png title_layer_0.png title_layer_2.png
+# working setup: ..\amiga\merge_layers.py --rect 32,24,288,256 -o title_layers.png title_layer_0.png title_layer_2.png
 import argparse
 import pathlib
 

@@ -2282,7 +2282,7 @@ blit_background:
 	lea		mulBG_NB_BYTES_PER_ROW_table(pc),a4
 	.ifndef	MC68020
 	add.w	d1,d1
-	* add Y offset: Y*NB_BYTES_PER_ROW
+	* add Y offset: Y*BG_NB_BYTES_PER_ROW
 	add.w	(a4,d1.w),d0
 	add.w	(a4,d1.w),d0
 	.else
@@ -3197,7 +3197,104 @@ start_process_1_plane:
 	GEN_MINTERM_TABLE	cookie_cut_blit,0x0FCA
 	GEN_MINTERM_TABLE_2	cookie_cut_mask_blit,0x0BCA
 
+* < A5: custom
+* < D0.W,D1.W: x,y, no shifting
+* < A0: source (pointer on array of planes)
+* < A1: destination fg plane
+* < D2: width in bytes
+* < D3: number of planes
+* < D4: height. If negative, source is copied with negative modulo (flip)
+* < D5: y offset for source planes
+* < D7: blit mask (not considered, optim, -1 all through the game)
+* blit mask set
+* returns: start of destination in A1 (computed from old A1+X,Y)
+* trashes: a1
+blit_planes_any_internal_no_cookie_cut:
+    movem.l d0-d7/a4,-(a7)
+    * pre-compute the maximum of shit here
+	tst.w	d4
+	bpl.b	1f
+	sub.w	d4,d1	| pre-add height to d1
+	subq.w	#1,d1	| minus one
+1:	
+	tst	d1
+    beq.b   2f    | optim
+    lea		mulBG_NB_BYTES_PER_ROW_table,a4
+	.ifdef	NO68020
+	add.w	d1,d1
+    move.w  (a4,d1.w),d1	| y times 40
+	.else
+    move.w  (a4,d1.w*2),d1	| y times 40
+	.endif
+2:
+	
+    asr.w   #3,d0			| X displacement in bytes
 
+    add.w   d0,d1
+
+	move.l  #0x09f00000,d7    | A->D copy, ascending mode
+	move.l  #0x0FCA0000,d6     | D clear
+
+    * make offset even. Blitter will ignore odd address
+    * but a 68000 CPU doesn't and since we RETURN A1...
+    *bclr    #0,d1
+    add.w   d1,a1       | plane position (D1 < 0x7FFF, 288*40=0x2D00)
+	move.w	#BG_NB_BYTES_PER_ROW,d0
+	tst.w	d4
+	bpl.b	5f
+	neg.w	d0
+	neg.w	d4    | make d4 positive again
+5:
+    sub.w   d2,d0       | blit width
+    lsl.w   #6,d4
+    lsr.w   #1,d2
+    add.w   d2,d4       | blit height
+    * always the same settings (ATM)
+	moveq	#-2,d2
+	
+    * now just wait for blitter ready to write all registers
+	WAIT_BLIT
+    
+    * blitter registers set
+
+	WRITE_BLITTER_REG_WORD	d2,bltamod		|A modulo=bytes to skip between lines
+	
+	WRITE_BLITTER_REG_WORD	d0,bltdmod	|D modulo
+					
+	subq	#1,d3
+	jeq	7f
+	subq	#1,d3
+6:
+	jbsr	start_process_1_plane_nocc
+	
+	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
+	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
+	lea		(BG_SCREEN_PLANE_SIZE,a1),a1
+	WAIT_BLIT
+	dbf		d3,6b
+7:
+	jbsr	start_process_1_plane_nocc
+	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
+	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
+    
+    movem.l (a7)+,d0-d7/a4
+    rts
+	
+start_process_1_plane_nocc:
+	move.l (a0)+,d0
+	jne	61f
+
+	* source is 0: just clear (less bandwidth lost) and change bltcon
+	WRITE_BLITTER_REG_LONG	#0x01000000,bltcon0	| sets con0 and con1: clear
+
+	rts
+61:
+	* non-zero: set data source & bltcon
+	WRITE_BLITTER_REG_LONG	d7,bltcon0	| sets con0 and con1: C-A+B->D cookie cut full
+	WRITE_BLITTER_REG_LONG	d0,bltapt	| source graphic top left corner
+	rts
+
+	
 	
 bob_previous_positions_1:
 	.fill NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE+4 , 1 , -1
@@ -3744,10 +3841,27 @@ video_word_dirty_cpu1:
 	* layer 2: used for intro computer room
 	cmp.w	#0x1000,d7
 	jcc		0f
+	tst.b	block_tile_layer_0
+	jne		osd_w_videoram_out
 	
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
 	jra		update_bg0_tile
+0:
+	cmp.w	#0x2188,d7
+	jne		0f
+	* upper left corner, check if computer panel of title is displaying
+	move.b	(a6,d7.w),d0		| code
+	jne		1f
+	move.b	(1,a6,d7.w),d1
+	cmp.b	#0x61,d1
+	jne		1f
+	* title panel: load pic and display it, bypassing the
+	* multi-layer mode (layer 0 + layer 2, preferably with
+	* layer 0 overwriting layer 2!!)
+	jbsr	blit_title
+	st.b	block_tile_layer_0
+	jra		osd_w_videoram_out
 0:
 	cmp.w	#0x2000,d7
 	jcc		osd_w_videoram_out
@@ -3759,9 +3873,53 @@ video_word_dirty_cpu1:
 
 	and.w	#0xFFF,d7
 	jra		update_bg1_tile
-	
+1:
+	clr.b	block_tile_layer_0
 osd_w_videoram_out:
 	rts	
+	
+blit_title:
+	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
+	move.l	#BG_SCREEN_PLANE_SIZE,d5
+	.else
+	move.w	#BG_SCREEN_PLANE_SIZE,d5
+	.endif
+	
+	lea	_custom,a5
+	move.l		playfield_drawn_screen_ptr,a1
+	jbsr		do_bt
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.else 
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a1
+	jbsr		do_bt
+	.endif
+	
+	RTS
+
+do_bt:
+	lea 	title_pic,a0
+	move.w	#NB_BG_PLANES,d3
+	move.w	#288/8+2,d2
+	move.w	#256,d4
+	moveq	#0,d0
+	moveq	#0,d1
+	moveq	#0,d5
+	jbsr	blit_planes_any_internal_no_cookie_cut
+	
+* < A5: custom
+* < D0.W,D1.W: x,y, no shifting
+* < A0: source (pointer on array of planes)
+* < A1: destination fg plane
+* < D2: width in bytes
+* < D3: number of planes
+* < D4: height. If negative, source is copied with negative modulo (flip)
+* < D5: y offset for source planes
+* blit mask set
+* returns: start of destination in A1 (computed from old A1+X,Y)
+* trashes: a1
+
+	RTS
 	
 bg_tile:
 	and.w	#0xFFF,d7
@@ -4231,6 +4389,7 @@ compute_fg_tile_xy:
 	lsr.w	#7,d1		| Y
 	cmp.w	#4,d1		| first 4 rows aren't visible
 	jcs		0f
+	sub.w	#1,d1
 	rts
 0:
 	* invalid
@@ -4308,7 +4467,7 @@ update_fg_tile:
 	and.w	#0x7,d0		| dest X offset
 	lsl.w	#7,d1		| dest Y offset (8*8*2 pixels per row)
 	add.w	d0,d1
-	add.w	#0x10,d1	| skip control word
+	sub.w	#0x40-0x10,d1	| make higher (-0x40) & skip control word (+0x10)
 	
 	* get 1 pointer for 1 sprite
 	move.l	(a1),a1
@@ -5485,7 +5644,7 @@ cpu_init:
 	rts	
 	
 gng_credits_text:
-	.ascii	"Ghosts N Goblins Amiga AGA"
+	.ascii	"Rolling Thunder Amiga AGA"
 	.byte	0xff
 gng_credits_text_2:
 	.ascii	"  Code JOTD - Music IM"
@@ -5749,6 +5908,8 @@ return_address:
 current_music_name:
 	.long	0
 	
+block_tile_layer_0:
+	.byte	0
 menu_flip_flop:
 	.byte	0
 current_menu_column:
@@ -6266,19 +6427,19 @@ fine_x_scroll_value:
 	
 	.set	offset, 0
 	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
-	TITLE_SPRITE_COLOR	0x6A01,0x445
+	TITLE_SPRITE_COLOR	0x5E01,0x445
 	.set	offset,offset+8
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x556
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x556
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x667
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x667
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x778
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x778
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x99A
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x99A
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x889
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x889
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0xBBC
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0xBBC
 
 	
 	* here was first_rows (before I disabled it)
@@ -6289,15 +6450,15 @@ pal_intreq_block_game:
 	* here was second_rows (before I disabled it)
 
 	.set	offset,offset+36
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x889
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x889
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x99A
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x99A
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x778
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x778
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x667
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x667
 	.set	offset,offset+2
-	TITLE_SPRITE_COLOR	0x6A01+offset<<8,0x556
+	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x556
 	.set	offset,offset+2
 	
 	* reset to white
