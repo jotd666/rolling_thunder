@@ -100,7 +100,7 @@ cpu2_boot_8000:  ; [global]
 809D: 0F 05       CLR    $05
 809F: 0F 07       CLR    semaphore_07
 80A1: 1C EF       ANDCC  #$EF		; enable interrupts
-mainloop_80a3:     ; [global]
+mainloop_80a3:
 80A3: BD B0 BF    JSR    process_event_b0bf
 80A6: 20 FB       BRA    mainloop_80a3
 
@@ -5182,7 +5182,7 @@ B0BE: 39          RTS
 ; - level completed
 ; - various special enemies (with guns, etc..). Grunts are handled
 ;   by cpu1
-process_event_b0bf:
+process_event_b0bf:		; [global]
 B0BF: D6 68       LDB    $68
 B0C1: D1 67       CMPB   $67
 B0C3: 26 01       BNE    $B0C6

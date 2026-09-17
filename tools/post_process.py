@@ -55,6 +55,8 @@ def game_specific_cpu1(address,lines,i):
     elif address == 0x800a:
         # skip memory/video memory test of boot
         line = change_instruction("jra\tnormal_start_8190",lines,i)
+    elif address == 0x81b9:
+        line += "\tjbsr\tosd_event_loop_cpu2\n"
     return line
 
 sc_cpu2 = SourceChanger()

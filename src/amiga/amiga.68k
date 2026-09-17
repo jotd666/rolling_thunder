@@ -130,8 +130,8 @@ FG_SCREEN_TILE_ADDRESS = 0x3000
 FG_SCREEN_START_OFFSET = 0x208
 BG_SCREEN_TILE_ADDRESS = 0x0
 
-SPRITE_ADDRESS = 0x1E00  | to 0x1FFF
-SPRITE_BUFFER_SIZE = 0x100
+SPRITE_ADDRESS = 0x5800  | to 0x5FFF
+SPRITE_BUFFER_SIZE = 0x800
 
 * if the alloc_sprite & update_sprite routines
 * are reused, changing those offsets can make
@@ -139,11 +139,13 @@ SPRITE_BUFFER_SIZE = 0x100
 * RAMs have 4 bytes per sprite, only the order
 * and some bits differ
 
-TARGET_SPRITE_Y = 2
-TARGET_SPRITE_X = 3
-TARGET_SPRITE_ATTRIBUTES = 1
-TARGET_SPRITE_CODE = 0
-TARGET_SPRITE_SIZEOF = 4
+TARGET_SPRITE_Y = 15
+TARGET_SPRITE_X = 13
+TARGET_SPRITE_ATTRIBUTES_1 = 10
+TARGET_SPRITE_ATTRIBUTES_2 = 14
+TARGET_SPRITE_COLOR = 12
+TARGET_SPRITE_CODE = 11
+TARGET_SPRITE_SIZEOF = 0x10
 
 MIRROR_BIT = 2
 FLIT_BIT = 3
@@ -354,6 +356,7 @@ osd_enter_\@:
 	.global osd_blitz		| for debug
 	.global osd_read_dsw1
 	.global osd_read_dsw2
+	.global osd_event_loop_cpu2
 	.global	osd_set_cpu1_bank
 	.global	osd_set_cpu2_bank
 	.global	osd_set_back_color
@@ -982,7 +985,6 @@ demo_game:
 	jbsr	enable_interrupts
 
 	jbsr	cpu_init		| zero most registers
-	moveq	#0,d5			| D5 too
 
 	moveq	#0,d0
 	jbsr	osd_set_cpu1_bank
@@ -995,14 +997,15 @@ demo_game:
 	move.l	a6,cpu2_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
 	
-	move.b	#1,currently_running_cpu
+	move.b	#1,currently_running_cpu+1
 	jbsr	cpu2_boot_8000
+	* store d5 init value once init has run
 	move.w	d5,cpu2_target_ssp_value
 	
 	CPU1_GET_MEMORY_START_AND_DP
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
-	clr.b	currently_running_cpu
+	clr.b	currently_running_cpu+1
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
 
@@ -1564,6 +1567,18 @@ load_file:
 0:
 	illegal
 
+osd_event_loop_cpu2:
+	movem.l	d0-a6,-(a7)
+	* set cpu #2
+	move.b	#1,currently_running_cpu+1
+	CPU2_GET_MEMORY_START_AND_DP
+	move.l	#0x400,d5		| re-set stack
+	jbsr	process_event_b0bf
+	* back to cpu #1
+	clr.b	currently_running_cpu+1
+	movem.l	(a7)+,d0-a6
+	rts
+	
 * ATM disabled
 osd_set_tilebank_8800:
 	rts
@@ -1717,7 +1732,7 @@ level3_interrupt:
 	jbsr	log_used_hud_tiles
 	jbsr	log_used_bg0_tiles
 	jbsr	log_used_bg1_tiles
-	jbsr	log_used_bg2_tiles
+	*jbsr	log_used_bg2_tiles
 	jbsr	log_used_sprites
 	lea		_custom,a5
 	.endif
@@ -2517,7 +2532,7 @@ really_update_sprites:
 	*********************
 	
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE,a6),a0
+	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE-0x10,a6),a0
 	*lea		mockup+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE,a0
 
 
@@ -2571,14 +2586,7 @@ compute_sprite_xy_code:
 	.endif
 	
 	* tile_code = buffered_spriteram[offs] + ((attributes << 2) & 0x300)
-	moveq	#0,d2
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d2
-	btst	#0,d2
-	jeq		0f
-	sub.w	#0x100,d0
-0:
-	and.b	#0xC0,d2
-	lsl.w	#2,d2
+
 	move.b	(TARGET_SPRITE_CODE,a0),d2
 	
 	rts
@@ -2622,11 +2630,11 @@ update_one_bob:
 	* tries to display sprite 0x2C3 mirrored
 	* 
 	*
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d3
 	
 	.if		OPT_MIRROR_TEST==1
 	bset	#MIRROR_BIT,d3
-	move.b	d3,(TARGET_SPRITE_ATTRIBUTES,a0)
+	move.b	d3,(TARGET_SPRITE_ATTRIBUTES_1,a0)
 	.endif
 	
 	lea		sprite_group_table(pc),a3
@@ -2663,11 +2671,11 @@ update_one_bob:
 	* in dev mode, break if we try to display a non-existing bob
 
 	moveq	#0,d2
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d2
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d2
 	and.b	#0XC0,d2
 	lsl.w	#2,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a0),d3
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d3
 	COLOR0_FLASH	0xF00
 	*BREAKPOINT	"unregistered sprite clut (D2=code, D3=attribute)"
 	jra		2f
@@ -4974,39 +4982,48 @@ log_used_bgx_tiles:
 	jne		0b
 	rts
 	
+sprite_sizes:
+	.byte	16, 8, 32, 4
+	
 * sprite_log, log_sprites
 log_used_sprites:
-	rts
-	
 	* scan the whole screen, see what was updated
 	* main screen
 	
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(SPRITE_ADDRESS,a6),a5
+	lea		(SPRITE_ADDRESS-6,a6),a5
+	lea 	sprite_sizes,a4
 	lea	sprite_log_table,a0
 	moveq	#0,d7
 0:
-	cmp.b	#0xF8,(TARGET_SPRITE_Y,a5,d7.w)
-	jeq		1f			| not active
+	moveq	#0,d3
 	moveq	#0,d2
 	moveq	#0,d1
 	moveq	#0,d0
+	moveq	#0,d4
+	moveq	#0,d5
+	moveq	#0,d6
 	move.b	(TARGET_SPRITE_CODE,a5,d7.w),d0
-	move.b	(TARGET_SPRITE_ATTRIBUTES,a5,d7.w),d1
-	move.b	d1,d2
-	* extended tile code
-	lsl.w	#2,d2
-	and.w	#0x300,d2
-	add.w	d2,d0
-	lsr.b	#4,d1
-	and.w	#SPRITE_NB_CLUTS-1,d1
-	
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a5,d7.w),d1
+	move.b	d1,d6
+	and.b	#0xc0,d6
+	lsr.b	#6,d6
+	move.b	(a4,d6.w),d6		| sizex
+	move.b	d2,d5
+	and.b	#0x6,d5
+	lsr.b	#1,d5
+	move.b	(a4,d5.w),d5		| sizey
+	and.b	#7,d1				| sprite bank
+	lsl.w	#8,d1				| times 0x100
+	add.w	d1,d0				| extended sprite code
+	move.b	(TARGET_SPRITE_COLOR,a5,d7.w),d1
 	lsl.l	#SPRITE_NB_CLUTS_POW,d0			| sprite code * NB_CLUTS (long!)
+	lsr.w	#1,d1			| color >>= 1
 	add.l	d1,d0			| add clut
 
 	st.b	(a0,d0.l)
 1:
-	addq	#TARGET_SPRITE_SIZEOF,d7
+	add.w	#TARGET_SPRITE_SIZEOF,d7
 	cmp.w	#NB_TARGET_SPRITES*TARGET_SPRITE_SIZEOF,d7
 	jne		0b
 	rts
@@ -5834,10 +5851,10 @@ osd_dump_logs:
 	move.l	#BG_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	
-	lea		bg2_tile_log_table,a1
-	lea		bg2_tile_log_name(pc),a0
-	move.l	#BG_TILE_LOG_LENGTH,d0
-	jbsr	resload_SaveFile(a2)
+*	lea		bg2_tile_log_table,a1
+*	lea		bg2_tile_log_name(pc),a0
+*	move.l	#BG_TILE_LOG_LENGTH,d0
+*	jbsr	resload_SaveFile(a2)
 	
 	lea		sprite_log_table,a1
 	lea		sprite_log_name(pc),a0
