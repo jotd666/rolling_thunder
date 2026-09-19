@@ -394,9 +394,10 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
         sy = ((sy + 16) & 0xFF) - 16
 
         cell = sheets.cell(sprite, color)
-        if dump_list and (cell is not None or spr[o + 11] or spr[o + 13]):
-            print(f"  @{o:04x} cell={sprite:4d} (code={spr[o+11]:3d} "
-                  f"bank={sprite_bank}) clut={color:3d} "
+        code = spr[o+11]
+        if dump_list and (code and sprite_bank) and (cell is not None or spr[o + 11] or spr[o + 13]):
+            print(f"  @{o:04x} cell=0x{sprite:04x} (code=0x{code:03x} "
+                  f"bank={sprite_bank}) clut=0x{color:03x} "
                   f"{sizex:2d}x{sizey:2d} src=({tx:2d},{ty:2d}) "
                   f"pos=({sx:4d},{sy:4d}) pri={priority} "
                   f"flip={flipx}{flipy}{'' if cell is not None else '  MISSING'}")
