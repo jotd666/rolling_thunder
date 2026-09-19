@@ -111,6 +111,7 @@ SPRITE_NB_CLUTS = 1<<SPRITE_NB_CLUTS_POW
 
 HW_SPRITE_BUFFER_SIZE = (2*8*256+16*2)
 
+* we need 256 times more room because of tx/ty/sizex/sizey combinations
 SPRITE_LOG_LENGTH = SPRITE_COUNT*SPRITE_NB_CLUTS
 HUD_TILE_LOG_LENGTH = HUD_TILE_NB_CLUTS*HUD_TILE_COUNT
 BG_TILE_LOG_LENGTH = BG_TILE_NB_CLUTS*BG_TILE_COUNT
@@ -937,12 +938,9 @@ demo_game:
 	.endif
 
 
-	
 	jbsr	cache_fg_tiles_address
 	jbsr	cache_bg_tiles_address
 
-
-	
 	tst.b	no_level_music_flag
 	jeq		0f
 	jbsr	make_automatic_sound_channels
@@ -985,6 +983,7 @@ demo_game:
 	jbsr	enable_interrupts
 
 	jbsr	cpu_init		| zero most registers
+	moveq	#0,d5           | clear d5 msw
 
 	moveq	#0,d0
 	jbsr	osd_set_cpu1_bank
@@ -1568,14 +1567,18 @@ load_file:
 	illegal
 
 osd_event_loop_cpu2:
+	rts
+	* maybe it would be necessary to protect against
+	* irq from cpu2 or from both cpus
 	movem.l	d0-a6,-(a7)
 	* set cpu #2
+	move.w	currently_running_cpu,-(a7)
 	move.b	#1,currently_running_cpu+1
 	CPU2_GET_MEMORY_START_AND_DP
 	move.l	#0x400,d5		| re-set stack
 	jbsr	process_event_b0bf
 	* back to cpu #1
-	clr.b	currently_running_cpu+1
+	move.w	(a7)+,currently_running_cpu
 	movem.l	(a7)+,d0-a6
 	rts
 	
@@ -1733,7 +1736,7 @@ level3_interrupt:
 	jbsr	log_used_bg0_tiles
 	jbsr	log_used_bg1_tiles
 	*jbsr	log_used_bg2_tiles
-	jbsr	log_used_sprites
+	*jbsr	log_used_sprites
 	lea		_custom,a5
 	.endif
 	
@@ -4982,66 +4985,8 @@ log_used_bgx_tiles:
 	jne		0b
 	rts
 	
-*sprite_sizes:
-*	.byte	16, 8, 32, 4
-*translation_size_table:
-*	.skip	7       | t=0
-*	.byte	1<<4		| t=8
-*	.skip	7
-*	.byte	2<<4       | t=0x10
-*	.skip   7
-*	.byte	3<<4       | t=0x18
-*	moveq	#0,d4
-*	moveq	#0,d5
-*	moveq	#0,d6
-*	moveq	#0,d3
-*	moveq	#0,d2
-
-*	* compute translation size info
-*	*
-*	* this makes logging (and sprite tile pre-computing) way more
-*	* complex: sx/sy/tx/ty can vary and draw a cropped part of the 32x32 sprite
-*	* we can and we have to perform that clipping in real time
-*
-*	*	int sizex = sprite_size[(attr1 & 0xc0) >> 6];
-*	*	int sizey = sprite_size[(attr2 & 0x06) >> 1];
-*
-*	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a5,d7.w),d6
-*	and.b	#0xc0,d6
-*	lsr.b	#6,d6               | 2 first bits for size X
-*	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a5,d7.w),d5
-*	and.b	#0x6,d5
-*	lsr.b	#1,d5				| 2 first bits for size Y
-*	
-*	* we have sizex & sizey, compute masks for tx/ty
-*	
-*	*	int tx = (attr1 & 0x18) & (~(sizex-1));  tx/ty can be 0,8,16,24
-*	*	int ty = (attr2 & 0x18) & (~(sizey-1));
-*	move.b	d6,d3
-*	subq	#1,d3
-*	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a5,d7.w),d2
-*	and.b	#0x18,d2
-*	and.b	d3,d2		| "clip" tx
-*	move.b	(a4,d2.w),d2	| convert to 3 bits (bits 4-5)
-*	
-*	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a5,d7.w),d4
-*	move.b	d5,d3
-*	subq	#1,d3
-*	and.b	#0x18,d4
-*	and.b	d3,d4		| "clip" ty
-*	move.b	(a4,d4.w),d4	| convert to 3 bits
-*	add.b	d4,d4
-*	add.b	d4,d4		| bits 6-7
-*	
-*	or.b	d4,d6
-*	
-*	add.b	d5,d5
-*	add.b	d5,d5		| size Y bits are 2-3
-*
-*	or.b 	d5,d6
-
 	
-	
+
 * sprite_log, log_sprites
 log_used_sprites:
 	* scan the whole screen, see what was updated
@@ -5050,25 +4995,35 @@ log_used_sprites:
 	CPU1_GET_MEMORY_START_IN_A6
 	lea		(SPRITE_ADDRESS-6,a6),a5
 	lea		sprites_mock,a5     | log mockup
-	lea	sprite_log_table,a0
+	lea	sprite_log_table,a1
 	moveq	#0,d7
-0:
+	moveq	#0,d3
+	moveq	#0,d2
 	moveq	#0,d1
 	moveq	#0,d0
-	move.b	(TARGET_SPRITE_CODE,a5,d7.w),d0
-	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a5,d7.w),d1
+	moveq	#0,d4
+	moveq	#0,d5
+	moveq	#0,d6
+
+0:
+	lea		(a5,d7.w),a0
+	move.b	(TARGET_SPRITE_CODE,a0),d2
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d1
 	
 	and.b	#7,d1				| sprite bank
 	lsl.w	#8,d1				| times 0x100
-	add.w	d1,d0				| extended sprite code
-	move.b	(TARGET_SPRITE_COLOR,a5,d7.w),d1
-	lsl.l	#SPRITE_NB_CLUTS_POW,d0			| sprite code * NB_CLUTS (long!)
-	lsl.l   #8,d0			| times 256 to fit bits for tx/ty/sizex/sizey
+	add.w	d1,d2				| extended sprite code
+	move.b	(TARGET_SPRITE_COLOR,a0),d1
+	lsl.l	#SPRITE_NB_CLUTS_POW,d2			| sprite code * NB_CLUTS (long!)
+	lsl.l   #8,d2			| times 256 to fit bits for tx/ty/sizex/sizey
 	lsr.w	#1,d1			| color >>= 1
 	
-	add.l	d1,d0			| add clut
+	jbsr	get_sprite_pos_and_size_offset
 
-	st.b	(a0,d0.l)
+	mulu	d0,d1
+	add.l	d1,d2			| add clut times sizeinfo
+
+	st.b	(a1,d2.l)
 1:
 	add.w	#TARGET_SPRITE_SIZEOF,d7
 	cmp.w	#NB_TARGET_SPRITES*TARGET_SPRITE_SIZEOF,d7
@@ -5463,6 +5418,82 @@ sprites_mock:
 
 
 	.endif
+
+* < a0: pointer on sprite structure
+* > d0.w: 
+
+get_sprite_pos_and_size_offset:
+	movem.l	d1-d7/a4,-(a7)
+	lea		translation_size_table,a4
+	* compute translation size info
+	*
+	* this makes logging (and sprite tile pre-computing) way more
+	* complex: sx/sy/tx/ty can vary and drawing a cropped part of the 32x32 sprite
+	* would be possible only for sizes & x offsets which are a multiple of 16 since
+	* we're using the blitter & shifting
+	* anyway on a 32x32 tile, either the full tile is used (32x32, no tx/ty)
+	* or disjoint parts of it (most of the time/all the time) so splitting the pic
+	* doesn't really consume more chipmem. The selection table is 1000 times bigger though
+	* as the 8 selection bits multiply the number of required pointers by 256
+	*
+	* it doesn't matter much as this game will clearly need fastmem.
+	*
+	* BUT it's a technical issue maybe for nothing (too much mem just
+	* for logging all those is tens of megabytes
+	* as clearly this is
+	* a problem only if x offset is 8 or 24, and x size is 8
+	* in all other cases, dynamic clipping works
+	*
+	*	int sizex = sprite_size[(attr1 & 0xc0) >> 6];
+	*	int sizey = sprite_size[(attr2 & 0x06) >> 1];
+
+	moveq	#0,d0
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d0
+	and.b	#0xc0,d0
+	lsr.b	#6,d0               | 2 first bits for size X
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d5
+	and.b	#0x6,d5
+	lsr.b	#1,d5				| 2 first bits for size Y
+	
+	* we have sizex & sizey, compute masks for tx/ty
+	
+	*	int tx = (attr1 & 0x18) & (~(sizex-1));  tx/ty can be 0,8,16,24
+	*	int ty = (attr2 & 0x18) & (~(sizey-1));
+	move.b	d0,d3
+	subq	#1,d3
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d2
+	and.w	#0x18,d2
+	and.b	d3,d2		| "clip" tx
+	move.b	(a4,d2.w),d2	| convert to 3 bits (bits 4-5)
+	
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d4
+	move.b	d5,d3
+	subq	#1,d3
+	and.w	#0x18,d4
+	and.b	d3,d4		| "clip" ty
+	move.b	(a4,d4.w),d4	| convert to 3 bits
+	add.b	d4,d4
+	add.b	d4,d4		| bits 6-7
+	
+	or.b	d4,d0
+	
+	add.b	d5,d5
+	add.b	d5,d5		| size Y bits are 2-3
+
+	or.b 	d5,d0
+	movem.l	(a7)+,d1-d7/a4
+	rts
+	
+sprite_sizes:
+	.byte	16, 8, 32, 4
+translation_size_table:
+	.skip	7       | t=0
+	.byte	1<<4	| t=8
+	.skip	7
+	.byte	2<<4       | t=0x10
+	.skip   7
+	.byte	3<<4       | t=0x18
+
 	
 redraw_bg_tiles:
 	BREAKPOINT	"redraw bg tiles"
