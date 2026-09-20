@@ -69,7 +69,7 @@ def doit_hud_tiles(dump_it=False):
     return doit(8,0,256,"hud",ref_clut_index=0x0,hud=True,dump_it=dump_it)
 def doit_tiles_8x8(dump_it=False):
     return doit(8,0,256,"tiles_8x8",ref_clut_index=0,dump_it=dump_it)
-def doit_sprites_16x16(dump_it=False):
+def doit_sprites_32x32(dump_it=False):
     return doit(16,2048//16,128,"sprites_16x16",ref_clut_index=0,dump_it=dump_it)
 
 if __name__ == "__main__":

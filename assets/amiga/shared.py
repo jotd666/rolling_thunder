@@ -25,7 +25,7 @@ BG_NB_TILES = 0x1000
 BG_NB_CLUTS = 0x100
 
 SPRITE_NB_CLUTS = 128
-SPRITE_NB_TILES = 0x400
+SPRITE_NB_TILES = 0x800
 
 
 def palette_pad(palette,pad_nb):

@@ -1,4 +1,10 @@
 log used sprites
+
+parasite: ???
+used_sprites: New: code=0b, clut=00
+used_sprites: New: code=0c, clut=00
+used_sprites: New: code=1c, clut=00
+
 display sprites
 
 cpu1 wrong stack (stack of cpu2) at the end of attract mode. we need to be able to debug current cpu flag!!
