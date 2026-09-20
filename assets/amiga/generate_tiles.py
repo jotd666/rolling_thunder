@@ -75,4 +75,4 @@ def doit_sprites_32x32(dump_it=False):
 if __name__ == "__main__":
     #doit_hud_tiles(True)
     #doit_tiles_8x8(True)
-    doit_sprites_16x16(True)
+    doit_sprites_32x32(True)

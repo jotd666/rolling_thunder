@@ -357,9 +357,9 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
                             actual_nb_planes += 1
                         if is_bob:
 
-                            # only 4 planes + mask => 5 planes
+                            # only 5 planes + mask => 6 planes
                             orig_wtile = wtile
-                            y_start,wtile = bitplanelib.autocrop_y(wtile,mask_color=magenta)
+                            y_start,wtile = bitplanelib.autocrop_y(wtile,mask_color=mask_color)
                             height = wtile.size[1]
                             width = wtile.size[0]//8 + 2
                             bitplane_data = bitplanelib.palette_image2raw(wtile,None,palette,generate_mask=True,mask_color=mask_color)
@@ -660,12 +660,14 @@ for i,tsd in sprite_sheet_dict.items():
     bg_tile_palette.update(tp)
 
 
+total_nb_colors += 1    # transparent hasn't been removed yet, let's not count it
 if len(bg_tile_palette)>total_nb_colors:
-    print(f"Too many colors in sprite tiles ({len(bg_tile_palette)}), quantizing")
+    print(f"Too many colors in sprite tiles ({len(bg_tile_palette)-1}), quantizing")
     # if we specify 64 right away, the algorithm can provide less colors than 64, wasting entries
     # by attempting to quantize with higher values, we guarantee not to waste colors
-    for attempt_nb_colors in [total_nb_colors+3,total_nb_colors+2,total_nb_colors+1,total_nb_colors]:
-        sprite_replacement_dict = quantize_palette(bg_tile_palette,"sprite_tiles",attempt_nb_colors,dump_it=dump_it)
+    for attempt_nb_colors in reversed(range(8)):
+        attempt_nb_colors += total_nb_colors+1
+        sprite_replacement_dict = quantize_palette(bg_tile_palette,"sprite_tiles",attempt_nb_colors,transparent=magenta,dump_it=dump_it)
         new_sprite_palette = sorted(set(sprite_replacement_dict.values()))
         if len(new_sprite_palette)<=total_nb_colors:
             print(f"Quantization achieved {len(new_sprite_palette)} colors with start colors = {attempt_nb_colors}")
@@ -680,8 +682,9 @@ if len(bg_tile_palette)>total_nb_colors:
     bitplanelib.replace_color_from_dict(title_layers,sprite_replacement_dict)
 
 # pad if needed
-#bg_tile_palette.remove(magenta)
+bg_tile_palette.remove(magenta)
 bg_tile_palette = sorted(bg_tile_palette)
+total_nb_colors -= 1    # transparent hasn't been removed yet, let's not count it
 
 
 
@@ -811,7 +814,7 @@ with open(src_dir / "graphics.68k","w") as f:
         f.write(f"\t.long\ttitle_pic_plane_{i}\n")
 
     f.write("shared_bob_table:\n")
-##    dump_bob_layer(sprite_table,f)
+    dump_bob_layer(sprite_table,f)
 
     f.write("\t.section\t.datachip\n")
 

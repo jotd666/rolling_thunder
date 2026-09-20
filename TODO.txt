@@ -5,7 +5,8 @@ used_sprites: New: code=0b, clut=00
 used_sprites: New: code=0c, clut=00
 used_sprites: New: code=1c, clut=00
 
-display sprites
+display sprites: display proper size, trousers of kkk men missing
+y shift and missing background blit on title
 
 cpu1 wrong stack (stack of cpu2) at the end of attract mode. we need to be able to debug current cpu flag!!
 also values of cpu2_target_ssp_value and cpu1_target_ssp_value

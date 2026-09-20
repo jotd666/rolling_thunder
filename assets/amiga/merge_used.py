@@ -47,7 +47,7 @@ merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 ####merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=True)
-merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=True)
+merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False)
 
 ##  @00da cell=0x0319 (code=0x019 bank=6) clut=0x046 16x16 src=(16, 0) pos=( 175, 172) pri=4 flip=00
 ##  @00ca cell=0x0119 (code=0x019 bank=2) clut=0x002 16x16 src=( 0, 0) pos=( 346, 168) pri=4 flip=10
