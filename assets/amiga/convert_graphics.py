@@ -359,7 +359,9 @@ def read_tileset(img_set_list,palette,plane_orientation_flags,cache,is_bob,nb_cl
 
                             # only 5 planes + mask => 6 planes
                             orig_wtile = wtile
-                            y_start,wtile = bitplanelib.autocrop_y(wtile,mask_color=mask_color)
+                            #y_start,wtile = bitplanelib.autocrop_y(wtile,mask_color=mask_color)
+                            y_start = 0  # ATM autocrop is too complex with multi-tile
+
                             height = wtile.size[1]
                             width = wtile.size[0]//8 + 2
                             bitplane_data = bitplanelib.palette_image2raw(wtile,None,palette,generate_mask=True,mask_color=mask_color)

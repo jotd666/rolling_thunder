@@ -86,7 +86,25 @@ def read_used_tiles(used_tiles_name,tile_cluts,nb_tiles,nb_cluts):
 
 def get_sprite_names():
 
-    rval = {}
+    rval = {0x11C: "four_yellow_hooded_heads",
+    0x119: "four_purple_hooded_heads",
+    0x1b9: "four_purple_hooded_head_backs",
+    0x1bb: "four_purple_hooded_head_backs",
+    0x1d8: "four_purple_hooded_head_backs",
+    0x184: "blue_enemy_legs",
+    0x1af: "two_enemy_backs",
+    0x1b3: "two_enemy_backs",
+    0x186: "blue_enemy_legs",
+    0x308: "fan_left",
+    0x309: "fan_right",
+    0x103: "shooter_legs",
+    0xB: "player_shooting",
+    0xc: "player_legs",
+    0x1c:"player_parts",
+    0x18b:"blue_enemy_legs",
+    0x112:"base_enemy_torsos",
+    0x10E:"enemy_body_parts",
+    }
 
     return rval
 

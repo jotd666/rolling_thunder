@@ -1,12 +1,7 @@
 log used sprites
-
-parasite: ???
-used_sprites: New: code=0b, clut=00
-used_sprites: New: code=0c, clut=00
-used_sprites: New: code=1c, clut=00
-
-display sprites: display proper size, trousers of kkk men missing
-y shift and missing background blit on title
+display sprites: X and Y are shifted, Y wraps
+mirroring: mirror the whole 32x32 tile and for size_x = 0x10 (0),
+if translation_x = 0 set 0x10 and if 0x10 set 0
 
 cpu1 wrong stack (stack of cpu2) at the end of attract mode. we need to be able to debug current cpu flag!!
 also values of cpu2_target_ssp_value and cpu1_target_ssp_value

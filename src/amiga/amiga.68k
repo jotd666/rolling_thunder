@@ -2594,6 +2594,9 @@ really_update_sprites:
 *}
 
 
+sprite_size:
+	.byte	16, 8, 32, 4
+	
 compute_sprite_xy:
 	moveq	#0,d1
 	* attributes = buffered_spriteram[offs + 1]
@@ -2611,7 +2614,6 @@ compute_sprite_xy:
 	and.w	#0xFF,d1
 	sub.w	#16,d1
 	
-	move.b	#0,0x110
 	add.w	sprite_xoffs,d0
 	sub.w	sprite_yoffs,d1
 
@@ -2648,9 +2650,31 @@ update_one_bob:
 	move.b	d3,(TARGET_SPRITE_ATTRIBUTES_1,a0)
 	.endif
 	
+	*cmp.w	#0x1b3,d2
+	*jeq		33f
+	*cmp.w	#0x1B9,d2
+	*jeq		33f
+	* skpi others
+	*move.l	(a7)+,a0
+	*rts
+33:
+* < a0: pointer on sprite structure
+* > d0: size X  (0=16, 1=8, 2=32, 3=4)
+* > d1: size Y
+* > d2: translation X (0,8,0x10,0x18)
+* > d3: translation Y
+	movem.w	d0-d3,-(a7)
+	jbsr	get_sprite_pos_and_size_offset
+	lea		sprite_translation_data,a1
+	movem.w	d0-d3,(a1)
+	movem.w	(a7)+,d0-d3
+	.ifndef	NO68020
+	move.l	(a4,d2.w*4),d4		| get pointer from shared bob table
+	.else
 	add.w 	d2,d2
 	add.w 	d2,d2
 	move.l	(a4,d2.w),d4		| get pointer from shared bob table
+	.endif
 	.ifdef	RELEASE
 	jeq		2f				| can theorically happen as sprite update is not atomic (it could be...)
 	.else
@@ -2682,29 +2706,63 @@ update_one_bob:
 	.endif
 	jeq		2f		| invalid clut: can happen in transition phases
 	move.l	d4,a0
+	
+	lea	(8,a0),a0		| skip dimensions immediately we know them
 
-	move.w	(a0)+,d4		| height
-	move.w	(a0)+,d5		| width
-	add.w	(a0)+,d1		| add offset to Y
-	* A0 points on the first bitplane of the bob
-	addq 	#2,a0
+	* 32x32 sprite+cluts are chosen. Now see if we must create a sub-sprite
+	clr.w	blitter_modulo_shift
+	
+	cmp.w	#2,size_x
+	jeq 	40f
+	btst	#0,size_x
+	jeq		44f
+	BREAKPOINT	"size x is 8 or 4"
+44:
+	move.w	#2,blitter_modulo_shift
+	* size X is 16 which we support with some effort
+	jbsr	compose_16x16_dynamic_bob
+	move.w	#0x10,d4		| height
+	moveq	#4,d5			| width
+	jra		size_and_translation_done
+40:
+	* size X = 32
+	* now if translation_y is 0 and size_y = 32 we have a full 32x32 sprite
+	* (which is the most frequent case)
+	move.w	#6,d5		| X = 32
+	move.w	#0x20,d4		| full size
+	tst.w	translation_y
+	jne		41f
+	cmp.w	#2,size_y
+	jeq		size_and_translation_done
+41:	
+	* X size = 32 but Y size and offset are different: compute dynamic bob planes
+	jbsr	compose_32xsy_dynamic_bob
+	lea		sprite_size,a1
+	move.w	size_y,d3
+	move.b	(a1,d3.w),d4	| Y size in pixels
 
+
+*	add.w	(a0)+,d1		| add offset to Y
+*	* A0 points on the first bitplane of the bob
+*	addq 	#2,a0
+
+size_and_translation_done:
 * now we have to check if mirror must be performed, either by doing this in-place
 * or by selecting already mirrored data
-	lea		((NB_PLAYFIELD_PLANES+1)*4,a0),a1		| load mirrored data pointers
-	tst.w	(a1)
-	jmi		101f		| invalid pointers: we must do in-place
-	btst	#MIRROR_BIT,d3
-	jeq		102f
-	* to mirror, just change pointer list
-	move.l	a1,a0
-	* and skip mirroring bit
-	jra		103f
-101:
-	btst	#MIRROR_BIT,d3
-102:
-	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
-	*jbsr	mirror_sprite_planes
+*	lea		((NB_PLAYFIELD_PLANES+1)*4,a0),a1		| load mirrored data pointers
+*	tst.w	(a1)
+*	jmi		101f		| invalid pointers: we must do in-place
+*	btst	#MIRROR_BIT,d3
+*	jeq		102f
+*	* to mirror, just change pointer list
+*	move.l	a1,a0
+*	* and skip mirroring bit
+*	jra		103f
+*101:
+*	btst	#MIRROR_BIT,d3
+*102:
+*	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
+*	*jbsr	mirror_sprite_planes
 103:	
 	* BOBs must follow screen scroll
 	add.w	bobs_game_scroll_y,d1
@@ -2744,7 +2802,7 @@ update_one_bob:
 	clr.w	(a6)+			    | store current sprite attributes to previous ones
 	move.w	d4,(a6)+			| store height
 	move.w	d2,(a6)+			| store width in bytes
-	move.w	d6,(a6)+			| object code
+	move.w	d6,(a6)+			| object code (D6 is trash ATM)
 	jra		9f
 
 8:
@@ -2768,13 +2826,60 @@ update_one_bob:
 
 9:
 	moveq	#NB_PLAYFIELD_PLANES,d3
-
+	moveq	#0,d5 	| no y offset
 	jbsr	blit_planes_any_internal_cookie_cut
 2:
 	move.l	(a7)+,a0
 	rts
 
+compose_32xsy_dynamic_bob:
+	movem.l	d0-d3,-(a7)
+	lea		dynamic_bob,a1
+	moveq	#NB_PLAYFIELD_PLANES,d3
+	move.w	translation_y,d1
+	add.w	d1,d1
+	add.w	d1,d1		| times 4
+0:
+	move.l	(a0)+,d0
+	jeq		1f
+	* non-null: add an offset
+	add.w	d1,d0
+1:
+	* and store
+	move.l	d0,(a1)+
+	dbf		d3,0b
+	lea		dynamic_bob,a0
+	movem.l	(a7)+,d0-d3
+	RTS
 
+* < A0: bitplane list
+* > A0: 16x16 sprite structure (shifted bitplanes)
+compose_16x16_dynamic_bob:
+	movem.l	d0-d3,-(a7)
+	lea		dynamic_bob,a1
+	moveq	#NB_PLAYFIELD_PLANES,d3
+	* pre compute offset
+	move.w	translation_x,d1
+	lsr.w	#3,d1		| 0 or 2
+	* Y offset
+	move.w	translation_y,d2
+	jeq		0f
+	add.w	d2,d2
+	add.w	d2,d2
+	add.w	d2,d1		| total byte shift to apply to bob data for each plane
+0:
+	move.l	(a0)+,d0
+	jeq		1f
+	* non-null: add an offset
+	add.w	d1,d0
+1:
+	* and store
+	move.l	d0,(a1)+
+	dbf		d3,0b
+	lea		dynamic_bob,a0
+	movem.l	(a7)+,d0-d3
+	RTS
+	
 * < A0: plane list
 * < D3: required orientation
 * < D4: height
@@ -3050,8 +3155,8 @@ clear_planes_any_blitter_internal:
 * < D3: number of planes
 * < D4: height. If negative, source is copied with negative modulo (flip)
 * < D5: y offset for source planes
-* < D7: blit mask (not considered, optim, -1 all through the game)
 * blit mask set
+* blitter_modulo_shift 0 or 2
 * returns: start of destination in A1 (computed from old A1+X,Y)
 * trashes: a1
 blit_planes_any_internal_cookie_cut:
@@ -3110,6 +3215,7 @@ blit_planes_any_internal_cookie_cut:
     add.w   d2,d4       | blit height
     * always the same settings (ATM)
 	moveq	#-2,d2
+	add.w	blitter_modulo_shift,d2		| width=32: nothing to do, width=16: shift
 	add.w	d5,a3			| apply y offset to mask too (y offset looks wrong)
 	
     * now just wait for blitter ready to write all registers
@@ -3190,6 +3296,12 @@ start_process_1_plane:
 	GEN_MINTERM_TABLE	cookie_cut_blit,0x0FCA
 	GEN_MINTERM_TABLE_2	cookie_cut_mask_blit,0x0BCA
 
+blitter_modulo_shift:
+	.word	0
+	
+dynamic_bob:
+	.skip	4*(NB_PLAYFIELD_PLANES+1)
+	
 * < A5: custom
 * < D0.W,D1.W: x,y, no shifting
 * < A0: source (pointer on array of planes)
@@ -3304,6 +3416,17 @@ bob_previous_positions_2:
 
 	.endif
 
+	********** leave this together
+sprite_translation_data:
+size_x:
+	.word	0
+size_y:
+	.word	0
+translation_x:
+	.word	0
+translation_y:
+	.word	0
+	*************
 	
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 switch_screen_buffers:
@@ -3880,6 +4003,8 @@ blit_title:
 	
 	lea	_custom,a5
 	move.l		playfield_drawn_screen_ptr,a1
+	jbsr		do_bt
+	lea		background_restore_buffer,a1
 	jbsr		do_bt
 	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
 	.else 
@@ -5347,8 +5472,6 @@ get_sprite_pos_and_size_offset:
 
 	rts
 	
-sprite_sizes:
-	.byte	16, 8, 32, 4
 
 
 	

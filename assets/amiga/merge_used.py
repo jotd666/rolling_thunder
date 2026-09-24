@@ -63,3 +63,17 @@ merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False)
 ##  @-006 cell=0x0310 (code=0x010 bank=6) clut=0x043 16x16 src=(16,16) pos=( 187, 172) pri=0 flip=00
 
 
+#intro:
+##sprite offsets x=67 y=17, bank_sprites=128
+##  @00aa cell=0x011c (code=0x01c bank=2) clut=0x006 16x16 src=(16,16) pos=( 224, 169) pri=6 flip=10
+##  @009a cell=0x0103 (code=0x003 bank=2) clut=0x006 32x32 src=( 0, 0) pos=( 224, 194) pri=6 flip=10
+##  @008a cell=0x010e (code=0x00e bank=2) clut=0x006 32x16 src=( 0, 0) pos=( 224, 178) pri=6 flip=10
+##  @007a cell=0x01b9 (code=0x039 bank=3) clut=0x002 16x16 src=( 0, 0) pos=( 283, 169) pri=6 flip=00
+##  @006a cell=0x0184 (code=0x004 bank=3) clut=0x002 32x32 src=( 0, 0) pos=( 276, 194) pri=6 flip=00
+##  @005a cell=0x01af (code=0x02f bank=3) clut=0x002 32x16 src=( 0, 0) pos=( 276, 178) pri=6 flip=00
+##  @004a cell=0x01d8 (code=0x058 bank=3) clut=0x002 16x16 src=( 0,16) pos=( 156, 169) pri=6 flip=00
+##  @003a cell=0x018b (code=0x00b bank=3) clut=0x002 32x32 src=( 0, 0) pos=( 148, 194) pri=6 flip=00
+##  @002a cell=0x01ce (code=0x04e bank=3) clut=0x002 32x16 src=( 0, 0) pos=( 148, 179) pri=6 flip=00
+##  @001a cell=0x01bb (code=0x03b bank=3) clut=0x002 16x16 src=(16, 0) pos=(  92, 169) pri=6 flip=00
+##  @000a cell=0x0186 (code=0x006 bank=3) clut=0x002 32x32 src=( 0, 0) pos=(  84, 194) pri=6 flip=00
+##  @-006 cell=0x01b3 (code=0x033 bank=3) clut=0x002 32x16 src=( 0,16) pos=(  84, 178) pri=6 flip=00

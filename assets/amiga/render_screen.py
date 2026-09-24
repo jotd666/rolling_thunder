@@ -362,8 +362,7 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
               f"bank_sprites={bank_sprites}")
     drawn = 0
 
-    print([hex(x) for x in spr[0x10:0x20]])
-    dddd
+
     # back to front, exactly like MAME: last entry is not a sprite
     for o in range(0x800 - 0x20, -1, -0x10):
         o -= 6   # JOTD: use the copy before HW copies it
