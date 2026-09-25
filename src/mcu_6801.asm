@@ -1,3 +1,57 @@
+
+;=============================================================================
+; ROLLING THUNDER - HD63701 "CUS60" MCU  (internal $F000-$FFFF + sub-ROM rt3_4.6b)
+;
+; The MCU is the I/O and sound coprocessor.  For a port you do not need to run
+; this code: you need the CONTRACT it implements.  That contract is:
+;
+;   MCU $1000-$13FF  ==  CUS30 sound RAM  ==  CPU1 $4000-$43FF   (MCU = CPU1 - $3000)
+;   MCU $1400-$1FFF  ==  private MCU RAM, invisible to both 6809s
+;
+; INPUT PIPELINE
+;   read_ios_8255        sample DSW0/DSW1/IN0/IN1 ($2030/$2031/$2020/$2021) and
+;                        IN2 (port 1), bit-expand to one byte per bit at $1400
+;   debounce_inputs_8298  3 bytes per switch at $1425: edge / raw / debounced
+;   get_logical_input_82ca  permute through the sub-ROM table at $807F and
+;                        invert active-low bits (all but COIN1/COIN2)
+;   publish_inputs_82e4  pack to 2 bytes per switch (edge, level) at $1494
+;   ...which the 6809s read at CPU1 $423C + 2*L.
+;
+; The 37-entry logical order (L) is listed in full in the CPU1/CPU2 headers.
+; Summary: L0-L7 = SWA:1..8, L8-L15 = SWB:1..8, L16-L36 = the cabinet controls.
+;
+; BOOT / SELF-TEST HANDSHAKE (MCU side of what CPU1 does at $8107)
+;   $1182  -> 6809  $A6 when the kernel is alive          (CPU1 $4182)
+;   $1183  <- 6809  command; $FF = run self-test.  Non-zero also means test
+;                   mode, which disables the 9-credit coin lockout ($8394)
+;   $1184  -> 6809  $A6 after acting on $1183             (CPU1 $4184)
+;   $1185  -> 6809  self-test result, 0 = pass            (CPU1 $4185)
+;   $1181  <- 6809  $A6 = the 6809 says the MCU failed    (CPU1 $4181)
+;
+; COINS / CREDITS
+;   $0080  internal credit counter
+;   $1189/$118A  published credit count   (CPU1 $4189/$418A)
+;   $118B  coin accumulator
+;   $1190  MCU tick counter
+;   Coin inputs are NOT inverted by get_logical_input; the coin routine at
+;   $F5B0 handles polarity and the 9-credit cap itself.
+;
+; KERNEL STRUCTURE (why this code looks indirect)
+;   $00AE points at a 124-byte device descriptor at $11C0.  The main loop at
+;   $F04C calls function pointers out of that descriptor ($12,x $1C,x $28,x...)
+;   and $F20A can swap the whole descriptor for another one.  The game-specific
+;   behaviour lives in the sub-ROM at $8000-$BFFF; the generic scheduler lives
+;   in the internal ROM at $F000.  This is the standard Namco CUS60 framework,
+;   shared with Sky Kid Deluxe, Hopping Mappy, Genpei Toumaden and Wonder Momo.
+;
+; MINIMUM VIABLE REPLACEMENT FOR A PORT
+;   1. preset $1182 = $1184 = $A6 and $1185 = 0
+;   2. honour writes to $1183 (just echo $A6 into $1184)
+;   3. once per frame: sample your controls, debounce, and write the 37
+;      two-byte records at CPU1 $423C (edge byte true for one frame only)
+;   4. maintain the credit count at CPU1 $418A so the title screen advances
+;=============================================================================
+
 ;	map(0x1000, 0x13ff).rw(m_cus30, FUNC(namco_cus30_device::namcos1_cus30_r), FUNC(namco_cus30_device::namcos1_cus30_w)); (shared)
 ;	map(0x1400, 0x1fff).ram();
 ;	map(0x2000, 0x2001).rw("ymsnd", FUNC(ym2151_device::read), FUNC(ym2151_device::write));
@@ -38,8 +92,8 @@ dsw1_2031 = $2031
 80B9: 97 02    sta  $02
 80BB: 97 00    sta  $00
 80BD: 97 BA    sta  $BA
-80BF: BD F2 98 jsr  $F298
-80C2: BD F1 4A jsr  $F14A
+80BF: BD F2 98 jsr  function_f298
+80C2: BD F1 4A jsr  kernel_load_descriptor_f14a
 80C5: DE AE    ldx  $AE
 80C7: EC 2E    ldd  $2E,x
 80C9: DD AA    std  $AA
@@ -57,12 +111,12 @@ dsw1_2031 = $2031
 80DE: 8A 08    ora  #$08
 80E0: 97 08    sta  $08
 80E2: 0E       cli  
-80E3: 8D 55    bsr  $813A
+80E3: 8D 55    bsr  function_813a
 80E5: 7F 11 91 clr  $1191
-80E8: BD F2 0A jsr  $F20A
-80EB: BD F0 B5 jsr  $F0B5
+80E8: BD F2 0A jsr  kernel_swap_descriptor_f20a
+80EB: BD F0 B5 jsr  function_f0b5
 80EE: 8E 00 C5 lds  #$00C5
-80F1: BD F2 AE jsr  $F2AE
+80F1: BD F2 AE jsr  function_f2ae
 80F4: DE AE    ldx  $AE
 80F6: AE 12    lds  $12,x
 80F8: DE AE    ldx  $AE
@@ -71,8 +125,8 @@ dsw1_2031 = $2031
 80FE: DE AE    ldx  $AE
 8100: EE 28    ldx  $28,x
 8102: AD 00    jsr  $00,x
-8104: BD F2 49 jsr  $F249
-8107: BD 84 56 jsr  $8456
+8104: BD F2 49 jsr  function_f249
+8107: BD 84 56 jsr  function_8456
 810A: DE AE    ldx  $AE
 810C: EE 18    ldx  $18,x
 810E: AD 00    jsr  $00,x
@@ -92,9 +146,12 @@ dsw1_2031 = $2031
 812C: DE AE    ldx  $AE
 812E: EE 2C    ldx  $2C,x
 8130: AD 00    jsr  $00,x
-8132: BD 81 B7 jsr  $81B7
-8135: BD 81 4F jsr  $814F
+8132: BD 81 B7 jsr  function_81b7
+8135: BD 81 4F jsr  function_814f
 8138: 20 F8    bra  $8132
+
+; called 1x  from $80E3
+function_813a:
 813A: DE AE    ldx  $AE
 813C: A6 32    lda  $32,x
 813E: 5F       clrb 
@@ -106,6 +163,9 @@ dsw1_2031 = $2031
 814A: 9C C6    cmpx $C6
 814C: 26 F9    bne  $8147
 814E: 39       rts  
+
+; called 1x  from $8135
+function_814f:
 814F: B6 11 82 lda  $1182
 8152: 81 A6    cmpa #$A6
 8154: 27 03    beq  $8159
@@ -119,22 +179,28 @@ dsw1_2031 = $2031
 8166: 7E F4 F9 jmp  $F4F9
 8169: 7F 11 82 clr  $1182
 816C: 8E 13 FF lds  #$13FF
-816F: BD F0 FB jsr  $F0FB
-8172: BD 81 84 jsr  $8184
-8175: BD F2 20 jsr  $F220
+816F: BD F0 FB jsr  function_f0fb
+8172: BD 81 84 jsr  function_8184
+8175: BD F2 20 jsr  function_f220
 8178: 8E 00 C5 lds  #$00C5
-817B: BD F1 10 jsr  $F110
-817E: BD 81 9A jsr  $819A
+817B: BD F1 10 jsr  function_f110
+817E: BD 81 9A jsr  function_819a
 8181: 7E F4 DD jmp  $F4DD
+
+; called 1x  from $8172
+function_8184:
 8184: DE AE    ldx  $AE
 8186: A6 31    lda  $31,x
 8188: 81 80    cmpa #$80
 818A: 27 03    beq  $818F
-818C: 7E F1 24 jmp  $F124
+818C: 7E F1 24 jmp  function_f124
 818F: CC C0 00 ldd  #$C000
 8192: DD A8    std  $A8
 8194: CE 40 00 ldx  #$4000
 8197: 7E F1 37 jmp  $F137
+
+; called 1x  from $817E
+function_819a:
 819A: DE AE    ldx  $AE
 819C: A6 32    lda  $32,x
 819E: 27 11    beq  $81B1
@@ -144,11 +210,14 @@ dsw1_2031 = $2031
 81A6: 18       xgdx 
 81A7: 27 08    beq  $81B1
 81A9: CE 14 00 ldx  #$1400
-81AC: BD F2 E3 jsr  $F2E3
+81AC: BD F2 E3 jsr  function_f2e3
 81AF: 25 01    bcs  $81B2
 81B1: 39       rts  
 81B2: C6 04    ldb  #$04
 81B4: 7E F3 3F jmp  $F33F
+
+; called 1x  from $8132
+function_81b7:
 81B7: B6 11 82 lda  $1182
 81BA: 81 A6    cmpa #$A6
 81BC: 26 16    bne  $81D4
@@ -220,21 +289,35 @@ dsw1_2031 = $2031
 8233: AD 00    jsr  $00,x
 8235: 3B       rti  
 
-8236: 8D 18    bsr  $8250
+8236: 8D 18    bsr  function_8250
 8238: B6 11 82 lda  $1182
 823B: 81 A6    cmpa #$A6
 823D: 27 04    beq  $8243
-823F: 8D 0F    bsr  $8250
-8241: 8D 0D    bsr  $8250
-8243: BD 82 E4 jsr  $82E4
-8246: BD 83 09 jsr  $8309
-8249: BD 83 2F jsr  $832F
-824C: BD 83 38 jsr  $8338
+823F: 8D 0F    bsr  function_8250
+8241: 8D 0D    bsr  function_8250
+8243: BD 82 E4 jsr  publish_inputs_82e4
+8246: BD 83 09 jsr  merge_service_switch_8309
+8249: BD 83 2F jsr  function_832f
+824C: BD 83 38 jsr  function_8338
 824F: 39       rts  
+
+; called 3x  from $8236, $823F, $8241
+function_8250:
 8250: 8D 03    bsr  read_ios_8255
-8252: 8D 44    bsr  $8298
+8252: 8D 44    bsr  debounce_inputs_8298
 8254: 39       rts  
 
+
+;--------------------------------------------------------------------------
+; Sample the five input sources and bit-expand them, one byte per bit, into
+; the private table at $1400:
+; $1400-$1407  DSW0 bits 7..0      (read through the dsw0_r scrambler)
+; $1408-$140F  DSW1 bits 7..0
+; $1410-$1417  IN0  bits 7..0
+; $1418-$141F  IN1  bits 7..0
+; $1420-$1424  IN2  bits 7..3  (bits 2..0 of port 1 are outputs)
+;--------------------------------------------------------------------------
+; called 1x  from $8250
 read_ios_8255:
 8255: CE 14 00 ldx  #$1400
 8258: DF C8    stx  $C8
@@ -260,6 +343,13 @@ read_ios_8255:
 8280: 26 F2    bne  $8274
 8282: 39       rts  
 
+
+;--------------------------------------------------------------------------
+; Helper for read_ios: shift one port 8 times, storing the partial shift
+; register after every step, so that byte $1400+n ends up with bit 0 = the
+; corresponding port bit.
+;--------------------------------------------------------------------------
+; called 4x  from $825D, $8262, $8267, $826C
 read_io_8283:
 8283: A6 00    lda  $00,x
 8285: C6 08    ldb  #$08
@@ -273,6 +363,14 @@ read_io_8283:
 8292: 7A 00 B5 dec  $00B5
 8295: 26 F2    bne  $8289
 8297: 39       rts  
+
+;--------------------------------------------------------------------------
+; Debounce all 37 logical switches. Three bytes per entry at $1425:
+; +0 rising edge   +1 raw sample   +2 debounced level
+; A level only changes after two consecutive identical samples.
+;--------------------------------------------------------------------------
+; called 1x  from $8252
+debounce_inputs_8298:
 8298: CE 14 25 ldx  #$1425
 829B: 7F 00 CD clr  $00CD
 829E: A6 01    lda  $01,x
@@ -314,6 +412,14 @@ read_io_8283:
 82E0: 84 01    anda #$01
 82E2: 38       pulx 
 82E3: 39       rts  
+
+;--------------------------------------------------------------------------
+; Publish the inputs: copy [edge, raw] of each of the 37 entries from the
+; 3-byte debounce records at $1425 into the 2-byte records at $1494, which is
+; the layout the 6809s consume at their $423C.
+;--------------------------------------------------------------------------
+; called 1x  from $8243
+publish_inputs_82e4:
 82E4: CE 14 25 ldx  #$1425
 82E7: DF CA    stx  $CA
 82E9: CE 14 94 ldx  #$1494
@@ -334,6 +440,13 @@ read_io_8283:
 8303: 7A 00 CD dec  $00CD
 8306: 26 EA    bne  $82F2
 8308: 39       rts  
+
+;--------------------------------------------------------------------------
+; OR the service dip (logical 0) together with the edge-connector service
+; switch (logical 17) so either one enters service mode.
+;--------------------------------------------------------------------------
+; called 1x  from $8246
+merge_service_switch_8309:
 8309: CE 14 94 ldx  #$1494
 830C: C6 00    ldb  #$00
 830E: 58       aslb 
@@ -355,10 +468,16 @@ read_io_8283:
 832A: DE C6    ldx  $C6
 832C: A7 00    sta  $00,x
 832E: 39       rts  
+
+; called 1x  from $8249
+function_832f:
 832F: B6 11 83 lda  $1183
 8332: 27 03    beq  $8337
-8334: BD F2 49 jsr  $F249
+8334: BD F2 49 jsr  function_f249
 8337: 39       rts  
+
+; called 1x  from $824C
+function_8338:
 8338: B6 11 83 lda  $1183
 833B: 27 05    beq  $8342
 833D: 7F 00 C6 clr  $00C6
@@ -387,9 +506,12 @@ read_io_8283:
 8370: 96 C6    lda  $C6
 8372: 97 01    sta  $01
 8374: 39       rts  
-8375: BD FD 9D jsr  $FD9D
-8378: 8D 01    bsr  $837B
+8375: BD FD 9D jsr  function_fd9d
+8378: 8D 01    bsr  function_837b
 837A: 39       rts  
+
+; called 1x  from $8378
+function_837b:
 837B: DE B3    ldx  $B3
 837D: 4F       clra 
 837E: E6 00    ldb  $00,x
@@ -401,11 +523,14 @@ read_io_8283:
 8386: E6 04    ldb  $04,x
 8388: 54       lsrb 
 8389: 49       rola 
-838A: 8D 08    bsr  $8394
+838A: 8D 08    bsr  coin_lockout_check_8394
 838C: 7F 00 02 clr  $0002
 838F: 97 BA    sta  $BA
 8391: 97 00    sta  $00
 8393: 39       rts  
+
+; called 1x  from $838A
+coin_lockout_check_8394:
 8394: 7D 11 83 tst  $1183
 8397: 26 08    bne  $83A1
 8399: D6 80    ldb  $80
@@ -431,13 +556,13 @@ read_io_8283:
 83BD: 37       pshb 
 83BE: CC 83 D0 ldd  #$83D0
 83C1: ED 46    std  $46,x
-83C3: BD F7 87 jsr  $F787
+83C3: BD F7 87 jsr  function_f787
 83C6: DE AE    ldx  $AE
 83C8: 33       pulb 
 83C9: 32       pula 
 83CA: ED 46    std  $46,x
 83CC: 39       rts  
-83CD: 7E F7 87 jmp  $F787
+83CD: 7E F7 87 jmp  function_f787
 83D0: 00       illegal
 83D1: FF 81 0E stx  $810E
 83D4: 27 13    beq  $83E9
@@ -505,6 +630,9 @@ read_io_8283:
 8451: 31       ins  
 8452: 31       ins  
 8453: 7E F8 F5 jmp  $F8F5
+
+; called 1x  from $8107, $8484
+function_8456:
 8456: CC 00 20 ldd  #$0020
 8459: 36       psha 
 845A: B6 20 01 lda  $2001
@@ -527,7 +655,7 @@ read_io_8283:
 847E: 26 EE    bne  $846E
 8480: 39       rts  
 8481: F6 13 80 ldb  $1380
-8484: 27 D0    beq  $8456
+8484: 27 D0    beq  function_8456
 8486: C1 FF    cmpb #$FF
 8488: 27 2B    beq  $84B5
 848A: 86 00    lda  #$00
@@ -1014,9 +1142,9 @@ F004: B7 11 83 sta  nb_credits_1183
 F007: FD 11 84 std  $1184
 F00A: 7F 11 82 clr  $1182
 F00D: 8E 13 FF lds  #$13FF
-F010: BD F2 98 jsr  $F298
-F013: BD F1 4A jsr  $F14A
-F016: BD F0 BD jsr  $F0BD
+F010: BD F2 98 jsr  function_f298
+F013: BD F1 4A jsr  kernel_load_descriptor_f14a
+F016: BD F0 BD jsr  function_f0bd
 F019: DE AE    ldx  $AE
 F01B: EC 2E    ldd  $2E,x
 F01D: DD AA    std  $AA
@@ -1035,12 +1163,12 @@ F032: 8A 08    ora  #$08
 F034: 97 08    sta  $08
 F036: 0E       cli  
 F037: 7F 11 91 clr  $1191
-F03A: BD F0 DC jsr  $F0DC
-F03D: BD F2 0A jsr  $F20A
-F040: BD F0 95 jsr  $F095
-F043: BD F0 B5 jsr  $F0B5
+F03A: BD F0 DC jsr  function_f0dc
+F03D: BD F2 0A jsr  kernel_swap_descriptor_f20a
+F040: BD F0 95 jsr  function_f095
+F043: BD F0 B5 jsr  function_f0b5
 F046: 8E 00 C5 lds  #$00C5
-F049: BD F2 AE jsr  $F2AE
+F049: BD F2 AE jsr  function_f2ae
 F04C: DE AE    ldx  $AE
 F04E: AE 12    lds  $12,x
 F050: DE AE    ldx  $AE
@@ -1049,7 +1177,7 @@ F054: AD 00    jsr  $00,x
 F056: DE AE    ldx  $AE
 F058: EE 28    ldx  $28,x
 F05A: AD 00    jsr  $00,x
-F05C: BD F2 49 jsr  $F249
+F05C: BD F2 49 jsr  function_f249
 F05F: DE AE    ldx  $AE
 F061: EE 18    ldx  $18,x
 F063: AD 00    jsr  $00,x
@@ -1076,6 +1204,9 @@ F08D: DE AE    ldx  $AE
 F08F: EE 16    ldx  $16,x
 F091: AD 00    jsr  $00,x
 F093: 20 EC    bra  $F081
+
+; called 2x  from $F040, $F4C5
+function_f095:
 F095: CC 40 FF ldd  #$40FF
 F098: 97 00    sta  $00
 F09A: D7 02    stb  $02
@@ -1093,9 +1224,15 @@ F0AF: 01       nop
 F0B0: 41       illegal
 F0B1: C1 C0    cmpb #$C0
 F0B3: E0 00    subb $00,x
+
+; called 2x  from $80EB, $F043
+function_f0b5:
 F0B5: CE 11 00 ldx  #$1100
 F0B8: C6 80    ldb  #$80
 F0BA: 7E F3 5C jmp  $F35C
+
+; called 1x  from $F016
+function_f0bd:
 F0BD: DE AE    ldx  $AE
 F0BF: E6 37    ldb  $37,x
 F0C1: 27 34    beq  $F0F7
@@ -1110,6 +1247,9 @@ F0D3: 27 22    beq  $F0F7
 F0D5: 7A 00 CC dec  $00CC
 F0D8: 26 F4    bne  $F0CE
 F0DA: 20 1B    bra  $F0F7
+
+; called 2x  from $F03A, $F353
+function_f0dc:
 F0DC: DE AE    ldx  $AE
 F0DE: E6 37    ldb  $37,x
 F0E0: 27 15    beq  $F0F7
@@ -1124,6 +1264,9 @@ F0F3: C1 A6    cmpb #$A6
 F0F5: 26 F3    bne  $F0EA
 F0F7: 7F 11 80 clr  $1180
 F0FA: 39       rts  
+
+; called 2x  from $816F, $F4CB
+function_f0fb:
 F0FB: CE F0 00 ldx  #$F000
 F0FE: 4F       clra 
 F0FF: 5F       clrb 
@@ -1137,16 +1280,22 @@ F10A: 39       rts
 F10B: 18       xgdx 
 F10C: C6 05    ldb  #$05
 F10E: 20 38    bra  $F148
+
+; called 2x  from $817B, $F4D7
+function_f110:
 F110: DE AE    ldx  $AE
 F112: A6 30    lda  $30,x
 F114: 8B 10    adda #$10
 F116: 5F       clrb 
 F117: CE 10 00 ldx  #$1000
-F11A: BD F2 E3 jsr  $F2E3
+F11A: BD F2 E3 jsr  function_f2e3
 F11D: 25 01    bcs  $F120
 F11F: 39       rts  
 F120: C6 02    ldb  #$02
 F122: 20 24    bra  $F148
+
+; called 1x; jumped-to 1x  from $818C, $F4CE
+function_f124:
 F124: B6 80 00 lda  $8000
 F127: 81 A6    cmpa #$A6
 F129: 26 19    bne  $F144
@@ -1168,6 +1317,9 @@ F144: 39       rts
 F145: 18       xgdx 
 F146: C6 03    ldb  #$03
 F148: 20 41    bra  $F18B
+
+; called 2x  from $80C2, $F013
+kernel_load_descriptor_f14a:
 F14A: CE 11 C0 ldx  #$11C0
 F14D: DF AE    stx  $AE
 F14F: DF C8    stx  $C8
@@ -1176,7 +1328,7 @@ F153: 3A       abx
 F154: DF CA    stx  $CA
 F156: CE F1 8E ldx  #$F18E
 F159: DF C6    stx  $C6
-F15B: BD F3 64 jsr  $F364
+F15B: BD F3 64 jsr  kernel_copy_block_f364
 F15E: B6 80 00 lda  $8000
 F161: 81 A6    cmpa #$A6
 F163: 26 23    bne  $F188
@@ -1194,7 +1346,7 @@ F179: 08       inx
 F17A: E6 00    ldb  $00,x
 F17C: 08       inx  
 F17D: DF C6    stx  $C6
-F17F: BD F3 64 jsr  $F364
+F17F: BD F3 64 jsr  kernel_copy_block_f364
 F182: 9C CA    cmpx $CA
 F184: 2E 03    bgt  $F189
 F186: 20 E2    bra  $F16A
@@ -1269,6 +1421,9 @@ F205: 63 02    com  $02,x
 F207: 03       illegal
 F208: 00       illegal
 F209: 00       illegal
+
+; called 2x  from $80E8, $F03D
+kernel_swap_descriptor_f20a:
 F20A: DE AE    ldx  $AE
 F20C: DF C6    stx  $C6
 F20E: EE 00    ldx  $00,x
@@ -1276,29 +1431,38 @@ F210: 27 0D    beq  $F21F
 F212: DF C8    stx  $C8
 F214: DF CA    stx  $CA
 F216: C6 7C    ldb  #$7C
-F218: BD F3 64 jsr  $F364
+F218: BD F3 64 jsr  kernel_copy_block_f364
 F21B: DE CA    ldx  $CA
 F21D: DF AE    stx  $AE
 F21F: 39       rts  
+
+; called 2x  from $8175, $F4D1
+function_f220:
 F220: DE AE    ldx  $AE
 F222: EC 33    ldd  $33,x
 F224: CE 00 B1 ldx  #$00B1
-F227: BD F2 E3 jsr  $F2E3
+F227: BD F2 E3 jsr  function_f2e3
 F22A: 25 01    bcs  $F22D
 F22C: 39       rts  
 F22D: C6 01    ldb  #$01
 F22F: 20 15    bra  $F246
+
+; called 1x  from $F4DA
+function_f231:
 F231: DE AE    ldx  $AE
 F233: A6 32    lda  $32,x
 F235: 27 0C    beq  $F243
 F237: EC 35    ldd  $35,x
 F239: 27 08    beq  $F243
 F23B: CE C0 00 ldx  #$C000
-F23E: BD F2 E3 jsr  $F2E3
+F23E: BD F2 E3 jsr  function_f2e3
 F241: 25 03    bcs  $F246
 F243: 39       rts  
 F244: C6 04    ldb  #$04
 F246: 7E F3 3F jmp  $F33F
+
+; called 3x  from $8104, $8334, $F05C
+function_f249:
 F249: DE AE    ldx  $AE
 F24B: A6 6B    lda  $6B,x
 F24D: 26 3E    bne  $F28D
@@ -1315,7 +1479,7 @@ F25E: 37       pshb
 F25F: 36       psha 
 F260: E6 71    ldb  $71,x
 F262: 38       pulx 
-F263: 8D 17    bsr  $F27C
+F263: 8D 17    bsr  function_f27c
 F265: 38       pulx 
 F266: 3C       pshx 
 F267: EE 6E    ldx  $6E,x
@@ -1330,6 +1494,9 @@ F275: 3A       abx
 F276: 7A 00 C7 dec  $00C7
 F279: 26 DC    bne  $F257
 F27B: 39       rts  
+
+; called 1x  from $F263
+function_f27c:
 F27C: D7 C6    stb  $C6
 F27E: 4F       clra 
 F27F: E6 01    ldb  $01,x
@@ -1348,6 +1515,9 @@ F291: DD 85    std  nb_coins_per_credit_85
 F293: EC 02    ldd  $02,x
 F295: DD 87    std  $87
 F297: 39       rts  
+
+; called 2x  from $80BF, $F010
+function_f298:
 F298: CE 00 B1 ldx  #$00B1
 F29B: C6 1D    ldb  #$1D
 F29D: 96 14    lda  $14
@@ -1357,6 +1527,9 @@ F2A4: 26 05    bne  $F2AB
 F2A6: CE 00 80 ldx  #$0080
 F2A9: C6 80    ldb  #$80
 F2AB: 7E F3 5C jmp  $F35C
+
+; called 2x  from $80F1, $F049
+function_f2ae:
 F2AE: DE AE    ldx  $AE
 F2B0: A6 30    lda  $30,x
 F2B2: 8B 10    adda #$10
@@ -1396,6 +1569,9 @@ F2DD: 02       illegal
 F2DE: 03       illegal
 F2DF: C6 07    ldb  #$07
 F2E1: 20 5C    bra  $F33F
+
+; called 4x  from $81AC, $F11A, $F227, $F23E
+function_f2e3:
 F2E3: DD A8    std  $A8
 F2E5: 3C       pshx 
 F2E6: 4F       clra 
@@ -1465,7 +1641,7 @@ F34A: B7 11 84 sta  $1184
 F34D: DE AE    ldx  $AE
 F34F: 86 01    lda  #$01
 F351: A7 37    sta  $37,x
-F353: BD F0 DC jsr  $F0DC
+F353: BD F0 DC jsr  function_f0dc
 F356: DE AE    ldx  $AE
 F358: EE 04    ldx  $04,x
 F35A: AD 00    jsr  $00,x
@@ -1475,6 +1651,9 @@ F35F: 08       inx
 F360: 5A       decb 
 F361: 26 FA    bne  $F35D
 F363: 39       rts  
+
+; called 6x  from $F15B, $F17F, $F218, $F373, $F71F, $F774, $F783
+kernel_copy_block_f364:
 F364: DE C6    ldx  $C6
 F366: A6 00    lda  $00,x
 F368: 08       inx  
@@ -1484,7 +1663,7 @@ F36D: A7 00    sta  $00,x
 F36F: 08       inx  
 F370: DF C8    stx  $C8
 F372: 5A       decb 
-F373: 26 EF    bne  $F364
+F373: 26 EF    bne  kernel_copy_block_f364
 F375: 39       rts  
 F376: B7 20 00 sta  $2000
 F379: 39       rts  
@@ -1668,14 +1847,14 @@ F4BD: 26 32    bne  $F4F1
 F4BF: 5D       tstb 
 F4C0: 27 37    beq  $F4F9
 F4C2: 7F 11 82 clr  $1182
-F4C5: BD F0 95 jsr  $F095
+F4C5: BD F0 95 jsr  function_f095
 F4C8: 8E 13 FF lds  #$13FF
-F4CB: BD F0 FB jsr  $F0FB
-F4CE: BD F1 24 jsr  $F124
-F4D1: BD F2 20 jsr  $F220
+F4CB: BD F0 FB jsr  function_f0fb
+F4CE: BD F1 24 jsr  function_f124
+F4D1: BD F2 20 jsr  function_f220
 F4D4: 8E 00 C5 lds  #$00C5
-F4D7: BD F1 10 jsr  $F110
-F4DA: BD F2 31 jsr  $F231
+F4D7: BD F1 10 jsr  function_f110
+F4DA: BD F2 31 jsr  function_f231
 F4DD: CC A6 00 ldd  #$A600
 F4E0: FD 11 84 std  $1184
 F4E3: 86 01    lda  #$01
@@ -1719,7 +1898,7 @@ F528: DE AE    ldx  $AE
 F52A: A1 77    cmpa $77,x
 F52C: 25 03    bcs  $F531
 F52E: 7E F5 C5 jmp  $F5C5
-F531: BD F5 DB jsr  $F5DB
+F531: BD F5 DB jsr  function_f5db
 F534: DE AE    ldx  $AE
 F536: E6 65    ldb  $65,x
 F538: EE 57    ldx  $57,x
@@ -1806,10 +1985,13 @@ F5CA: 90 81    suba $81
 F5CC: 25 06    bcs  $F5D4
 F5CE: BB 11 8B adda $118B
 F5D1: B7 11 8B sta  $118B
-F5D4: 8D 14    bsr  $F5EA
+F5D4: 8D 14    bsr  function_f5ea
 F5D6: FD 11 89 std  $1189
 F5D9: 31       ins  
 F5DA: 39       rts  
+
+; called 1x  from $F531
+function_f5db:
 F5DB: 86 01    lda  #$01
 F5DD: 20 01    bra  $F5E0
 F5DF: 4F       clra 
@@ -1820,6 +2002,9 @@ F5E6: 3A       abx
 F5E7: A7 00    sta  $00,x
 F5E9: 39       rts  
 
+
+; called 3x  from $F5D4, $F707, $F70E
+function_f5ea:
 F5EA: 86 FF    lda  #$FF
 F5EC: 4C       inca 
 F5ED: C0 0A    subb #$0A
@@ -1898,11 +2083,11 @@ F675: F7 11 90 stb  $1190
 F678: 5A       decb 
 F679: 26 11    bne  $F68C
 F67B: CE 00 93 ldx  #$0093
-F67E: BD F7 23 jsr  $F723
+F67E: BD F7 23 jsr  function_f723
 F681: B6 11 8C lda  $118C
 F684: 27 06    beq  $F68C
 F686: CE 00 8F ldx  #$008F
-F689: BD F7 23 jsr  $F723
+F689: BD F7 23 jsr  function_f723
 F68C: DE AE    ldx  $AE
 F68E: A6 76    lda  $76,x
 F690: 97 C6    sta  $C6
@@ -1965,18 +2150,21 @@ F6FD: 7C 00 C7 inc  $00C7
 F700: 83 00 3C subd #$003C
 F703: 24 F8    bcc  $F6FD
 F705: CB 3C    addb #$3C
-F707: BD F5 EA jsr  $F5EA
+F707: BD F5 EA jsr  function_f5ea
 F70A: ED 23    std  $23,x
 F70C: D6 C7    ldb  $C7
-F70E: BD F5 EA jsr  $F5EA
+F70E: BD F5 EA jsr  function_f5ea
 F711: ED 21    std  $21,x
 F713: CE 00 80 ldx  #$0080
 F716: DF C6    stx  $C6
 F718: CE 11 A5 ldx  #$11A5
 F71B: DF C8    stx  $C8
 F71D: C6 1B    ldb  #$1B
-F71F: BD F3 64 jsr  $F364
+F71F: BD F3 64 jsr  kernel_copy_block_f364
 F722: 39       rts  
+
+; called 2x  from $F67E, $F689
+function_f723:
 F723: A6 03    lda  $03,x
 F725: 4C       inca 
 F726: 81 3C    cmpa #$3C
@@ -2023,15 +2211,18 @@ F76C: DD C6    std  $C6
 F76E: EC 4A    ldd  $4A,x
 F770: DD C8    std  $C8
 F772: C6 20    ldb  #$20
-F774: BD F3 64 jsr  $F364
+F774: BD F3 64 jsr  kernel_copy_block_f364
 F777: DE AE    ldx  $AE
 F779: EC 3A    ldd  $3A,x
 F77B: DD C6    std  $C6
 F77D: CC 10 00 ldd  #$1000
 F780: DD C8    std  $C8
 F782: 5F       clrb 
-F783: BD F3 64 jsr  $F364
+F783: BD F3 64 jsr  kernel_copy_block_f364
 F786: 39       rts  
+
+; called 1x; jumped-to 1x  from $83C3, $83CD
+function_f787:
 F787: DE AE    ldx  $AE
 F789: EC 4E    ldd  $4E,x
 F78B: DD C6    std  $C6
@@ -2195,7 +2386,7 @@ F8A4: DF CA    stx  $CA
 F8A6: DE C6    ldx  $C6
 F8A8: ED 04    std  $04,x
 F8AA: 6F 06    clr  $06,x
-F8AC: BD FA 22 jsr  $FA22
+F8AC: BD FA 22 jsr  function_fa22
 F8AF: DE C6    ldx  $C6
 F8B1: CC 00 00 ldd  #$0000
 F8B4: ED 0D    std  $0D,x
@@ -2374,7 +2565,7 @@ FA02: A7 04    sta  $04,x
 FA04: DE C6    ldx  $C6
 FA06: 6A 0A    dec  $0A,x
 FA08: 26 02    bne  $FA0C
-FA0A: 8D 16    bsr  $FA22
+FA0A: 8D 16    bsr  function_fa22
 FA0C: DE C6    ldx  $C6
 FA0E: A6 11    lda  $11,x
 FA10: 81 11    cmpa #$11
@@ -2385,6 +2576,9 @@ FA18: DC C6    ldd  $C6
 FA1A: C3 00 11 addd #$0011
 FA1D: DD C6    std  $C6
 FA1F: 7E F8 CA jmp  $F8CA
+
+; called 2x  from $F8AC, $FA0A
+function_fa22:
 FA22: DE CA    ldx  $CA
 FA24: 3C       pshx 
 FA25: DE C6    ldx  $C6
@@ -2756,9 +2950,12 @@ FCD1: 86 03    lda  #$03
 FCD3: 3D       mul  
 FCD4: BD F3 5C jsr  $F35C
 FCD7: 39       rts  
-FCD8: 8D 04    bsr  $FCDE
-FCDA: BD FD 29 jsr  $FD29
+FCD8: 8D 04    bsr  function_fcde
+FCDA: BD FD 29 jsr  function_fd29
 FCDD: 39       rts  
+
+; called 1x  from $FCD8
+function_fcde:
 FCDE: DE AE    ldx  $AE
 FCE0: A6 69    lda  $69,x
 FCE2: 26 01    bne  $FCE5
@@ -2799,19 +2996,25 @@ FD21: 27 05    beq  $FD28
 FD23: 7C 00 CD inc  $00CD
 FD26: 20 C4    bra  $FCEC
 FD28: 39       rts  
+
+; called 1x  from $FCDA
+function_fd29:
 FD29: DE AE    ldx  $AE
 FD2B: EE 57    ldx  $57,x
 FD2D: DF C8    stx  $C8
 FD2F: DE B1    ldx  $B1
-FD31: 8D 0D    bsr  $FD40
+FD31: 8D 0D    bsr  function_fd40
 FD33: DE AE    ldx  $AE
 FD35: EE 57    ldx  $57,x
 FD37: 08       inx  
 FD38: DF C8    stx  $C8
 FD3A: DE B1    ldx  $B1
 FD3C: 08       inx  
-FD3D: 8D 01    bsr  $FD40
+FD3D: 8D 01    bsr  function_fd40
 FD3F: 39       rts  
+
+; called 2x  from $FD31, $FD3D
+function_fd40:
 FD40: DF CA    stx  $CA
 FD42: DE AE    ldx  $AE
 FD44: A6 69    lda  $69,x
@@ -2860,9 +3063,12 @@ FD8E: 7A 00 B6 dec  $00B6
 FD91: 26 EB    bne  $FD7E
 FD93: 7C 11 88 inc  $1188
 FD96: 39       rts  
-FD97: 8D 04    bsr  $FD9D
-FD99: BD FE 23 jsr  $FE23
+FD97: 8D 04    bsr  function_fd9d
+FD99: BD FE 23 jsr  function_fe23
 FD9C: 39       rts  
+
+; called 2x  from $8375, $FD97
+function_fd9d:
 FD9D: DE AE    ldx  $AE
 FD9F: EC 5B    ldd  $5B,x
 FDA1: DD C6    std  $C6
@@ -2934,6 +3140,9 @@ FE1B: DF CC    stx  $CC
 FE1D: 7A 00 B5 dec  $00B5
 FE20: 26 91    bne  $FDB3
 FE22: 39       rts  
+
+; called 1x  from $FD99
+function_fe23:
 FE23: DE AE    ldx  $AE
 FE25: A6 6A    lda  $6A,x
 FE27: 48       asla 
@@ -2981,7 +3190,7 @@ FE66: CA 40    orb  #$40
 FE68: D7 02    stb  $02
 FE6A: CA C0    orb  #$C0
 FE6C: D7 02    stb  $02
-FE6E: 8D 2D    bsr  $FE9D
+FE6E: 8D 2D    bsr  function_fe9d
 FE70: 8A C0    ora  #$C0
 FE72: 97 02    sta  $02
 FE74: 84 9F    anda #$9F
@@ -3008,6 +3217,9 @@ FE99: 1B       aba
 FE9A: 16       tab  
 FE9B: 32       pula 
 FE9C: 39       rts  
+
+; called 2x  from $FE6E, $FECC
+function_fe9d:
 FE9D: C5 18    bitb #$18
 FE9F: 27 15    beq  $FEB6
 FEA1: C5 10    bitb #$10
@@ -3033,7 +3245,7 @@ FEC4: 97 00    sta  $00
 FEC6: 86 A0    lda  #$A0
 FEC8: 97 02    sta  $02
 FECA: 96 02    lda  $02
-FECC: 8D CF    bsr  $FE9D
+FECC: 8D CF    bsr  function_fe9d
 FECE: C6 E0    ldb  #$E0
 FED0: D7 02    stb  $02
 FED2: C6 FF    ldb  #$FF
@@ -3091,4 +3303,5 @@ FFCD: FE 80 01 ldx  $8001
 FFD0: 26 03    bne  $FFD5
 FFD2: 7E F0 00 jmp  $F000
 FFD5: 6E 00    jmp  $00,x
+
 
