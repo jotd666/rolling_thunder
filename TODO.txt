@@ -1,5 +1,5 @@
 log used sprites
-display sprites: X and Y are shifted, Y wraps
+display sprites: X is shifted
 mirroring: mirror the whole 32x32 tile and for size_x = 0x10 (0),
 if translation_x = 0 set 0x10 and if 0x10 set 0
 
