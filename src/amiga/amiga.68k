@@ -148,8 +148,8 @@ TARGET_SPRITE_COLOR = 12
 TARGET_SPRITE_CODE = 11
 TARGET_SPRITE_SIZEOF = 0x10
 
-MIRROR_BIT = 2
-FLIT_BIT = 3
+MIRROR_BIT = 5
+FLIT_BIT = 0
 
 
 
@@ -2709,6 +2709,12 @@ update_one_bob:
 100:
 	.endif
 200:
+	* now select Y flip, note it down in sprite_flip_y variable for later
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d2
+*		int flipy = (attr2 & 0x01);
+	btst	#0,d2
+	sne		sprite_flip_y
+
 	* now select proper clut
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_COLOR,a0),d2
@@ -2755,31 +2761,34 @@ update_one_bob:
 	* X size = 32 but Y size and offset are different: compute dynamic bob planes
 	jbsr	compose_32xsy_dynamic_bob
 	lea		sprite_size,a1
+	move.w	d3,-(a7)
 	move.w	size_y,d3
 	move.b	(a1,d3.w),d4	| Y size in pixels
-
+	move.w	(a7)+,d3
 
 *	add.w	(a0)+,d1		| add offset to Y
 *	* A0 points on the first bitplane of the bob
 *	addq 	#2,a0
 
 size_and_translation_done:
+
+*		int flipx = (attr1 & 0x20) >> 5;
+
 * now we have to check if mirror must be performed, either by doing this in-place
 * or by selecting already mirrored data
-*	lea		((NB_PLAYFIELD_PLANES+1)*4,a0),a1		| load mirrored data pointers
-*	tst.w	(a1)
-*	jmi		101f		| invalid pointers: we must do in-place
-*	btst	#MIRROR_BIT,d3
-*	jeq		102f
-*	* to mirror, just change pointer list
-*	move.l	a1,a0
-*	* and skip mirroring bit
-*	jra		103f
-*101:
-*	btst	#MIRROR_BIT,d3
-*102:
-*	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
-*	*jbsr	mirror_sprite_planes
+	tst.w		((NB_PLAYFIELD_PLANES+1)*4,a0)		| load mirrored data pointers
+	jmi		101f		| invalid pointers: we must do in-place
+	btst	#MIRROR_BIT,d3
+	jeq		102f
+	* to mirror, just change pointer list
+	lea	((NB_PLAYFIELD_PLANES+1)*4,a0),a0
+	* and skip mirroring bit
+	jra		103f
+101:
+	btst	#MIRROR_BIT,d3
+102:
+	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
+	jbsr	mirror_sprite_planes
 103:	
 	* BOBs must follow screen scroll
 	add.w	bobs_game_scroll_y,d1
@@ -2842,13 +2851,20 @@ size_and_translation_done:
 	moveq	#0,d5			| Y-offset
 
 9:
+	tst.b	sprite_flip_y
+	jeq		10f
+	neg.w	d4
+10:
 	moveq	#NB_PLAYFIELD_PLANES,d3
-	moveq	#0,d5 	| no y offset
+	moveq	#0,d5 	| no y offset ATM
 	jbsr	blit_planes_any_internal_cookie_cut
 2:
 	move.l	(a7)+,a0
 	rts
 
+sprite_flip_y:
+	.word	0
+	
 compose_32xsy_dynamic_bob:
 	movem.l	d0-d3,-(a7)
 	lea		dynamic_bob,a1
@@ -3318,6 +3334,7 @@ blitter_modulo_shift:
 	
 dynamic_bob:
 	.skip	4*(NB_PLAYFIELD_PLANES+1)
+	.word	-2		| in-place, no mirror
 	
 * < A5: custom
 * < D0.W,D1.W: x,y, no shifting
