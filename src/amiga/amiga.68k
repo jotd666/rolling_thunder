@@ -2731,7 +2731,8 @@ update_one_bob:
 	move.l	d4,a0
 	
 	lea	(8,a0),a0		| skip dimensions immediately we know them
-
+	move.l	a0,raw_32x32_sprite_data
+	
 	* 32x32 sprite+cluts are chosen. Now see if we must create a sub-sprite
 	clr.w	blitter_modulo_shift
 	
@@ -2743,6 +2744,13 @@ update_one_bob:
 44:
 	move.w	#2,blitter_modulo_shift
 	* size X is 16 which we support with some effort
+	* if mirror is set and width is 16 pixels, we have to change clipping area
+	* else mirroring will make the engine pick the wrong tile
+	btst	#MIRROR_BIT,d3
+	jeq		45f
+	bchg	#4,translation_x+1	| 0 <=> 0x10	
+45:
+
 	jbsr	compose_16x16_dynamic_bob
 	move.w	#0x10,d4		| height
 	moveq	#4,d5			| width
@@ -2788,7 +2796,7 @@ size_and_translation_done:
 	btst	#MIRROR_BIT,d3
 102:
 	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
-	jbsr	mirror_sprite_planes
+	jbsr	mirror_sprite_planes_32x32
 103:	
 	* BOBs must follow screen scroll
 	add.w	bobs_game_scroll_y,d1
@@ -2864,6 +2872,8 @@ size_and_translation_done:
 
 sprite_flip_y:
 	.word	0
+raw_32x32_sprite_data:
+	.long	0
 	
 compose_32xsy_dynamic_bob:
 	movem.l	d0-d3,-(a7)
@@ -2912,15 +2922,28 @@ compose_16x16_dynamic_bob:
 	lea		dynamic_bob,a0
 	movem.l	(a7)+,d0-d3
 	RTS
-	
-* < A0: plane list
+
+* mirror 32x32 tile, either the tile we're going to display
+* or the original source of the clipped 16x16, 32x16, whatever
+* because we cannot mirror clipped data (we could but first it will
+* be annoying to implement with modulus and all then we'd have to maintain
+* the mirroring status per clipped area. That is a nightmare.
+* statistically, as sub-tiles are logically grouped, doing the mirroring once
+* is probably as fast (or faster) as mirroring all tiles, because the other sub tiles
+* will be used shortly after
+
+* < A0: plane list <= fixed on internal variable
 * < D3: required orientation
-* < D4: height
-* < D5: width (bytes) including 16 bit shift
+* < D4: height		<= fixed to 32
+* < D5: width (bytes) including 16 bit shift <= fixed to 6
 * trashes: only unused registers :) A3
 
-mirror_sprite_planes:
-	movem.l	d0-d2/d6/a0,-(a7)
+mirror_sprite_planes_32x32:
+	movem.l	d0-d2/d4-d6/a0,-(a7)
+	move.l	raw_32x32_sprite_data,a0
+	move.w	#0x20,d4
+	moveq	#6,d5
+	
 	* bitplanes aren't pre-computed: check bitplanes current orientation and swap
 	* if required. This is slow but saves memory
 	.if		OPT_BLIT_CHAIN_MODE==0
@@ -2949,7 +2972,7 @@ mirror_sprite_planes:
 	* next bitplane
 1:
 	dbf		d6,0b
-	movem.l	(a7)+,d0-d2/d6/a0
+	movem.l	(a7)+,d0-d2/d4-d6/a0
 	rts
 	
 
