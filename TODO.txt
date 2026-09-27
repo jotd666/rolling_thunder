@@ -1,13 +1,13 @@
-investigate (with cpu trace?? or breakpoints!!!) 
+cpu2 reads wrong value into DP+$25
 
-CPU1 $9028 CLR $06=0     → yield
-CPU2 $858D sees 0, passes; $8591 CLR $07=0 → yield
-CPU1 work; $9034 INC $06=1 → yield
-CPU2 $8593 sees 1, passes; sprites; $85B1 INC $07=1 → yield
-CPU1 $9036 sees 1, passes; RTS
-CPU2 RTS
+834E: A6 86       LDA    A,X		; [rom_address]
+8350: B7 D8 03    STA    bank2_select_d803
+8353: AE 5E       LDX    -$2,U
+8355: A6 80       LDA    ,X+		; [bank_address]
+8357: 97 25       STA    $25
+8359: EC 5A       LDD    -$6,U
 
-because IRQ1 ends but IRQ2 is still stuck with 8593 loop
+bank or ROM addresses must be not working on cpu 2
 
 log used sprites
 display sprites: X is shifted

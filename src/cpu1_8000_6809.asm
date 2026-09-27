@@ -2115,7 +2115,8 @@ title_screen_8f10:
 8F34: 0F 05       CLR    dp_sub_cpu2_05
 8F36: 0F 07       CLR    dp_sem_cpu2_07
 8F38: 39          RTS
-8F39: B7 C0 00    STA    $C000		; ROM
+
+8F39: B7 C0 00    STA    $C000		; ROM 	; [breakpoint]
 8F3C: 0F 02       CLR    dp_state_cpu1_02
 8F3E: 0F 04       CLR    dp_sub_cpu1_04
 8F40: 0F 06       CLR    dp_sem_cpu1_06
@@ -2212,7 +2213,7 @@ function_8f4f:
 9011: FD 3F 96    STD    $3F96
 9014: B6 41 8A    LDA    nb_credits_418a
 9017: FD 3F 98    STD    $3F98		; number of credits on screen
-901A: 0C 04       INC    dp_sub_cpu1_04		; CPU1 sub-state
+901A: 0C 04       INC    dp_sub_cpu1_04		; CPU1 sub-state 0 => 1
 901C: 0F 06       CLR    dp_sem_cpu1_06
 901E: 96 D1       LDA    $D1
 9020: 26 03       BNE    $9025

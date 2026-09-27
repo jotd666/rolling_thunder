@@ -277,9 +277,10 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):
 
     if any(","+x in line for x in ("dp_sem_cpu1_06","dp_sem_cpu2_07","dp_sem_cpu_d2")):
         toks = line.split()
-        if toks[0] == "OP_W_ON_DP_ADDRESS":
+        if (toks[0] == "OP_W_ON_DP_ADDRESS") or (toks[0] == "OP_1_ON_DP_ADDRESS" and toks[1].startswith("clr")):
             # write into semaphore variable: we need a sync point to try to switch to other cpu
             line += "\tjbsr\tosd_yield   | sync after semaphore write\n"
+
     return line
 
 def handle_semwait(cpu,lines,i):

@@ -555,6 +555,16 @@ okay\@:
 	.endif
 	GET_ROM_ADDRESS_FUNC
 	.endm
+	
+	.macro GET_REG_VIDEO_ADDRESS	offset,reg
+	.ifeq	\offset
+	move.l	\reg,a0
+	.else
+	lea	\offset,a0
+	lea	(a0,\reg\().l),a0
+	.endif
+	GET_VIDEO_ADDRESS_FUNC
+	.endm
 
 	***** bank access *****
 	.macro GET_BANK_ADDRESS	offset

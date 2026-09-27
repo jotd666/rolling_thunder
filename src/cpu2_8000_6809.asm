@@ -736,7 +736,7 @@ function_8343:
 834E: A6 86       LDA    A,X		; [rom_address]
 8350: B7 D8 03    STA    bank2_select_d803
 8353: AE 5E       LDX    -$2,U
-8355: A6 80       LDA    ,X+
+8355: A6 80       LDA    ,X+		; [bank_address]
 8357: 97 25       STA    $25
 8359: EC 5A       LDD    -$6,U
 835B: 47          ASRA
@@ -758,12 +758,12 @@ function_8343:
 836D: 47          ASRA
 836E: 56          RORB
 836F: DD 28       STD    $28
-8371: A6 41       LDA    $1,U
+8371: A6 41       LDA    $1,U		; sprite fill loop
 8373: 84 02       ANDA   #$02
 8375: 26 1D       BNE    $8394
-8377: EC 84       LDD    ,X
-8379: ED 24       STD    $4,Y
-837B: E6 03       LDB    $3,X
+8377: EC 84       LDD    ,X		; [bank_address]
+8379: ED 24       STD    $4,Y		; sprite memory	
+837B: E6 03       LDB    $3,X		; [bank_address]
 837D: 1D          SEX
 837E: D3 26       ADDD   $26
 8380: 10 83 01 40 CMPD   #$0140
@@ -774,10 +774,10 @@ function_8343:
 838E: AA 44       ORA    $4,U
 8390: ED 26       STD    $6,Y
 8392: 20 1D       BRA    $83B1
-8394: EC 84       LDD    ,X
+8394: EC 84       LDD    ,X		; [bank_address]
 8396: 88 20       EORA   #$20
 8398: ED 24       STD    $4,Y
-839A: E6 04       LDB    $4,X
+839A: E6 04       LDB    $4,X		; [bank_address]
 839C: 1D          SEX
 839D: D3 26       ADDD   $26
 839F: 10 83 01 40 CMPD   #$0140
@@ -787,14 +787,14 @@ function_8343:
 83AB: 84 01       ANDA   #$01
 83AD: AA 44       ORA    $4,U
 83AF: ED 26       STD    $6,Y
-83B1: E6 05       LDB    $5,X
+83B1: E6 05       LDB    $5,X		; [bank_address]
 83B3: 1D          SEX
 83B4: D3 28       ADDD   $28
 83B6: 10 83 00 E0 CMPD   #$00E0
 83BA: 2C 11       BGE    $83CD
 83BC: 10 83 FF E0 CMPD   #$FFE0
 83C0: 2D 0B       BLT    $83CD
-83C2: A6 02       LDA    $2,X
+83C2: A6 02       LDA    $2,X		; [bank_address]
 83C4: AA 45       ORA    $5,U
 83C6: ED 28       STD    $8,Y
 83C8: 0C 24       INC    $24

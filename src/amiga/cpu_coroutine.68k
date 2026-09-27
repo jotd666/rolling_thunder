@@ -37,7 +37,9 @@ task_sp:            .skip    2*4           | [0] = CPU1 saved SP, [1] = CPU2 sav
 cpu2_done:          .skip    1*2           | CPU2 handler has returned this frame
 cur_task:           .skip    1*2           | 0 = CPU1 running, 1 = CPU2 running
 yield_budget:       .skip    1*2
-
+in_irq:
+	.skip	1
+	.align	2
                     .skip    2048        | CPU2's own stack
 cpu2_stack_top:
 
@@ -49,7 +51,7 @@ cpu2_stack_top:
 |-----------------------------------------------------------------------------
 run_frame:
 	movem.l d0-d7/a0-a6,-(sp)
-
+	st.b	in_irq
 	clr.w   cpu2_done
 	move.w  #MAX_YIELDS,yield_budget
 	clr.w   cur_task
@@ -71,6 +73,7 @@ run_frame:
 	jbsr     osd_yield
 	jra   .drain
 .both_done:
+	clr.b	in_irq
 	movem.l (sp)+,d0-d7/a0-a6
 	rts
 
@@ -99,6 +102,10 @@ task_exit:
 | deadlock guard, which means a semaphore nobody posts).
 |-----------------------------------------------------------------------------
 osd_yield:
+	tst.b	in_irq
+	jne		0f
+	rts			| cannot yield from non-irq code
+0:
 	movem.l d0-d7/a0-a6,-(sp)
 
 	subq.w  #1,yield_budget
