@@ -1629,12 +1629,11 @@ compute_bank_base:
 	
 call_irqs:
 	move.w	currently_running_cpu,-(a7)
-	jbsr	call_irq_cpu_1
-	jbsr	call_irq_cpu_2
+	jbsr	run_frame
 	move.w	(a7)+,currently_running_cpu
 	rts
 	
-call_irq_cpu_1:
+cpu1_irq_body:
 	tst.b	cpu_interrupts
 	jne		0f
 	rts
@@ -1646,28 +1645,16 @@ call_irq_cpu_1:
 	* should we set a saved copy of S or use the one that existed
 	* when the game was interrupted? depends if the game was interrupted
 	* in the original game code or in an osd function
-	cmp.b	#1,osd_entry_count
-	jeq		0f
-	* osd_entry_count > 1: means that we interrupted an osd call
-	* we have to restore d5 as it was on entering the osd call
-	* restore game S (aka d5) so it's used in the irq
-	* we must not change d5 until game irq has been called
-	move.w	cpu1_target_ssp_value,d5
-0:
-
-	swap	d5
-	clr		d5
-	swap 	d5
-	.ifndef	RELEASE
-	tst.w	d5
-	jne		0f
-	BREAKPOINT	"entering cpu 1 irq with d5/S=0"
-0:
-	.endif
+	* it's really too bloody complex, especially with both cpus (if irq interrupts
+	* the second cpu, then what is the value of the first cpu stack???), so let's put D5 somewhere
+	* where it's not going to conflict with existing non-irq stack and it will work
+	*
+	* end of ROM areas are filled with 0xFF for both cpus, we only need 256 bytes so that will probably work
+	move.l	#0xFFF0,d5
 	clr.b	currently_running_cpu+1
 	jra	cpu1_irq_8565
 	
-call_irq_cpu_2:
+cpu2_irq_body:
 	tst.b	cpu_interrupts+1
 	jne		0f
 	rts
@@ -1679,14 +1666,13 @@ call_irq_cpu_2:
 	* should we set a saved copy of S or use the one that existed
 	* when the game was interrupted? depends if the game was interrupted
 	* in the original game code or in an osd function
-
-	moveq	#0,d5
-	move.w	cpu2_target_ssp_value,d5
-	.ifndef	RELEASE
-	jne		0f
-	BREAKPOINT	"entering cpu 2 irq with d5/S=0"
-0:
-	.endif
+	* screw it: point in unused ROM area
+	*
+	* note: this is going to need to map stack usages in ROM block
+	* not a problem for CPU #1 as memory is 64k in one block, but
+	# for CPU #2 because of memory sharing, the ROM has to be put in a
+	# separate block, so now stack needs to be pulled from ROM
+	move.l	#0xFFF0,d5
 	
 	move.b	#1,currently_running_cpu+1
 	jra	cpu2_irq_8173
@@ -4851,7 +4837,10 @@ osd_debug_hook:
 	
 	.include	"cpu_coroutine.68k"
 	
-
+sync_deadlock:
+	BREAKPOINT	"deadlock while syncing CPUs"
+	illegal
+	
 osd_read_p1_inputs:
 	move.b	 player_1_controls,d0
 	rts

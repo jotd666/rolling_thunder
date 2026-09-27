@@ -251,8 +251,11 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
     if "[unchecked_address" in line:
         # give me the original instruction
         line = line.replace("_ADDRESS","_UNCHECKED_ADDRESS")
-    elif "[rom_address" in line:
+    elif "[rom_address" in line or "[local]" in line:
         # for cpu2 only
+        # note: we're using a part of ROM for stack in IRQ to avoid conflicts
+        # which explains why all local tags redirect to ROM (except the ones
+        # from non-IRQ)
         line = line.replace("_ADDRESS","_ROM_ADDRESS")
     elif "[video_address" in line:
         # give me the original instruction
