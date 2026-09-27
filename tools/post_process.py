@@ -275,6 +275,11 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):
         # give me the original instruction
         line = line.replace("_ADDRESS","_BANK_ADDRESS")
 
+    if any(","+x in line for x in ("dp_sem_cpu1_06","dp_sem_cpu2_07","dp_sem_cpu_d2")):
+        toks = line.split()
+        if toks[0] == "OP_W_ON_DP_ADDRESS":
+            # write into semaphore variable: we need a sync point to try to switch to other cpu
+            line += "\tjbsr\tosd_yield   | sync after semaphore write\n"
     return line
 
 def handle_semwait(cpu,lines,i):
@@ -318,8 +323,10 @@ def doit(cpu):
     "cus115_rombank_6800":"set_cpu1_bank",
     "tilebank_select_8800":"set_tilebank_8800",
     "tilebank_select_8c00":"set_tilebank_8c00",
+    "sprite_latch_5ff2":"latch_sprites",
     } if cpu==1 else  {
     "watchdog_8000":"",
+    "sprite_latch_1ff2":"latch_sprites",
     "irq_ack_8800":"",
     "bank2_select_d803":"set_cpu2_bank",
     }

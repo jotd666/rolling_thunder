@@ -359,6 +359,7 @@ dp_sub_cpu1_04               = $04		; DP $5604 - CPU1 sub-state
 dp_sub_cpu2_05               = $05		; DP $5605 - CPU2 sub-state
 dp_sem_cpu1_06               = $06		; DP $5606 - CPU1 semaphore / step within sub-state
 dp_sem_cpu2_07               = $07		; DP $5607 - CPU2 semaphore / step within sub-state
+dp_sem_cpu_d2                = $d2		; DP $56D2 - another semaphore / step within sub-state
 dp_irqcount1_0e              = $0E		; DP $560E - CPU1 IRQ/frame counter
 dp_irqcount2_0f              = $0F		; DP $560F - CPU2 IRQ/frame counter
 dp_bank1_shadow_19           = $19		; DP $5619 - shadow of CPU1 ROM bank latch, re-armed every IRQ
@@ -2589,13 +2590,13 @@ function_92a3:
 
 ; 1 jump-table ref
 function_92be:
-92BE: 0F D2       CLR    $D2
+92BE: 0F D2       CLR    dp_sem_cpu_d2
 92C0: CC 00 00    LDD    #$0000
 92C3: DD 88       STD    $88
 92C5: DD 8A       STD    $8A
 92C7: BD D8 36    JSR    function_d836
-92CA: 0C D2       INC    $D2
-92CC: 96 D2       LDA    $D2
+92CA: 0C D2       INC    dp_sem_cpu_d2
+92CC: 96 D2       LDA    dp_sem_cpu_d2
 92CE: 81 02       CMPA   #$02
 92D0: 26 FA       BNE    $92CC		; [semwait]
 92D2: 39          RTS
@@ -4824,13 +4825,13 @@ A4B9: 7E D6 36    JMP    $D636
 
 ; 1 jump-table ref
 function_a4bc:
-A4BC: 0F D2       CLR    $D2
+A4BC: 0F D2       CLR    dp_sem_cpu_d2
 A4BE: CC 00 00    LDD    #$0000
 A4C1: DD 88       STD    $88
 A4C3: DD 8A       STD    $8A
 A4C5: BD D8 36    JSR    function_d836
-A4C8: 0C D2       INC    $D2
-A4CA: 96 D2       LDA    $D2
+A4C8: 0C D2       INC    dp_sem_cpu_d2
+A4CA: 96 D2       LDA    dp_sem_cpu_d2
 A4CC: 81 02       CMPA   #$02
 A4CE: 26 FA       BNE    $A4CA		; [semwait]
 A4D0: 39          RTS
@@ -5540,13 +5541,13 @@ AA52: 86 FF       LDA    #$FF
 AA54: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 AA57: B6 41 8A    LDA    nb_credits_418a
 AA5A: FD 3F 98    STD    $3F98
-AA5D: 0F D2       CLR    $D2
+AA5D: 0F D2       CLR    dp_sem_cpu_d2
 AA5F: CC 00 00    LDD    #$0000
 AA62: DD 88       STD    $88
 AA64: DD 8A       STD    $8A
 AA66: BD D8 36    JSR    function_d836
-AA69: 0C D2       INC    $D2
-AA6B: 96 D2       LDA    $D2
+AA69: 0C D2       INC    dp_sem_cpu_d2
+AA6B: 96 D2       LDA    dp_sem_cpu_d2
 AA6D: 81 02       CMPA   #$02
 AA6F: 26 FA       BNE    $AA6B		; [semwait]
 AA71: 39          RTS
@@ -6002,13 +6003,13 @@ AE16: 7E D6 36    JMP    $D636
 
 ; 1 jump-table ref
 function_ae19:
-AE19: 0F D2       CLR    $D2
+AE19: 0F D2       CLR    dp_sem_cpu_d2
 AE1B: CC 00 00    LDD    #$0000
 AE1E: DD 88       STD    $88
 AE20: DD 8A       STD    $8A
 AE22: BD D8 36    JSR    function_d836
-AE25: 0C D2       INC    $D2
-AE27: 96 D2       LDA    $D2
+AE25: 0C D2       INC    dp_sem_cpu_d2
+AE27: 96 D2       LDA    dp_sem_cpu_d2
 AE29: 81 02       CMPA   #$02
 AE2B: 26 FA       BNE    $AE27		; [semwait]
 AE2D: C6 FC       LDB    #$FC

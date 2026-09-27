@@ -118,6 +118,7 @@ osd_yield:
 
 	| --- CPU2 wants to yield to CPU1 ---
 .from_cpu2:
+	move.b	#0,0x110
 	move.l  sp,task_sp+4
 	clr.w   cur_task
 	move.l  task_sp+0,sp
@@ -130,7 +131,7 @@ osd_yield:
 *
 *   .w9D27:     cmp.b   #1,sem07
 *               bcc.s   .ok
-*               bsr     yield
+*               jbsr     yield
 *               bra.s   .w9D27
 *   .ok:
 *
@@ -138,7 +139,7 @@ osd_yield:
 *
 *   .w8962:     cmp.b   #4,sem06
 *               bcc.s   .ok
-*               bsr     yield
+*               jbsr     yield
 *               bra.s   .w8962
 *   .ok:
 *

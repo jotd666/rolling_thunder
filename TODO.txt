@@ -1,25 +1,21 @@
+investigate (with cpu trace?? or breakpoints!!!) 
+
+CPU1 $9028 CLR $06=0     → yield
+CPU2 $858D sees 0, passes; $8591 CLR $07=0 → yield
+CPU1 work; $9034 INC $06=1 → yield
+CPU2 $8593 sees 1, passes; sprites; $85B1 INC $07=1 → yield
+CPU1 $9036 sees 1, passes; RTS
+CPU2 RTS
+
+because IRQ1 ends but IRQ2 is still stuck with 8593 loop
+
 log used sprites
 display sprites: X is shifted
+
 optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
-
-cpu1 wrong stack (stack of cpu2) at the end of attract mode. we need to be able to debug current cpu flag!!
-also values of cpu2_target_ssp_value and cpu1_target_ssp_value
-maybe do a simple init for cpu1, store cpu1_target_ssp_value then mainloop
-possibly cpu1_target_ssp_value is destroyed in OSD_ENTER
-	jra		osd_enter_\@
-	* top entry: save game S register
-from_cpu1_\@:
-	move.w	d5,cpu1_target_ssp_value
-
 
 check when bullets decrease (check cheat, track down to fire flag)
 
-global irq:
-=> init context for irq2
-=> jump irq1
-=> osd_cpu_switch (avec param!) switch cpus
-=> si arrive au bout de irq2, check irq1 fini si oui global irq ends sinon switch irq1
-=> idem pour irq1
 
 
 

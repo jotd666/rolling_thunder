@@ -263,22 +263,9 @@ BIT_FIRE_2 = 5
 	* with OSD_ENTER/OSD_EXIT.
 	
 	.macro	OSD_ENTER
-	tst.b	osd_entry_count
-	jne		osd_enter_\@
-	tst.b	currently_running_cpu+1
-	jeq		from_cpu1_\@
-	move.w	d5,cpu2_target_ssp_value
-	jra		osd_enter_\@
-	* top entry: save game S register
-from_cpu1_\@:
-	move.w	d5,cpu1_target_ssp_value
-osd_enter_\@:
-	addq.b	#1,osd_entry_count	| increase nesting
 	.endm
 	
 	.macro	OSD_EXIT
-	subq.b	#1,osd_entry_count	| decrease nesting
-
 	.endm
 	
 	
@@ -363,6 +350,7 @@ osd_enter_\@:
 	.global	osd_set_back_color
 	.global	osd_read_p1_inputs
 	.global	osd_read_p2_inputs
+	.global	osd_latch_sprites
 	
 	.global	osd_video_byte_dirty_cpu1
 	.global	osd_video_byte_dirty_cpu2
@@ -924,6 +912,8 @@ demo_game:
 	
 	CPU1_GET_MEMORY_START_AND_DP
 	* protect CPU1 & CPU2 ROMs from writing if whdload on
+	* keep the top of ROM (not used, full of FFs, for each cpu
+	* target stack during IRQs)
 	move.l	#0x7FE0,d0
 	move.l	a6,a0
 	add.l	#0x8000,a0
@@ -999,8 +989,6 @@ demo_game:
 	
 	move.b	#1,currently_running_cpu+1
 	jbsr	cpu2_boot_8000
-	* store d5 init value once init has run
-	move.w	d5,cpu2_target_ssp_value
 	
 	CPU1_GET_MEMORY_START_AND_DP
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
@@ -1629,6 +1617,18 @@ compute_bank_base:
 	rts
 	
 call_irqs:
+	tst.b	copy_sprites
+	jeq		0f
+	clr.b	copy_sprites
+	CPU1_GET_MEMORY_START_AND_DP
+	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
+	moveq	#NB_TARGET_SPRITES-1,d7
+1:
+	move.l	(4,a0),(10,a0)
+	move.w	(6,a0),(14,a0)
+	sub.w	#CURRENT_SPRITE_SIZE,a0
+	dbf		d7,1b
+0:
 	move.w	currently_running_cpu,-(a7)
 	jbsr	run_frame
 	move.w	(a7)+,currently_running_cpu
@@ -1651,7 +1651,7 @@ cpu1_irq_body:
 	* where it's not going to conflict with existing non-irq stack and it will work
 	*
 	* end of ROM areas are filled with 0xFF for both cpus, we only need 256 bytes so that will probably work
-	move.l	#0xFFF0,d5
+	move.l	cpu1_target_ssp_value,d5	
 	clr.b	currently_running_cpu+1
 	jra	cpu1_irq_8565
 	
@@ -1673,7 +1673,7 @@ cpu2_irq_body:
 	* not a problem for CPU #1 as memory is 64k in one block, but
 	# for CPU #2 because of memory sharing, the ROM has to be put in a
 	# separate block, so now stack needs to be pulled from ROM
-	move.l	#0xFFF0,d5
+	move.l	cpu2_target_ssp_value,d5
 	
 	move.b	#1,currently_running_cpu+1
 	jra	cpu2_irq_8173
@@ -2435,8 +2435,11 @@ copy_80:
 	move.w	(a2)+,(a3)+	
 	CPU_COPY_POST
 
-
-
+osd_latch_sprites:
+	st.b	copy_sprites
+	rts
+	
+	
 really_update_sprites:
 	
 	***********************
@@ -4840,7 +4843,7 @@ osd_debug_hook:
 	
 sync_deadlock:
 	BREAKPOINT	"deadlock while syncing CPUs"
-	illegal
+	rts
 	
 osd_read_p1_inputs:
 	move.b	 player_1_controls,d0
@@ -6284,20 +6287,23 @@ osd_log_cpu:
 
 
 	move.w	(6,a7),last_known_m6809_pc
-	move.w	last_known_m6809_pc,0x100
-	move.w	(4,a7),0x102   | last active cpu
+	move.w	(4,a7),0x104   | last active cpu
 	
-	move.l	a6,-(a7)
+	movem.l	a6/d7,-(a7)
+	move.w 	(12,a7),d7		| active cpu
+	add.w	d7,d7
+	lea		0x100.W,A0		
+	move.w	last_known_m6809_pc,(a0,d7.w) | cpu0 in 100, cpu1 in 102
 	lea		cpu_log_enable,a0
-	add.w 	(8,a7),a0		| cpu #
+	add.w 	(12,a7),a0		| cpu #
 	* check if cpu log is enabled
 	tst.b	(a0)
 	jeq		445f
 	COLOR0_FLASH	0x0F0
 
 	move.l	log_ptr,a6
-	move.w	(10,a7),(a6)+	| the PC
-	move.w 	(8,a7),(a6)+	| cpu #
+	move.w	(14,a7),(a6)+	| the PC
+	move.w 	(12,a7),(a6)+	| cpu #
 	move.l	d1,-(a7)
 	rol.w	#8,d1
 	move.b	d0,d1
@@ -6317,7 +6323,7 @@ osd_log_cpu:
 444:
 	move.l	(a7)+,d1
 445:
-	move.l	(a7)+,a6
+	movem.l	(a7)+,a6/d7
 	OSD_EXIT
 	rts
 
@@ -6594,6 +6600,8 @@ start_level:
 		.long	0
 	.long	0
 	
+copy_sprites:
+	.byte	0
 dip_switches_1:
 	.byte	0
 dip_switches_2:
@@ -6610,9 +6618,10 @@ mid_screen_interrupt_count:
 system_vbr:
 	.long	0
 cpu1_target_ssp_value:
-	.word	0
+	.long	0xFFF0		| at top of ROM where there's no data
 cpu2_target_ssp_value:
-	.word	0
+	.long	0xFFF0		| at top of ROM where there's no data
+
 
 sprite_xoffs:
 	.word	0

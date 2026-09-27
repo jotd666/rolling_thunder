@@ -257,6 +257,7 @@ dp_sub_cpu1_04               = $04		; DP $1604 - CPU1 sub-state
 dp_sub_cpu2_05               = $05		; DP $1605 - CPU2 sub-state
 dp_sem_cpu1_06               = $06		; DP $1606 - CPU1 semaphore / step within sub-state
 dp_sem_cpu2_07               = $07		; DP $1607 - CPU2 semaphore / step within sub-state
+dp_sem_cpu_d2                = $d2		; DP $16d2 - another semaphore
 dp_irqcount1_0e              = $0E		; DP $160E - CPU1 IRQ/frame counter
 dp_irqcount2_0f              = $0F		; DP $160F - CPU2 IRQ/frame counter
 dp_bank1_shadow_19           = $19		; DP $1619 - shadow of CPU1 ROM bank latch, re-armed every IRQ
@@ -1278,7 +1279,7 @@ function_8830:
 
 ; 1 jump-table ref  from $8857
 function_8853:
-8853: 96 D2       LDA    $D2
+8853: 96 D2       LDA    dp_sem_cpu_d2
 8855: 81 01       CMPA   #$01
 8857: 26 FA       BNE    function_8853		; [semwait]
 8859: BD 85 DA    JSR    function_85da
@@ -1291,20 +1292,20 @@ function_8853:
 886B: 84 3F       ANDA   #$3F
 886D: 97 13       STA    $13
 886F: 27 03       BEQ    $8874
-8871: 0C D2       INC    $D2
+8871: 0C D2       INC    dp_sem_cpu_d2
 8873: 39          RTS
 8874: CE 16 11    LDU    #$1611		; direct page (shared with CPU1 $5600)
 8877: CC 99 99    LDD    #$9999
 887A: BD 88 B2    JSR    function_88b2
 887D: DC 11       LDD    $11
 887F: 27 03       BEQ    $8884
-8881: 0C D2       INC    $D2
+8881: 0C D2       INC    dp_sem_cpu_d2
 8883: 39          RTS
 8884: 0C 04       INC    dp_sub_cpu1_04		; CPU1 sub-state
 8886: 0F 06       CLR    dp_sem_cpu1_06
 8888: 0C 05       INC    dp_sub_cpu2_05		; CPU2 sub-state
 888A: 0F 07       CLR    dp_sem_cpu2_07
-888C: 0C D2       INC    $D2
+888C: 0C D2       INC    dp_sem_cpu_d2
 888E: 39          RTS
 
 ; 1 jump-table ref
@@ -1559,7 +1560,7 @@ function_8a0a:
 
 ; 1 jump-table ref  from $8A32
 function_8a2e:
-8A2E: 96 D2       LDA    $D2
+8A2E: 96 D2       LDA    dp_sem_cpu_d2
 8A30: 81 01       CMPA   #$01
 8A32: 26 FA       BNE    function_8a2e		; [semwait]
 8A34: BD 85 DA    JSR    function_85da
@@ -1572,18 +1573,18 @@ function_8a2e:
 8A46: 84 3F       ANDA   #$3F
 8A48: 97 13       STA    $13
 8A4A: 27 03       BEQ    $8A4F
-8A4C: 0C D2       INC    $D2
+8A4C: 0C D2       INC    dp_sem_cpu_d2
 8A4E: 39          RTS
 8A4F: CE 16 11    LDU    #$1611		; direct page (shared with CPU1 $5600)
 8A52: CC 99 99    LDD    #$9999
 8A55: BD 88 B2    JSR    function_88b2
 8A58: DC 11       LDD    $11
 8A5A: 27 03       BEQ    $8A5F
-8A5C: 0C D2       INC    $D2
+8A5C: 0C D2       INC    dp_sem_cpu_d2
 8A5E: 39          RTS
 8A5F: 0C 06       INC    dp_sem_cpu1_06
 8A61: 0C 07       INC    dp_sem_cpu2_07
-8A63: 0C D2       INC    $D2
+8A63: 0C D2       INC    dp_sem_cpu_d2
 8A65: 39          RTS
 
 ; 1 jump-table ref
@@ -1669,7 +1670,7 @@ function_8ab9:
 
 ; 1 jump-table ref  from $8ADE
 function_8ada:
-8ADA: 96 D2       LDA    $D2
+8ADA: 96 D2       LDA    dp_sem_cpu_d2
 8ADC: 81 01       CMPA   #$01
 8ADE: 26 FA       BNE    function_8ada
 8AE0: BD 85 DA    JSR    function_85da
@@ -1682,18 +1683,18 @@ function_8ada:
 8AF2: 84 3F       ANDA   #$3F
 8AF4: 97 13       STA    $13
 8AF6: 27 03       BEQ    $8AFB
-8AF8: 0C D2       INC    $D2
+8AF8: 0C D2       INC    dp_sem_cpu_d2
 8AFA: 39          RTS
 8AFB: CE 16 11    LDU    #$1611		; direct page (shared with CPU1 $5600)
 8AFE: CC 99 99    LDD    #$9999
 8B01: BD 88 B2    JSR    function_88b2
 8B04: DC 11       LDD    $11
 8B06: 27 03       BEQ    $8B0B
-8B08: 0C D2       INC    $D2
+8B08: 0C D2       INC    dp_sem_cpu_d2
 8B0A: 39          RTS
 8B0B: 0C 06       INC    dp_sem_cpu1_06
 8B0D: 0C 07       INC    dp_sem_cpu2_07
-8B0F: 0C D2       INC    $D2
+8B0F: 0C D2       INC    dp_sem_cpu_d2
 8B11: 39          RTS
 
 ; 1 jump-table ref
@@ -1786,7 +1787,7 @@ function_8b64:
 
 ; 1 jump-table ref  from $8B8C
 function_8b88:
-8B88: 96 D2       LDA    $D2
+8B88: 96 D2       LDA    dp_sem_cpu_d2
 8B8A: 81 01       CMPA   #$01
 8B8C: 26 FA       BNE    function_8b88		; [semwait]
 8B8E: BD 85 DA    JSR    function_85da
@@ -1794,7 +1795,7 @@ function_8b88:
 8B94: BD 83 0D    JSR    function_830d
 8B97: BD 84 8B    JSR    function_848b
 8B9A: B7 1F F2    STA    sprite_latch_1ff2		; write = tell sprite chip to buffer the list (CPU1 $5FF2)
-8B9D: 0C D2       INC    $D2
+8B9D: 0C D2       INC    dp_sem_cpu_d2
 8B9F: 39          RTS
 
 ; 1 jump-table ref
