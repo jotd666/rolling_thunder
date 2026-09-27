@@ -107,7 +107,7 @@ cpu2_8000_020.o: cpu2_8000.68k cpu2_options.inc cpu2_8000.inc cpu2_data.inc
 	
 hw_tester.o: $(AMIGASRC)/hw_tester.68k cpu1_options.inc cpu1_8000.inc cpu1_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 	$(ASM_020) -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/hw_tester.68k -o hw_tester.o
-amiga_aga.o: $(AMIGASRC)/amiga.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+amiga_aga.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/cpu_coroutine.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 	$(ASM_020) --defsym OPT_CD32_VERSION=0 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_aga.o
 #amiga_cd32.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/context.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
 #	$(ASM_020) --defsym OPT_CD32_VERSION=1 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_cd32.o

@@ -282,16 +282,17 @@ def handle_semwait(cpu,lines,i):
         label = toks[1]
         lines.append(f"""
 wait_{label}:
+\tjbsr\tosd_yield
 \tjra\t{label}
 
 """)
         line = line.replace(label,f"wait_{label}")
     return line
-def handle_semwait(cpu,lines,i):
-    line = lines[i]
-    if "[semwait]" in line:
-        line = remove_instruction(lines,i)
-    return line
+##def handle_semwait(cpu,lines,i):
+##    line = lines[i]
+##    if "[semwait]" in line:
+##        line = remove_instruction(lines,i)
+##    return line
 
 def doit(cpu):
     global_symbols = []

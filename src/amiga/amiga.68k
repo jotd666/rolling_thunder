@@ -352,7 +352,7 @@ osd_enter_\@:
 * osd layer		
 	.global osd_enable_interrupts
 	.global osd_disable_interrupts
-
+	.global osd_yield    | A.I. generated task switcher
 	.global osd_break		| for debug	
 	.global osd_blitz		| for debug
 	.global osd_read_dsw1
@@ -4849,6 +4849,7 @@ object_type_table:
 osd_debug_hook:
 	rts
 	
+	.include	"cpu_coroutine.68k"
 	
 
 osd_read_p1_inputs:
