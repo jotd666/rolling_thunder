@@ -924,17 +924,18 @@ demo_game:
 	
 	CPU1_GET_MEMORY_START_AND_DP
 	* protect CPU1 & CPU2 ROMs from writing if whdload on
-	move.l	#0x10000,d0
+	move.l	#0x7FE0,d0
 	move.l	a6,a0
 	add.l	#0x8000,a0
 	move.l  (_resload,pc),a2
 	jsr     (resload_ProtectWrite,a2)
-*	CPU2_GET_MEMORY_START_AND_DP
-*	* protect CPU2 ROM from writing if whdload on
-*	move.l	#0x8000,d0
-*	move.l	a3,a0
-*	move.l  (_resload,pc),a2
-*	jsr     (resload_ProtectWrite,a2)
+	
+	CPU2_GET_MEMORY_START_AND_DP
+	* protect CPU2 ROM from writing if whdload on
+	move.l	#0x7FE0,d0
+	move.l	a3,a0
+	move.l  (_resload,pc),a2
+	jsr     (resload_ProtectWrite,a2)
 	.endif
 
 

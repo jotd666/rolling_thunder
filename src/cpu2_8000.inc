@@ -428,15 +428,6 @@ okay\@:
 	GET_ADDRESS_FUNC
 	.endm
 
-	.macro GET_ROM_REG_ADDRESS	offset,reg
-	.ifeq	\offset
-	move.l	\reg,a0
-	.else
-	lea	\offset,a0
-	lea	(a0,\reg\().l),a0
-	.endif
-	GET_ROM_ADDRESS_FUNC
-	.endm
 	
 	.macro GET_VIDEO_REG_ADDRESS	offset,reg
 	.ifeq	\offset
@@ -557,10 +548,10 @@ okay\@:
 
 	.macro GET_REG_ROM_ADDRESS	offset,reg
 	.ifeq	\offset
-	move.w	\reg,a0
+	move.l	\reg,a0
 	.else
 	lea	\offset,a0
-	lea	(a0,\reg\().w),a0
+	lea	(a0,\reg\().l),a0
 	.endif
 	GET_ROM_ADDRESS_FUNC
 	.endm

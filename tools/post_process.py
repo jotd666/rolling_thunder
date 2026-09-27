@@ -222,7 +222,7 @@ def check_stack_usage(lines,i):
 
     return line
 
-def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
+def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):
     line = lines[i]
 
     # pre-add video_address tag if we find a store instruction to an explicit 3000-3FFF address
@@ -251,7 +251,7 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i):
     if "[unchecked_address" in line:
         # give me the original instruction
         line = line.replace("_ADDRESS","_UNCHECKED_ADDRESS")
-    elif "[rom_address" in line or "[local]" in line:
+    elif "[rom_address" in line or (cpu==2 and "[local]" in line):
         # for cpu2 only
         # note: we're using a part of ROM for stack in IRQ to avoid conflicts
         # which explains why all local tags redirect to ROM (except the ones
@@ -338,7 +338,7 @@ def doit(cpu):
 
         lines[i] = handle_semwait(cpu,lines,i)
 
-        line = handle_special_addresses(input_dict,store_to_video,rom_address,lines,i)
+        line = handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu)
         lines[i] = line
         line = check_stack_usage(lines,i)
         ###############################################
