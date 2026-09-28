@@ -1,13 +1,4 @@
-cpu2 reads wrong value into DP+$25
-
-834E: A6 86       LDA    A,X		; [rom_address]
-8350: B7 D8 03    STA    bank2_select_d803
-8353: AE 5E       LDX    -$2,U
-8355: A6 80       LDA    ,X+		; [bank_address]
-8357: 97 25       STA    $25
-8359: EC 5A       LDD    -$6,U
-
-bank or ROM addresses must be not working on cpu 2
+detect JSR + branch (is there a mode on converter?)
 
 log used sprites
 display sprites: X is shifted

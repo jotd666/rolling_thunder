@@ -6348,7 +6348,7 @@ B266: BD B5 31    JSR    function_b531
 B269: BD B5 6D    JSR    function_b56d
 B26C: DE A6       LDU    $A6
 B26E: 96 A8       LDA    $A8
-B270: EC C6       LDD    A,U
+B270: EC C6       LDD    A,U		; [bank_address]
 B272: ED E3       STD    ,--S		; [local]
 B274: DE A9       LDU    $A9
 B276: EC 06       LDD    $6,X
@@ -6357,7 +6357,7 @@ B27B: 84 0F       ANDA   #$0F
 B27D: ED 06       STD    $6,X
 B27F: 33 CB       LEAU   D,U
 B281: EC E1       LDD    ,S++		; [local]
-B283: ED C4       STD    ,U
+B283: ED C4       STD    ,U		; [video_address_word]
 B285: 0A B1       DEC    $B1
 B287: 27 25       BEQ    $B2AE
 B289: 96 AE       LDA    $AE
@@ -6390,7 +6390,7 @@ B2BA: 84 0F       ANDA   #$0F
 B2BC: ED 06       STD    $6,X
 B2BE: 33 CB       LEAU   D,U
 B2C0: CC FF 03    LDD    #$FF03
-B2C3: ED C4       STD    ,U
+B2C3: ED C4       STD    ,U		; [video_address]
 B2C5: 0A B1       DEC    $B1
 B2C7: 27 0E       BEQ    $B2D7
 B2C9: 0A AE       DEC    $AE

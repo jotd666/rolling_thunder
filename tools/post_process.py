@@ -227,9 +227,9 @@ def check_stack_usage(lines,i):
         else:
             # native/target byte A/B stack mix goes crashy crashy
             line += f"\taddq.w\t#1,d5\n\tmove.b\t(a0),{param}\n"
+        line = f"\tPUSH_SR\n{line}\n\tPOP_SR\n"
         if ",pc" in lines[i].lower():  # puls ...,pc
             line += "\trts\n"
-
     return line
 
 def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):

@@ -1,4 +1,4 @@
-import os,pathlib,shutil,json
+import os,pathlib,shutil,json,sys
 
 from shared import *
 
@@ -33,22 +33,25 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False):
 
     if old_contents == contents:
         print(f"Nothing new for {used_name}")
+        rc = 0
     else:
         for i,(a,b) in enumerate(zip(old_contents,contents)):
             if a!=b:
                 code,clut = divmod(i,nb_cluts)
                 print(f"{used_name}: New: code={code:02x}, clut={clut:02x}")
+        rc = 1
 
+        with open(merged_path_file / used_name,"wb") as f:
+            f.write(contents)
+    return rc
+rc = merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
+rc |= merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
+rc |= merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 
-    with open(merged_path_file / used_name,"wb") as f:
-        f.write(contents)
-
-merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
-merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
-merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 ####merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=True)
-merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=True)
+rc |= merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False)
 
+sys.exit(not rc)
 ##  @00da cell=0x0319 (code=0x019 bank=6) clut=0x046 16x16 src=(16, 0) pos=( 175, 172) pri=4 flip=00
 ##  @00ca cell=0x0119 (code=0x019 bank=2) clut=0x002 16x16 src=( 0, 0) pos=( 346, 168) pri=4 flip=10
 ##  @00ba cell=0x010e (code=0x00e bank=2) clut=0x002 32x16 src=( 0,16) pos=( 346, 210) pri=4 flip=10

@@ -812,7 +812,7 @@ function_83d5:
 83DB: B7 D8 03    STA    bank2_select_d803
 83DE: AE 4E       LDX    $E,U
 83E0: 27 3F       BEQ    $8421
-83E2: EC 84       LDD    ,X
+83E2: EC 84       LDD    ,X		; [bank_address]
 83E4: ED 24       STD    $4,Y
 83E6: EC 4A       LDD    $A,U
 83E8: 10 83 FE 00 CMPD   #$FE00
@@ -828,7 +828,7 @@ function_83d5:
 83FA: 44          LSRA
 83FB: 56          RORB
 83FC: 84 01       ANDA   #$01
-83FE: AA 03       ORA    $3,X
+83FE: AA 03       ORA    $3,X		; [bank_address]
 8400: AB 45       ADDA   $5,U
 8402: ED 26       STD    $6,Y
 8404: EC 4C       LDD    $C,U
@@ -843,7 +843,7 @@ function_83d5:
 8413: 56          RORB
 8414: 44          LSRA
 8415: 56          RORB
-8416: A6 02       LDA    $2,X
+8416: A6 02       LDA    $2,X		; [bank_address]
 8418: AA 44       ORA    $4,U
 841A: ED 28       STD    $8,Y
 841C: 0C 24       INC    $24
@@ -1961,7 +1961,7 @@ function_8e6e:
 8E86: EB E0       ADDB   ,S+		; [local]
 8E88: CE 40 00    LDU    #$4000		; layer 2 tilemap
 8E8B: ED E3       STD    ,--S		; [local]
-8E8D: EC CB       LDD    D,U
+8E8D: EC CB       LDD    D,U		; [video_address]
 8E8F: C4 07       ANDB   #$07
 8E91: 10 83 FF 03 CMPD   #$FF03
 8E95: 26 02       BNE    $8E99
@@ -1973,14 +1973,15 @@ function_8e6e:
 8E9F: EC E1       LDD    ,S++		; [local]
 8EA1: 83 0D 80    SUBD   #$0D80
 8EA4: 84 0F       ANDA   #$0F
-8EA6: EC CB       LDD    D,U
+8EA6: EC CB       LDD    D,U	; [video_address]
 8EA8: C4 07       ANDB   #$07
 8EAA: 10 83 FF 03 CMPD   #$FF03
 8EAE: 39          RTS
+
 8EAF: EC E1       LDD    ,S++		; [local]
 8EB1: 83 0E 00    SUBD   #$0E00
 8EB4: 84 0F       ANDA   #$0F
-8EB6: EC CB       LDD    D,U
+8EB6: EC CB       LDD    D,U	; [video_address]
 8EB8: C4 03       ANDB   #$03
 8EBA: 10 83 FF 03 CMPD   #$FF03
 8EBE: 39          RTS
@@ -2492,24 +2493,25 @@ function_9256:
 9271: CB 08       ADDB   #$08
 9273: C4 7F       ANDB   #$7F
 9275: E7 E2       STB    ,-S		; [local]
-9277: EC A5       LDD    B,Y
+9277: EC A5       LDD    B,Y	; [video_address]
 9279: C4 03       ANDB   #$03
 927B: 10 83 FF 03 CMPD   #$FF03
 927F: 26 02       BNE    $9283
-9281: 35 82       PULS   A,PC		; [manual_stack_pull]
+9281: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
+
 9283: E6 E0       LDB    ,S+		; [local]
 9285: 96 81       LDA    $81
 9287: 84 07       ANDA   #$07
 9289: 26 0D       BNE    $9298
 928B: CB 46       ADDB   #$46
 928D: C4 7F       ANDB   #$7F
-928F: EC A5       LDD    B,Y
+928F: EC A5       LDD    B,Y	; [video_address]
 9291: C4 03       ANDB   #$03
 9293: 10 83 FF 03 CMPD   #$FF03
 9297: 39          RTS
 9298: CB 48       ADDB   #$48
 929A: C4 7F       ANDB   #$7F
-929C: EC A5       LDD    B,Y
+929C: EC A5       LDD    B,Y	; [video_address]
 929E: C4 03       ANDB   #$03
 92A0: 10 83 FF 03 CMPD   #$FF03
 92A4: 39          RTS
@@ -2563,7 +2565,8 @@ function_92d6:
 92F8: 81 2C       CMPA   #$2C
 92FA: 27 CF       BEQ    $92CB
 92FC: C5 02       BITB   #$02
-92FE: 35 82       PULS   A,PC		; [manual_stack_pull]
+92FE: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
+
 9300: 5F          CLRB
 9301: 39          RTS
 
@@ -3380,7 +3383,7 @@ function_98cd:
 9932: C6 9C       LDB    #$9C
 9934: 7E 99 3B    JMP    function_993b
 9937: 96 0A       LDA    $0A
-9939: E6 C6       LDB    A,U
+9939: E6 C6       LDB    A,U	; [rom_address]
 
 ; called 2x; jumped-to 9x  from $98B9, $98EB, $9934, $9A95, $9A9B, $9DBE, $9DC3, $9E3B, ...
 function_993b:
@@ -3499,7 +3502,7 @@ function_9ad5:
 9ADB: 48          ASLA
 9ADC: 9B C2       ADDA   $C2
 9ADE: 9B C4       ADDA   $C4
-9AE0: E6 C6       LDB    A,U
+9AE0: E6 C6       LDB    A,U		; [rom_address]
 9AE2: 10 8E 13 A0 LDY    #$13A0		; work RAM (shared with CPU1 $4400)
 9AE6: 96 E6       LDA    $E6
 9AE8: E7 A6       STB    A,Y
@@ -3507,11 +3510,7 @@ function_9ad5:
 9AEB: 84 1F       ANDA   #$1F
 9AED: 97 E6       STA    $E6
 9AEF: 39          RTS
-9AF0: 08 08       ASL    $08
-9AF2: 0C 0C       INC    $0C
-9AF4: 08 08       ASL    $08
-9AF6: 08 0C       ASL    $0C
-9AF8: 08 08       ASL    $08
+
 
 ; called 2x  from $9A93, $B55E
 function_9afa:
@@ -4575,17 +4574,17 @@ A2C8: 7E A2 D2    JMP    $A2D2
 A2CB: 10 8E A3 4E LDY    #$A34E
 A2CF: 7E A2 D2    JMP    $A2D2
 A2D2: 86 E0       LDA    #$E0
-A2D4: E6 A0       LDB    ,Y+
+A2D4: E6 A0       LDB    ,Y+	; [rom_address]
 A2D6: ED C4       STD    ,U
-A2D8: EC A1       LDD    ,Y++
+A2D8: EC A1       LDD    ,Y++	; [rom_address]
 A2DA: ED 4E       STD    $E,U
-A2DC: EC A1       LDD    ,Y++
+A2DC: EC A1       LDD    ,Y++	; [rom_address]
 A2DE: ED 46       STD    $6,U
 A2E0: EC 1A       LDD    -$6,X
-A2E2: E3 A1       ADDD   ,Y++
+A2E2: E3 A1       ADDD   ,Y++	; [rom_address]
 A2E4: ED 4A       STD    $A,U
 A2E6: EC 1C       LDD    -$4,X
-A2E8: E3 A1       ADDD   ,Y++
+A2E8: E3 A1       ADDD   ,Y++	; [rom_address]
 A2EA: ED 4C       STD    $C,U
 A2EC: E6 05       LDB    $5,X
 A2EE: E7 44       STB    $4,U
@@ -4594,15 +4593,15 @@ A2F2: 6F 43       CLR    $3,U
 A2F4: 0C 40       INC    $40
 A2F6: 33 C8 10    LEAU   $10,U
 A2F9: 86 E2       LDA    #$E2
-A2FB: E6 A0       LDB    ,Y+
+A2FB: E6 A0       LDB    ,Y+	; [rom_address]
 A2FD: ED C4       STD    ,U
-A2FF: EC A1       LDD    ,Y++
+A2FF: EC A1       LDD    ,Y++	; [rom_address]
 A301: ED 4E       STD    $E,U
 A303: EC 1A       LDD    -$6,X
-A305: E3 A1       ADDD   ,Y++
+A305: E3 A1       ADDD   ,Y++	; [rom_address]
 A307: ED 4A       STD    $A,U
 A309: EC 1C       LDD    -$4,X
-A30B: E3 A1       ADDD   ,Y++
+A30B: E3 A1       ADDD   ,Y++	; [rom_address]
 A30D: ED 4C       STD    $C,U
 A30F: 6F 42       CLR    $2,U
 A311: 6F 43       CLR    $3,U
@@ -4971,17 +4970,17 @@ A638: 7E A6 42    JMP    $A642
 A63B: 10 8E A6 9E LDY    #$A69E
 A63F: 7E A6 42    JMP    $A642
 A642: 86 E0       LDA    #$E0
-A644: E6 A0       LDB    ,Y+
+A644: E6 A0       LDB    ,Y+		; [rom_address]
 A646: ED C4       STD    ,U
-A648: EC A1       LDD    ,Y++
+A648: EC A1       LDD    ,Y++		; [rom_address]
 A64A: ED 4E       STD    $E,U
-A64C: EC A1       LDD    ,Y++
+A64C: EC A1       LDD    ,Y++		; [rom_address]
 A64E: ED 46       STD    $6,U
 A650: EC 1A       LDD    -$6,X
-A652: E3 A1       ADDD   ,Y++
+A652: E3 A1       ADDD   ,Y++		; [rom_address]
 A654: ED 4A       STD    $A,U
 A656: EC 1C       LDD    -$4,X
-A658: E3 A1       ADDD   ,Y++
+A658: E3 A1       ADDD   ,Y++		; [rom_address]
 A65A: ED 4C       STD    $C,U
 A65C: E6 05       LDB    $5,X
 A65E: E7 44       STB    $4,U
@@ -4990,15 +4989,15 @@ A662: 6F 43       CLR    $3,U
 A664: 0C 40       INC    $40
 A666: 33 C8 10    LEAU   $10,U
 A669: 86 E2       LDA    #$E2
-A66B: E6 A0       LDB    ,Y+
+A66B: E6 A0       LDB    ,Y+		; [rom_address]
 A66D: ED C4       STD    ,U
-A66F: EC A1       LDD    ,Y++
+A66F: EC A1       LDD    ,Y++		; [rom_address]
 A671: ED 4E       STD    $E,U
 A673: EC 1A       LDD    -$6,X
-A675: E3 A1       ADDD   ,Y++
+A675: E3 A1       ADDD   ,Y++		; [rom_address]
 A677: ED 4A       STD    $A,U
 A679: EC 1C       LDD    -$4,X
-A67B: E3 A1       ADDD   ,Y++
+A67B: E3 A1       ADDD   ,Y++		; [rom_address]
 A67D: ED 4C       STD    $C,U
 A67F: 6F 42       CLR    $2,U
 A681: 6F 43       CLR    $3,U
@@ -8640,7 +8639,7 @@ C323: A6 84       LDA    ,X
 C325: 84 FC       ANDA   #$FC
 C327: 80 04       SUBA   #$04
 C329: 44          LSRA
-C32A: EC C6       LDD    A,U
+C32A: EC C6       LDD    A,U		; [rom_address]
 C32C: CE 14 5E    LDU    #$145E		; work RAM (shared with CPU1 $4400)
 C32F: BD 88 B2    JSR    function_88b2
 C332: 6D 06       TST    $6,X
@@ -10412,10 +10411,10 @@ D091: 10 8E 04 30 LDY    #$0430		; work RAM (shared with CPU1 $4400)
 D095: CE E9 58    LDU    #$E958		; ROM
 D098: 96 C2       LDA    $C2
 D09A: 48          ASLA
-D09B: EE C6       LDU    A,U
+D09B: EE C6       LDU    A,U		; [rom_address]
 D09D: 96 C4       LDA    $C4
 D09F: 48          ASLA
-D0A0: EE C6       LDU    A,U
+D0A0: EE C6       LDU    A,U		; [rom_address]
 D0A2: 96 81       LDA    $81
 D0A4: 9B 0F       ADDA   dp_irqcount2_0f		; CPU2 IRQ/frame counter
 D0A6: 84 1C       ANDA   #$1C
@@ -10431,15 +10430,15 @@ D0B6: 31 A8 20    LEAY   $20,Y
 D0B9: 10 8C 09 00 CMPY   #$0900
 D0BD: 25 F1       BCS    $D0B0
 D0BF: 39          RTS
-D0C0: EC C1       LDD    ,U++
+D0C0: EC C1       LDD    ,U++		; [rom_address]
 D0C2: 8A 80       ORA    #$80
 D0C4: A7 A4       STA    ,Y
 D0C6: E7 27       STB    $7,Y
 D0C8: 86 80       LDA    #$80
 D0CA: A7 21       STA    $1,Y
-D0CC: EC C1       LDD    ,U++
+D0CC: EC C1       LDD    ,U++		; [rom_address]
 D0CE: ED 22       STD    $2,Y
-D0D0: A6 C0       LDA    ,U+
+D0D0: A6 C0       LDA    ,U+		; [rom_address]
 D0D2: A7 25       STA    $5,Y
 D0D4: 6F 2C       CLR    $C,Y
 D0D6: 6F 2D       CLR    $D,Y
@@ -10455,13 +10454,13 @@ D0EA: AB 22       ADDA   $2,Y
 D0EC: 84 03       ANDA   #$03
 D0EE: AB E0       ADDA   ,S+		; [local]
 D0F0: 48          ASLA
-D0F1: EC C6       LDD    A,U
+D0F1: EC C6       LDD    A,U		; [rom_address]
 D0F3: A7 24       STA    $4,Y
 D0F5: E7 26       STB    $6,Y
 D0F7: CE E9 40    LDU    #$E940
 D0FA: A6 7F       LDA    -$1,S		; [local]
 D0FC: 44          LSRA
-D0FD: EC C6       LDD    A,U
+D0FD: EC C6       LDD    A,U		; [rom_address]
 D0FF: ED 32       STD    -$E,Y
 D101: A6 01       LDA    $1,X
 D103: 8A 02       ORA    #$02
@@ -10903,12 +10902,13 @@ D454: 39          RTS
 function_d455:
 D455: 8D 20       BSR    function_d477
 D457: CE 40 00    LDU    #$4000		; layer 2 tilemap
-D45A: EC CB       LDD    D,U
+D45A: EC CB       LDD    D,U	; [video_address]
 D45C: C4 03       ANDB   #$03
 D45E: C1 03       CMPB   #$03
 D460: 27 02       BEQ    $D464
 D462: 5F          CLRB
 D463: 39          RTS
+
 D464: CE E6 7C    LDU    #$E67C		; ROM
 D467: 44          LSRA
 D468: 44          LSRA
@@ -10919,8 +10919,8 @@ D46E: 54          LSRB
 D46F: 54          LSRB
 D470: 54          LSRB
 D471: 54          LSRB
-D472: EE C5       LDU    B,U
-D474: E6 C6       LDB    A,U
+D472: EE C5       LDU    B,U		; [rom_address]
+D474: E6 C6       LDB    A,U		; [rom_address]
 D476: 39          RTS
 
 ; called 1x  from $D455
@@ -10967,7 +10967,7 @@ D4B7: 26 01       BNE    $D4BA
 D4B9: 4F          CLRA
 D4BA: A7 02       STA    $2,X
 D4BC: 48          ASLA
-D4BD: EC C6       LDD    A,U
+D4BD: EC C6       LDD    A,U	; [rom_address]
 D4BF: ED 0E       STD    $E,X
 D4C1: 39          RTS
 
@@ -11246,7 +11246,7 @@ D6D7: 20 D2       BRA    $D6AB
 ; called 1x; jumped-to 1x  from $D69A, $D6CA
 function_d6d9:
 D6D9: EC 5C       LDD    -$4,U
-D6DB: E3 A4       ADDD   ,Y
+D6DB: E3 A4       ADDD   ,Y		; [rom_address]
 D6DD: A3 0C       SUBD   $C,X
 D6DF: B3 E6 40    SUBD   $E640		; ROM
 D6E2: 2B 08       BMI    $D6EC
@@ -11257,7 +11257,7 @@ D6EB: 39          RTS
 D6EC: 53          COMB
 D6ED: 43          COMA
 D6EE: C3 00 01    ADDD   #$0001
-D6F1: 10 A3 22    CMPD   $2,Y
+D6F1: 10 A3 22    CMPD   $2,Y		; [rom_address]
 D6F4: 22 F4       BHI    $D6EA
 D6F6: 6D 06       TST    $6,X
 D6F8: 2B 38       BMI    $D732
@@ -11265,7 +11265,7 @@ D6FA: A6 41       LDA    $1,U
 D6FC: 84 02       ANDA   #$02
 D6FE: 26 16       BNE    $D716
 D700: EC 5A       LDD    -$6,U
-D702: E3 24       ADDD   $4,Y
+D702: E3 24       ADDD   $4,Y		; [rom_address]
 D704: A3 0A       SUBD   $A,X
 D706: B3 E6 44    SUBD   $E644
 D709: 2B 16       BMI    $D721
@@ -11275,14 +11275,14 @@ D711: 86 61       LDA    #$61
 D713: A7 47       STA    $7,U
 D715: 39          RTS
 D716: EC 5A       LDD    -$6,U
-D718: E3 26       ADDD   $6,Y
+D718: E3 26       ADDD   $6,Y		; [rom_address]
 D71A: A3 0A       SUBD   $A,X
 D71C: B3 E6 44    SUBD   $E644
 D71F: 2A EA       BPL    $D70B
 D721: 53          COMB
 D722: 43          COMA
 D723: C3 00 01    ADDD   #$0001
-D726: 10 A3 28    CMPD   $8,Y
+D726: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D729: 22 05       BHI    $D730
 D72B: 86 61       LDA    #$61
 D72D: A7 47       STA    $7,U
@@ -11303,14 +11303,14 @@ D749: 86 62       LDA    #$62
 D74B: A7 47       STA    $7,U
 D74D: 39          RTS
 D74E: EC 5A       LDD    -$6,U
-D750: E3 26       ADDD   $6,Y
+D750: E3 26       ADDD   $6,Y		; [rom_address]
 D752: A3 0A       SUBD   $A,X
 D754: B3 E6 46    SUBD   $E646
 D757: 2A EA       BPL    $D743
 D759: 53          COMB
 D75A: 43          COMA
 D75B: C3 00 01    ADDD   #$0001
-D75E: 10 A3 28    CMPD   $8,Y
+D75E: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D761: 22 CD       BHI    $D730
 D763: 86 62       LDA    #$62
 D765: A7 47       STA    $7,U

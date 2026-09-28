@@ -2688,14 +2688,21 @@ update_one_bob:
 	.else
 	jne		100f
 	* in dev mode, break if we try to display a non-existing bob
+	jbsr	get_sprite_pos_and_size_offset
 
-	moveq	#0,d2
-	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d2
-	lsl.w	#2,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
-	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d3
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d5
+	
+	and.b	#7,d5				| sprite bank
+	lsl.w	#7,d5				| times 0x80
+	add.w	d5,d2				| extended sprite code
+
+	moveq	#0,d3
+	move.b	(TARGET_SPRITE_COLOR,a0),d3
+	bclr.b	#0,d3
+
 	COLOR0_FLASH	0xF00
-	*BREAKPOINT	"unregistered sprite clut (D2=code, D3=attribute)"
+	*BREAKPOINT	"unregistered sprite clut (D0=sizex, D1=sizey, D2=code, D3=clut)"
 	jra		2f
 100:
 	.endif
@@ -2709,12 +2716,11 @@ update_one_bob:
 	* now select proper clut
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_COLOR,a0),d2
-	lsr.b	#1,d2
+	bclr.b	#0,d2
 	move.l	d4,a0
 	.ifdef MC68020
-	move.l	(a0,d2.w*4),d4
+	move.l	(a0,d2.w*2),d4
 	.else
-	add.w	d2,d2
 	add.w	d2,d2
 	move.l	(a0,d2.w),d4
 	.endif
@@ -5152,8 +5158,7 @@ log_used_sprites:
 	* main screen
 	
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(SPRITE_ADDRESS,a6),a5   | -6??
-	lea		sprites_mock,a5     | log mockup
+	lea		(SPRITE_ADDRESS,a6),a5
 	lea	sprite_log_table,a1
 	moveq	#0,d7
 	moveq	#0,d3
