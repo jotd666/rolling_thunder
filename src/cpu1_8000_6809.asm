@@ -3618,7 +3618,7 @@ function_9b02:
 9B11: FD 3F 98    STD    $3F98
 9B14: 7D 41 8C    TST    mcu_flag_418c		; <-> MCU: attract/credit flag
 9B17: 26 67       BNE    $9B80
-9B19: BD AC 53    JSR    function_ac53
+9B19: BD AC 53    JSR    function_returns_z_ac53
 9B1C: 26 2B       BNE    $9B49
 9B1E: 10 8E 39 A8 LDY    #$39A8
 9B22: 86 FF       LDA    #$FF
@@ -4133,7 +4133,7 @@ function_9f63:
 9F6C: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 9F6F: B6 41 8A    LDA    nb_credits_418a
 9F72: FD 3F 98    STD    $3F98
-9F75: BD A0 F9    JSR    function_a0f9
+9F75: BD A0 F9    JSR    function_returns_z_a0f9
 9F78: 27 56       BEQ    $9FD0
 9F7A: B6 42 62    LDA    in_edge_4262		; input edge  [19] IN0.6 START1
 9F7D: BA 42 60    ORA    in_edge_4260		; input edge  [18] IN1.6 START2
@@ -4174,7 +4174,7 @@ function_9fb9:
 9FC2: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 9FC5: B6 41 8A    LDA    nb_credits_418a
 9FC8: FD 3F 98    STD    $3F98
-9FCB: BD A0 F9    JSR    function_a0f9
+9FCB: BD A0 F9    JSR    function_returns_z_a0f9
 9FCE: 26 36       BNE    $A006
 9FD0: 86 03       LDA    #$03
 9FD2: 97 06       STA    dp_sem_cpu1_06
@@ -4329,7 +4329,7 @@ A0F6: 0F 07       CLR    dp_sem_cpu2_07
 A0F8: 39          RTS
 
 ; called 2x  from $9F75, $9FCB
-function_a0f9:
+function_returns_z_a0f9:		; [cc_handled]
 A0F9: 96 13       LDA    $13
 A0FB: 4C          INCA
 A0FC: 84 3F       ANDA   #$3F
@@ -5041,9 +5041,9 @@ A63E: 39          RTS
 function_a63f:
 A63F: 86 2C       LDA    #$2C
 A641: 97 B2       STA    $B2
-A643: BD B4 D7    JSR    function_b4d7
+A643: BD B4 D7    JSR    function_returns_z_b4d7
 A646: 26 53       BNE    $A69B
-A648: BD B4 EC    JSR    function_b4ec
+A648: BD B4 EC    JSR    function_returns_z_b4ec
 A64B: 26 4E       BNE    $A69B
 A64D: BD B5 1D    JSR    function_b51d
 A650: BD B5 31    JSR    function_b531
@@ -5746,7 +5746,7 @@ AC00: B6 41 8A    LDA    nb_credits_418a
 AC03: FD 3F 98    STD    $3F98
 AC06: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
 AC09: 10 26 FF 24 LBNE   $AB31
-AC0D: 8D 44       BSR    function_ac53
+AC0D: 8D 44       BSR    function_returns_z_ac53
 AC0F: 27 01       BEQ    $AC12
 AC11: 39          RTS
 AC12: 0F DB       CLR    $DB
@@ -5781,7 +5781,7 @@ AC50: 0F 07       CLR    dp_sem_cpu2_07
 AC52: 39          RTS
 
 ; called 2x  from $9B19, $AC0D
-function_ac53:
+function_returns_z_ac53:		; [cc_handled]
 AC53: 96 13       LDA    $13
 AC55: 4C          INCA
 AC56: 84 3F       ANDA   #$3F
@@ -6339,9 +6339,9 @@ B251: A0 E0       SUBA   ,S+		; [local]
 B253: 97 AE       STA    $AE
 B255: 86 20       LDA    #$20
 B257: 97 B1       STA    $B1
-B259: BD B4 D7    JSR    function_b4d7
+B259: BD B4 D7    JSR    function_returns_z_b4d7
 B25C: 26 55       BNE    $B2B3
-B25E: BD B4 EC    JSR    function_b4ec
+B25E: BD B4 EC    JSR    function_returns_z_b4ec
 B261: 26 50       BNE    $B2B3
 B263: BD B5 1D    JSR    function_b51d
 B266: BD B5 31    JSR    function_b531
@@ -6495,9 +6495,9 @@ B381: AB 2A       ADDA   $A,Y
 B383: 97 AD       STA    $AD
 B385: 86 2C       LDA    #$2C
 B387: 97 B2       STA    $B2
-B389: BD B4 D7    JSR    function_b4d7
+B389: BD B4 D7    JSR    function_returns_z_b4d7
 B38C: 26 54       BNE    $B3E2
-B38E: BD B4 EC    JSR    function_b4ec
+B38E: BD B4 EC    JSR    function_returns_z_b4ec
 B391: 26 4F       BNE    $B3E2
 B393: BD B5 1D    JSR    function_b51d
 B396: BD B5 31    JSR    function_b531
@@ -6673,7 +6673,7 @@ B4D5: 35 86       PULS   D,PC		; [manual_stack_pull]
 
 
 ; called 3x  from $A643, $B259, $B389
-function_b4d7:
+function_returns_z_b4d7:		; [cc_handled]
 B4D7: 96 AB       LDA    $AB
 B4D9: 2B 0E       BMI    $B4E9
 B4DB: 91 78       CMPA   $78
@@ -6688,7 +6688,7 @@ B4E9: 86 01       LDA    #$01
 B4EB: 39          RTS
 
 ; called 3x  from $A648, $B25E, $B38E
-function_b4ec:
+function_returns_z_b4ec:	; [cc_handled]
 B4EC: DE 74       LDU    $74
 B4EE: 86 18       LDA    #$18
 B4F0: 97 19       STA    dp_bank1_shadow_19
@@ -6789,7 +6789,7 @@ B57F: 39          RTS
 
 
 ; called 1x  from $B58C, $C665
-function_b580:
+function_b580:		; [cc_handled]
 B580: A6 84       LDA    ,X
 B582: 81 FF       CMPA   #$FF
 B584: 27 09       BEQ    $B58F
@@ -7695,7 +7695,7 @@ BA88: C6 2C       LDB    #$2C
 BA8A: 7E B8 8E    JMP    function_b88e
 
 ; called 21x  from $BE9B, $C167, $C185, $C1E4, $C201, $C2E6, $C404, $C443, ...
-function_ba8d:
+function_ba8d:		; [cc_handled]
 BA8D: EC 16       LDD    -$A,X
 BA8F: 10 2B 00 99 LBMI   $BB2C
 BA93: E3 1A       ADDD   -$6,X
@@ -7728,10 +7728,7 @@ BACE: EC E1       LDD    ,S++		; [local]
 BAD0: ED 1A       STD    -$6,X
 BAD2: 5F          CLRB
 BAD3: 35 82       PULS   A,PC		; [manual_stack_pull]
-BAD5: 0A 30       DEC    $30
-BAD7: 0A 36       DEC    $36
-BAD9: 0A 32       DEC    $32
-BADB: 0A 38       DEC    $38
+
 BADD: C6 FF       LDB    #$FF
 BADF: E7 84       STB    ,X
 BAE1: 39          RTS
@@ -7756,7 +7753,8 @@ BB02: 27 08       BEQ    $BB0C
 BB04: 81 40       CMPA   #$40
 BB06: 27 04       BEQ    $BB0C
 BB08: C6 48       LDB    #$48
-BB0A: 35 82       PULS   A,PC
+BB0A: 35 82       PULS   A,PC		; [manual_stack_pull]
+
 BB0C: CE BB C1    LDU    #$BBC1
 BB0F: C6 08       LDB    #$08
 BB11: A6 E0       LDA    ,S+		; [local]

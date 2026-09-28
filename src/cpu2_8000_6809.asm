@@ -2105,7 +2105,7 @@ function_8eef:
 8F95: 39          RTS
 
 ; called 2x  from $8F59, $941D
-function_8f96:
+function_8f96:		; [cc_handled]
 8F96: 96 81       LDA    $81
 8F98: 84 07       ANDA   #$07
 8F9A: 26 4C       BNE    $8FE8
@@ -2125,7 +2125,7 @@ function_8f96:
 8FB9: C4 03       ANDB   #$03
 8FBB: 10 83 FF 03 CMPD   #$FF03
 8FBF: 26 02       BNE    $8FC3
-8FC1: 35 86       PULS   D,PC
+8FC1: 35 86       PULS   D,PC		; [manual_stack_pull]
 8FC3: 96 83       LDA    $83
 8FC5: 84 07       ANDA   #$07
 8FC7: 26 10       BNE    $8FD9
@@ -2145,7 +2145,7 @@ function_8f96:
 8FE8: 39          RTS
 
 ; called 1x  from $8F5D
-function_8fe9:
+function_8fe9:		; [cc_handled]
 8FE9: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 8FEC: A6 41       LDA    $1,U
 8FEE: 84 70       ANDA   #$70
@@ -2156,7 +2156,7 @@ function_8fe9:
 8FFA: 39          RTS
 
 ; called 1x  from $8F72
-function_8ffb:
+function_8ffb:		; [cc_handled]
 8FFB: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 8FFE: A6 1B       LDA    -$5,X
 9000: 84 70       ANDA   #$70
@@ -3856,7 +3856,7 @@ function_9d77:
 9D8D: 7E 99 37    JMP    $9937
 
 ; called 2x  from $9D36, $C081
-function_9d90:
+function_9d90:		; [cc_handled]
 9D90: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9D93: CC FF FF    LDD    #$FFFF
 9D96: BD 93 02    JSR    function_9302
@@ -3867,7 +3867,7 @@ function_9d90:
 9DA0: 39          RTS
 
 ; called 2x  from $9D4E, $C0AB
-function_9da1:
+function_9da1:		; [cc_handled]
 9DA1: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9DA4: CC 01 FF    LDD    #$01FF
 9DA7: BD 93 02    JSR    function_9302
@@ -11209,7 +11209,7 @@ D69D: 4F          CLRA
 D69E: 39          RTS
 
 ; called 4x  from $D249, $D2A1, $D2FF, $D349
-function_d69f:
+function_d69f:  		; [cc_handled]
 D69F: 96 38       LDA    $38
 D6A1: 9B 39       ADDA   $39
 D6A3: 26 01       BNE    $D6A6
@@ -11244,7 +11244,7 @@ D6D4: 33 C8 20    LEAU   $20,U
 D6D7: 20 D2       BRA    $D6AB
 
 ; called 1x; jumped-to 1x  from $D69A, $D6CA
-function_d6d9:
+function_d6d9:		; [cc_handled]
 D6D9: EC 5C       LDD    -$4,U
 D6DB: E3 A4       ADDD   ,Y		; [rom_address]
 D6DD: A3 0C       SUBD   $C,X
