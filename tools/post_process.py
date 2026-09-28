@@ -83,6 +83,7 @@ def game_specific_cpu2(address,lines,i):
     elif address == 0x8008:
         # skip memory/video memory test of boot
         kill_code(lines,i,0x8097)
+
     return line
 
 dreg_dict = {'a':'d0','b':'d1'}
@@ -201,17 +202,26 @@ def check_stack_usage(lines,i):
         # native/target word D, or byte A,B stack mix goes crashy crashy
         arg = line.split()[1].lower()
         param = arg.split(",")[0]
+        if "[irq_stack_address]" in line:
+            inst = "GET_REG_ROM_ADDRESS"  # irq stack reloc hack in top ROM
+        else:
+            inst = "GET_REG_ADDRESS"
+
         if param == "d0/d1":
-            line = "\tsubq.w\t#2,d5\n"+change_instruction("GET_REG_ADDRESS\t0,d5",lines,i) + "\tMAKE_D\n\tMOVE_W_FROM_REG\td1,a0\n"
+            line = "\tsubq.w\t#2,d5\n"+change_instruction(f"{inst}\t0,d5",lines,i) + "\tMAKE_D\n\tMOVE_W_FROM_REG\td1,a0\n"
         else:
             # native/target byte A/B stack mix goes crashy crashy
-            line = "\tsubq.w\t#1,d5\n" + change_instruction("GET_REG_ADDRESS\t0,d5",lines,i) + f"\tmove.b\t{param},(a0)\n"
+            line = "\tsubq.w\t#1,d5\n" + change_instruction(f"{inst}\t0,d5",lines,i) + f"\tmove.b\t{param},(a0)\n"
 
     elif "[manual_stack_pull]" in line:
         # native/target word D, or byte A,B stack mix goes crashy crashy
         arg = line.split()[1].lower()
         param = arg.split(",")[1]
-        line = change_instruction("GET_REG_ADDRESS\t0,d5",lines,i)
+        if "[irq_stack_address]" in line:
+            inst = "GET_REG_ROM_ADDRESS"  # irq stack reloc hack in top ROM
+        else:
+            inst = "GET_REG_ADDRESS"
+        line = change_instruction(f"{inst}\t0,d5",lines,i)
         if param == "d0/d1":
              line += "\taddq.w\t#2,d5\n\tMOVE_W_TO_REG\ta0,d1\n"
         else:

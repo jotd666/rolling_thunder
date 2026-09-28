@@ -124,8 +124,10 @@ def load_mame_log(in_log,out_log,pcs,excluded_pcs=set(),avoid_regs = "",sorted_c
     with open(out_log,"w") as fw:
         fw.writelines(lst)
 
-pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=0)
+pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=1)
+if not pcs:
+    raise Exception("No trace found on the amiga side for this cpu")
 
 # trace rolling.tr,,,{tracelog "A=%02X, B=%02X, D=%04X, X=%04X, Y=%04X, U=%04X ",a,b,d,x,y,u}
-load_mame_log(r"K:\Emulation\MAME\mame.tr","rolling.tr",pcs)
+load_mame_log(r"K:\Emulation\MAME\mame.tr","mame.tr",pcs)
 

@@ -1070,7 +1070,7 @@ function_85da:
 85F8: 8D 60       BSR    function_865a
 85FA: A6 84       LDA    ,X
 85FC: 2B 4B       BMI    $8649
-85FE: CE 86 93    LDU    #$8693		; ROM
+85FE: CE 86 93    LDU    #jump_table_8693		; ROM
 8601: 81 13       CMPA   #$13
 8603: 26 03       BNE    $8608
 8605: CE 86 FD    LDU    #jump_table_86fd
@@ -1086,24 +1086,24 @@ function_85da:
 861A: A6 02       LDA    $2,X
 861C: 84 7C       ANDA   #$7C
 861E: 44          LSRA
-861F: EE C6       LDU    A,U
+861F: EE C6       LDU    A,U		; [rom_address]
 8621: A6 15       LDA    -$B,X
 8623: 4C          INCA
 8624: 84 0F       ANDA   #$0F
 8626: A7 15       STA    -$B,X
-8628: E6 C6       LDB    A,U
+8628: E6 C6       LDB    A,U		; [rom_address]
 862A: C1 FF       CMPB   #$FF
 862C: 27 12       BEQ    $8640
 862E: C1 F0       CMPB   #$F0
 8630: 25 12       BCS    $8644
 8632: 10 8E 86 53 LDY    #$8653
 8636: C4 0F       ANDB   #$0F
-8638: A6 A5       LDA    B,Y
+8638: A6 A5       LDA    B,Y	; [rom_address]
 863A: A7 0A       STA    $A,X
 863C: 6F 14       CLR    -$C,X
 863E: 20 09       BRA    $8649
 8640: 6F 15       CLR    -$B,X
-8642: E6 C4       LDB    ,U
+8642: E6 C4       LDB    ,U		; [rom_address]
 8644: BD B4 29    JSR    function_b429
 8647: 6F 14       CLR    -$C,X
 8649: 0A 3B       DEC    $3B
@@ -1336,7 +1336,7 @@ function_8898:
 
 ; called 7x; jumped-to 2x  from $85BA, $887A, $8A55, $8B01, $9F5A, $9F68, $A31B, $A68B, ...
 function_88b2:
-88B2: 34 06       PSHS   D		; [manual_stack_push]
+88B2: 34 06       PSHS   D		; [manual_stack_push] [irq_stack_address]
 88B4: A6 41       LDA    $1,U
 88B6: AB 61       ADDA   $1,S		; [local]
 88B8: 19          DAA
@@ -1345,7 +1345,7 @@ function_88b2:
 88BD: A9 E4       ADCA   ,S		; [local]
 88BF: 19          DAA
 88C0: A7 C4       STA    ,U
-88C2: 35 86       PULS   D,PC		; [manual_stack_pull]
+88C2: 35 86       PULS   D,PC		; [manual_stack_pull] [irq_stack_address]
 
 
 ; 1 jump-table ref
@@ -2571,7 +2571,7 @@ function_92d6:
 function_9302:
 9302: 8D 20       BSR    function_9324
 9304: CE 40 00    LDU    #$4000		; layer 2 tilemap
-9307: EC CB       LDD    D,U
+9307: EC CB       LDD    D,U		; [video_address]
 9309: C4 03       ANDB   #$03
 930B: C1 03       CMPB   #$03
 930D: 27 02       BEQ    $9311
@@ -2587,8 +2587,8 @@ function_9302:
 931C: 54          LSRB
 931D: 54          LSRB
 931E: 54          LSRB
-931F: EE C5       LDU    B,U
-9321: E6 C6       LDB    A,U
+931F: EE C5       LDU    B,U		; [rom_address]
+9321: E6 C6       LDB    A,U		; [rom_address]
 9323: 39          RTS
 
 ; called 1x  from $9302
@@ -2867,7 +2867,7 @@ function_9497:
 9546: EC E1       LDD    ,S++		; [local]
 9548: ED 1A       STD    -$6,X
 954A: 5F          CLRB
-954B: 35 82       PULS   A,PC		; [manual_stack_pull]
+954B: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 
 
 ; called 20x  from $B6F1, $B73E, $B75A, $B7CF, $B855, $B86F, $B887, $B8D2, ...
@@ -3337,10 +3337,10 @@ function_98cd:
 98DE: 4C          INCA
 98DF: 84 7F       ANDA   #$7F
 98E1: A7 15       STA    -$B,X
-98E3: E6 C6       LDB    A,U
+98E3: E6 C6       LDB    A,U		; [rom_address]
 98E5: 2A 04       BPL    $98EB
 98E7: 6F 15       CLR    -$B,X
-98E9: E6 C4       LDB    ,U
+98E9: E6 C4       LDB    ,U		; [rom_address]
 98EB: 8D 4E       BSR    function_993b
 98ED: 6F 14       CLR    -$C,X
 98EF: 39          RTS
@@ -6849,6 +6849,8 @@ B597: CE DB 1C    LDU    #$DB1C
 B59A: 7E 8D E8    JMP    function_8de8
 B59D: CE DB 34    LDU    #$DB34
 B5A0: 7E 8D E8    JMP    function_8de8
+
+function_b5a3:
 B5A3: BD 94 97    JSR    function_9497
 B5A6: 2A 01       BPL    $B5A9
 B5A8: 39          RTS
@@ -7680,6 +7682,7 @@ BBCF: 39          RTS
 
 BBD0: C6 04       LDB    #$04
 BBD2: 7E B4 29    JMP    function_b429
+function_bbd5:
 BBD5: 6A 0A       DEC    $A,X
 BBD7: 27 01       BEQ    $BBDA
 BBD9: 39          RTS
@@ -8027,6 +8030,8 @@ BE73: 84 FE       ANDA   #$FE
 BE75: A7 0C       STA    $C,X
 BE77: C6 04       LDB    #$04
 BE79: 7E B4 29    JMP    function_b429
+
+function_be7c:
 BE7C: 6A 0A       DEC    $A,X
 BE7E: 27 01       BEQ    $BE81
 BE80: 39          RTS
@@ -9601,6 +9606,7 @@ CAFD: 39          RTS
 ; 2 jump-table ref
 function_cafe:
 CAFE: 7E 8D C8    JMP    function_8dc8
+function_cb01:
 CB01: CE CB 09    LDU    #jump_table_cb09
 CB04: A6 09       LDA    $9,X
 CB06: 48          ASLA
@@ -9656,6 +9662,7 @@ CB74: C6 04       LDB    #$04
 CB76: 7E B4 29    JMP    function_b429
 CB79: 6C 14       INC    -$C,X
 CB7B: 39          RTS
+function_cb7c:
 CB7C: 6A 0A       DEC    $A,X
 CB7E: 27 01       BEQ    $CB81
 CB80: 39          RTS
@@ -9699,6 +9706,8 @@ CBBB: 7E 8D E8    JMP    function_8de8
 function_cbbe:
 CBBE: C6 04       LDB    #$04
 CBC0: 7E B4 29    JMP    function_b429
+
+function_cbc3:
 CBC3: 6A 0A       DEC    $A,X
 CBC5: 27 01       BEQ    $CBC8
 CBC7: 39          RTS
@@ -9709,6 +9718,8 @@ CBCE: CE DE 34    LDU    #$DE34		; ROM
 CBD1: 7E 8D E8    JMP    function_8de8
 CBD4: 6C 14       INC    -$C,X
 CBD6: 39          RTS
+
+function_cbd7:
 CBD7: 6A 0A       DEC    $A,X
 CBD9: 27 01       BEQ    $CBDC
 CBDB: 39          RTS
@@ -9719,6 +9730,7 @@ CBE2: CE DE 90    LDU    #$DE90
 CBE5: 7E 8D E8    JMP    function_8de8
 CBE8: 6C 14       INC    -$C,X
 CBEA: 39          RTS
+function_cbeb:
 CBEB: 6A 0A       DEC    $A,X
 CBED: 27 01       BEQ    $CBF0
 CBEF: 39          RTS
@@ -9744,6 +9756,7 @@ CC10: 83 00 50    SUBD   #$0050
 CC13: ED 1A       STD    -$6,X
 CC15: 6C 14       INC    -$C,X
 CC17: 39          RTS
+function_cc18:
 CC18: 6A 0A       DEC    $A,X
 CC1A: 27 01       BEQ    $CC1D
 CC1C: 39          RTS
@@ -9754,11 +9767,13 @@ CC23: CE DE B8    LDU    #$DEB8		; ROM
 CC26: 7E 8D E8    JMP    function_8de8
 CC29: 6C 14       INC    -$C,X
 CC2B: 39          RTS
+function_cc2c:
 CC2C: 6A 0A       DEC    $A,X
 CC2E: 27 01       BEQ    $CC31
 CC30: 39          RTS
 CC31: 6C 14       INC    -$C,X
 CC33: 39          RTS
+function_cc34:
 CC34: 6A 0A       DEC    $A,X
 CC36: 27 01       BEQ    $CC39
 CC38: 39          RTS
@@ -9769,6 +9784,7 @@ CC3F: CE DE CC    LDU    #$DECC
 CC42: 7E 8D E8    JMP    function_8de8
 CC45: 6C 14       INC    -$C,X
 CC47: 39          RTS
+function_cc48:
 CC48: 6A 0A       DEC    $A,X
 CC4A: 27 01       BEQ    $CC4D
 CC4C: 39          RTS
@@ -9779,6 +9795,7 @@ CC53: CE DE FC    LDU    #$DEFC
 CC56: 7E 8D E8    JMP    function_8de8
 CC59: 6C 14       INC    -$C,X
 CC5B: 39          RTS
+function_cc5c:
 CC5C: 6A 0A       DEC    $A,X
 CC5E: 27 01       BEQ    $CC61
 CC60: 39          RTS
@@ -9789,6 +9806,7 @@ CC67: CE DE F0    LDU    #$DEF0
 CC6A: 7E 8D E8    JMP    function_8de8
 CC6D: 6C 14       INC    -$C,X
 CC6F: 39          RTS
+function_cc70:
 CC70: 6A 0A       DEC    $A,X
 CC72: 27 01       BEQ    $CC75
 CC74: 39          RTS
@@ -9798,6 +9816,7 @@ CC79: CE DF 1C    LDU    #$DF1C
 CC7C: 7E 8D E8    JMP    function_8de8
 CC7F: 6C 14       INC    -$C,X
 CC81: 39          RTS
+function_cc82:
 CC82: 6A 0A       DEC    $A,X
 CC84: 27 01       BEQ    $CC87
 CC86: 39          RTS
@@ -9961,7 +9980,7 @@ CDA7: B3 04 0A    SUBD   $040A		; work RAM (shared with CPU1 $4400)
 CDAA: 10 83 0C 00 CMPD   #$0C00
 CDAE: 2D 01       BLT    $CDB1
 CDB0: 39          RTS
-CDB1: CE DF 4C    LDU    #$DF4C		; ROM
+CDB1: CE DF 4C    LDU    #$DF4C		; ROM   [breakpoint]
 CDB4: 7E 8D E8    JMP    function_8de8
 
 ; 2 jump-table ref
@@ -9969,7 +9988,7 @@ function_cdb7:
 CDB7: 6A 0A       DEC    $A,X
 CDB9: 27 01       BEQ    $CDBC
 CDBB: 39          RTS
-CDBC: CE DF 4C    LDU    #$DF4C		; ROM
+CDBC: CE DF 4C    LDU    #$DF4C		; ROM  [breakpoint]
 CDBF: 7E 8D E8    JMP    function_8de8
 
 ; 1 jump-table ref
@@ -9990,7 +10009,7 @@ CDD7: 39          RTS
 CDD8: A6 09       LDA    $9,X
 CDDA: 81 03       CMPA   #$03
 CDDC: 27 06       BEQ    $CDE4
-CDDE: CE DF 4C    LDU    #$DF4C		; ROM
+CDDE: CE DF 4C    LDU    #$DF4C		; ROM  [breakpoint]
 CDE1: 7E 8D E8    JMP    function_8de8
 CDE4: 6C 14       INC    -$C,X
 CDE6: 39          RTS
@@ -11567,6 +11586,61 @@ jump_table_8561:
 	dc.w	function_8567	; $8561
 	dc.w	function_858d	; $8563
 	dc.w	function_85cb	; $8565
+jump_table_8693:
+	dc.w	function_bbd5 
+	dc.w	function_b5a3 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767
+	dc.w	function_8767
+	dc.w	function_8767
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_b5a3 
+	dc.w	function_8767 
+	dc.w	function_be7c 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_cb01 
+	dc.w	function_cb7c 
+	dc.w	function_cbc3 
+	dc.w	function_8767 
+	dc.w	function_8767
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_8767 
+	dc.w	function_cbd7 
+	dc.w	function_cbeb 
+	dc.w	function_cc18 
+	dc.w	function_cc2c
+	dc.w	function_cc34 
+	dc.w	function_cc48 
+	dc.w	function_cc5c 
+	dc.w	function_cc70 
+	dc.w	function_cc82 
+
 jump_table_86fd:
 	dc.w	function_cdd3	; $86fd
 	dc.w	function_ccaa	; $86ff

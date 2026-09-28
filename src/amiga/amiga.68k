@@ -1604,6 +1604,7 @@ osd_set_cpu2_bank:
 	BREAKPOINT	"Bank 2 out of range (d7)"
 0:
 	.endif
+
 	lea		cpu2_banks,a0
 	jbsr	compute_bank_base
 	move.l	a1,cpu2_bank_base
@@ -2495,7 +2496,7 @@ really_update_sprites:
 	*********************
 	
 	CPU1_GET_MEMORY_START_IN_A6
-	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
+	lea		(SPRITE_ADDRESS,a6),a0
 
 *	int sprite_xoffs = m_spriteram[0x07f5] + ((m_spriteram[0x07f4] & 1) << 8);
 *	int sprite_yoffs = m_spriteram[0x07f7];
