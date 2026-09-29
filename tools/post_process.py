@@ -192,7 +192,7 @@ def remove_continuing_lines(lines,i):
 
 def check_stack_usage(lines,i):
     line = lines[i]
-    if any(x in line for x in ("[alloc_locals]","[free_locals]","[local]","[pushed_parameter]")):
+    if any(x in line for x in ("[alloc_locals]","[free_locals]","[local]","[local_no_irq]","[local_select]","[pushed_parameter]")):
         for j in range(1,4):
             if "ERROR" in lines[i-j] and " S " in lines[i-j]:
                lines[i-j]=remove_error(lines[i-j],True)
@@ -235,6 +235,10 @@ def check_stack_usage(lines,i):
 def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):
     line = lines[i]
 
+    if "[address_pop_rts]" in line:
+        line = change_instruction("addq.w\t#4,sp",lines,i,False)  # leave RTS
+
+
     # pre-add video_address tag if we find a store instruction to an explicit 3000-3FFF address
     if store_to_video.search(line):
         line = line.rstrip() + " [video_address]\n"
@@ -267,6 +271,12 @@ def handle_special_addresses(input_dict,store_to_video,rom_address,lines,i,cpu):
         # which explains why all local tags redirect to ROM (except the ones
         # from non-IRQ)
         line = line.replace("_ADDRESS","_ROM_ADDRESS")
+    elif (cpu==2 and "[local_select]" in line):
+        # for cpu2 only
+        # note: we're using a part of ROM for stack in IRQ to avoid conflicts
+        # which explains why all local tags redirect to ROM (except the ones
+        # from non-IRQ)
+        line = line.replace("_ADDRESS","_ROM_RAM_SELECT_ADDRESS")
     elif "[video_address" in line:
         # give me the original instruction
         line = line.replace("_ADDRESS","_VIDEO_ADDRESS")

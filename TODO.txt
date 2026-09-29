@@ -1,7 +1,12 @@
-detect JSR + branch (is there a mode on converter?)
 
+bg0 tiles are drawn too low. Skip the first 3 rows for a proper alignment
 log used sprites
 display sprites: X is shifted
+fan is completely trashed too
+attract mode runs properly until hero enters arms door: hero locks up
+demo times out
+and then deadlock just after highscore (boss)
+check if 9222 (cpu2) should be called? not called in MAME
 
 optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
 

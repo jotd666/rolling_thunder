@@ -2348,10 +2348,10 @@ function_9085:
 ; 1 jump-table ref
 game_demo_90fb:
 90FB: 7D 42 3D    TST    in_level_423d		; input level [ 0] dip SWA:1 (service mode)
-90FE: 26 14       BNE    $9114
+90FE: 26 14       BNE    service_mode_9114
 9100: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
 9103: 27 02       BEQ    $9107
-9105: 0C 18       INC    $18
+9105: 0C 18       INC    $18		; exit from demo
 9107: 96 04       LDA    dp_sub_cpu1_04		; CPU1 sub-state
 9109: 91 05       CMPA   dp_sub_cpu2_05		; CPU2 sub-state
 910B: 23 01       BLS    $910E
@@ -2359,6 +2359,7 @@ game_demo_90fb:
 910E: CE 91 24    LDU    #jump_table_9124
 9111: 48          ASLA
 9112: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=10]
+service_mode_9114:
 9114: B7 C0 00    STA    $C000		; [breakpoint] | ROM
 9117: 0F 02       CLR    dp_state_cpu1_02
 9119: 0F 04       CLR    dp_sub_cpu1_04
@@ -5102,7 +5103,6 @@ A6BA: 0C AB       INC    $AB
 A6BC: 0F AD       CLR    $AD
 A6BE: 7E A6 43    JMP    $A643
 
-A6C0: 43          COMA   ; [breakpoint]  instruction overlap!
 A6C1: 39          RTS
 
 ; called 1x  from $9D53
@@ -6815,7 +6815,7 @@ B5AB: 0C 30       INC    $30
 B5AD: 39          RTS
 
 ; 125 jump-table ref; jumped-to 40x  from $BE88, $BF9E, $C0BD, $C150, $C156, $C1CB, $C1D3, $C28F, ...
-function_b5ae:
+function_b5ae:		; [cc_handled]
 B5AE: 6F 09       CLR    $9,X
 B5B0: CE B6 10    LDU    #$B610		; ROM
 B5B3: A6 84       LDA    ,X
@@ -6978,7 +6978,7 @@ B6E3: 7E B8 8E    JMP    function_b88e
 
 
 ; called 5x; jumped-to 60x  from $B6AF, $B6E3, $BA85, $BA8A, $BB1C, $BB21, $BB29, $BEA4, ...
-function_b88e:
+function_b88e:   ; [cc_handled] (hoping jump table doesn't complicate things)
 B88E: E7 07       STB    $7,X
 B890: C5 03       BITB   #$03
 B892: 26 08       BNE    $B89C
@@ -7729,6 +7729,10 @@ BAD0: ED 1A       STD    -$6,X
 BAD2: 5F          CLRB
 BAD3: 35 82       PULS   A,PC		; [manual_stack_pull]
 
+BAD5: 0A 30       DEC    $30                                         
+BAD7: 0A 36       DEC    $36                                         
+BAD9: 0A 32       DEC    $32                                         
+BADB: 0A 38       DEC    $38                                         
 BADD: C6 FF       LDB    #$FF
 BADF: E7 84       STB    ,X
 BAE1: 39          RTS
@@ -7861,7 +7865,7 @@ BBC0: 39          RTS
 
 
 ; called 38x  from $BFBB, $BFD7, $BFEB, $C021, $C05E, $C076, $C0DA, $C0E8, ...
-function_bbd1:
+function_bbd1:		; [cc_handled]
 BBD1: EC 18       LDD    -$8,X
 BBD3: 2F 61       BLE    $BC36
 BBD5: E3 1C       ADDD   -$4,X
@@ -7963,7 +7967,7 @@ BC9A: 35 82       PULS   A,PC		; [manual_stack_pull]
 
 
 ; called 3x  from $BEA1, $CBE9, $CC32
-function_bc9c:
+function_bc9c:  ; [cc_handled]
 BC9C: EC 1A       LDD    -$6,X
 BC9E: 10 83 FF 00 CMPD   #$FF00
 BCA2: 2D 21       BLT    $BCC5
@@ -8249,7 +8253,7 @@ BEC3: CE DE 8A    LDU    #$DE8A		; ROM
 BEC6: 7E B5 FD    JMP    $B5FD
 
 ; called 1x  from $BEA8
-function_bec9:
+function_bec9:   ; [cc_handled]
 BEC9: A6 0C       LDA    $C,X
 BECB: 85 20       BITA   #$20
 BECD: 26 49       BNE    $BF18
@@ -9319,7 +9323,7 @@ C660: 7E B5 AE    JMP    function_b5ae
 
 
 ; called 6x  from $C629, $C631, $C639, $C6AC, $C6B4, $C6BC
-function_c663:
+function_c663:		; [cc_handled]
 C663: EE 62       LDU    $2,S		; [pushed_parameter] retrieve pushed object number from stack (X)
 C665: BD B5 80    JSR    function_b580		; [breakpoint]
 C668: 26 01       BNE    $C66B
@@ -10073,7 +10077,7 @@ CC5B: CE DF 22    LDU    #$DF22		; ROM
 CC5E: 7E B5 FD    JMP    $B5FD
 
 ; called 1x  from $CC40
-function_cc61:
+function_cc61:		; [cc_handled]
 CC61: A6 0C       LDA    $C,X
 CC63: 85 20       BITA   #$20
 CC65: 26 49       BNE    $CCB0
@@ -11650,7 +11654,7 @@ D86C: 20 D6       BRA    $D844
 
 
 ; called 1x  from $D850
-function_d89e:
+function_d89e:		; [cc_handled]
 D89E: DC 88       LDD    $88
 D8A0: E3 0A       ADDD   $A,X
 D8A2: ED 0A       STD    $A,X

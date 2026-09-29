@@ -1318,7 +1318,7 @@ function_888f:
 function_8898:
 8898: 39          RTS
 
-8899: 34 06       PSHS   D		; [manual_stack_push]
+8899: 34 06       PSHS   D		; [manual_stack_push] [irq_stack_address]
 889B: A6 42       LDA    $2,U
 889D: AB 61       ADDA   $1,S		; [local]
 889F: 19          DAA
@@ -1331,7 +1331,7 @@ function_8898:
 88AB: 89 00       ADCA   #$00
 88AD: 19          DAA
 88AE: A7 C4       STA    ,U
-88B0: 35 86       PULS   D,PC		; [manual_stack_pull]
+88B0: 35 86       PULS   D,PC		; [manual_stack_pull] [irq_stack_address]
 
 
 ; called 7x; jumped-to 2x  from $85BA, $887A, $8A55, $8B01, $9F5A, $9F68, $A31B, $A68B, ...
@@ -1946,7 +1946,7 @@ function_8e05:
 8E6D: 39          RTS
 
 ; called 2x  from $8E31, $93E6
-function_8e6e:
+function_8e6e:		; [cc_handled]
 8E6E: 96 81       LDA    $81
 8E70: 84 07       ANDA   #$07
 8E72: 26 4A       BNE    $8EBE
@@ -1965,7 +1965,7 @@ function_8e6e:
 8E8F: C4 07       ANDB   #$07
 8E91: 10 83 FF 03 CMPD   #$FF03
 8E95: 26 02       BNE    $8E99
-8E97: 35 86       PULS   D,PC
+8E97: 35 86       PULS   D,PC		; [manual_stack_pull] [irq_stack_address]
 
 8E99: 96 83       LDA    $83
 8E9B: 84 07       ANDA   #$07
@@ -1987,7 +1987,7 @@ function_8e6e:
 8EBE: 39          RTS
 
 ; called 1x  from $8E35
-function_8ebf:
+function_8ebf:		; [cc_handled]
 8EBF: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 8EC2: A6 41       LDA    $1,U
 8EC4: 84 70       ANDA   #$70
@@ -1998,7 +1998,7 @@ function_8ebf:
 8ED0: 39          RTS
 
 ; called 1x  from $8E4A
-function_8ed1:
+function_8ed1:	; [cc_handled]
 8ED1: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 8ED4: A6 1B       LDA    -$5,X
 8ED6: 84 70       ANDA   #$70
@@ -2224,7 +2224,7 @@ function_9019:
 9074: 35 90       PULS   X,PC
 
 ; called 11x  from $A87A, $A891, $A8A6, $A927, $A943, $A9B8, $AA9D, $AAF5, ...
-function_9076:
+function_9076:		; [cc_handled]
 9076: DC 86       LDD    $86
 9078: C4 F0       ANDB   #$F0
 907A: ED E3       STD    ,--S		; [local]
@@ -2291,7 +2291,7 @@ function_9076:
 90ED: 39          RTS
 
 ; called 2x  from $90A1, $9458
-function_90ee:
+function_90ee:		; [cc_handled]
 90EE: 96 83       LDA    $83
 90F0: 84 07       ANDA   #$07
 90F2: 27 01       BEQ    $90F5
@@ -2330,7 +2330,7 @@ function_90ee:
 913C: 39          RTS
 
 ; called 1x  from $90A5
-function_913d:
+function_913d:	; [cc_handled]
 913D: A6 01       LDA    $1,X
 913F: 84 FC       ANDA   #$FC
 9141: 81 28       CMPA   #$28
@@ -2345,7 +2345,7 @@ function_913d:
 9156: 39          RTS
 
 ; called 1x  from $90B9
-function_9157:
+function_9157:	; [cc_handled]
 9157: A6 01       LDA    $1,X
 9159: 84 FC       ANDA   #$FC
 915B: 81 28       CMPA   #$28
@@ -2411,6 +2411,7 @@ function_9177:
 91CE: A7 84       STA    ,X
 91D0: 0C B3       INC    $B3
 91D2: 35 90       PULS   X,PC
+
 91D4: EC 1C       LDD    -$4,X
 91D6: 10 83 07 80 CMPD   #$0780
 91DA: 24 1E       BCC    $91FA
@@ -2445,7 +2446,9 @@ function_9177:
 921C: 97 15       STA    $15
 921E: C6 60       LDB    #$60
 9220: E7 07       STB    $7,X
-9222: 35 C0       PULS   U,PC
+9222: 35 C0       PULS   U,PC		; [address_pop_rts] we don't need U
+
+; seems not called!
 9224: 10 8E 13 60 LDY    #$1360
 9228: 96 E4       LDA    $E4
 922A: C6 0B       LDB    #$0B
@@ -2458,6 +2461,7 @@ function_9177:
 9237: 0A 31       DEC    $31
 9239: 0A 33       DEC    $33
 923B: 35 C0       PULS   U,PC
+
 923D: C4 C0       ANDB   #$C0
 923F: E7 05       STB    $5,X
 9241: DC 82       LDD    $82
@@ -2477,7 +2481,7 @@ function_9177:
 9255: 39          RTS
 
 ; called 2x  from $91DC, $948F
-function_9256:
+function_9256:		; [cc_handled]
 9256: 96 83       LDA    $83
 9258: 84 07       ANDA   #$07
 925A: 27 01       BEQ    $925D
@@ -2517,7 +2521,7 @@ function_9256:
 92A4: 39          RTS
 
 ; called 1x  from $91E0
-function_92a5:
+function_92a5:		; [cc_handled]
 92A5: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 92A8: A6 43       LDA    $3,U
 92AA: 84 70       ANDA   #$70
@@ -2535,17 +2539,17 @@ function_92a5:
 92C3: 81 2C       CMPA   #$2C
 92C5: 27 04       BEQ    $92CB
 92C7: C5 02       BITB   #$02
-92C9: 35 82       PULS   A,PC		; [manual_stack_pull]
+92C9: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 92CB: C5 04       BITB   #$04
-92CD: 35 82       PULS   A,PC		; [manual_stack_pull]
+92CD: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 92CF: C4 C0       ANDB   #$C0
 92D1: E7 05       STB    $5,X
 92D3: 5F          CLRB
-92D4: 35 82       PULS   A,PC		; [manual_stack_pull]
+92D4: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 
 
 ; called 1x  from $9208
-function_92d6:
+function_92d6:	; [cc_handled]
 92D6: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 92D9: A6 1D       LDA    -$3,X
 92DB: 84 70       ANDA   #$70
@@ -2566,7 +2570,6 @@ function_92d6:
 92FA: 27 CF       BEQ    $92CB
 92FC: C5 02       BITB   #$02
 92FE: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
-
 9300: 5F          CLRB
 9301: 39          RTS
 
@@ -2783,7 +2786,7 @@ function_9425:
 9494: 7E 93 55    JMP    function_9355
 
 ; called 15x  from $B5A3, $B6EB, $B8CC, $BB8D, $BBA1, $C45B, $C483, $C503, ...
-function_9497:
+function_9497:		; [cc_handled]
 9497: EC 16       LDD    -$A,X
 9499: 2B 74       BMI    $950F
 949B: E3 1A       ADDD   -$6,X
@@ -2813,7 +2816,8 @@ function_9497:
 94D2: EC E1       LDD    ,S++		; [local]
 94D4: ED 1A       STD    -$6,X
 94D6: 5F          CLRB
-94D7: 35 82       PULS   A,PC		; [manual_stack_pull]
+94D7: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
+
 94D9: 0A 31       DEC    $31
 94DB: 0A 37       DEC    $37
 94DD: 0A 33       DEC    $33
@@ -2874,7 +2878,7 @@ function_9497:
 
 
 ; called 20x  from $B6F1, $B73E, $B75A, $B7CF, $B855, $B86F, $B887, $B8D2, ...
-function_956d:
+function_956d:		; [cc_handled]
 956D: EC 18       LDD    -$8,X
 956F: 2F 63       BLE    $95D4
 9571: E3 1C       ADDD   -$4,X
@@ -2908,7 +2912,7 @@ function_956d:
 95B0: E3 12       ADDD   -$E,X
 95B2: ED 18       STD    -$8,X
 95B4: 5F          CLRB
-95B5: 35 82       PULS   A,PC		; [manual_stack_pull]
+95B5: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 95B7: 0A 31       DEC    $31
 95B9: 0A 37       DEC    $37
 95BB: 0A 33       DEC    $33
@@ -2923,7 +2927,7 @@ function_956d:
 95CC: A6 0C       LDA    $C,X
 95CE: 8A 02       ORA    #$02
 95D0: A7 0C       STA    $C,X
-95D2: 35 82       PULS   A,PC		; [manual_stack_pull]
+95D2: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 
 95D4: E3 1C       ADDD   -$4,X
 95D6: 10 83 FC 80 CMPD   #$FC80
@@ -2964,7 +2968,7 @@ function_956d:
 9623: E3 12       ADDD   -$E,X
 9625: ED 18       STD    -$8,X
 9627: 5F          CLRB
-9628: 35 82       PULS   A,PC		; [manual_stack_pull]
+9628: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 
 ; called 1x  from $B298
 function_962a:
@@ -3089,9 +3093,9 @@ function_96bc:
 9703: 84 02       ANDA   #$02
 9705: 26 0D       BNE    $9714
 9707: FC 04 0A    LDD    $040A
-970A: E3 24       ADDD   $4,Y
+970A: E3 24       ADDD   $4,Y		; [rom_address]
 970C: A3 1A       SUBD   -$6,X
-970E: A3 44       SUBD   $4,U
+970E: A3 44       SUBD   $4,U		; [rom_address]
 9710: 2B 75       BMI    $9787
 9712: 20 2B       BRA    $973F
 9714: FC 04 0A    LDD    $040A
@@ -3118,7 +3122,7 @@ function_96bc:
 9742: 2E 19       BGT    $975D
 9744: CE 04 10    LDU    #$0410
 9747: A6 05       LDA    $5,X
-9749: A1 45       CMPA   $5,U		; [rom_address]
+9749: A1 45       CMPA   $5,U
 974B: 26 07       BNE    $9754
 974D: E6 0D       LDB    $D,X
 974F: CA 14       ORB    #$14
@@ -3191,7 +3195,7 @@ function_96bc:
 97CF: 39          RTS
 
 ; called 1x  from $CBB2
-function_97d0:
+function_97d0:		; [cc_handled] (but can be problematic with jump table)
 97D0: CE 04 10    LDU    #$0410		; work RAM (shared with CPU1 $4400)
 97D3: A6 C4       LDA    ,U
 97D5: 2B 38       BMI    $980F
@@ -3231,7 +3235,7 @@ function_97d0:
 9811: 7E B4 29    JMP    function_b429
 
 ; called 1x  from $97F2
-function_9814:
+function_9814:		; [cc_handled]
 9814: EC 5C       LDD    -$4,U
 9816: E3 A4       ADDD   ,Y
 9818: A3 1C       SUBD   -$4,X
@@ -3382,9 +3386,9 @@ function_98cd:
 9930: A7 05       STA    $5,X
 9932: C6 9C       LDB    #$9C
 9934: 7E 99 3B    JMP    function_993b
+
 9937: 96 0A       LDA    $0A
 9939: E6 C6       LDB    A,U	; [rom_address]
-
 ; called 2x; jumped-to 9x  from $98B9, $98EB, $9934, $9A95, $9A9B, $9DBE, $9DC3, $9E3B, ...
 function_993b:
 993B: E7 07       STB    $7,X
@@ -3438,7 +3442,7 @@ function_9a3c:
 9A5F: 7E 8D C8    JMP    function_8dc8
 
 ; called 3x  from $9926, $9A99, $B565
-function_9a62:
+function_9a62:		; [cc_handled]
 9A62: EC 1A       LDD    -$6,X
 9A64: 10 83 FF 00 CMPD   #$FF00
 9A68: 2D 21       BLT    $9A8B
@@ -3745,7 +3749,7 @@ function_9c96:
 9CBE: 7E 99 37    JMP    $9937
 
 ; called 4x  from $9C49, $9C8C, $BF85, $BFE5
-function_9cc1:
+function_9cc1:		; [cc_handled]
 9CC1: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9CC4: CC 01 00    LDD    #$0100
 9CC7: BD 93 02    JSR    function_9302
@@ -3756,7 +3760,7 @@ function_9cc1:
 9CD1: 39          RTS
 
 ; called 4x  from $9C61, $9CB7, $BFAA, $C00E
-function_9cd2:
+function_9cd2:		; [cc_handled]
 9CD2: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9CD5: CC FF 00    LDD    #$FF00
 9CD8: BD 93 02    JSR    function_9302
@@ -3891,7 +3895,7 @@ function_9db2:
 9DC6: 7E 8D C8    JMP    function_8dc8
 
 ; called 2x  from $9DB2, $9E2F
-function_9dc9:
+function_9dc9:			; [cc_handled]
 9DC9: 96 53       LDA    $53
 9DCB: 26 01       BNE    $9DCE
 9DCD: 39          RTS
@@ -3930,7 +3934,7 @@ function_9dc9:
 9E14: 31 A6       LEAY   A,Y
 9E16: EC 4C       LDD    $C,U
 9E18: A3 1C       SUBD   -$4,X
-9E1A: A3 A4       SUBD   ,Y
+9E1A: A3 A4       SUBD   ,Y		; [rom_address]
 9E1C: 26 03       BNE    $9E21
 9E1E: EF 10       STU    -$10,X
 9E20: 39          RTS
@@ -3939,8 +3943,7 @@ function_9dc9:
 9E25: 39          RTS
 9E26: 33 C8 10    LEAU   $10,U
 9E29: 20 A8       BRA    $9DD3
-9E2B: 04 70       LSR    $70
-9E2D: 03 F0       COM    $F0
+
 
 ; 2 jump-table ref
 function_9e2f:
@@ -3974,6 +3977,7 @@ function_9e46:
 9E63: A7 09       STA    $9,X
 9E65: CE DA 64    LDU    #$DA64
 9E68: 7E 8D EA    JMP    $8DEA
+
 9E6B: CE A0 13    LDU    #jump_table_a013
 9E6E: A6 09       LDA    $9,X
 9E70: 48          ASLA
@@ -5187,7 +5191,7 @@ A81B: CE A8 35    LDU    #$A835		; ROM
 A81E: 96 0A       LDA    $0A
 A820: 84 0C       ANDA   #$0C
 A822: 44          LSRA
-A823: EC C6       LDD    A,U
+A823: EC C6       LDD    A,U		; [rom_address]
 A825: ED 16       STD    -$A,X
 A827: CE A8 2F    LDU    #jump_table_a82f
 A82A: A6 09       LDA    $9,X
@@ -5204,7 +5208,7 @@ A843: CE A8 35    LDU    #$A835		; ROM
 A846: 96 0A       LDA    $0A
 A848: 84 0C       ANDA   #$0C
 A84A: 44          LSRA
-A84B: EC C6       LDD    A,U
+A84B: EC C6       LDD    A,U		; [rom_address]
 A84D: C3 00 20    ADDD   #$0020
 A850: ED 16       STD    -$A,X
 A852: CE A8 71    LDU    #jump_table_a871
@@ -5216,7 +5220,7 @@ A85D: 96 0A       LDA    $0A
 A85F: 84 0C       ANDA   #$0C
 A861: 44          LSRA
 A862: EC C6       LDD    A,U
-A864: C3 FF E0    ADDD   #$FFE0
+A864: C3 FF E0    ADDD   #$FFE0		; [rom_address]
 A867: ED 16       STD    -$A,X
 A869: CE A8 71    LDU    #jump_table_a871
 A86C: A6 09       LDA    $9,X
@@ -5575,7 +5579,7 @@ AADE: CE A8 35    LDU    #$A835		; ROM
 AAE1: 96 0A       LDA    $0A
 AAE3: 84 0C       ANDA   #$0C
 AAE5: 44          LSRA
-AAE6: EC C6       LDD    A,U
+AAE6: EC C6       LDD    A,U		; [rom_address]
 AAE8: ED 16       STD    -$A,X
 AAEA: CE AB 49    LDU    #jump_table_ab49
 AAED: A6 09       LDA    $9,X
@@ -6419,10 +6423,10 @@ B0FC: 96 3C       LDA    $3C
 B0FE: 48          ASLA
 B0FF: 9B C2       ADDA   $C2
 B101: 48          ASLA
-B102: EE C6       LDU    A,U
+B102: EE C6       LDU    A,U	; [rom_address]
 B104: 96 C4       LDA    $C4
 B106: 48          ASLA
-B107: EE C6       LDU    A,U
+B107: EE C6       LDU    A,U	; [rom_address]
 B109: BD B1 8C    JSR    function_b18c
 B10C: 6F 84       CLR    ,X
 B10E: 96 68       LDA    $68
@@ -6516,13 +6520,13 @@ B198: 91 79       CMPA   $79
 B19A: 24 19       BCC    $B1B5
 B19C: D6 78       LDB    $78
 B19E: 3D          MUL
-B19F: ED E3       STD    ,--S		; [local]
+B19F: ED E3       STD    ,--S		; [local_no_irq]
 B1A1: D6 62       LDB    $62
 B1A3: 1D          SEX
-B1A4: E3 E1       ADDD   ,S++		; [local]
+B1A4: E3 E1       ADDD   ,S++		; [local_no_irq]
 B1A6: 58          ASLB
 B1A7: 49          ROLA
-B1A8: 10 AE CB    LDY    D,U
+B1A8: 10 AE CB    LDY    D,U	; [bank_address]
 B1AB: 8D 33       BSR    function_b1e0
 B1AD: 0C 63       INC    $63
 B1AF: 96 63       LDA    $63
@@ -6595,16 +6599,16 @@ B21D: 6F 0E       CLR    $E,X
 B21F: CE E8 E0    LDU    #$E8E0		; ROM
 B222: A6 84       LDA    ,X
 B224: 84 7C       ANDA   #$7C
-B226: A7 E2       STA    ,-S		; [local]
+B226: A7 E2       STA    ,-S		; [local_select] called from irq and from non-irq
 B228: A6 02       LDA    $2,X
 B22A: 84 03       ANDA   #$03
-B22C: AB E0       ADDA   ,S+		; [local]
+B22C: AB E0       ADDA   ,S+		; [local_select]
 B22E: 48          ASLA
 B22F: EC C6       LDD    A,U		; [rom_address]
 B231: A7 04       STA    $4,X
 B233: E7 06       STB    $6,X
 B235: CE E9 40    LDU    #$E940
-B238: A6 7F       LDA    -$1,S		; [local]
+B238: A6 7F       LDA    -$1,S		; [local_select]
 B23A: 44          LSRA
 B23B: EC C6       LDD    A,U		; [rom_address]
 B23D: ED 12       STD    -$E,X
@@ -6665,7 +6669,7 @@ B292: 8D 2A       BSR    function_b2be
 B294: A6 84       LDA    ,X
 B296: 2B 1C       BMI    $B2B4
 B298: BD 96 2A    JSR    function_962a
-B29B: CE B3 79    LDU    #$B379		; ROM
+B29B: CE B3 79    LDU    #jump_table_b379
 B29E: A6 84       LDA    ,X
 B2A0: 84 FC       ANDA   #$FC
 B2A2: 81 10       CMPA   #$10
@@ -6818,6 +6822,8 @@ B53E: 1D          SEX
 B53F: ED 16       STD    -$A,X
 B541: 7E 8D C8    JMP    function_8dc8
 
+function_b554:
+B554: BD 94 97    JSR    $9497                                        
 B557: 2A 01       BPL    $B55A
 B559: 39          RTS
 B55A: 10 26 FE CB LBNE   function_b429
@@ -6904,7 +6910,7 @@ B601: 84 30       ANDA   #$30
 B603: 44          LSRA
 B604: 44          LSRA
 B605: 44          LSRA
-B606: A6 C6       LDA    A,U
+B606: A6 C6       LDA    A,U		; [rom_address]
 B608: A7 08       STA    $8,X
 B60A: 5F          CLRB
 B60B: 39          RTS
@@ -7026,9 +7032,11 @@ B6E2: A6 0C       LDA    $C,X
 B6E4: 84 7E       ANDA   #$7E
 B6E6: A7 0C       STA    $C,X
 B6E8: 7E 8D C8    JMP    function_8dc8
+function_b6eb:
 B6EB: BD 94 97    JSR    function_9497
 B6EE: 2A 01       BPL    $B6F1
 B6F0: 39          RTS
+function_b6f1:
 B6F1: BD 95 6D    JSR    function_956d
 B6F4: 26 0B       BNE    $B701
 B6F6: 6A 0A       DEC    $A,X
@@ -7058,6 +7066,7 @@ B71D: 7E 8D C8    JMP    function_8dc8
 ; 2 jump-table ref
 function_b720:
 B720: 7E 8D C8    JMP    function_8dc8
+function_b723:
 B723: CE B7 F4    LDU    #jump_table_b7f4
 B726: A6 09       LDA    $9,X
 B728: 48          ASLA
@@ -7151,6 +7160,7 @@ B7BE: 84 FD       ANDA   #$FD
 B7C0: A7 0C       STA    $C,X
 B7C2: C6 04       LDB    #$04
 B7C4: 7E B4 29    JMP    function_b429
+function_b7c7:
 B7C7: CE B8 04    LDU    #jump_table_b804
 B7CA: A6 09       LDA    $9,X
 B7CC: 48          ASLA
@@ -7192,6 +7202,7 @@ function_b810:
 B810: CC 00 20    LDD    #$0020
 B813: ED 18       STD    -$8,X
 B815: 7E 8D C8    JMP    function_8dc8
+function_b818:
 B818: CE B8 DE    LDU    #jump_table_b8de
 B81B: A6 09       LDA    $9,X
 B81D: 48          ASLA
@@ -7293,6 +7304,7 @@ B8BB: 84 FD       ANDA   #$FD
 B8BD: A7 0C       STA    $C,X
 B8BF: C6 04       LDB    #$04
 B8C1: 7E B4 29    JMP    function_b429
+function_b8c4:
 B8C4: CE B8 EE    LDU    #jump_table_b8ee
 B8C7: A6 09       LDA    $9,X
 B8C9: 48          ASLA
@@ -7323,6 +7335,8 @@ B904: 7E 8D C8    JMP    function_8dc8
 B907: 86 03       LDA    #$03
 B909: A7 08       STA    $8,X
 B90B: 7E 8D C8    JMP    function_8dc8
+
+function_b90e:
 B90E: 6A 0A       DEC    $A,X
 B910: 27 01       BEQ    $B913
 B912: 39          RTS
@@ -7379,6 +7393,7 @@ B96A: 7E 8D C8    JMP    function_8dc8
 B96D: 86 03       LDA    #$03
 B96F: A7 08       STA    $8,X
 B971: 7E 8D C8    JMP    function_8dc8
+function_b974:
 B974: 6A 0A       DEC    $A,X
 B976: 27 01       BEQ    $B979
 B978: 39          RTS
@@ -7633,6 +7648,7 @@ BB7A: 7E 8D C8    JMP    function_8dc8
 BB7D: CC FF D0    LDD    #$FFD0
 BB80: ED 16       STD    -$A,X
 BB82: 7E 8D C8    JMP    function_8dc8
+function_bb85:
 BB85: CE BB C2    LDU    #jump_table_bbc2
 BB88: A6 09       LDA    $9,X
 BB8A: 48          ASLA
@@ -7675,6 +7691,8 @@ BBBF: 7E B4 29    JMP    function_b429
 ; 2 jump-table ref
 function_bbc8:
 BBC8: 7E 8D C8    JMP    function_8dc8
+
+function_bbcb:
 BBCB: 6A 0A       DEC    $A,X
 BBCD: 27 01       BEQ    $BBD0
 BBCF: 39          RTS
@@ -7705,6 +7723,7 @@ BBF5: C6 38       LDB    #$38
 BBF7: 7E B4 29    JMP    function_b429
 BBFA: C6 04       LDB    #$04
 BBFC: 7E B4 29    JMP    function_b429
+function_bbff:
 BBFF: 6A 0A       DEC    $A,X
 BC01: 27 01       BEQ    $BC04
 BC03: 39          RTS
@@ -7787,6 +7806,7 @@ BC95: A6 0C       LDA    $C,X
 BC97: 8A 04       ORA    #$04
 BC99: A7 0C       STA    $C,X
 BC9B: 7E 8D C8    JMP    function_8dc8
+function_bc9e:
 BC9E: 6A 0A       DEC    $A,X
 BCA0: 27 01       BEQ    $BCA3
 BCA2: 39          RTS
@@ -7898,6 +7918,7 @@ BD6E: A6 0C       LDA    $C,X
 BD70: 8A 04       ORA    #$04
 BD72: A7 0C       STA    $C,X
 BD74: 7E 8D C8    JMP    function_8dc8
+function_bd77:
 BD77: 6A 0A       DEC    $A,X
 BD79: 27 01       BEQ    $BD7C
 BD7B: 39          RTS
@@ -7998,6 +8019,7 @@ BE3D: C6 04       LDB    #$04
 BE3F: 7E B4 29    JMP    function_b429
 BE42: C6 48       LDB    #$48
 BE44: 7E B4 29    JMP    function_b429
+function_be47:
 BE47: 6A 0A       DEC    $A,X
 BE49: 27 01       BEQ    $BE4C
 BE4B: 39          RTS
@@ -8018,6 +8040,7 @@ BE64: A7 07       STA    $7,X
 function_be66:
 BE66: CE DB EC    LDU    #$DBEC		; ROM
 BE69: 7E 8D E8    JMP    function_8de8
+function_be6c:
 BE6C: 6A 0A       DEC    $A,X
 BE6E: 27 01       BEQ    function_be71
 BE70: 39          RTS
@@ -8047,6 +8070,7 @@ BE93: CE DB EC    LDU    #$DBEC		; ROM
 BE96: 7E 8D E8    JMP    function_8de8
 BE99: 6C 14       INC    -$C,X
 BE9B: 39          RTS
+function_be9c:
 BE9C: 6A 0A       DEC    $A,X
 BE9E: 27 01       BEQ    $BEA1
 BEA0: 39          RTS
@@ -8063,6 +8087,8 @@ function_beb1:
 BEB1: 86 02       LDA    #$02
 BEB3: A7 08       STA    $8,X
 BEB5: 7E 8D C8    JMP    function_8dc8
+
+function_beb8:
 BEB8: 6A 0A       DEC    $A,X
 BEBA: 27 01       BEQ    $BEBD
 BEBC: 39          RTS
@@ -8091,6 +8117,8 @@ BEDD: CE DB 0C    LDU    #$DB0C		; ROM
 BEE0: 7E 8D E8    JMP    function_8de8
 BEE3: C6 14       LDB    #$14
 BEE5: 7E B4 29    JMP    function_b429
+
+function_bee8:
 BEE8: 6A 0A       DEC    $A,X
 BEEA: 27 01       BEQ    $BEED
 BEEC: 39          RTS
@@ -8130,6 +8158,7 @@ BF30: ED 16       STD    -$A,X
 BF32: CC FF F0    LDD    #$FFF0
 BF35: ED 16       STD    -$A,X
 BF37: 7E 8D C8    JMP    function_8dc8
+function_bf3a:
 BF3A: 6A 0A       DEC    $A,X
 BF3C: 27 01       BEQ    $BF3F
 BF3E: 39          RTS
@@ -8243,6 +8272,7 @@ C02C: CC FF F0    LDD    #$FFF0
 C02F: ED 18       STD    -$8,X
 C031: ED 16       STD    -$A,X
 C033: 7E 8D C8    JMP    function_8dc8
+function_c036:
 C036: 6A 0A       DEC    $A,X
 C038: 27 01       BEQ    $C03B
 C03A: 39          RTS
@@ -8352,6 +8382,7 @@ C110: A7 01       STA    $1,X
 C112: 0A 33       DEC    $33
 C114: 0A 39       DEC    $39
 C116: 39          RTS
+function_c117:
 C117: CE C2 5B    LDU    #jump_table_c25b
 C11A: A6 09       LDA    $9,X
 C11C: 48          ASLA
@@ -8422,6 +8453,7 @@ C183: 0A 37       DEC    $37
 C185: 0A 33       DEC    $33
 C187: 0A 39       DEC    $39
 C189: 39          RTS
+function_c18a:
 C18A: CE C2 69    LDU    #jump_table_c269
 C18D: A6 09       LDA    $9,X
 C18F: 48          ASLA
@@ -8544,6 +8576,7 @@ C275: 7E 8D C8    JMP    function_8dc8
 ; 1 jump-table ref
 function_c278:
 C278: 7E 8D C8    JMP    function_8dc8
+function_c27b:
 C27B: 6A 0A       DEC    $A,X
 C27D: 27 01       BEQ    $C280
 C27F: 39          RTS
@@ -8572,6 +8605,7 @@ C296: 7E 8D E8    JMP    function_8de8
 function_c299:
 C299: C6 04       LDB    #$04
 C29B: 7E B4 29    JMP    function_b429
+function_c29e:
 C29E: 6A 0A       DEC    $A,X
 C2A0: 27 01       BEQ    $C2A3
 C2A2: 39          RTS
@@ -8772,6 +8806,7 @@ C430: C4 03       ANDB   #$03
 C432: CB 68       ADDB   #$68
 C434: E7 07       STB    $7,X
 C436: 7E 8D C8    JMP    function_8dc8
+function_c439:
 C439: CE C4 41    LDU    #jump_table_c441
 C43C: A6 09       LDA    $9,X
 C43E: 48          ASLA
@@ -8858,6 +8893,7 @@ C4DE: 0A 37       DEC    $37
 C4E0: 0A 33       DEC    $33
 C4E2: 0A 39       DEC    $39
 C4E4: 39          RTS
+function_c4e5:
 C4E5: CE C4 ED    LDU    #jump_table_c4ed
 C4E8: A6 09       LDA    $9,X
 C4EA: 48          ASLA
@@ -8926,6 +8962,7 @@ C562: 0A 37       DEC    $37
 C564: 0A 33       DEC    $33
 C566: 0A 39       DEC    $39
 C568: 39          RTS
+function_c569:
 C569: CE C5 71    LDU    #jump_table_c571
 C56C: A6 09       LDA    $9,X
 C56E: 48          ASLA
@@ -8994,6 +9031,7 @@ C5E6: 39          RTS
 ; 2 jump-table ref
 function_c5e7:
 C5E7: 7E 8D C8    JMP    function_8dc8
+function_c5ea:
 C5EA: 6A 0A       DEC    $A,X
 C5EC: 27 01       BEQ    $C5EF
 C5EE: 39          RTS
@@ -9047,6 +9085,7 @@ C649: 7E 8D C8    JMP    function_8dc8
 C64C: CC FF D0    LDD    #$FFD0
 C64F: ED 16       STD    -$A,X
 C651: 7E 8D C8    JMP    function_8dc8
+function_c654:
 C654: CE C6 5C    LDU    #jump_table_c65c
 C657: A6 09       LDA    $9,X
 C659: 48          ASLA
@@ -9082,6 +9121,7 @@ C68A: 27 01       BEQ    $C68D
 C68C: 39          RTS
 C68D: C6 10       LDB    #$10
 C68F: 7E B4 29    JMP    function_b429
+function_c692:
 C692: CE C6 9A    LDU    #jump_table_c69a
 C695: A6 09       LDA    $9,X
 C697: 48          ASLA
@@ -9121,6 +9161,7 @@ C6CD: 7E B4 29    JMP    function_b429
 C6D0: A6 07       LDA    $7,X
 C6D2: A7 01       STA    $1,X
 C6D4: 39          RTS
+function_c6d5:
 C6D5: CE C7 3E    LDU    #jump_table_c73e
 C6D8: A6 07       LDA    $7,X
 C6DA: 84 FC       ANDA   #$FC
@@ -9187,6 +9228,7 @@ C78C: 39          RTS
 ; 4 jump-table ref
 function_c78d:
 C78D: 7E 8D C8    JMP    function_8dc8
+function_c790:
 C790: CE C7 98    LDU    #jump_table_c798
 C793: A6 09       LDA    $9,X
 C795: 48          ASLA
@@ -9356,6 +9398,7 @@ C8F0: C6 3C       LDB    #$3C
 C8F2: 7E B4 29    JMP    function_b429
 C8F5: C6 84       LDB    #$84
 C8F7: 7E B4 29    JMP    function_b429
+function_c8fa:
 C8FA: CE C9 02    LDU    #jump_table_c902
 C8FD: A6 09       LDA    $9,X
 C8FF: 48          ASLA
@@ -9681,6 +9724,7 @@ CB99: 39          RTS
 ; 2 jump-table ref
 function_cb9a:
 CB9A: 7E 8D C8    JMP    function_8dc8
+function_cb9d:
 CB9D: 6A 0A       DEC    $A,X
 CB9F: 27 01       BEQ    $CBA2
 CBA1: 39          RTS
@@ -10159,7 +10203,7 @@ CED8: 20 FE       BRA    $CED8
 
 
 ; called 1x  from $CEBD
-function_ceea:
+function_ceea:		; [cc_handled]
 CEEA: DC 88       LDD    $88
 CEEC: E3 0A       ADDD   $A,X
 CEEE: ED 0A       STD    $A,X
@@ -10177,11 +10221,11 @@ CF0A: 10 83 14 00 CMPD   #$1400
 CF0E: 2C 09       BGE    $CF19
 CF10: 0C 53       INC    $53
 CF12: A6 84       LDA    ,X
-CF14: 84 7F       ANDA   #$7F
+CF14: 84 7F       ANDA   #$7F	; positive
 CF16: A7 84       STA    ,X
 CF18: 39          RTS
 CF19: A6 84       LDA    ,X
-CF1B: 8A 80       ORA    #$80
+CF1B: 8A 80       ORA    #$80	; negative
 CF1D: A7 84       STA    ,X
 CF1F: 39          RTS
 
@@ -10214,7 +10258,7 @@ jump_table_cf34:
 	
 jump_table_cf3e:
 	.word	function_cf48
-	.word	function_cf40	; bogus
+	.word	function_cf40
 	.word	function_cfb5 
 	.word	function_cfda
 	.word	function_cff2 
@@ -10223,7 +10267,7 @@ jump_table_cf3e:
 
 ; 1 jump-table ref
 function_cf40:
-CF40: 39          RTS    ; [breakpoint] fake
+CF40: 39          RTS
 
 
 ; 1 jump-table ref
@@ -10231,7 +10275,7 @@ function_cf48:
 CF48: CE CF 8C    LDU    #$CF8C		; ROM
 CF4B: A6 84       LDA    ,X
 CF4D: 84 03       ANDA   #$03
-CF4F: E6 C6       LDB    A,U
+CF4F: E6 C6       LDB    A,U		; [rom_address]
 CF51: 10 8E 13 A0 LDY    #$13A0		; work RAM (shared with CPU1 $4400)
 CF55: 96 E6       LDA    $E6
 CF57: E7 A6       STB    A,Y
@@ -10246,13 +10290,13 @@ CF66: CE CF 80    LDU    #$CF80
 CF69: A6 84       LDA    ,X
 CF6B: 80 40       SUBA   #$40
 CF6D: 48          ASLA
-CF6E: EC C6       LDD    A,U
+CF6E: EC C6       LDD    A,U		; [rom_address]
 CF70: ED 0E       STD    $E,X
 CF72: CE CF 86    LDU    #$CF86
 CF75: A6 84       LDA    ,X
 CF77: 80 40       SUBA   #$40
 CF79: 48          ASLA
-CF7A: 10 AE C6    LDY    A,U
+CF7A: 10 AE C6    LDY    A,U		; [rom_address]
 CF7D: 7E D1 25    JMP    $D125
 
 CF94: A7 01       STA    $1,X
@@ -10267,7 +10311,7 @@ CFA2: CE CF AF    LDU    #$CFAF
 CFA5: A6 84       LDA    ,X
 CFA7: 80 40       SUBA   #$40
 CFA9: 48          ASLA
-CFAA: EC C6       LDD    A,U
+CFAA: EC C6       LDD    A,U		; [rom_address]
 CFAC: ED 0E       STD    $E,X
 CFAE: 39          RTS
 
@@ -10288,7 +10332,7 @@ CFC7: CE CF D4    LDU    #$CFD4		; ROM
 CFCA: A6 84       LDA    ,X
 CFCC: 80 40       SUBA   #$40
 CFCE: 48          ASLA
-CFCF: EC C6       LDD    A,U
+CFCF: EC C6       LDD    A,U		; [rom_address]
 CFD1: ED 0E       STD    $E,X
 CFD3: 39          RTS
 
@@ -10329,7 +10373,7 @@ D005: CE CF D4    LDU    #$CFD4		; ROM
 D008: A6 84       LDA    ,X
 D00A: 80 40       SUBA   #$40
 D00C: 48          ASLA
-D00D: EC C6       LDD    A,U
+D00D: EC C6       LDD    A,U		; [rom_address]
 D00F: ED 0E       STD    $E,X
 D011: 39          RTS
 
@@ -10346,7 +10390,7 @@ D01E: CE CF AF    LDU    #$CFAF		; ROM
 D021: A6 84       LDA    ,X
 D023: 80 40       SUBA   #$40
 D025: 48          ASLA
-D026: EC C6       LDD    A,U
+D026: EC C6       LDD    A,U		; [rom_address]
 D028: ED 0E       STD    $E,X
 D02A: 39          RTS
 
@@ -10363,7 +10407,7 @@ D037: CE CF 80    LDU    #$CF80		; ROM
 D03A: A6 84       LDA    ,X
 D03C: 80 40       SUBA   #$40
 D03E: 48          ASLA
-D03F: EC C6       LDD    A,U
+D03F: EC C6       LDD    A,U		; [rom_address]
 D041: ED 0E       STD    $E,X
 D043: 39          RTS
 
@@ -10379,7 +10423,7 @@ D04D: 39          RTS
 D04E: CE D0 7F    LDU    #$D07F		; ROM
 D051: A6 84       LDA    ,X
 D053: 84 03       ANDA   #$03
-D055: E6 C6       LDB    A,U
+D055: E6 C6       LDB    A,U		; [rom_address]
 D057: 10 8E 13 A0 LDY    #$13A0		; work RAM (shared with CPU1 $4400)
 D05B: 96 E6       LDA    $E6
 D05D: E7 A6       STB    A,Y
@@ -10483,7 +10527,7 @@ D125: A7 E2       STA    ,-S		; [local]
 D127: 86 01       LDA    #$01
 D129: B7 D8 03    STA    bank2_select_d803
 D12C: 8D 2F       BSR    function_d15d
-D12E: EC A1       LDD    ,Y++
+D12E: EC A1       LDD    ,Y++		; [bank_address]
 D130: DD 5A       STD    $5A
 D132: DC 56       LDD    $56
 D134: 8B 20       ADDA   #$20
@@ -10491,11 +10535,11 @@ D136: 1F 03       TFR    D,U
 D138: D6 58       LDB    $58
 D13A: 96 5B       LDA    $5B
 D13C: A7 E4       STA    ,S		; [local]
-D13E: A6 A0       LDA    ,Y+
-D140: A7 C5       STA    B,U
+D13E: A6 A0       LDA    ,Y+		; [bank_address]
+D140: A7 C5       STA    B,U		; [video_address]
 D142: 5C          INCB
-D143: A6 A0       LDA    ,Y+
-D145: A7 C5       STA    B,U
+D143: A6 A0       LDA    ,Y+		; [bank_address]
+D145: A7 C5       STA    B,U		; [video_address]
 D147: 5C          INCB
 D148: C4 7F       ANDB   #$7F
 D14A: 6A E4       DEC    ,S		; [local]
@@ -10506,7 +10550,7 @@ D153: 84 0F       ANDA   #$0F
 D155: DD 56       STD    $56
 D157: 0A 5A       DEC    $5A
 D159: 26 D9       BNE    $D134
-D15B: 35 82       PULS   A,PC		; [manual_stack_pull]
+D15B: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 
 ; called 1x  from $D12C
 function_d15d:
@@ -10859,7 +10903,7 @@ D40D: ED 0E       STD    $E,X
 D40F: 39          RTS
 
 ; called 6x  from $D244, $D29C, $D2FA, $D344, $D394, $D3D2
-function_d410:
+function_d410:	; [cc_handled]
 D410: EC 06       LDD    $6,X
 D412: 2A 15       BPL    $D429
 D414: E3 0A       ADDD   $A,X
@@ -11099,7 +11143,7 @@ D5AE: ED 0E       STD    $E,X
 D5B0: 39          RTS
 
 ; called 2x  from $D546, $D57B
-function_d5b1:
+function_d5b1:		; [cc_handled]
 D5B1: EC 06       LDD    $6,X
 D5B3: E3 0A       ADDD   $A,X
 D5B5: ED 0A       STD    $A,X
@@ -11182,7 +11226,7 @@ D659: 39          RTS
 
 
 ; called 2x  from $D399, $D3D7
-function_d674:
+function_d674: 		; [cc_handled]
 D674: CE 04 10    LDU    #$0410		; work RAM (shared with CPU1 $4400)
 D677: A6 C4       LDA    ,U
 D679: 2B 22       BMI    $D69D
@@ -11317,7 +11361,7 @@ D765: A7 47       STA    $7,U
 D767: 39          RTS
 
 ; called 1x  from $D576
-function_d768:
+function_d768:		; [cc_handled]
 D768: CE 04 10    LDU    #$0410		; work RAM (shared with CPU1 $4400)
 D76B: A6 C4       LDA    ,U
 D76D: 2B 22       BMI    $D791
@@ -12165,6 +12209,52 @@ jump_table_b0dc:
 	dc.w	function_b116	; $b0e0
 	dc.w	function_b13d	; $b0e2
 	dc.w	function_b165	; $b0e4
+jump_table_b379:
+	dc.w	function_bbcb 
+	dc.w	function_b554 
+	dc.w	function_bc9e 
+	dc.w	function_be9c 
+	dc.w	function_beb8 
+	dc.w	function_bee8 
+	dc.w	function_b90e 
+	dc.w	function_b974
+	dc.w	function_b6f1
+	dc.w	function_b6eb
+	dc.w	function_b723
+	dc.w	function_b818
+	dc.w	function_b8c4 
+	dc.w	function_b7c7 
+	dc.w	function_bbff 
+	dc.w	function_bd77
+	dc.w	function_b554
+	dc.w	function_bb85
+	dc.w	function_be47
+	dc.w	function_bf3a 
+	dc.w	function_c036
+	dc.w	function_be6c
+	dc.w	function_c117 
+	dc.w	function_c18a
+	dc.w	function_c439
+	dc.w	function_c4e5
+	dc.w	function_c569
+	dc.w	function_bbcb 
+	dc.w	function_bbcb 
+	dc.w	function_bbcb
+	dc.w	function_c654
+	dc.w	function_c692
+	dc.w	function_c6d5 
+	dc.w	function_c790 
+	dc.w	function_c8fa 
+	dc.w	function_cb01 
+	dc.w	function_cb7c 
+	dc.w	function_cb9d 
+	dc.w	function_c5ea 
+	dc.w	function_b554
+	dc.w	function_b554 
+	dc.w	function_b554 
+	dc.w	function_c27b 
+	dc.w	function_c29e
+
 jump_table_b3d1:
 	dc.w	function_cd88	; $b3d1
 	dc.w	function_ccaa	; $b3d3

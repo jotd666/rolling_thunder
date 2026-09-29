@@ -428,6 +428,28 @@ okay\@:
 	GET_ADDRESS_FUNC
 	.endm
 
+	* to handle the case where routine is called from irq or from non-irq
+	* on irq, the stack is artificially located somewhere else in memory
+	* (only location available in 16 bit range is top ROM where there is no data)
+	
+	.macro GET_REG_ROM_RAM_SELECT_ADDRESS	offset,reg
+	.ifeq	\offset
+	move.l	\reg,a0
+	cmp.w	#0xFF00,\reg
+	jcc		from_rom\@
+	.else
+	lea	\offset,a0
+	lea	(a0,\reg\().l),a0
+	cmp.l	#0xFF00,a0
+	jcc		from_rom\@
+	.endif
+	GET_ADDRESS_FUNC
+	jra		end\@
+from_rom\@:
+	GET_ROM_ADDRESS_FUNC
+end\@:
+	.endm
+
 	
 	.macro GET_VIDEO_REG_ADDRESS	offset,reg
 	.ifeq	\offset

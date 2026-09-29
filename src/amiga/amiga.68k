@@ -116,8 +116,8 @@ SPRITE_LOG_LENGTH = SPRITE_COUNT*SPRITE_NB_CLUTS
 HUD_TILE_LOG_LENGTH = HUD_TILE_NB_CLUTS*HUD_TILE_COUNT
 BG_TILE_LOG_LENGTH = BG_TILE_NB_CLUTS*BG_TILE_COUNT
 
-SPRITE_X_CORRECTION = 0
-SPRITE_Y_CORRECTION = -BG_TILE_WIDTH
+SPRITE_X_CORRECTION = 8
+SPRITE_Y_CORRECTION = -32
 
 
 
@@ -178,9 +178,9 @@ OPT_AGA_MODE=1
 OPT_AGA_MODE=0
 	.endif
 
-* a plane of attached sprites	
+* a plane of attached sprites has 4 bitplanes	
 NB_FG_PLANES = 4
-NB_BG_PLANES = NB_PLAYFIELD_PLANES
+NB_BG_PLANES = NB_PLAYFIELD_PLANES	| same depth as sprites
 
 TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 FG_NB_BYTES_PER_ROW = 0x20
@@ -1556,7 +1556,6 @@ load_file:
 	illegal
 
 osd_event_loop_cpu2:
-	rts
 	* maybe it would be necessary to protect against
 	* irq from cpu2 or from both cpus
 	movem.l	d0-a6,-(a7)
@@ -2327,9 +2326,9 @@ blit_background:
 	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
 	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
 	
-	* all bitplanes but not the last one that we'll clear
+	* all bitplanes
 	
-	.rept	NB_PLAYFIELD_PLANES-2
+	.rept	NB_PLAYFIELD_PLANES-1
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
 	add.l	d0,a0
 	add.l	d0,a1
