@@ -1,6 +1,6 @@
 import re, zipfile, collections, sys
 
-z=zipfile.ZipFile('/mnt/user-data/uploads/rthunder.zip')
+z=zipfile.ZipFile('../assets/amiga/rthunder.zip')
 ROM={'cpu1':z.read('rt3_1b.9c'),'cpu2':z.read('rt3_2b.12c')}
 def rd16(cpu,a):
     if not (0x8000<=a<=0xFFFE): return None
@@ -107,8 +107,8 @@ def analyse(cpu,fn):
                              scores={t:score(t) for t in known}))
     return findings,tl,insn
 
-for cpu,fn in (('cpu1','cpu1.asm'),('cpu2','cpu2.asm')):
-    F,tl,insn=analyse(cpu,fn)
+for cpu,fn in (('cpu1','cpu1_8000_6809.asm'),('cpu2','cpu2_8000_6809.asm')):
+    F,tl,insn=analyse(cpu,"../src/"+fn)
     multi=[f for f in F if len(f['tabs'])>1]
     bad  =[f for f in F if f['unlabelled']]
     nodef=[f for f in F if not f['tabs']]

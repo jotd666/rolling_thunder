@@ -6504,7 +6504,7 @@ B396: BD B5 31    JSR    function_b531
 B399: BD B5 6D    JSR    function_b56d
 B39C: DE A6       LDU    $A6
 B39E: 96 A8       LDA    $A8
-B3A0: EC C6       LDD    A,U
+B3A0: EC C6       LDD    A,U	; [bank_address]
 B3A2: ED E3       STD    ,--S		; [local]
 B3A4: DE A9       LDU    $A9
 B3A6: A6 05       LDA    $5,X
