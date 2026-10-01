@@ -1,5 +1,6 @@
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
+placement of the 5th sprite isn't correct
 invincibility use DSW instead of mame cheat
 start skips the "select area" part
 fix body sprites

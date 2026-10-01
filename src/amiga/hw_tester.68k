@@ -48,11 +48,11 @@ PREVIOUS_SPRITE_SIZE = 8
 CURRENT_SPRITE_SIZE = 4
 
 COLUMN_SIZE = 0x1f
-ROW_SIZE = 0x10
+ROW_SIZE = 0x20
 
 GAME_MAX_SCROLL_X = 0x200
-GAME_MAX_SCROLL_Y = 0x200
-BG_TILE_WIDTH = 16
+GAME_MAX_SCROLL_Y = 0x100
+BG_TILE_WIDTH = 8
 
 BG_TILE_MAX_SIZE = 64000  | possibly less
 
@@ -64,9 +64,9 @@ FG_TILE_NB_CLUTS_POW = 4
 FG_TILE_NB_CLUTS = 1<<FG_TILE_NB_CLUTS_POW
 FG_TILE_COUNT = 0x400
 
-BG_TILE_NB_CLUTS_POW = 3
+BG_TILE_NB_CLUTS_POW = 8
 BG_TILE_NB_CLUTS = 1<<BG_TILE_NB_CLUTS_POW
-BG_TILE_COUNT = 0x400
+BG_TILE_COUNT = 0x1000
 NB_SPRITES = 0x400
 
 SPRITE_NB_CLUTS_POW = 2
@@ -89,14 +89,12 @@ NTSC_Y_SHIFT = 12
 
 AGA_X_SHIFT = 0x37
 
-FG_SCREEN_TILE_ADDRESS = 0x2000
-FG_SCREEN_COLOR_ADDRESS = 0x2400
-BG_SCREEN_TILE_ADDRESS = 0x2800
-BG_SCREEN_COLOR_ADDRESS = 0x2C00
-SPRITE_ADDRESS = 0x1E00  | to 0x1FFF
-SPRITE_BUFFER_SIZE = 0x100
+FG_SCREEN_TILE_ADDRESS = 0x3000
+BG_SCREEN_TILE_ADDRESS = 0
 
-bg_tiles_address_2800 = BG_SCREEN_TILE_ADDRESS
+
+bg_tiles_address_0000 = BG_SCREEN_TILE_ADDRESS
+fg_tiles_address_3000 = FG_SCREEN_TILE_ADDRESS
 
 
 * if the alloc_sprite & update_sprite routines
@@ -130,7 +128,7 @@ OPT_AGA_MODE=0
 
 * a plane of non-attached sprites	
 NB_FG_PLANES = 4
-NB_BG_PLANES = 5
+NB_BG_PLANES = NB_PLAYFIELD_PLANES
 
 TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 FG_NB_BYTES_PER_ROW = 0x20
@@ -215,7 +213,7 @@ BIT_FIRE_2 = 5
 	
 	.macro	COPY_TILE8_PLANE_ROW
 	move.b	d0,(offset,a1)  | buffer
-	move.b	d0,(offset,a3)  | buffer
+	*move.b	d0,(offset,a3)  | buffer
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	move.b	d0,(offset,a4)  | buffer
 	.endif
@@ -228,7 +226,7 @@ BIT_FIRE_2 = 5
 	and.b	d2,d1			| keep only bits outside mask
 	or.b	d1,d0			| merge with input data
 	move.b	d0,(offset,a1)  | buffer
-	move.b	d0,(offset,a3)  | buffer
+	*move.b	d0,(offset,a3)  | buffer
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	move.b	d0,(offset,a4)  | buffer
 	.endif
@@ -238,7 +236,7 @@ BIT_FIRE_2 = 5
 	.set	offset,0
 	.rept	8
 	clr.b	(offset,a1)
-	clr.b	(offset,a3)
+	*clr.b	(offset,a3)
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	clr.b	(offset,a4)
 	.endif
@@ -248,7 +246,7 @@ BIT_FIRE_2 = 5
 	
 	.macro	TILE8_NEXT_PLANE
 	add.l	d5,a1	| bitplane
-	add.l	d5,a3   | restore buffer
+	*add.l	d5,a3   | restore buffer
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	add.l	d5,a4	| double buffered bitplane
 	.endif
@@ -459,7 +457,7 @@ _user:
 	addq	#2,a0	| leave 16 bits hidden for left side clipping
 	jbsr	align_for_fmode
 	move.l	a0,playfield_screen_data_1
-	move.l	a0,playfield_drawed_screen_ptr
+	move.l	a0,playfield_drawn_screen_ptr
 	move.l	a0,playfield_displayed_screen_ptr
 	
 	st		music_track_start_number
@@ -529,15 +527,15 @@ _user:
 
 	
 	* load attached sprites palette
-	lea		fg_tile_upper_palette,a0
-	move.l	color_copper_pointers+TOTAL_NB_COLORS*4,a1	| entries 64-80
-	move.w	#16,d0
+	lea		fg_tile_palette,a0
+	move.l	color_copper_pointers+TOTAL_NB_COLORS*4,a1	| entries 64-79
+	move.w	#4,d0
 	jbsr	load_palette
 	
 	
-	lea		sprite_palette,a0
-	move.l	color_copper_pointers+TOTAL_NB_COLORS/2*4,a1	| entries 32-64
-	move.w	#TOTAL_NB_COLORS/2,d0
+	lea		bg_tile_palette,a0
+	move.l	color_copper_pointers,a1	| entries 0-63
+	move.w	#TOTAL_NB_COLORS,d0
 	jbsr	load_palette
 	
 	
@@ -562,11 +560,7 @@ _user:
 
 0:
 1:
-	move.b	difficulty_level+3,d0
-	and.w	#3,d0
-	lea		difficulty_table,a0
-	move.b	(a0,d0.w),difficulty_dsw
-	
+
 	
 	move.b	start_level+3,start_level_flag
 	
@@ -574,9 +568,6 @@ _user:
 	move.l	misc_options,d1
 	btst	#0,d1
 	seq		frameskip
-	btst	#1,d1
-	sne		skip_intro_flag
-
 
 	move.l	cheat_flags,d0
 	btst	#0,d0
@@ -758,7 +749,7 @@ call_bcpl:
 	rts
 
 	.macro	WRITE_TEXT	text,color
-	lea		(0x2044+0x20*row,a6),a0
+	lea		(0x3208+4+0x80*row,a6),a0
 	lea		\text,a1
 	move.b	#\color,d0
 	jbsr	display_text
@@ -767,7 +758,7 @@ call_bcpl:
 
 	.macro	WRITE_HEX	value,color
 	move.w	\value,d1
-	lea		(0x2044+0x20*row+14,a6),a0
+	lea		(0x3208+0x80*row+14*2,a6),a0
 	move.b	#\color,d0
 	jbsr	display_number
 	.set	row,row+1
@@ -818,62 +809,49 @@ demo_game:
 	lea		base_at_start,a1
 	tst.b	start_level_3
 
-	lea		(bg_tiles_address_2800,a6),a0
-	move.w	#0x3FF,d0
+
+	* install both layers of bg tiles
+	lea		(bg_tiles_address_0000,a6),a0
+	move.w	#0xFFF,d0
 0:
 	move.w	(a1)+,(a0)+
 	dbf		d0,0b	
 	* set "walls" that we can identify on the X edges
 	
-	lea		(0x2801,a6),a0
-	move	#7,d0
+	* horizontal first
+	lea		(fg_tiles_address_3000+0x208,a6),a0
+	lea		(0x80*27,A0),a1
+	move	#26,d0
+	move.l	a0,a2
 0:
-	move.b	#0xE9,(a0)
-	move.b	#0x41,(0x400,a0)
-	addq 	#2,a0
+	move.w	#0x11FC,(a2)
+	move.l	a2,a0
+	jbsr	osd_video_byte_dirty
+	move.w	#0x11FC,(a1)
+	move.l	a1,a0
+	jbsr	osd_video_byte_dirty
+	
+	addq	#2,a2
+	addq	#2,a1
 	dbf		d0,0b
 	
-	lea		(0x2BE0,a6),a0
-	move	#7,d0
+	lea		(fg_tiles_address_3000+0x288,a6),a0
+	move	#26,d0
+	lea		(0X33,a0),a1
+	move.l	a0,a2
 0:
-	move.b	#0xE9,(a0)
-	move.b	#0x41,(0x400,a0)
-	addq 	#2,a0
+	move.w	#0x12FC,(a2)
+	move.l	a2,a0
+	jbsr	osd_video_byte_dirty
+	move.w	#0x13FC,(a1)
+	move.l	a1,a0
+	jbsr	osd_video_byte_dirty
+
+	add.w	#0x80,a1
+	add.w	#0x80,a2
 	dbf		d0,0b
-	
-	* set "walls" in diagonals too
-	lea		(0x2822,a6),a0
-	move	#0x2,d1
-1:
-	move	#0xF,d0
-	move.l	a0,a1
-0:
-	move.b	#0xE9,(a1)
-	move.b	#0x41,(0x400,a1)
-	add 	#0x21,a1
-	dbf		d0,0b
-	add	#0x100,a0
-	dbf		d1,1b
 	
 
-	
-	* install frame
-	lea	(0x2040,a6),a0
-	jbsr	install_horiz_frame
-	lea	(0x2040+0x3A0,a6),a0
-	jbsr	install_horiz_frame
-	lea	(0x2060,a6),a0
-	move.w	#0x1D,d0
-0:
-	move.b	#0xB0,(a0)
-	move.b	#0x0E,(0x400,a0)
-	jbsr	osd_video_byte_dirty
-	add	#0x1F,a0
-	move.b	#0xB0,(a0)
-	move.b	#0x0E,(0x400,a0)
-	jbsr	osd_video_byte_dirty
-	addq	#0x1,a0
-	dbf		d0,0b
 	
 	jbsr	load_context
 
@@ -926,31 +904,31 @@ num2hexstring:
 	rts
 	
 tester_text:
-	.ascii	"Welcome to Rolling Thunder hw tester"
+	.ascii	"ROLLING THUNDER HW TESTER"
 	.byte	0xff
 scrollx_text:
-	.ascii	"Game ScrollX "
+	.ascii	"GAME SCROLLX "
 	.byte	0xff
 hscrollx_text:
-	.ascii	"Host ScrollX "
+	.ascii	"HOST SCROLLX "
 	.byte	0xff
 scrolly_text:
-	.ascii	"Game ScrollY "
+	.ascii	"GAME SCROLLY "
 	.byte	0xff
 hscrolly_text:
-	.ascii	"Host ScrollY "
+	.ascii	"HOST SCROLLY "
 	.byte	0xff
 max_scrollx_text:
-	.ascii	"Max ScrollX "
+	.ascii	"MAX SCROLLX "
 	.byte	0xff
 min_scrollx_text:
-	.ascii	"Min ScrollX "
+	.ascii	"MIN SCROLLX "
 	.byte	0xff
 x_offset_text:
-	.ascii	"X offset "
+	.ascii	"X OFFSET "
 	.byte	0xff
 xl_offset_text:
-	.ascii	"XL offset "
+	.ascii	"XL OFFSET "
 	.byte	0xff
 	.align 2
 
@@ -958,10 +936,14 @@ display_text:
 0:
 	move.b	(a1)+,d1
 	jmi		1f
+	cmp.b	#0xA,d1
+	jcs		2f
+	sub.b	#0x41-0xA,d1
+2:
 	move.b	d1,(a0)
-	move.b	d0,(0x400,a0)
+	move.b	#0xFC,(1,a0)
 	jbsr	osd_video_byte_dirty
-	addq	#1,a0
+	addq	#2,a0
 	jra		0b
 1:
 	rts
@@ -1014,18 +996,18 @@ force_all_screen_redraw:
 	
 	move.w	host_scroll_x,d0
 	move.w	d0,d5				| save scroll X
-	lea		(bg_tiles_address_2800,a6),a5
-	lsr.w	#4,D0	| divide by 16 to get real X tile offset
+	lea		(bg_tiles_address_0000,a6),a5
+	lsr.w	#3,D0	| divide by 8 to get real X tile offset
 	* now compute start address to fetch data from
-	move.w	#1,d7		| first row is not visible with scroll=0, visible with=$10
+	move.w	#3*0x80,d7		| first rows are not visible with scroll=0, visible with=$10 ??
 	* atm Y=0
-	lsl.w	#5,d0	| times 32
+	lsl.w	#1,d0	| times 2
 	add.w	d0,d7	| start address
 
 	move.w	d7,d6	| save current Y
 
 
-	move.w	#0x10,d2	| size of screen in tiles
+	move.w	#0x14,d2	| size of screen in tiles
 0:
 	move.w	d6,d7	| set current Y row
 	move.w	#COLUMN_SIZE,d1		|  (64 bit margin)
@@ -1037,17 +1019,21 @@ force_all_screen_redraw:
 	lsl.w	#6,d0
 	move.w	d0,x_offset
 
-	and.w	#0x3FF,d7		| wrap on memory
+	and.w	#0xFFF,d7		| wrap on memory
 	* force tile draw
 	lea		(a5,d7.w),a0
 	movem.l	d1-d2/d5-d6,-(a7)
 	move.b	(a0),d0
-	move.b	(0x400,a0),d1
-	jbsr	update_bg_tile
+	move.b	(1,a0),d1
+	jbsr	update_bg0_tile
+	movem.l	(a7),d1-d2/d5-d6
+*	move.b	(0x1000,a0),d0
+*	move.b	(0x1001,a0),d1
+*	jbsr	update_bg1_tile
 	movem.l	(a7)+,d1-d2/d5-d6
-	add.w	#0x1,d7		| next X
+	addq.w	#0x2,d7		| next X
 	dbf		d1,1b
-	add.w	#0x20,d6
+	add.w	#0x80,d6			| next row
 	add.w	#BG_TILE_WIDTH,d5	| keep track of current "scroll"
 	dbf		d2,0b
 	rts
@@ -1072,12 +1058,13 @@ draw_column_tiles:
 	move.w	(a7)+,d0	
 	GET_MEMORY_START_AND_DP
 
-	lea		(bg_tiles_address_2800,a6),a5
-	lsr.w	#4,D0	| divide by 16 to get real X tile offset
+	moveq	#0,d0     | TEMP TEMP TEMP
+	lea		(bg_tiles_address_0000,a6),a5
+	lsr.w	#3,D0	| divide by 8 to get real X tile offset
 	* now compute start address to fetch data from
 	move.w	#1,d7		| first row is not visible with scroll=0, visible with=$10
 	* atm Y=0
-	lsl.w	#5,d0	| times 32
+	lsl.w	#1,d0	| times 2
 	add.w	d0,d7	| start address
 
 	move.w	#COLUMN_SIZE,d2
@@ -1092,12 +1079,12 @@ draw_column_tiles:
 	
 	
 	move.b	(a0),d0
-	move.b	(0x400,a0),d1
+	move.b	(1,a0),d1
 	move.w	d2,-(a7)
-	jbsr	update_bg_tile
+	jbsr	update_bg0_tile
 	move.w	(a7)+,d2
 	
-	addq	#1,d7			| next Y
+	add.w	#0x80,d7			| next Y
 	dbf		d2,0b
 	rts
 
@@ -1182,22 +1169,7 @@ load_file:
 	rts
 0:
 	illegal	
-install_horiz_frame:
-	move.w	#0xA0A1,(a0)
-	move.w	#0x0E0E,(0x400,a0)
-	jbsr	osd_video_word_dirty
-	addq	#2,a0
-	move.w	#0x1B/2,d0
-0:
-	move.b	#0xA2,(a0)
-	move.b	#0x0E,(0x400,a0)
-	jbsr	osd_video_byte_dirty
-	addq	#2,a0
-	dbf		d0,0b
-	move.w	#0xA3A3,(a0)
-	move.w	#0x0E0E,(0x400,a0)
-	jbsr	osd_video_word_dirty
-	rts
+
 	
 	.ifndef	RELEASE
 dump_and_quit:	
@@ -1593,7 +1565,7 @@ really_update_sprites:
 
 	* clear previous positions
 	lea	background_restore_buffer,a0
-	move.l	playfield_drawed_screen_ptr(pc),a1
+	move.l	playfield_drawn_screen_ptr(pc),a1
 	move.w	#NB_TARGET_SPRITES-1,d7
 	WAIT_BLIT
 	move.l	#-1,bltalwm(a5)		| needed for blit_background
@@ -1623,21 +1595,6 @@ really_update_sprites:
 	*********************
 	
 
-
-	GET_MEMORY_START_AND_DP
-	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE,a6),a0
-	*lea		mockup,a0
-
-
-    lea _custom,A5
-	move.l	bob_previous_drawed_sprites(pc),a6
-	lea		bob_table,a4
-	
-	moveq	#NB_TARGET_SPRITES-1,d7
-1:
-	jbsr	update_one_bob
-	subq.w	#CURRENT_SPRITE_SIZE,a0
-	dbf		d7,1b
 
 	rts
 	
@@ -1779,7 +1736,7 @@ update_one_bob:
 	move.l	(NB_PLAYFIELD_PLANES*4,a0),d2
 	beq.b	2f		| mask is zero: blank tile => skip
 	
-	move.l		playfield_drawed_screen_ptr(pc),a1
+	move.l		playfield_drawn_screen_ptr(pc),a1
 	
 	move.l	d2,a3
 	* now 2 cases: if Y is negative, we have to clip, else normal
@@ -2240,7 +2197,7 @@ switch_screen_buffers:
 	* let's switch screen buffers, background (chars)
 	* toggle fg planes (double buffering)
 	* also toggle previous sprite positions
-	lea		playfield_drawed_screen_ptr(pc),a0
+	lea		playfield_drawn_screen_ptr(pc),a0
 	lea		bob_previous_positions_1(pc),a2
 	lea		bob_previous_positions_2(pc),a3
 	move.l	playfield_screen_data_1,a1
@@ -2363,8 +2320,6 @@ platform_init:
 	st.b	ntsc_flag
 	* disable extra mid-screen interrupt, as it would be too fast (NTSC)
 	move.w	#COPPER_NOP,pal_intreq_block_game
-	* also change screen start position, make it higher
-	move.w	#0x01+(0xC<<8),screen_start
 
 	
 	*move.w	#0x0401,pal_wait			| else intreq never happens
@@ -2739,8 +2694,6 @@ video_word_dirty_cpu1:
 	* layer 2: used for intro computer room
 	cmp.w	#0x1000,d7
 	jcc		0f
-	tst.b	block_tile_layer_0
-	jne		osd_w_videoram_out
 	
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
@@ -2758,27 +2711,26 @@ video_word_dirty_cpu1:
 	and.w	#0xFFF,d7
 	jra		update_bg1_tile
 1:
-	clr.b	block_tile_layer_0
+
 osd_w_videoram_out:
 	rts	
 	
 
 test_x_offset:
-	BREAKPOINT	"TEST"
-	move.w	#0xAC4,host_scroll_x
-	move.w	#0xC4,game_scroll_x
-	move.w	#0x2E2,d7
+	move.w	#0xA00,host_scroll_x
+	move.w	#0x00,game_scroll_x
+	move.w	#0x200,d7
 	jbsr	compute_x_offset
 	move.w	x_offset,d0
 	
-	move.w	#0xAC4,host_scroll_x
-	move.w	#0xC4,game_scroll_x
-	move.w	#0x2C6,d7
-	jbsr	compute_x_offset
-	move.w	x_offset,d0
+*	move.w	#0xAC4,host_scroll_x
+*	move.w	#0xC4,game_scroll_x
+*	move.w	#0x2C6,d7
+*	jbsr	compute_x_offset
+*	move.w	x_offset,d0
 	rts
 	
-* < D7: address (0-0x800)
+* < D7: address (0-0xFFF)
 * > D0: x_offset or -1 if not in visible screen
 compute_x_offset:
 	movem.w	d1-d2,-(a7)
@@ -2786,12 +2738,13 @@ compute_x_offset:
 	* positions. Compute first X & last X coord visible
 
 	move.w	d7,d2
-	lsr.w	#5,d2
+	and.w	#0x7F,d2
+	lsr.w	#1,d2	| get real X
 	
 	* establish min & max bounds including invisible tile used for scroll
 	* which is outside the screen
 	move.w	game_scroll_x,d0  | left of screen
-	lsr.w	#4,d0		| divide by 16 match tile
+	lsr.w	#3,d0		| divide by 16 match tile
 	move.w	d0,d1
 	add.w	#0x12,d1	| right part
 	
@@ -2903,17 +2856,20 @@ update_bg0_tile:
 	moveq	#0,d1
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
-	subq	#3,d1		| first 3 rows aren't visible
+	subq	#3,d1		| first 3 rows aren't visible (well maybe after scroll)
 	* temp clip!!!
 	cmp.w	#0x24,d0
 	jcc		11f
 	cmp.w	#0x20,d1
 	jcc		11f
 	
+	* TODO: add x_offset
+	
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
 	move.l	#BG_SCREEN_PLANE_SIZE,d5
 	.else
+	moveq	#0,d5
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	.endif
 	
@@ -2945,11 +2901,6 @@ update_bg0_tile:
 	add.w	d0,a3
 
 	
-	*cmp.b	#0x20,d2
-	*jeq		11f				| optim: blank tile
-	*move.l		bg_tile_character_table,d0
-	*jeq		100f			| no context loaded: out
-	*move.l	d0,a0
 	lea		bg0_character_table,a0
 	.ifdef	NO68020
 	add.w	d2,d2
@@ -3520,7 +3471,7 @@ set_bobs_bitplanes:
 scroll_table:
 	* generated by python script
 	.ifne	OPT_AGA_MODE
-	.include	"scroll_table_64.68k"
+	.include	"scroll_table_32.68k"
 	.else
 	.include	"scroll_table_16.68k"
 	.endif
@@ -4239,7 +4190,8 @@ difficulty_table:
 
 looped_sound_enabled:
 	.long	0
-
+layer_1_restore_screen_pointer:
+	.long	0
 return_address:
 	.long	0
 	
@@ -4461,7 +4413,7 @@ playfield_screen_data_2:
 	
 	
 
-playfield_drawed_screen_ptr:
+playfield_drawn_screen_ptr:
 	.long	0
 playfield_displayed_screen_ptr:
 	.long	0
@@ -4534,9 +4486,9 @@ log_buffer_end:
 	
 	
 fg_tile_address_table:
-	.skip	0x400*2
+	.skip	0x800*2
 bg_tile_address_table:
-	.skip	0x1000*2
+	.skip	0x800*2
 
 	
 dev_ram_buffer:
@@ -4650,8 +4602,6 @@ fine_x_scroll_value:
 	
 	* mid-line wait & extra interrupt
 	.word	0x8001,0xFFFE
-pal_intreq_block_game:
-	.word	 intreq,0x8014  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
 
 
 	
@@ -4676,19 +4626,8 @@ pal_wait:
      .long    -2					
 	.ascii	"ENDCPLST"
 
-first_rows:
-	.rept	NB_FIRST_ROWS
-	DECL_ROW
-	.endr
-first_rows_end:
-second_rows:
-	.rept	NB_SECOND_ROWS
-	DECL_ROW
-	.endr
-third_rows:
-	.rept	NB_THIRD_ROWS
-	DECL_ROW
-	.endr
+pal_intreq_block_game:
+	.word	 intreq,0x8014  | call copper interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
 
 
 	* aligning on 8 bytes so .align will work
@@ -4696,6 +4635,10 @@ third_rows:
 	.align	8
 	
 		.section .bsschip
+layer_1_restore_buffer:
+	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
+	.skip	BG_SCREEN_SIZE
+	.skip	BG_SCREEN_PLANE_SIZE		| plus mask!
 
 hw_sprite_ram_buffer:
 	.skip	HW_SPRITE_BUFFER_SIZE*8	| 8 64-bit wide sprites + control words + align

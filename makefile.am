@@ -3,7 +3,7 @@ DATADIR = ../
 MAIN_AGA = $(DATADIR)$(PROGNAME)_aga
 MAIN_CD32 = $(DATADIR)$(PROGNAME)_cd32
 MAIN_OCS = $(DATADIR)$(PROGNAME)_ocs
-AMIGA_SHELL = ..\$(PROGNAME)
+AMIGA_SHELL = $(DATADIR)$(PROGNAME)
 
 ifdef RELEASE_BUILD
 OPT_RELEASE = --defsym RELEASE=1
@@ -17,6 +17,7 @@ ASM_020 = $(ASM_BASE) -m68020 --defsym MC68020=1 $(OPT_RELEASE)
 ASM = $(ASM_000)
 
 HW_TESTER_AGA = ..\HWTester.slave
+HWT = ../hw_tester
 CDLOADER = ..\$(PROGNAME).cdslave
 WHDLOADER_AGA = ..\$(PROGNAME)_AGA.slave
 WHDLOADER_AGA_CHIP = ..\$(PROGNAME)_AGA_chip.slave
@@ -38,12 +39,12 @@ WHDASM = vasmm68k_mot -DDATETIME -I$(HDBASE)/amiga39_JFF_OS/include -I$(WHDBASE)
 
 # leave MAIN_OBJ first
 MEM_OBJS = cpu1_rom.o cpu_ram.o cpu2_rom.o cpu1_banks.o cpu2_banks.o
-HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics.o vbr.o ReadJoyPad.o ptplayer.o 
+HWT_OBJS = hw_tester.o sounds.o cpu_ram.o   graphics.o vbr.o ReadJoyPad.o ptplayer.o 
 AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o 
 CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o
 
 
-all:  $(HW_TESTER_AGA) ../data/hw_tester $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
+all:  $(HW_TESTER_AGA) ../hw_tester $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
 
 
 
@@ -70,8 +71,8 @@ $(MAIN_AGA): $(AGA_OBJS)
 $(MAIN_CD32): $(CD32_OBJS)
 	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(MAIN_CD32) $(CD32_OBJS)
 	
-../data/hw_tester: $(HWT_OBJS)
-	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o ../data/hw_tester  $(HWT_OBJS)
+$(HWT): $(HWT_OBJS)
+	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(HWT)  $(HWT_OBJS)
 	
 #$(MAIN_OCS): $(OCS_OBJS)
 #	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(MAIN_OCS) $(OCS_OBJS)
@@ -105,11 +106,11 @@ cpu2_8000_020.o: cpu2_8000.68k cpu2_options.inc cpu2_8000.inc cpu2_data.inc
 	$(ASM_020) cpu2_8000.68k -o cpu2_8000_020.o
 
 	
-hw_tester.o: $(AMIGASRC)/hw_tester.68k cpu1_options.inc cpu1_8000.inc cpu1_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+hw_tester.o: $(AMIGASRC)/hw_tester.68k cpu1_options.inc cpu1_8000.inc cpu1_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_32.68k
 	$(ASM_020) -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/hw_tester.68k -o hw_tester.o
-amiga_aga.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/cpu_coroutine.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+amiga_aga.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/cpu_coroutine.68k cpu1_options.inc cpu2_options.inc cpu1_8000.inc cpu1_data.inc cpu2_data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_32.68k
 	$(ASM_020) --defsym OPT_CD32_VERSION=0 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_aga.o
-#amiga_cd32.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/context.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_64.68k
+#amiga_cd32.o: $(AMIGASRC)/amiga.68k $(AMIGASRC)/context.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/palette.68k $(AMIGASRC)/graphics.68k $(AMIGASRC)/sound_entries.68k  $(AMIGASRC)/scroll_table_32.68k
 #	$(ASM_020) --defsym OPT_CD32_VERSION=1 -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_cd32.o
 #amiga_ocs.o: $(AMIGASRC)/amiga.68k options.inc include.inc data.inc $(AMIGASRC)/ReadJoyPad.i $(AMIGASRC)/ocs/palette.68k $(AMIGASRC)/sound_entries.68k $(AMIGASRC)/scroll_table_16.68k
 #	$(ASM_000) -I$(AMIGASRC)/ocs -I$(AMIGASRC) -I$(AMIGASRC)/mit_includes $(AMIGASRC)/amiga.68k -o amiga_ocs.o
