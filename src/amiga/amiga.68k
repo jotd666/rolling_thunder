@@ -1794,6 +1794,8 @@ level1_interrupt:
 
 	CPU1_GET_MEMORY_START_IN_A6
 	
+	jbsr	decode_mcu_inputs
+
 	moveq	#0,d0
 *	move.w	(scroll_x_register_lsb_3b08,a6),d0
 *	ror.w	#8,d0		| hardware is in little endian
@@ -4972,32 +4974,40 @@ osd_read_dsw2:
 	move.b	dip_switches_2,d0	| what MAME returns by default
 	rts
 	
-osd_read_system:
-	st.b	d0
+* < A6: CPU1 ram base
+decode_mcu_inputs:
 	movem.l	a0/d1,-(a7)
 	lea		keyboard_table(pc),a0
 	tst.b	coin1_requested
 	jeq		0f
-	subq.b	#1,coin1_requested
+	clr.b	coin1_requested
 	st.b	detect_controllers
-	bclr	#BIT_COIN1,d0
+	cmp.b	#9,(nb_credits_418a,a6)
+	jeq		0f
+	addq.b	#1,(nb_credits_418a,a6)
+	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
 0:
 
 	tst.b	coin2_requested
 	beq.b	0f
 	subq.b	#1,coin2_requested
 	st.b	detect_controllers
-	bclr	#BIT_COIN2,d0
+	cmp.b	#9,(nb_credits_418a,a6)
+	jeq		0f
+	addq.b	#1,(nb_credits_418a,a6)
+	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
+	cmp.b	#9,(nb_credits_418a,a6)
+	jeq		0f
+	addq.b	#1,(nb_credits_418a,a6)
+	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
 0:	
 	tst.b	(1,a0)		| "1" key like in MAME
 	beq.b	0f
 	st.b	detect_controllers
-	bclr	#BIT_START_1P,d0
 0:	
 	tst.b	(2,a0)		| "2" key like in MAME
 	beq.b	0f
 	st.b	detect_controllers
-	bclr	#BIT_START_2P,d0
 0:	
 
 	jbsr		is_game_playing
@@ -5008,17 +5018,17 @@ osd_read_system:
 	btst	#JPB_BTN_RED,d1		| "5" key like in MAME
 	jeq		0f
 	st.b	detect_controllers
-	bclr	#BIT_COIN1,d0
+	*bclr	#BIT_COIN1,d0
 0:
 	btst	#JPB_BTN_UP,d1		| "1" key like in MAME
 	jeq		0f
 	st.b	detect_controllers
-	bclr	#BIT_START_1P,d0
+	*bclr	#BIT_START_1P,d0
 0:
 	btst	#JPB_BTN_DOWN,d1		| "2" key like in MAME
 	jeq		0f
 	st.b	detect_controllers
-	bclr	#BIT_START_2P,d0
+	*bclr	#BIT_START_2P,d0
 0:
 
 1:	

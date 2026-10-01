@@ -2103,7 +2103,7 @@ title_screen_8f10:
 8F1C: CE 8F 49    LDU    #jump_table_8f49
 8F1F: 48          ASLA
 8F20: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=3]
-8F22: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+8F22: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 8F25: 26 01       BNE    $8F28
 8F27: 39          RTS
 8F28: 0C 18       INC    $18
@@ -2349,7 +2349,7 @@ function_9085:
 game_demo_90fb:
 90FB: 7D 42 3D    TST    in_level_423d		; input level [ 0] dip SWA:1 (service mode)
 90FE: 26 14       BNE    service_mode_9114
-9100: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+9100: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 9103: 27 02       BEQ    $9107
 9105: 0C 18       INC    $18		; exit from demo
 9107: 96 04       LDA    dp_sub_cpu1_04		; CPU1 sub-state
@@ -2479,7 +2479,7 @@ function_91e9:
 91FA: 39          RTS
 
 ; 1 jump-table ref
-function_91fb:
+credit_inserted_from_demo_91fb:
 91FB: 96 6E       LDA    $6E
 91FD: 91 6F       CMPA   $6F
 91FF: 27 01       BEQ    $9202
@@ -2487,7 +2487,7 @@ function_91fb:
 9202: BD 83 CB    JSR    clear_layer_0_83cb
 9205: BD 84 CD    JSR    function_84cd
 9208: BD 84 8C    JSR    function_848c
-920B: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+920B: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 920E: 26 0F       BNE    $921F
 9210: 86 04       LDA    #$04
 9212: 97 02       STA    dp_state_cpu1_02
@@ -2497,6 +2497,7 @@ function_91fb:
 921A: 0F 05       CLR    dp_sub_cpu2_05		; CPU2 sub-state
 921C: 0F 07       CLR    dp_sem_cpu2_07
 921E: 39          RTS
+
 921F: 86 05       LDA    #$05
 9221: 97 02       STA    dp_state_cpu1_02
 9223: 0F 04       CLR    dp_sub_cpu1_04
@@ -2524,7 +2525,7 @@ function_922e:
 924C: CE 92 7B    LDU    #jump_table_927b
 924F: 48          ASLA
 9250: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=7]
-9252: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+9252: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 9255: 26 01       BNE    $9258
 9257: 39          RTS
 9258: 86 01       LDA    #$01
@@ -3390,6 +3391,7 @@ function_9901:
 9917: CE 99 31    LDU    #jump_table_9931
 991A: 48          ASLA
 991B: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=2]
+service_mode_991d:
 991D: B7 C0 00    STA    $C000		; ROM
 9920: 0F 02       CLR    dp_state_cpu1_02
 9922: 0F 04       CLR    dp_sub_cpu1_04
@@ -3401,7 +3403,7 @@ function_9901:
 
 
 ; 1 jump-table ref
-function_9935:
+credit_inserted_from_intro_91fb:
 9935: BD 83 CB    JSR    clear_layer_0_83cb
 9938: BD B4 B8    JSR    clear_hud_rect_b4b8
 993B: C6 FC       LDB    #$FC
@@ -3459,7 +3461,7 @@ function_999f:
 99AD: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 99B0: B6 41 8A    LDA    nb_credits_418a
 99B3: FD 3F 98    STD    $3F98		; credit digit screen address
-99B6: B6 41 A5    LDA    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+99B6: B6 41 A5    LDA    mcu_flag_41a5		; <- MCU: coin inserted flag
 99B9: 81 01       CMPA   #$01
 99BB: 22 18       BHI    $99D5
 99BD: CE B0 90    LDU    #$B090		; ROM
@@ -3641,7 +3643,7 @@ function_9b02:
 9B44: 0F 06       CLR    dp_sem_cpu1_06
 9B46: 0F 07       CLR    dp_sem_cpu2_07
 9B48: 39          RTS
-9B49: B6 41 A5    LDA    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+9B49: B6 41 A5    LDA    mcu_flag_41a5		; <- MCU: coin inserted flag
 9B4C: 81 01       CMPA   #$01
 9B4E: 22 18       BHI    $9B68
 9B50: CE B0 90    LDU    #$B090
@@ -5638,7 +5640,7 @@ AB18: 7F 41 8C    CLR    mcu_flag_418c		; <-> MCU: attract/credit flag
 AB1B: 86 10       LDA    #$10
 AB1D: 97 DA       STA    $DA
 AB1F: 0F 13       CLR    $13
-AB21: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+AB21: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 AB24: 26 0B       BNE    $AB31
 AB26: 0D D8       TST    $D8
 AB28: 10 27 01 16 LBEQ   $AC42
@@ -5744,7 +5746,7 @@ ABFB: 86 FF       LDA    #$FF
 ABFD: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 AC00: B6 41 8A    LDA    nb_credits_418a
 AC03: FD 3F 98    STD    $3F98
-AC06: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+AC06: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 AC09: 10 26 FF 24 LBNE   $AB31
 AC0D: 8D 44       BSR    function_returns_z_ac53
 AC0F: 27 01       BEQ    $AC12
@@ -6109,7 +6111,7 @@ AEE5: 01 50       NEG    $50
 function_aee7:
 AEE7: 7F 41 8C    CLR    mcu_flag_418c		; <-> MCU: attract/credit flag
 AEEA: BD 83 CB    JSR    clear_layer_0_83cb
-AEED: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: attract-mode / demo permission flag
+AEED: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 AEF0: 27 13       BEQ    $AF05
 AEF2: 86 01       LDA    #$01
 AEF4: 97 D1       STA    $D1
@@ -12536,7 +12538,7 @@ jump_table_9124:
 	dc.w	function_917b	; $9130
 	dc.w	function_91dc	; $9132
 	dc.w	function_91e9	; $9134
-	dc.w	function_91fb	; $9136
+	dc.w	credit_inserted_from_demo_91fb	; $9136
 jump_table_927b:
 	dc.w	function_9289	; $927b
 	dc.w	function_9290	; $927d
@@ -12551,7 +12553,7 @@ jump_table_9639:
 	dc.w	function_97a2	; $963d
 	dc.w	function_9641	; $963f
 jump_table_992d:
-	dc.w	function_9935	; $992d
+	dc.w	credit_inserted_from_intro_91fb	; $992d
 	dc.w	function_999f	; $992f
 	dc.w	function_9a49	; $9931
 	dc.w	function_9b02	; $9933
