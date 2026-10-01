@@ -238,7 +238,7 @@ mcu_result_4185              = $4185		; <- MCU: self-test result, 0 = pass
 mcu_status_4189              = $4189		; <- MCU: coin/credit status byte
 ;nb_credits_418a             = $418A		; <- MCU: number of credits (MCU $118A)   (already defined above)
 mcu_coin_acc_418b            = $418B		; <- MCU: coin accumulator
-mcu_flag_418c                = $418C		; <-> MCU: attract/credit flag
+mcu_game_start_flag_418c                = $418C		; <-> MCU: game start flag
 mcu_flag_418d                = $418D		; <-> MCU: game-in-progress flag
 mcu_flag_418e                = $418E		; <- MCU: freeplay / continue flag
 mcu_timer_4190               = $4190		; <- MCU: down-counter tick
@@ -623,7 +623,7 @@ normal_start_8190:
 81A3: 0F 02       CLR    dp_state_cpu1_02
 81A5: 0F 04       CLR    dp_sub_cpu1_04		; CPU1 sub-state
 81A7: 0F 06       CLR    dp_sem_cpu1_06
-81A9: 7F 41 8C    CLR    mcu_flag_418c		; <-> MCU: attract/credit flag
+81A9: 7F 41 8C    CLR    mcu_game_start_flag_418c		; <-> MCU: game start flag
 81AC: 86 01       LDA    #$01
 81AE: B7 41 8D    STA    mcu_flag_418d		; <-> MCU: game-in-progress flag
 81B1: 7C 5F F3    INC    cpu2_ready_5ff3		; CPU2 -> CPU1 'POST finished' handshake ($1FF3)
@@ -2765,10 +2765,10 @@ function_93e4:
 9414: 44          LSRA
 9415: 26 02       BNE    $9419
 9417: 86 FF       LDA    #$FF
-9419: ED A4       STD    ,Y
+9419: ED A4       STD    ,Y		; [video_address_word]
 941B: 96 C0       LDA    $C0
 941D: 84 0F       ANDA   #$0F
-941F: ED 22       STD    $2,Y
+941F: ED 22       STD    $2,Y		; [video_address_word]
 9421: 10 8E 33 4A LDY    #$334A
 9425: C6 FC       LDB    #$FC
 9427: B6 54 A0    LDA    $54A0
@@ -2778,10 +2778,10 @@ function_93e4:
 942D: 44          LSRA
 942E: 26 02       BNE    $9432
 9430: 86 FF       LDA    #$FF
-9432: ED A4       STD    ,Y
+9432: ED A4       STD    ,Y		; [video_address_word]
 9434: B6 54 A0    LDA    $54A0
 9437: 84 0F       ANDA   #$0F
-9439: ED 22       STD    $2,Y
+9439: ED 22       STD    $2,Y		; [video_address_word]
 943B: 39          RTS
 943C: 10 8E 33 10 LDY    #$3310
 9440: C6 FC       LDB    #$FC
@@ -2792,10 +2792,10 @@ function_93e4:
 9448: 44          LSRA
 9449: 26 02       BNE    $944D
 944B: 86 FF       LDA    #$FF
-944D: ED A4       STD    ,Y
+944D: ED A4       STD    ,Y		; [video_address_word]
 944F: B6 54 80    LDA    $5480
 9452: 84 0F       ANDA   #$0F
-9454: ED 22       STD    $2,Y
+9454: ED 22       STD    $2,Y		; [video_address_word]
 9456: 10 8E 33 4A LDY    #$334A
 945A: C6 FC       LDB    #$FC
 945C: 96 C0       LDA    $C0
@@ -2805,10 +2805,10 @@ function_93e4:
 9461: 44          LSRA
 9462: 26 02       BNE    $9466
 9464: 86 FF       LDA    #$FF
-9466: ED A4       STD    ,Y
+9466: ED A4       STD    ,Y		; [video_address_word]
 9468: 96 C0       LDA    $C0
 946A: 84 0F       ANDA   #$0F
-946C: ED 22       STD    $2,Y
+946C: ED 22       STD    $2,Y		; [video_address_word]
 946E: 39          RTS
 
 
@@ -3452,8 +3452,8 @@ credit_inserted_from_intro_91fb:
 
 ; 1 jump-table ref
 function_999f:
-999F: 7D 41 8C    TST    mcu_flag_418c		; <-> MCU: attract/credit flag
-99A2: 26 49       BNE    $99ED
+999F: 7D 41 8C    TST    mcu_game_start_flag_418c		; <-> MCU: game start flag
+99A2: 26 49       BNE    game_start_99ed
 99A4: C6 FC       LDB    #$FC
 99A6: B6 41 89    LDA    mcu_status_4189		; <- MCU: coin/credit status byte
 99A9: 26 02       BNE    $99AD
@@ -3486,6 +3486,7 @@ function_999f:
 99E8: 26 F8       BNE    $99E2
 99EA: A6 E0       LDA    ,S+		; [local]
 99EC: 39          RTS
+game_start_99ed:
 99ED: 7C 41 8D    INC    mcu_flag_418d		; <-> MCU: game-in-progress flag
 99F0: 0F D9       CLR    $D9
 99F2: 7D 42 5B    TST    in_level_425b		; input level [15] dip SWB:8 (continues)
@@ -3619,7 +3620,7 @@ function_9b02:
 9B0B: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 9B0E: B6 41 8A    LDA    nb_credits_418a
 9B11: FD 3F 98    STD    $3F98
-9B14: 7D 41 8C    TST    mcu_flag_418c		; <-> MCU: attract/credit flag
+9B14: 7D 41 8C    TST    mcu_game_start_flag_418c		; <-> MCU: game start flag
 9B17: 26 67       BNE    $9B80
 9B19: BD AC 53    JSR    function_returns_z_ac53
 9B1C: 26 2B       BNE    $9B49
@@ -5323,25 +5324,25 @@ A876: 39          RTS
 A877: 10 8E 37 22 LDY    #$3722		; layer 3 tilemap / HUD
 A87B: 86 FF       LDA    #$FF
 A87D: F6 B0 BE    LDB    $B0BE		; ROM
-A880: A7 A1       STA    ,Y++
+A880: A7 A1       STA    ,Y++		; [video_address]
 A882: 5A          DECB
 A883: 26 FB       BNE    $A880
 A885: 10 8E 38 22 LDY    #$3822
 A889: 86 FF       LDA    #$FF
 A88B: F6 B0 D4    LDB    $B0D4
-A88E: A7 A1       STA    ,Y++
+A88E: A7 A1       STA    ,Y++		; [video_address]
 A890: 5A          DECB
 A891: 26 FB       BNE    $A88E
 A893: 10 8E 3A 22 LDY    #$3A22
 A897: 86 FF       LDA    #$FF
 A899: F6 B0 36    LDB    $B036
-A89C: A7 A1       STA    ,Y++
+A89C: A7 A1       STA    ,Y++		; [video_address]
 A89E: 5A          DECB
 A89F: 26 FB       BNE    $A89C
 A8A1: 10 8E 3B 22 LDY    #$3B22
 A8A5: 86 FF       LDA    #$FF
 A8A7: F6 B0 3F    LDB    $B03F
-A8AA: A7 A1       STA    ,Y++
+A8AA: A7 A1       STA    ,Y++		; [video_address]
 A8AC: 5A          DECB
 A8AD: 26 FB       BNE    $A8AA
 A8AF: 0F 0B       CLR    $0B
@@ -5636,7 +5637,7 @@ AB0D: 86 FF       LDA    #$FF
 AB0F: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 AB12: B6 41 8A    LDA    nb_credits_418a
 AB15: FD 3F 98    STD    $3F98
-AB18: 7F 41 8C    CLR    mcu_flag_418c		; <-> MCU: attract/credit flag
+AB18: 7F 41 8C    CLR    mcu_game_start_flag_418c		; <-> MCU: game start flag
 AB1B: 86 10       LDA    #$10
 AB1D: 97 DA       STA    $DA
 AB1F: 0F 13       CLR    $13
@@ -6109,7 +6110,7 @@ AEE5: 01 50       NEG    $50
 
 ; 1 jump-table ref
 function_aee7:
-AEE7: 7F 41 8C    CLR    mcu_flag_418c		; <-> MCU: attract/credit flag
+AEE7: 7F 41 8C    CLR    mcu_game_start_flag_418c		; <-> MCU: game start flag
 AEEA: BD 83 CB    JSR    clear_layer_0_83cb
 AEED: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 AEF0: 27 13       BEQ    $AF05

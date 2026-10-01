@@ -3981,13 +3981,14 @@ osd_video_word_dirty_cpu2:
 	rts
 
 video_word_dirty_cpu2:
-	move.l	a4,a6		| set video base (which is cpu1 ram zero address)
+	lea	(0x2000,a4),a6		| set video base (which is cpu1 ram zero address) & shift it to match cpu1
 video_word_dirty_cpu1:
 	move.l	a0,d7		| save address
 	sub.l	a6,d7
 	jmi		osd_w_videoram_out
 
-	* we now suppose that we're in 0-4000
+	* we now suppose that we're in 0-4000 (cpu1)
+	* or 2000-6000 (cpu2)
 	* check that in debug mode
 	.ifndef		RELEASE
 	cmp.w	#FG_SCREEN_TILE_ADDRESS+0x1000,d7
@@ -5001,14 +5002,18 @@ decode_mcu_inputs:
 	addq.b	#1,(nb_credits_418a,a6)
 	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
 0:	
+	clr.b	(mcu_game_start_flag_418c,a6)
 	tst.b	(1,a0)		| "1" key like in MAME
 	beq.b	0f
 	st.b	detect_controllers
+	move.b	#1,(mcu_game_start_flag_418c,a6)
 0:	
-	tst.b	(2,a0)		| "2" key like in MAME
-	beq.b	0f
-	st.b	detect_controllers
-0:	
+*	clr.b	(in_level_4261,a6)
+*	tst.b	(2,a0)		| "2" key like in MAME
+*	beq.b	0f
+*	st.b	detect_controllers
+*	move.b	#1,(in_level_4261,a6)
+*0:	
 
 	jbsr		is_game_playing
 	jeq	1f

@@ -57,6 +57,8 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("jra\tnormal_start_8190",lines,i)
     elif address == 0x81b9:
         line += "\tjbsr\tosd_event_loop_cpu2\n"
+    elif address in [0x94FB,0x9503]:
+        line = f"\ttst.b\tinvincible_flag\njne\t0f\n{line}0:\n"
     return line
 
 sc_cpu2 = SourceChanger()

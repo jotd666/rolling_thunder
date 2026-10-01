@@ -932,12 +932,12 @@ function_84a7:
 84B6: 10 8E 84 E3 LDY    #$84E3
 84BA: 96 C2       LDA    $C2
 84BC: 48          ASLA
-84BD: 10 AE A6    LDY    A,Y
+84BD: 10 AE A6    LDY    A,Y		; [rom_address]
 84C0: 96 C4       LDA    $C4
 84C2: 48          ASLA
 84C3: 9B CF       ADDA   $CF
 84C5: 48          ASLA
-84C6: 10 AE A6    LDY    A,Y
+84C6: 10 AE A6    LDY    A,Y		; [rom_address]
 84C9: BD 8D 9E    JSR    function_8d9e
 84CC: 6F 04       CLR    $4,X
 84CE: EC A1       LDD    ,Y++		; [rom_address]
@@ -2121,25 +2121,25 @@ function_8f96:		; [cc_handled]
 8FB0: EB E0       ADDB   ,S+		; [local]
 8FB2: CE 40 00    LDU    #$4000		; layer 2 tilemap
 8FB5: ED E3       STD    ,--S		; [local]
-8FB7: EC CB       LDD    D,U
+8FB7: EC CB       LDD    D,U		; [video_address_word]
 8FB9: C4 03       ANDB   #$03
 8FBB: 10 83 FF 03 CMPD   #$FF03
 8FBF: 26 02       BNE    $8FC3
-8FC1: 35 86       PULS   D,PC		; [manual_stack_pull]
+8FC1: 35 86       PULS   D,PC		; [manual_stack_pull] [irq_stack_address]
 8FC3: 96 83       LDA    $83
 8FC5: 84 07       ANDA   #$07
 8FC7: 26 10       BNE    $8FD9
 8FC9: EC E1       LDD    ,S++		; [local]
 8FCB: 83 0D 80    SUBD   #$0D80
 8FCE: 84 0F       ANDA   #$0F
-8FD0: EC CB       LDD    D,U
+8FD0: EC CB       LDD    D,U		; [video_address_word]
 8FD2: C4 03       ANDB   #$03
 8FD4: 10 83 FF 03 CMPD   #$FF03
 8FD8: 39          RTS
 8FD9: EC E1       LDD    ,S++		; [local]
 8FDB: 83 0E 00    SUBD   #$0E00
 8FDE: 84 0F       ANDA   #$0F
-8FE0: EC CB       LDD    D,U
+8FE0: EC CB       LDD    D,U		; [video_address_word]
 8FE2: C4 03       ANDB   #$03
 8FE4: 10 83 FF 03 CMPD   #$FF03
 8FE8: 39          RTS
@@ -2839,13 +2839,13 @@ function_9497:		; [cc_handled]
 94FB: 33 C8 10    LEAU   $10,U		; => 955D
 94FE: C6 08       LDB    #$08
 9500: A6 E0       LDA    ,S+		; [local]
-9502: A1 C1       CMPA   ,U++
+9502: A1 C1       CMPA   ,U++		; [rom_address]
 9504: 27 06       BEQ    $950C
 9506: 5A          DECB
 9507: 26 F9       BNE    $9502
 9509: C6 24       LDB    #$24
 950B: 39          RTS
-950C: E6 5F       LDB    -$1,U
+950C: E6 5F       LDB    -$1,U		; [rom_address]
 950E: 39          RTS
 950F: E3 1A       ADDD   -$6,X
 9511: 10 83 FE 00 CMPD   #$FE00
@@ -3237,7 +3237,7 @@ function_97d0:		; [cc_handled] (but can be problematic with jump table)
 ; called 1x  from $97F2
 function_9814:		; [cc_handled]
 9814: EC 5C       LDD    -$4,U
-9816: E3 A4       ADDD   ,Y
+9816: E3 A4       ADDD   ,Y		; [rom_address]
 9818: A3 1C       SUBD   -$4,X
 981A: B3 E6 5E    SUBD   $E65E		; ROM
 981D: 2B 08       BMI    $9827
@@ -3248,7 +3248,7 @@ function_9814:		; [cc_handled]
 9827: 53          COMB
 9828: 43          COMA
 9829: C3 00 01    ADDD   #$0001
-982C: 10 A3 22    CMPD   $2,Y
+982C: 10 A3 22    CMPD   $2,Y		; [rom_address]
 982F: 22 F4       BHI    $9825
 9831: A6 01       LDA    $1,X
 9833: 84 02       ANDA   #$02
@@ -3257,7 +3257,7 @@ function_9814:		; [cc_handled]
 9839: 84 02       ANDA   #$02
 983B: 26 14       BNE    $9851
 983D: EC 5A       LDD    -$6,U
-983F: E3 24       ADDD   $4,Y
+983F: E3 24       ADDD   $4,Y		; [rom_address]
 9841: A3 1A       SUBD   -$6,X
 9843: B3 E6 62    SUBD   $E662
 9846: 2B 14       BMI    $985C
@@ -3266,14 +3266,14 @@ function_9814:		; [cc_handled]
 984E: C6 78       LDB    #$78
 9850: 39          RTS
 9851: EC 5A       LDD    -$6,U
-9853: E3 26       ADDD   $6,Y
+9853: E3 26       ADDD   $6,Y		; [rom_address]
 9855: A3 1A       SUBD   -$6,X
 9857: B3 E6 62    SUBD   $E662
 985A: 2A EC       BPL    $9848
 985C: 53          COMB
 985D: 43          COMA
 985E: C3 00 01    ADDD   #$0001
-9861: 10 A3 28    CMPD   $8,Y
+9861: 10 A3 28    CMPD   $8,Y		; [rom_address]
 9864: 22 03       BHI    $9869
 9866: C6 78       LDB    #$78
 9868: 39          RTS
@@ -3283,7 +3283,7 @@ function_9814:		; [cc_handled]
 986D: 84 02       ANDA   #$02
 986F: 26 14       BNE    $9885
 9871: EC 5A       LDD    -$6,U
-9873: E3 24       ADDD   $4,Y
+9873: E3 24       ADDD   $4,Y		; [rom_address]
 9875: A3 1A       SUBD   -$6,X
 9877: B3 E6 64    SUBD   $E664
 987A: 2B 14       BMI    $9890
@@ -3292,14 +3292,14 @@ function_9814:		; [cc_handled]
 9882: C6 78       LDB    #$78
 9884: 39          RTS
 9885: EC 5A       LDD    -$6,U
-9887: E3 26       ADDD   $6,Y
+9887: E3 26       ADDD   $6,Y		; [rom_address]
 9889: A3 1A       SUBD   -$6,X
 988B: B3 E6 64    SUBD   $E664
 988E: 2A EC       BPL    $987C
 9890: 53          COMB
 9891: 43          COMA
 9892: C3 00 01    ADDD   #$0001
-9895: 10 A3 28    CMPD   $8,Y
+9895: 10 A3 28    CMPD   $8,Y		; [rom_address]
 9898: 22 CF       BHI    $9869
 989A: C6 78       LDB    #$78
 989C: 39          RTS
@@ -5727,7 +5727,7 @@ ABCF: 26 1E       BNE    $ABEF
 ABD1: 10 8E 5F 08 LDY    #$5F08		; layer 3 tilemap / HUD
 ABD5: 86 FF       LDA    #$FF
 ABD7: F6 8C E9    LDB    $8CE9		; ROM
-ABDA: A7 A1       STA    ,Y++
+ABDA: A7 A1       STA    ,Y++		; [video_address_word]
 ABDC: 5A          DECB
 ABDD: 26 FB       BNE    $ABDA
 ABDF: 0F CE       CLR    $CE
