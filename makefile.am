@@ -42,8 +42,8 @@ HWT_OBJS = hw_tester.o sounds.o ram_cpu1.o  graphics.o vbr.o ReadJoyPad.o ptplay
 AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o 
 CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o
 
-#../data/hw_tester
-all:  $(HW_TESTER_AGA) $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
+
+all:  $(HW_TESTER_AGA) ../data/hw_tester $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
 
 
 

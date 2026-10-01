@@ -1,9 +1,13 @@
-add player controls
+D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
+=> note down the value of loop counter
+invincibility use DSW instead of mame cheat
 start skips the "select area" part
 fix body sprites
 fix fan trashing
+life bar: color should change: use copper color (and restore color for "time")
+time: doesn't display at all
+
 lockup after game over (is that wait for music? maybe same thing for when exiting weapons?)
-bg0 tiles are drawn too low. Skip the first 3 rows for a proper alignment
 display sprites: X is shifted
 fan is completely trashed too
 attract mode runs properly until hero enters arms door: hero locks up

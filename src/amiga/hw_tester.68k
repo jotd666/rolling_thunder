@@ -128,7 +128,7 @@ OPT_AGA_MODE=1
 OPT_AGA_MODE=0
 	.endif
 
-* a plane of attached sprites	
+* a plane of non-attached sprites	
 NB_FG_PLANES = 4
 NB_BG_PLANES = 5
 
@@ -192,6 +192,66 @@ BIT_FIRE_2 = 5
 	move.w	#(BORDERBLANK<<5),_custom+bplcon3
 	.endif
 	move.w	#\v,_custom+color	
+	.endm
+
+	* for tile display
+	.macro	NEXT_SOURCE_PLANE
+	move.l	(a4)+,d0		| next plane
+	jne		5f
+	move.l	#empty_row,d0
+5:	
+	move.l	d0,a0
+	.endm
+	
+	.macro	DECODE_CODE_AND_ATTRIBUTES
+	moveq	#0,d2
+	moveq	#0,d3
+	move.b	d0,d2	| code
+	move.b	d1,d3	| attribute+tile extend bits
+	and.b	#3,d1	| tile upper select 0-3
+	lsl.w	#8,d1	| *256
+	add.w	d1,d2	| extended tile code
+	.endm
+	
+	.macro	COPY_TILE8_PLANE_ROW
+	move.b	d0,(offset,a1)  | buffer
+	move.b	d0,(offset,a3)  | buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	move.b	d0,(offset,a4)  | buffer
+	.endif
+	.endm
+	
+	.macro	MASK_TILE8_PLANE_ROW
+	move.b	(offset,a1),d1	| read previous value
+	move.b	(a5)+,d2		| get mask value
+	not.b	d2				| invert bits
+	and.b	d2,d1			| keep only bits outside mask
+	or.b	d1,d0			| merge with input data
+	move.b	d0,(offset,a1)  | buffer
+	move.b	d0,(offset,a3)  | buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	move.b	d0,(offset,a4)  | buffer
+	.endif
+	.endm
+	
+	.macro	CLEAR_TILE8_PLANE
+	.set	offset,0
+	.rept	8
+	clr.b	(offset,a1)
+	clr.b	(offset,a3)
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	clr.b	(offset,a4)
+	.endif
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr	
+	.endm
+	
+	.macro	TILE8_NEXT_PLANE
+	add.l	d5,a1	| bitplane
+	add.l	d5,a3   | restore buffer
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.l	d5,a4	| double buffered bitplane
+	.endif
 	.endm
 
 	* S aka D5 is used a lot in the code as virtual stack, not only
@@ -720,6 +780,8 @@ demo_game:
 		bsr			platform_init					| amiga-specific init
 		
 0:	
+
+
 	* compute ram start for dev mode
 	* align so real addresses LSW match actual arcade addresses
 	* and lower 16-bit match original RAM & even ROM offsets
@@ -753,11 +815,9 @@ demo_game:
 	jbsr	cache_bg_tiles_address
 
 	GET_MEMORY_START_AND_DP
-	lea		cavern_at_start,a1
+	lea		base_at_start,a1
 	tst.b	start_level_3
-	jne		0f
-	lea		graveyard_at_start,a1
-0:
+
 	lea		(bg_tiles_address_2800,a6),a0
 	move.w	#0x3FF,d0
 0:
@@ -795,12 +855,7 @@ demo_game:
 	add	#0x100,a0
 	dbf		d1,1b
 	
-	moveq	#2,D0
-	tst.b	start_level_3
-	jne		0f
-	moveq	#0,d0
-0:
-	jbsr	load_context		| level 3
+
 	
 	* install frame
 	lea	(0x2040,a6),a0
@@ -820,6 +875,8 @@ demo_game:
 	addq	#0x1,a0
 	dbf		d0,0b
 	
+	jbsr	load_context
+
 	.set	row,4
 	
 	WRITE_TEXT	tester_text,2
@@ -869,7 +926,7 @@ num2hexstring:
 	rts
 	
 tester_text:
-	.ascii	"Welcome to GNG hw tester"
+	.ascii	"Welcome to Rolling Thunder hw tester"
 	.byte	0xff
 scrollx_text:
 	.ascii	"Game ScrollX "
@@ -930,54 +987,7 @@ load_context:
 
 	movem.l	d0-a6,-(a7)
 
-	
-	lea	context_name_table,A0
-	add.w	d0,d0	
-	add.w	d0,d0
-	move.l	(a0,d0.w),a0
-	lea		bg_character_table_buffer,a1
-	jbsr	load_file
-	
-	* set palette
-	lea		bg_character_table_buffer,a0
-	move.l	color_copper_pointers,a1	| entries 0-31
-	move.w	#TOTAL_NB_COLORS/2,d0
-	jbsr	load_palette
-	
-	* now relocate file
-	lea		bg_character_table_buffer+64,a0		| skip palette
-	move.l	a0,bg_tile_character_table				| set character table pointer
-	move.l	a0,d0
-	move.w	#0x3FF,d7
-0:
-	move.l	(a0)+,d1
-	jeq		10f
-	add.l	d0,d1
-	move.l 	d1,(-4,a0)
-	move.l	d1,a1
 
-	* relocate pointers on bitplane list in clut table
-	moveq	#BG_TILE_NB_CLUTS-1,d6
-1:
-	move.l	(a1)+,d2
-	jeq		5f
-	add.l	d0,d2
-	move.l	d2,(-4,a1)
-	move.l	d2,a2
-	* relocate pointers on bitplanes
-	moveq	#4,D5	| 5 bitplanes
-2:
-	move.l	(a2)+,d3
-	jeq		4f
-	add.l	d0,d3
-	move.l	d3,(-4,a2)
-4:
-	dbf		D5,2b
-5:
-	dbf		d6,1b
-10:
-	dbf		d7,0b
-	
 	* at start redraw everything
 	move.w	#START_X,game_scroll_x
 	move.w	#START_Y,game_scroll_y
@@ -1195,12 +1205,9 @@ dump_and_quit:
 	illegal
 	.endif
 	
-	.include	"context.68k"
 	
-cavern_at_start:
-	.include	"cavern.68k"
-graveyard_at_start:
-	.include	"graveyard.68k"
+base_at_start:
+	.include	"base.68k"
 
 call_nmi:
 	.set		row,5
@@ -2339,7 +2346,7 @@ restore_system:
 	rts
 
 
-	
+
 platform_init:
 	bsr		store_system
 	
@@ -2347,8 +2354,8 @@ platform_init:
 	lea		_custom,a5
 	move.w	#0x7FFF,dmacon(a5)
 	move.w	#0x7FFF,intena(a5)
-	* set blitter parameters once and for all
-    move.l  #-1,bltafwm(a5)
+	* set blitter parameters
+	move.l	#-1,bltafwm(a5)
 	
 	move.l	monitor,d0
 	cmp.l	#NTSC_MONITOR_ID,D0
@@ -2356,7 +2363,11 @@ platform_init:
 	st.b	ntsc_flag
 	* disable extra mid-screen interrupt, as it would be too fast (NTSC)
 	move.w	#COPPER_NOP,pal_intreq_block_game
-	move.w	#0x0401,pal_wait			| else intreq never happens
+	* also change screen start position, make it higher
+	move.w	#0x01+(0xC<<8),screen_start
+
+	
+	*move.w	#0x0401,pal_wait			| else intreq never happens
 0:
 	.if		NB_PLAYFIELD_PLANES==8
     move.w #0x0210+BORDERBLANK,bplcon0(a5) | 8 bitplanes, borderblank
@@ -2367,8 +2378,8 @@ platform_init:
 
 
  	*         VVHH
-    move.w #0x89+(Y_START<<8),d0
-    move.w #0x89+((Y_START-0x10)<<8),d1
+    move.w #0x89+((Y_START+0x10)<<8),d0
+    move.w #0x99+((Y_START)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
 	sub.w	#NTSC_Y_SHIFT<<8,d0
@@ -2382,38 +2393,132 @@ platform_init:
     add	#AGA_X_SHIFT,d0
     add	#AGA_X_SHIFT,d1
 	.endif
+	
     move.w d0,diwstrt(a5)
     move.w d1,diwstop(a5)
     move.w #0x0038,ddfstrt(a5)
 
-	move	#BG_NB_BYTES_PER_ROW-40,d0
+	move	#BG_NB_BYTES_PER_ROW-40,d0	| bpl1mod
 
 	.ifne	OPT_AGA_MODE
-    move.w #0x00C0,ddfstop(a5)		| C0 for fmode=3
-	move.w	#(3<<2)+3,fmode(a5)		| wide sprites, faster fetch
-	subq	#8,d0			| change modulo
+    move.w #0x00D0,ddfstop(a5)		| C0 for fmode=3
+	move.w	#(3<<2)+1,fmode(a5)		| wide sprites, faster fetch
+	subq	#4,d0			| change modulo
  	.else
 	move.w #0x00D0,ddfstop(a5)		| C0 for fmode=3
 	.endif
 	
-
 	* 0 modulo (OCS)
     move.w d0,bpl1mod(a5)
     move.w d0,bpl2mod(a5)
 
-*	lea		rows_table,a1
-*	lea		first_rows,a0
-*	move.w	#NB_FIRST_ROWS,d0
-*	jbsr	generate_row_table
-*	lea		second_rows,a0
-*	move.w	#NB_SECOND_ROWS,d0
-*	jbsr	generate_row_table
-*	lea		third_rows,a0
-*	move.w	#NB_THIRD_ROWS,d0
-*	jbsr	generate_row_table
+	
+	lea		hw_sprite_ram_buffer,a0
+	jbsr	align_for_fmode
+	moveq	#7,d0   | only 5 sprites are needed
+	lea		hw_sprite_pointers,a1
+0:
+	move.l	a0,(a1)+
+	add.w	#HW_SPRITE_BUFFER_SIZE,a0
+	dbf		d0,0b
+	
+	lea		bobs_screen_buffer_1,a0
+	addq	#2,a0	| leave 16 bits hidden for left side clipping
+	jbsr	align_for_fmode
+	move.l	a0,playfield_screen_data_1
+	move.l	a0,playfield_drawn_screen_ptr
+	move.l	a0,playfield_displayed_screen_ptr
+	
+	st		music_track_start_number
 
-	*move.w	#0xC0,d0
-	*jbsr	wrap_bitplanes
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	lea		bobs_screen_buffer_2,a0
+	addq	#2,a0	| leave 16 bits hidden for left side clipping
+	jbsr	align_for_fmode
+	move.l	a0,playfield_screen_data_2
+	move.l	a0,playfield_displayed_screen_ptr
+	.endif
+		
+	* init color table handling the bank switch issue
+	lea		copperlist_colors,a0
+	lea		color_copper_pointers,a1
+	moveq	#(TOTAL_NB_COLORS/32),d0		| nb banks for all colors + sprite color bank
+0:
+	.ifne	OPT_AGA_MODE
+	addq.w	#4,a0		| skip set bank
+	.endif
+	move.w	#31,d1		| 32 colors per bank
+1:
+	move.l	a0,(a1)+
+	addq.w	#4,a0
+	dbf		d1,1b
+	dbf		d0,0b
+	
+	
+	
+	* put static sprite entries, we'll write into
+	* that sprite area
+	lea		game_sprites,a2
+	lea		hw_sprite_pointers,a1
+1:
+	move.l	(a1)+,d0
+	move.w	d0,(6,a2)
+	swap	d0
+	move.w	d0,(2,a2)
+	*swap	d0
+	addq	#8,a2
+	cmp.l	#game_sprites_end,a2
+	bcs		1b
+2:
+	* compute control words for each sprite
+	lea		hw_sprite_pointers,a0
+	lea		HW_SpriteYTable_256,a1
+	moveq	#4,d7  | only 5 first sprites are used
+	moveq	#0x1F,d2	| sprite X start
+0:
+	move.w	d2,d0
+	move.w	#0x0,d1
+*	tst.b	ntsc_flag
+*	jeq		1f
+*	sub.w	#d1		| sprites slightly higher
+*1:
+	jbsr	store_sprite_pos
+	add.w	#64,d2		| advance X
+	
+	* store control word
+	move.l	(a0)+,a2
+	move.w	d0,(8,a2)
+	swap 	d0
+	move.w	d0,(a2)
+	addq	#8,a2
+	
+	dbf	d7,0b
+
+	* 3 last sprites are not displayed
+	.rept	3
+	clr.w	(a2)
+	clr.w	(8,a2)
+	addq	#8,a2
+	.endr
+	
+	* load sprites palette
+	move.l	color_copper_pointers+TOTAL_NB_COLORS*4,a1	| entries 64-80
+	moveq	#2,d7
+0:
+	lea		fg_tile_palette,a0
+	move.w	#4,d0
+	jbsr	load_palette
+	dbf		d7,0b
+	
+	
+	lea		bg_tile_palette,a0
+	move.l	color_copper_pointers,a1	| entries 0-64
+	move.w	#TOTAL_NB_COLORS,d0
+	jbsr	load_palette
+	
+	
+	jbsr		set_bobs_bitplanes
+	
 	
 	lea		_custom,a5
 	lea		game_copperlist,a0
@@ -2470,20 +2575,29 @@ platform_init:
 	
 	
 	
-    rts
+    rts	
+	
 	
 * < A0: palette
 * < A1: copperlist
 * < D0: number of colors to load	
 load_palette:
+	moveq	#0,d2
 	subq.w	#1,d0
 	beq.b	2f
 1:
 	addq.w	#2,a1
 	move.w	(a0)+,(a1)+
+	addq	#1,d2
+	cmp.b	#32,d2
+	jne		3f
+	moveq	#0,d2
+	addq	#4,a1		| skip bank
+3:
 	dbf		d0,1b
 2:
 	rts
+
 
 * < D0: row (0-0x1FF), if 0: do nothing
 wrap_bitplanes:
@@ -2533,25 +2647,6 @@ previous_wrap_y_pos:
 previous_wrap_copperlist_pos:
 	.long	0
 	
-* < A0: copper block with rows
-* < A1: part of the pointers list
-* < D0: number of rows to fill
-
-generate_row_table:
-	* generate row table, set jumps
-	move.w	#(first_rows_end-first_rows)/NB_FIRST_ROWS,d7	| block size
-	subq	#1,d0
-0:
-	move.l 	a0,(a1)+
-	lea		(a0,d7.w),a2	| next row jump
-	move.l	a2,d1
-	move.w	d1,(6,a0)
-	swap	d1
-	move.w	d1,(2,a0)
-	move.l	a2,a0		| next row
-	dbf		d0,0b
-	
-	rts
 	
 	
 * change return address from vblank
@@ -2584,66 +2679,89 @@ osd_disable_interrupts:
 osd_set_bank:
 	rts
 
-osd_video_word_dirty:
-	jbsr	osd_video_byte_dirty
-	addq	#1,a0
-	jbsr	osd_video_byte_dirty
-	subq	#1,a0
+* a0=screen address
+* we need to update code+attr anyway
+osd_video_byte_dirty:
+	OSD_ENTER
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
+	move.l	a0,d7
+	bclr	#0,d7
+	move.l	d7,a0
+	jbsr 	osd_video_word_dirty
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
+	OSD_EXIT
 	rts
-	
+
 * a0=screen address (preserved)
 * a6=ram base
 * should preserve all registers
 * allows 2000-3000 range
 * 2000: foreground/HUD (2400: attributes)
 * 2800: background
-osd_video_byte_dirty:
+osd_video_word_dirty:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2,-(a7)
-	move.b	(a0),d0
+	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
+	jbsr	video_word_dirty_cpu1
+	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
+	OSD_EXIT
+	rts
+
+video_word_dirty_cpu1:
 	move.l	a0,d7		| save address
 	sub.l	a6,d7
-	.ifndef	RELEASE
-	jmi		2f
-	.endif
+	jmi		osd_w_videoram_out
 
-	* we now suppose that we're in 2000-3000
+	* we now suppose that we're in 0-4000 (cpu1)
+	* or 2000-6000 (cpu2)
 	* check that in debug mode
 	.ifndef		RELEASE
 	cmp.w	#FG_SCREEN_TILE_ADDRESS+0x1000,d7
 	jcs		0f
 1:
 	BREAKPOINT	"write videoram out of range (D7)"
-	bra.b	osd_w_videoram_out	
+	jra	osd_w_videoram_out	
 0:
 	.endif
 	
+	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
+	jcs		0f
+	
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
 	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
-	.ifndef	RELEASE
-	jpl		0f
-	add.w	#FG_SCREEN_TILE_ADDRESS,d7
-	BREAKPOINT	"write videoram out of range (D7)"
-	jra		osd_w_videoram_out
+
+	jra	update_fg_tile
 0:
-	.endif
+	* background tiles have 3 layers, not sure all 3 layers are active
+	* simultaneously fortunately!
+	* layer 0: background
+	* layer 1: used for ramps
+	* layer 2: used for intro computer room
+	cmp.w	#0x1000,d7
+	jcc		0f
+	tst.b	block_tile_layer_0
+	jne		osd_w_videoram_out
 	
-	cmp.w	#BG_SCREEN_TILE_ADDRESS-FG_SCREEN_TILE_ADDRESS,d7
-	jcc		bg_tile
-	
-	and.w	#0x3FF,d7
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	jra		update_bg0_tile
+0:
 
-	lea		(FG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	lea		(FG_SCREEN_COLOR_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d1
+	cmp.w	#0x2000,d7
+	jcc		osd_w_videoram_out
+	* layer 1 & 2: same processing
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	cmp.b	#0xFF,d0
+	jeq		osd_w_videoram_out
 
-
-	jbsr	update_fg_tile
-
+	and.w	#0xFFF,d7
+	jra		update_bg1_tile
+1:
+	clr.b	block_tile_layer_0
 osd_w_videoram_out:
-	movem.l	(a7)+,d0-d7/a0-a2
-	OSD_EXIT
 	rts	
+	
 
 test_x_offset:
 	BREAKPOINT	"TEST"
@@ -2660,7 +2778,7 @@ test_x_offset:
 	move.w	x_offset,d0
 	rts
 	
-* < D7: address (0-0x400)
+* < D7: address (0-0x800)
 * > D0: x_offset or -1 if not in visible screen
 compute_x_offset:
 	movem.w	d1-d2,-(a7)
@@ -2709,42 +2827,56 @@ compute_x_offset:
 	jra		2b
 	
 bg_tile:
-	and.w	#0x3FF,d7
+	and.w	#0x7FF,d7
 
 	
 	
 	* tile is in screen considered the current scrolling: update it
 	* (don't check Y we need update no matter when in that case)
 	
-	lea		(BG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	lea		(BG_SCREEN_COLOR_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d1
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
 
-	jbsr	update_bg_tile
+	jbsr	update_bg0_tile
 
 	jra		osd_w_videoram_out
 	
 	
-	.macro	COPY_TILE8_PLANE_ROW
-	move.b	d0,(offset,a1)  | buffer
-	.endm
-	
-	.macro	CLEAR_TILE8_PLANE
-	.set	offset,0
-	.rept	8
-	clr.b	(offset,a1)
-	.set	offset,offset+FG_NB_BYTES_PER_ROW
-	.endr	
-	.endm
-	
-	.macro	TILE8_NEXT_PLANE
-	add.l	d5,a1
-	add.l	d5,a2
-	.endm
 
 cache_bg_tiles_address:
+	moveq	#0,d7
+	lea		bg_tile_address_table,a0
+0:
+	jbsr	compute_bg_tile_xy
+
+	move.b	d0,(a0)+		| store offset
+	move.b	d1,(a0)+		| store offset
+
+	addq.w	#2,d7
+	cmp.w	#0x1000,d7
+	jne		0b
 	rts
+	
+
+* < D7: 0-0x1000
+* > D0/D1: screen X/Y coords 
+compute_bg_tile_xy:
+	moveq	#0,d0
+	move.b	d7,d0
+	
+	and.b	#0x7F,d0	| x
+	lsr.b	#1,d0		| divide by 2: X in [0..63]
+	
+	move.w	d7,d1
+	lsr.w	#7,d1		| Y
+
+	rts
+0:
+	* invalid
+	moveq	#-1,d0
+	moveq	#-1,d1
+	rts
+	
 
 calc_x_offset_and_update_bg_tile:
 	move.w	d0,-(a7)
@@ -2753,47 +2885,31 @@ calc_x_offset_and_update_bg_tile:
 	jpl		0f
 	rts
 0:
-* < D7: 0-0x400 address
+
+* < D7: 0-0xFFF address
 * < D0: tile code
 * < D1: color code
 * uses x_offset computed from scrolling current params
 
-update_bg_tile:
-	
-	moveq	#0,d2			| mask up to 255
-	move.b	d0,d2			| tile code
-	moveq	#0,d3
-	move.b	d1,d3			| CLUT & tile code & flags
+update_bg0_tile:
+	DECODE_CODE_AND_ATTRIBUTES
 
-	move.w	d3,d4
-	and.b	#0xC0,d4
-	add.w	d4,d4
-	add.w	d4,d4
-	add.w	d4,d2			| full tile code
-
-	moveq	#0,d0
-	moveq	#0,d1
 	* compute address
 	
-
-	move.w	d7,d0
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
+	lea		bg_tile_address_table,a1
+	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
+	moveq	#0,d1
+	move.b	d0,d1
+	lsr.w	#8,d0		| X
+	subq	#3,d1		| first 3 rows aren't visible
+	* temp clip!!!
+	cmp.w	#0x24,d0
+	jcc		11f
+	cmp.w	#0x20,d1
+	jcc		11f
 	
-	
-	lsr.w	#5,d0	| divide by 0x20
-
-	
-	asr.w	#4,d1	| tiles are 16 pix wide
-	add.w 	d1,d0	| correct nb bytes
-
-	add.w	d0,d0	| 16 pixels
-	add.w 	x_offset,d0
-	
-
-	move.w	d7,d1
-	and.w	#0x1F,d1	| modulus 0x20
-	cmp.w	#0x10,d1
-	scs		d6			| repeat tile draw if Y tile  < 0x10
-
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
 	move.l	#BG_SCREEN_PLANE_SIZE,d5
@@ -2801,15 +2917,14 @@ update_bg_tile:
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	.endif
 	
-	move.l		playfield_drawed_screen_ptr,a1
+	move.l		playfield_drawn_screen_ptr,a1
 	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
 	.else 
 	* double buffering
 	move.l		playfield_displayed_screen_ptr,a4
-
 	.endif
 	
-	move.w	#NB_BG_PLANES-1,d4   | needed even if no tile
+	moveq	#NB_BG_PLANES-1,d4   | needed even if no tile
 	lea		mulBG_NB_BYTES_PER_ROW_table,A2
 	.ifdef	NO68020
 	add.w	d1,d1
@@ -2817,7 +2932,7 @@ update_bg_tile:
 	.else
 	move.w	(a2,d1.w*2),d1
 	.endif
-	lsl.w	#4,d1	| 16 pixels
+	lsl.w	#3,d1	| 8 pixels
 	add.w	d1,d0
 	add.w	d0,a1
 	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
@@ -2832,9 +2947,10 @@ update_bg_tile:
 	
 	*cmp.b	#0x20,d2
 	*jeq		11f				| optim: blank tile
-	move.l		bg_tile_character_table,d0
-	jeq		0f			| no context loaded: out
-	move.l	d0,a0
+	*move.l		bg_tile_character_table,d0
+	*jeq		100f			| no context loaded: out
+	*move.l	d0,a0
+	lea		bg0_character_table,a0
 	.ifdef	NO68020
 	add.w	d2,d2
 	add.w	d2,d2	
@@ -2857,11 +2973,6 @@ update_bg_tile:
 12:
 	.endif
 	move.l	d0,a2
-	move.w	d3,d1		| save attributes
-	lsr.w	#4,d1
-	and.w	#3,d1		| mirror/flip
-	
-	and.w	#0x7,d3
 	.ifdef	NO68020
 	add.w	d3,d3
 	add.w	d3,d3
@@ -2875,8 +2986,6 @@ update_bg_tile:
 	jne		12f
 	move.w	d7,-(a7)
 	add.w	#BG_SCREEN_TILE_ADDRESS,d7
-	lsr.w	#2,d2
-	lsr.w	#2,d3
 	*COLOR0_FLASH	0xFF0
 	move.w	(a7)+,d7
 	jra		11f
@@ -2884,71 +2993,27 @@ update_bg_tile:
 12:
 	move.l	d0,a2					| pointer on bitplanes
 
+
+	*lea		mirror_jump_table,a0
+	*.ifdef	NO68020
+	*add.w	d1,d1
+	*add.w	d1,d1
+	*move.l	(a0,d1.w),a0
+	*.else
+	*move.l	(a0,d1.w*4),a0
+	*.endif
 	
-	.macro	COPY_TILE16_PLANE_ROW
-	move.w	d0,(offset,a1)  | buffer
-	move.w	d0,(offset,a3)  | restore buffer
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	move.w	d0,(offset,a4)	| second buffer
-	.endif
-	.endm
+	* we wait just in case a blitter operation is in progress
+	* it rarely conflicts
+	*lea		_custom,a5
+	*REALLY_WAIT_BLIT
 	
-	.macro	CLEAR_TILE16_PLANE
-	.set	offset,0
-	.rept	16
-	clr.w	(offset,a1)
-	clr.w	(offset,a3)  | restore buffer
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	clr.w	(offset,a4)	| second buffer
-	.endif
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr	
-	.endm
 	
-*	.macro	COPY_TILE_PLANE_ROW_BACKBUFFER
-*	COPY_TILE_PLANE_ROW
-*	move.b	d0,(offset,a3)  | backbuffer
-*	.endm
-*	
-*	.macro	CLEAR_TILE_PLANE_BACKBUFFER
-*	.set	offset,0
-*	.rept	8
-*	clr.b	(offset,a1)
-*	clr.b	(offset,a3)
-*	.set	offset,offset+BG_NB_BYTES_PER_ROW
-*	.endr	
-*	.endm
-	
-	.macro	TILE16_NEXT_PLANE
-	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
-	add.l	d5,a1
-	add.l	d5,a3
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.l	d5,a4
-	.endif
-	.else
-	add.w	d5,a1
-	add.w	d5,a3
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d5,a4
-	.endif
-	
-	.endif
-	.endm
-	
-	lea		mirror_jump_table,a0
-	.ifdef	NO68020
-	add.w	d1,d1
-	add.w	d1,d1
-	move.l	(a0,d1.w),a0
-	.else
-	move.l	(a0,d1.w*4),a0
-	.endif
 	tst.b 	d6
-	jeq		0f
+	jra		0f
 	movem.l	d0-D3/a0-a6,-(a7)
 	jsr		(a0)
-	* lower part too
+	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
 	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
 	add.w	d6,a1
@@ -2958,168 +3023,258 @@ update_bg_tile:
 	.endif
 	move.w	#NB_BG_PLANES-1,d4
 0:
-	jmp		(a0)
-	
+	*jmp		(a0)
 
-standard_tile16:
 
 	* just copy
-
 4:
 	move.l	(a2)+,d0		| next plane
 	jeq		5f
 	move.l	d0,a0
 	.set	offset,0
-	.rept	16
-	move.w	(a0)+,d0
-	COPY_TILE16_PLANE_ROW
+	.rept	8
+	move.b	(a0)+,d0
+	COPY_TILE8_PLANE_ROW
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
 41:
-	TILE16_NEXT_PLANE
+	TILE8_NEXT_PLANE
 	dbf		d4,4b
 	
-0:
+100:
 	rts
 5:
-	CLEAR_TILE16_PLANE
+	CLEAR_TILE8_PLANE
 	jra		41b
-
-
-flipped_tile16:	
-4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
-	move.l	d0,a0
-	.set	offset,8*BG_NB_BYTES_PER_ROW
-	.rept	16
-	.set	offset,offset-BG_NB_BYTES_PER_ROW
-	move.w	(a0)+,d0
-	COPY_TILE16_PLANE_ROW
-	.endr
-41:
-	TILE16_NEXT_PLANE
-	dbf		d4,4b
 	
-0:
-	rts
+* < D7: 0-0xFFF address
+* < D0: tile code
+* < D1: color code
+* uses x_offset computed from scrolling current params
 
+update_bg1_tile:
+	DECODE_CODE_AND_ATTRIBUTES
 	
-mirror_tile16:
-	lea		mirror_bits(pc),a4
+	add.w	#0x400,d2
+	
+	* compute address
+	
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
+	lea		bg_tile_address_table,a1
+	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
 	moveq	#0,d1
+	move.b	d0,d1
+	lsr.w	#8,d0		| X
+	subq	#3,d1		| first 3 rows aren't visible
+	* temp clip!!!
+	cmp.w	#0x20,d0
+	jcc		11f
+	cmp.w	#0x20,d1
+	jcc		11f
+	
+	* updating bitplanes
+	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
+	move.l	#BG_SCREEN_PLANE_SIZE,d5
+	.else
+	move.w	#BG_SCREEN_PLANE_SIZE,d5
+	.endif
+	
+	move.l		playfield_drawn_screen_ptr,a1
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.else 
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a4
+	.endif
+	
+	moveq	#NB_BG_PLANES-1,d4   | needed even if no tile
+	lea		mulBG_NB_BYTES_PER_ROW_table,A2
+	.ifdef	NO68020
+	add.w	d1,d1
+	move.w	(a2,d1.w),d1
+	.else
+	move.w	(a2,d1.w*2),d1
+	.endif
+	lsl.w	#3,d1	| 8 pixels
+	add.w	d1,d0
+	add.w	d0,a1
+	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
+	.else 
+	* double buffering
+	add.w	d0,a4
+	.endif
+
+	* save address of layer 1 restore buffer
+	* (we just don't have enough registers)
+	lea		layer_1_restore_buffer,a3
+	add.w	d0,a3
+	move.l	a3,layer_1_restore_screen_pointer
+	
+	lea		background_restore_buffer,a3
+	add.w	d0,a3
+
+	
+	*move.l		bg_tile_character_table,d0
+	*jeq		100f			| no context loaded: out
+	*move.l	d0,a0
+	lea		bg1_character_table,a0
+	.ifdef	NO68020
+	add.w	d2,d2
+	add.w	d2,d2	
+	move.l	(a0,d2.w),d0		| tile pointer
+	.else
+	move.l	(a0,d2.w*4),d0		| tile pointer
+	.endif
+	.ifdef	RELEASE
+	jeq		11f					| clear tile, no error (release)
+	.else
+	jne		12f
+	move.w	d7,-(a7)
+	add.w	#BG_SCREEN_TILE_ADDRESS,d7
+	.ifdef	NO68020
+	lsr.w	#2,d2
+	.endif
+	*COLOR0_FLASH	0xF0F
+	move.w	(a7)+,d7
+	jra		11f
+12:
+	.endif
+	move.l	d0,a2
+	.ifdef	NO68020
+	add.w	d3,d3
+	add.w	d3,d3
+	move.l	(a2,d3.w),d0			| pointer on tile bitplanes for that CLUT
+	.else
+	move.l	(a2,d3.w*4),d0			| pointer on tile bitplanes for that CLUT	
+	.endif
+	.ifdef	RELEASE
+	jeq		11f						| not necessarily a problem
+	.else
+	jne		12f
+	move.w	d7,-(a7)
+	add.w	#BG_SCREEN_TILE_ADDRESS,d7
+	*COLOR0_FLASH	0xFF0
+	move.w	(a7)+,d7
+	jra		11f
+	.endif
+12:
+	move.l	d0,a2					| pointer on bitplanes
+
+
+	* we wait just in case a blitter operation is in progress
+	* it rarely conflicts
+	*lea		_custom,a5
+	*REALLY_WAIT_BLIT
+	
+	lea		(a2,4*NB_PLAYFIELD_PLANES),a6	| mask plane address, fixed
+	tst.b 	d6
+	jra		0f
+	movem.l	d0-D3/a0-a6,-(a7)
+	jsr		4f
+	* lower part too TODO
+	movem.l	(a7)+,d0-D3/a0-a6
+	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
+	add.w	d6,a1
+	add.w	d6,a3
+	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	add.w	d6,a4
+	.endif
+	move.w	#NB_BG_PLANES-1,d4
+0:
+	*jmp		(a0)
+
+	* just copy
 4:
 	move.l	(a2)+,d0		| next plane
 	jeq		5f
+	move.l	(a6),a5			| reload plane mask
 	move.l	d0,a0
 	.set	offset,0
-	.rept	16
-	move.b	(a0)+,d1
-	move.b	(a4,d1.w),d0	| mirror
-	ror.w	#8,d0
-	move.b	(a0)+,d1
-	move.b	(a4,d1.w),d0	| mirror
-	ror.w	#8,d0
-	* not working, needs 16 bit mirror
-	COPY_TILE16_PLANE_ROW
-
+	.rept	8
+	move.b	(a0)+,d0
+	MASK_TILE8_PLANE_ROW
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
 41:
-	TILE16_NEXT_PLANE
+	TILE8_NEXT_PLANE
 	dbf		d4,4b
 	
+	* now same thing for layer 1 restore
+	move.l 	layer_1_restore_screen_pointer,a1
+	lea		(a6,-4*NB_PLAYFIELD_PLANES),a2	| happy to restore input data
+	move.w	#NB_BG_PLANES-1,d4
 
-0:
-	rts
-1:
-
-5:
-	CLEAR_TILE16_PLANE
-	jra		41b
-	
-mirror_flipped_tile16:
-	lea		mirror_bits(pc),a4
-	moveq	#0,d1
-4:
+14:
 	move.l	(a2)+,d0		| next plane
-	jeq		5f
+	jeq		15f
 	move.l	d0,a0
-	.set	offset,8*BG_NB_BYTES_PER_ROW
-	.rept	16
-	.set	offset,offset-BG_NB_BYTES_PER_ROW
-	move.b	(a0)+,d1
-	move.b	(a4,d1.w),d0	| mirror
-	* not working, needs 16 bit mirror
-	COPY_TILE16_PLANE_ROW
-
+	.set	offset,0
+	.rept	8
+	move.b	(a0)+,(offset,a1)  | layer 1 buffer
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
-41:
-	TILE16_NEXT_PLANE
-	dbf		d4,4b
-
-0:
+141:
+	TILE8_NEXT_PLANE
+	dbf		d4,14b
+	* last plane: mask data for later blit
+	move.l	(a6),a5			| reload plane mask
+	.set	offset,0
+	.rept	8
+	move.b	(a5)+,(offset,a1)
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
+	
+100:
 	rts
-
 5:
-	CLEAR_TILE16_PLANE
+	CLEAR_TILE8_PLANE
 	jra		41b
 
-	* clear tile
-
-11:
-111:
-	CLEAR_TILE16_PLANE
-	TILE16_NEXT_PLANE
-	dbf		d4,111b
-2:
-	rts
-
-mirror_jump_table:
-	.long	standard_tile16
-	.long	mirror_tile16
-	.long	flipped_tile16
-	.long	mirror_flipped_tile16
+15:
+	CLEAR_TILE8_PLANE
+	jra		141b
 	
-mirror_bits:
-	.include "mirror_bits.68k"
-
-
 * bruteforce all possible x/y combinations
 * d2: 0: no X swap, 1: X swap (for scrolling maps)
 cache_fg_tiles_address:
 	moveq	#0,d7
 	lea		fg_tile_address_table,a0
-	lea		mulFG_NB_BYTES_PER_ROW_table,A1
 0:
-	moveq	#0,d0
 	jbsr	compute_fg_tile_xy
 
+	move.b	d0,(a0)+		| store offset
+	move.b	d1,(a0)+		| store offset
 
-	* displayable tile
-	add.w	d1,d1
-	move.w	(a1,d1.w),d1
-	add.w	d1,d0
-	move.w	d0,(a0)+		| store offset
-2:
-	addq.w	#1,d7
-	cmp.w	#0x400,d7
+	addq.w	#2,d7
+	cmp.w	#0x1000,d7
 	jne		0b
 	rts
 
 
-* < D7: 0-0x400
-* > D0/D1: coords 
+
+* < D7: 0-0x1000
+* > D0/D1: screen X/Y coords 
 compute_fg_tile_xy:
 	moveq	#0,d0
 	move.b	d7,d0
 	
-	and.b	#0x1F,d0	| x
+	and.b	#0x7F,d0	| x
+	sub.b	#8,d0
+	jmi		0f
+	cmp.b	#70,d0
+	jcc		0f
+	lsr.b	#1,d0		| divide by 2: X in [0..35]
+	
 	move.w	d7,d1
-	lsr.w	#5,d1		| Y
-	and.b	#0x1F,d1	| Y
-	subq	#2,d1		| 2 first rows aren't visible
-	lsl.w	#3,d1		| times 8
+	lsr.w	#7,d1		| Y
+	cmp.w	#4,d1		| first 4 rows aren't visible
+	jcs		0f
+	sub.w	#1,d1
+	rts
+0:
+	* invalid
+	moveq	#-1,d0
+	moveq	#-1,d1
 	rts
 
 *compute_tile_xy_portrait:
@@ -3137,63 +3292,49 @@ compute_fg_tile_xy:
 *	rts
 
 
-
-
-* < D7: 0-0x400 offset
+* < D7: 0x3000-0x3FFF offset
 * < D0: tile code
 * < D1: tile attribute
 
 update_fg_tile:
-	* if < 0x40 bail out as not visible
-	cmp.w	#0x40,d7
+	* if < 0x208 bail out as not visible
+	cmp.w	#0x208,d7
 	jcc		0f
 	rts
 0:
-	moveq	#0,d2
-	moveq	#0,d3
-	move.b	d0,d2	| code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	#0xC0,d3
-	lsl.w	#2,d3
-	add.w	d3,d2	| extended tile code
-	move.b	d1,d3	| attribute + tile msbits
-	and.w	#0xF,d3	| clut
+	DECODE_CODE_AND_ATTRIBUTES
+	lsr.b	#2,d3	| divide attribute by 4 on fg tiles
+
+	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
+	lea		fg_tile_address_table,a1
+	move.w	(a1,d7.w),d0
+	jmi		11f         | not visible: skip
+	moveq	#0,d1
+	move.b	d0,d1
+	lsr.w	#8,d0		| X
 	
-	jbsr	compute_fg_tile_xy
-	* select which destination sprites (0-3)
+	* select which destination sprite (0-5)
 	move.w	d0,d4
 	lea		hw_sprite_pointers,a1
-	and.w	#0xF8,d4		| divide by 8
-							| then multiply by 8 (sprite go by pairs)
+	and.w	#0xF8,d4		| divide by 8 (8*8=64 pixels)
+	lsr.w 	#1,d4			| then multiply by 4 to get proper sprite number
 	lea	(a1,d4.w),a1
 
 	
 	and.w	#0x7,d0		| dest X offset
-	lsl.w	#4,d1		| dest Y offset (8*2 pixels per row)
+	lsl.w	#7,d1		| dest Y offset (8*8*2 pixels per row)
 	add.w	d0,d1
-	add.w	#0x10,d1	| skip control word
+	sub.w	#0x40-0x10,d1	| make higher (-0x40) & skip control word (+0x10)
 	
-	* get 2 pointers for 2 attached sprites
-	move.l	(a1)+,a2
+	* get 1 pointer for 1 sprite
 	move.l	(a1),a1
-	exg		a1,a2
+	
 	* add offset to destination
-	add.w	d1,a2
 	add.w	d1,a1
 	
 	* now get source data
 	lea		fg_character_table,a0
-	
-*	lea		fg_tile_address_table,a1
-*	moveq	#0,d5
-*	.ifdef	MC68020
-*	move.w	(a1,d7.w*2),d5
-*	.else
-*	add.w	d7,d7
-*	move.w	(a1,d7.w),d5
-*	.endif
 
-20:
 
 	* updating bitplanes
 
@@ -3232,16 +3373,8 @@ update_fg_tile:
 	
 	move.l	d0,a4		| directly pointer on tile bitplanes
 	
-	.macro	NEXT_SOURCE_PLANE
-4:
-	move.l	(a4)+,d0		| next plane
-	jne		5f
-	move.l	#empty_row,d0
-5:	
-	move.l	d0,a0
-	.endm
 	
-standard_tile:
+*standard_tile:
 	* first plane: first sprite
 	NEXT_SOURCE_PLANE
 	.set	offset,0
@@ -3256,22 +3389,6 @@ standard_tile:
 	.rept	8
 	move.b	(a0)+,d0
 	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
-	* third plane: second sprite
-	NEXT_SOURCE_PLANE
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
-	.set	offset,offset+16
-	.endr
-	* second plane: second sprite, with a 8 offset
-	NEXT_SOURCE_PLANE
-	.set	offset,8
-	.rept	8
-	move.b	(a0)+,d0
-	move.b	d0,(offset,a2)
 	.set	offset,offset+16
 	.endr
 

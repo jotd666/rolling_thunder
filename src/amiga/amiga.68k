@@ -1617,10 +1617,11 @@ compute_bank_base:
 	rts
 	
 call_irqs:
+	CPU1_GET_MEMORY_START_AND_DP
 	tst.b	copy_sprites
 	jeq		0f
 	clr.b	copy_sprites
-	CPU1_GET_MEMORY_START_AND_DP
+	
 	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
@@ -1629,6 +1630,8 @@ call_irqs:
 	sub.w	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 0:
+	jbsr	decode_mcu_inputs
+
 	move.w	currently_running_cpu,-(a7)
 	jbsr	run_frame
 	move.w	(a7)+,currently_running_cpu
@@ -1699,18 +1702,12 @@ level3_interrupt:
 
 0:
 
-	move.l	joypad_1_state(pc),d1
-	move.l	d1,d2
-	moveq	#0,d0
-	move.b	p1_joystick_slot,d0
-	jmi		0f
+	move.l	joypad_1_state(pc),_previous_joypad_1_state
+	moveq	#1,d0
 	jbsr	_read_joystick
 	move.l	d0,joypad_1_state
-0:
 
-	jbsr	update_controls
-	
-	move.l	joypad_1_state,d0
+
 	btst	#JPB_BTN_PLAY,d0
 	beq.b	0f
 	btst	#JPB_BTN_PLAY,d2
@@ -1794,7 +1791,6 @@ level1_interrupt:
 
 	CPU1_GET_MEMORY_START_IN_A6
 	
-	jbsr	decode_mcu_inputs
 
 	moveq	#0,d0
 *	move.w	(scroll_x_register_lsb_3b08,a6),d0
@@ -3666,7 +3662,6 @@ platform_init:
     move.w d0,bpl2mod(a5)
 
 	
-	
 	lea		hw_sprite_ram_buffer,a0
 	jbsr	align_for_fmode
 	moveq	#7,d0   | only 5 sprites are needed
@@ -3831,18 +3826,6 @@ platform_init:
 	
     rts
 	
-* < A0: palette
-* < A1: copperlist
-* < D0: number of colors to load	
-load_palettesss:
-	subq.w	#1,d0
-	beq.b	2f
-1:
-	addq.w	#2,a1
-	move.w	(a0)+,(a1)+
-	dbf		d0,1b
-2:
-	rts
 	
 * < A0: palette
 * < A1: copperlist
@@ -3949,12 +3932,12 @@ osd_video_byte_dirty_cpu1:
 	
 osd_video_byte_dirty_cpu2:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
+	movem.l	d0-d7/a0-a6,-(a7)
 	move.l	a0,d7
 	bclr	#0,d7
 	move.l	d7,a0
 	jbsr 	video_word_dirty_cpu2
-	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
+	movem.l	(a7)+,d0-d7/a0-a6
 	OSD_EXIT
 	rts
 
@@ -3974,9 +3957,9 @@ osd_video_word_dirty_cpu1:
 	
 osd_video_word_dirty_cpu2:
 	OSD_ENTER
-	movem.l	d0-d7/a0-a2/a4-a6,-(a7)
+	movem.l	d0-d7/a0-a6,-(a7)
 	jbsr 	video_word_dirty_cpu2
-	movem.l	(a7)+,d0-d7/a0-a2/a4-a6
+	movem.l	(a7)+,d0-d7/a0-a6
 	OSD_EXIT
 	rts
 
@@ -4894,74 +4877,6 @@ purge_sprite_log_data:
 	.endif
 
 	
-* < D1: previous state
-update_controls:
-	moveq	#-1,d0
-
-	lea		keyboard_table(pc),a0
-
-	tst.b	(0x4C,a0)		| "up" key
-	beq.b	0f
-	bclr	#BIT_UP,d0
-0:
-	tst.b	(0x4D,a0)		| "down" key
-	beq.b	0f
-	bclr	#BIT_DOWN,d0
-0:
-	tst.b	(0x4F,a0)		| "<-" key
-	beq.b	0f
-	bclr	#BIT_LEFT,d0
-0:
-	tst.b	(0x4E,a0)		| "->" key
-	beq.b	0f
-	bclr	#BIT_RIGHT,d0
-0:
-	tst.b	(0x63,a0)		| "ctrl" key
-	beq.b	0f
-	bclr	#BIT_FIRE_1,d0
-0:
-	tst.b	(0x64,a0)		| left "alt" key
-	beq.b	0f
-	bclr	#BIT_FIRE_2,d0
-0:
-
-	* directions + fire
-	move.l	joypad_1_state(pc),d1
-	jbsr	decode_joypad_controls
-	move.b	d0,player_1_controls
-
-	
-
-
-	rts
-	
-decode_joypad_controls:
-	btst	#JPB_BTN_UP,d1
-	beq.b	0f
-	bclr	#BIT_UP,d0
-0:
-	btst	#JPB_BTN_DOWN,d1
-	beq.b	0f
-	bclr	#BIT_DOWN,d0
-0:
-	btst	#JPB_BTN_LEFT,d1
-	beq.b	0f
-	bclr	#BIT_LEFT,d0
-0:
-	btst	#JPB_BTN_RIGHT,d1
-	beq.b	0f
-	bclr	#BIT_RIGHT,d0
-0:
-	btst	#JPB_BTN_RED,d1
-	beq.b	0f
-	bclr	#BIT_FIRE_1,d0
-0:
-	btst	#JPB_BTN_BLU,d1
-	beq.b	0f
-	bclr	#BIT_FIRE_2,d0
-0:
-	rts
-	
 osd_set_back_color:
 	RTS
 	
@@ -5006,6 +4921,7 @@ decode_mcu_inputs:
 	tst.b	(1,a0)		| "1" key like in MAME
 	beq.b	0f
 	st.b	detect_controllers
+	clr.b	(1,a0)
 	move.b	#1,(mcu_game_start_flag_418c,a6)
 0:	
 *	clr.b	(in_level_4261,a6)
@@ -5015,6 +4931,76 @@ decode_mcu_inputs:
 *	move.b	#1,(in_level_4261,a6)
 *0:	
 
+	clr.l	(in_edge_4276,a6)
+	clr.l	(in_edge_4276+4,a6)
+	clr.l	(in_edge_4276+8,a6)
+	move.l	joypad_1_state,d1
+	move.l	_previous_joypad_1_state,d2
+	
+	btst	#JPB_BTN_RED,d1
+	jeq		0f
+	btst	#JPB_BTN_RED,d2
+	jne		0f					| previously pressed
+	move.b	#1,(in_edge_4278,a6)		| fire
+0:
+	btst	#JPB_BTN_BLU,d1
+	jeq		0f
+	btst	#JPB_BTN_BLU,d2
+	jne		0f					| previously pressed
+	move.b	#1,(in_edge_4276,a6)		| jump
+0:
+	btst	#JPB_BTN_UP,d1
+	jeq		0f
+	move.b	#1,(in_level_427b,a6)
+0:
+	btst	#JPB_BTN_DOWN,d1
+	jeq		0f
+	move.b	#1,(in_level_427d,a6)
+0:
+	btst	#JPB_BTN_RIGHT,d1
+	jeq		0f
+	move.b	#1,(in_level_427f,a6)
+0:
+	btst	#JPB_BTN_LEFT,d1
+	jeq		0f
+	move.b	#1,(in_level_4281,a6)
+0:
+
+	* keyboard controls
+	lea		keyboard_table(pc),a0
+
+	tst.b	(0x4C,a0)		| "up" key
+	beq.b	0f
+	move.b	#1,(in_level_427b,a6)
+0:
+	tst.b	(0x4D,a0)		| "down" key
+	beq.b	0f
+	move.b	#1,(in_level_427d,a6)
+0:
+	tst.b	(0x4F,a0)		| "<-" key
+	beq.b	0f
+	move.b	#1,(in_level_4281,a6)
+0:
+	tst.b	(0x4E,a0)		| "->" key
+	beq.b	0f
+	move.b	#1,(in_level_427f,a6)
+0:
+	move.b	(0x63,a0),d1	| "ctrl" key
+	beq.b	0f
+	tst.b	previous_ctrl_press
+	jne		0f
+	move.b	#1,(in_edge_4278,a6)		| fire
+0:
+	move.b	d1,previous_ctrl_press
+	
+	move.b	(0x64,a0),d1		| left "alt" key
+	beq.b	0f
+	tst.b	previous_alt_press
+	jne		0f
+	move.b	#1,(in_edge_4276,a6)		| jump
+0:
+	move.b	d1,previous_alt_press
+	
 	jbsr		is_game_playing
 	jeq	1f
 	move.l	joypad_1_state,d1
@@ -6438,7 +6424,10 @@ sprite_mem_name:
 
 
 	.align	2
-
+previous_ctrl_press:
+	.byte	0
+previous_alt_press:
+	.byte	0
 cpu_interrupts:
 	.word	0
 looped_sound_enabled:

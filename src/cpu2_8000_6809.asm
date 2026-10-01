@@ -67,6 +67,8 @@
 ; that runs CPU1 to completion before CPU2 will fail the check and drop into
 ; the error screen at $8147.
 ;
+; JOTD: thanks I didn't wait for your advice, I skipped it
+;
 ; ---------------------------------------------------------------------------
 ; SYNC 2 - THE PER-FRAME GAME-STATE BARRIER  (the one you need for gameplay)
 ; ---------------------------------------------------------------------------
@@ -101,6 +103,11 @@
 ;
 ; $00 bit 0 is a frame-parity flag: when set, both IRQ handlers take the short
 ; path and skip the state dispatch entirely, halving the logic rate.
+;
+; JOTD: thanks, it was really helpful. The switch code has a safety to prevent
+; deadlocks. It trips after attract mode, but I decided to ignore that one occurrence
+; (probably happens on the game too, where IRQ mask makes the irq code resume,
+; but I chose to "kill" the cpu 2 irq instead and it seems to work (phew!)
 ;
 ; ---------------------------------------------------------------------------
 ; SYNC 3 - SPRITE LIST DOUBLE BUFFERING
@@ -165,6 +172,8 @@
 ; must be true for one frame only.  Note SWA:1 (L0) is OR-ed with the edge
 ; connector service switch (L17) inside the MCU before publication.
 ;
+; JOTD: thanks Claude, I know that emulating the MCU is too much.
+;
 ; ---------------------------------------------------------------------------
 ; MCU INTERFACE - BOOT HANDSHAKE AND CREDITS
 ; ---------------------------------------------------------------------------
@@ -189,17 +198,6 @@
 ; honouring the $4183 write.  wait_mcu_ready1/2 ($8547/$854F) spin forever
 ; otherwise.
 ;
-; ---------------------------------------------------------------------------
-; IF THE PORT BOOTS BUT MISBEHAVES, CHECK THESE IN ORDER
-; ---------------------------------------------------------------------------
-;   1. post_errors_5ff1 must be 0, or CPU1 dead-loops in the error screen.
-;   2. Both IRQ handlers must re-arm their ROM bank latch every frame
-;      (CPU1 $8587 writes DP $19 to $6800, CPU2 $8189 writes DP $1A to $D803).
-;      Miss this and the banked window $6000-$7FFF reads the wrong ROM.
-;   3. CPU2 must write $1FF2 once per frame or no sprite ever appears.
-;   4. The watchdog at $8000 is written from inside long loops; if you keep a
-;      real watchdog, keep those writes.
-;   5. DP $00 bit 0 must toggle, or the game runs at half or double rate.
 ;=============================================================================
 
 ;=============================================================================
@@ -2311,7 +2309,7 @@ function_90ee:		; [cc_handled]
 9111: C4 03       ANDB   #$03
 9113: 10 83 FF 03 CMPD   #$FF03
 9117: 26 02       BNE    $911B
-9119: 35 82       PULS   A,PC		; [manual_stack_pull]
+9119: 35 82       PULS   A,PC		; [manual_stack_pull] [irq_stack_address]
 911B: E6 E0       LDB    ,S+		; [local]
 911D: 96 81       LDA    $81
 911F: 84 07       ANDA   #$07
@@ -5219,8 +5217,8 @@ A85A: CE A8 35    LDU    #$a835
 A85D: 96 0A       LDA    $0A
 A85F: 84 0C       ANDA   #$0C
 A861: 44          LSRA
-A862: EC C6       LDD    A,U
-A864: C3 FF E0    ADDD   #$FFE0		; [rom_address]
+A862: EC C6       LDD    A,U		; [rom_address]
+A864: C3 FF E0    ADDD   #$FFE0
 A867: ED 16       STD    -$A,X
 A869: CE A8 71    LDU    #jump_table_a871
 A86C: A6 09       LDA    $9,X
@@ -6447,10 +6445,10 @@ B123: 96 3C       LDA    $3C
 B125: 48          ASLA
 B126: 9B C2       ADDA   $C2
 B128: 48          ASLA
-B129: EE C6       LDU    A,U
+B129: EE C6       LDU    A,U	; [rom_address]
 B12B: 96 C4       LDA    $C4
 B12D: 48          ASLA
-B12E: EE C6       LDU    A,U
+B12E: EE C6       LDU    A,U	; [rom_address]
 B130: BD B1 8C    JSR    function_b18c
 B133: 6F 84       CLR    ,X
 B135: 96 68       LDA    $68
@@ -6472,10 +6470,10 @@ B14B: 96 3C       LDA    $3C
 B14D: 48          ASLA
 B14E: 9B C2       ADDA   $C2
 B150: 48          ASLA
-B151: EE C6       LDU    A,U
+B151: EE C6       LDU    A,U	; [rom_address]
 B153: 96 C4       LDA    $C4
 B155: 48          ASLA
-B156: EE C6       LDU    A,U
+B156: EE C6       LDU    A,U	; [rom_address]
 B158: BD B1 B6    JSR    function_b1b6
 B15B: 6F 84       CLR    ,X
 B15D: 96 68       LDA    $68
@@ -6496,10 +6494,10 @@ B172: 96 3C       LDA    $3C
 B174: 48          ASLA
 B175: 9B C2       ADDA   $C2
 B177: 48          ASLA
-B178: EE C6       LDU    A,U
+B178: EE C6       LDU    A,U	; [rom_address]
 B17A: 96 C4       LDA    $C4
 B17C: 48          ASLA
-B17D: EE C6       LDU    A,U
+B17D: EE C6       LDU    A,U	; [rom_address]
 B17F: BD B1 B6    JSR    function_b1b6
 B182: 6F 84       CLR    ,X
 B184: 96 68       LDA    $68
@@ -10533,8 +10531,9 @@ D132: DC 56       LDD    $56
 D134: 8B 20       ADDA   #$20
 D136: 1F 03       TFR    D,U
 D138: D6 58       LDB    $58
-D13A: 96 5B       LDA    $5B
+D13A: 96 5B       LDA    $5B		; loop counter
 D13C: A7 E4       STA    ,S		; [local]
+; loop on video memory
 D13E: A6 A0       LDA    ,Y+		; [bank_address]
 D140: A7 C5       STA    B,U		; [video_address]
 D142: 5C          INCB

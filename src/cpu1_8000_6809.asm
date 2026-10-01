@@ -816,8 +816,9 @@ read_player_input_82b8:
 82D5: CE 83 4A    LDU    #$834A		; ROM
 82D8: A6 C6       LDA    A,U
 82DA: 48          ASLA
-82DB: 6D 84       TST    ,X
+82DB: 6D 84       TST    ,X		; 4276 == 1?
 82DD: 27 05       BEQ    $82E4
+; jump
 82DF: 4C          INCA
 82E0: 0C 0D       INC    $0D
 82E2: 20 05       BRA    $82E9
@@ -828,8 +829,9 @@ read_player_input_82b8:
 82EA: D6 CE       LDB    $CE
 82EC: C1 01       CMPB   #$01
 82EE: 27 0A       BEQ    $82FA
-82F0: 6D 02       TST    $2,X
+82F0: 6D 02       TST    $2,X		; 4278 == 1 ?
 82F2: 27 26       BEQ    $831A
+; fire / shoot
 82F4: 4C          INCA
 82F5: 0C 0B       INC    $0B
 82F7: 97 0A       STA    $0A
