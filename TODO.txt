@@ -13,6 +13,7 @@ display sprites: X is shifted
 fan is completely trashed too
 attract mode runs properly until hero enters arms door: hero locks up
 demo times out
+maybe MCU protection, check MAME driver & debug
 
 
 

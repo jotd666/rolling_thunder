@@ -132,7 +132,7 @@ NB_BG_PLANES = NB_PLAYFIELD_PLANES
 
 TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 FG_NB_BYTES_PER_ROW = 0x20
-BG_NB_BYTES_PER_ROW = 0x28    | +64 pixels
+BG_NB_BYTES_PER_ROW = 0x28    | 288+32 pixels
 
 Y_START = 0x20
 
@@ -145,17 +145,15 @@ BASE_BPLCON2_VALUE = 0x0064
 BASE_BPLCON4_VALUE = 0x0044	  | sprites palette starts at color 64
 
 
-NB_FIRST_ROWS = 0x80-0x21
-NB_SECOND_ROWS = 0x80
-NB_THIRD_ROWS = 0x20
-
 
 FG_NB_LINES = 256
-BG_NB_LINES = 512+256
-Y_MAX = 512
+BG_NB_LINES = 512
+Y_MAX = 256
 NB_PLAYFIELD_LINES = BG_NB_LINES
 
-VISIBLE_SCROLL_WIDTH = BG_NB_BYTES_PER_ROW*8-64
+FMODE_WIDTH_POWER=5
+
+VISIBLE_SCROLL_WIDTH = BG_NB_BYTES_PER_ROW*8-(1<<FMODE_WIDTH_POWER)
 
 BG_SCREEN_PLANE_SIZE = BG_NB_BYTES_PER_ROW*(BG_NB_LINES+16)
 
@@ -986,7 +984,7 @@ force_all_screen_redraw:
 	* given the current scroll X/Y, draw all tiles on screen
 	move.w	game_scroll_x,d0
 	move.w	d0,previous_scroll_x
-	add.w	#(CORKSCREW_NB_SCREENS/2)*0x100,d0			| give us some leeway to the left: 10 screens before havoc
+	add.w	#(CORKSCREW_NB_SCREENS/2)*288,d0			| give us some leeway to the left: 10 screens before havoc
 	move.w	d0,host_scroll_x
 	move.w	d0,min_scroll_x
 	move.w	d0,d1
@@ -1007,12 +1005,12 @@ force_all_screen_redraw:
 	move.w	d7,d6	| save current Y
 
 
-	move.w	#0x14,d2	| size of screen in tiles
+	move.w	#40,d2	| size of screen in tiles plus 32 pixels
 0:
 	move.w	d6,d7	| set current Y row
 	move.w	#COLUMN_SIZE,d1		|  (64 bit margin)
 1:
-	* compute X offset now align on 0x40
+	* compute X offset now align on 0x20
 	move.w	d5,d0
 	lsr.w	#8,d0
 	lsr.w	#1,d0
@@ -1031,9 +1029,9 @@ force_all_screen_redraw:
 *	move.b	(0x1001,a0),d1
 *	jbsr	update_bg1_tile
 	movem.l	(a7)+,d1-d2/d5-d6
-	addq.w	#0x2,d7		| next X
+	add.w	#0x80,d7		| next row
 	dbf		d1,1b
-	add.w	#0x80,d6			| next row
+	addq.w	#0x2,d6			| next column
 	add.w	#BG_TILE_WIDTH,d5	| keep track of current "scroll"
 	dbf		d2,0b
 	rts
@@ -1053,23 +1051,21 @@ draw_column_tiles:
 	move.w	d0,-(a7)
 	lsr.w	#8,d0
 	lsr.w	#1,d0
-	lsl.w	#6,d0	
+	lsl.w	#6,d0	  | 64 = 8x8
 	move.w	d0,x_offset
 	move.w	(a7)+,d0	
 	GET_MEMORY_START_AND_DP
 
-	moveq	#0,d0     | TEMP TEMP TEMP
 	lea		(bg_tiles_address_0000,a6),a5
 	lsr.w	#3,D0	| divide by 8 to get real X tile offset
 	* now compute start address to fetch data from
-	move.w	#1,d7		| first row is not visible with scroll=0, visible with=$10
-	* atm Y=0
 	lsl.w	#1,d0	| times 2
+	move.w	#3*0x80,d7		| first rows are not visible with scroll=0, visible with=$10 ??
 	add.w	d0,d7	| start address
 
 	move.w	#COLUMN_SIZE,d2
 0:
-	and.w	#0x3FF,d7		| wrap
+	and.w	#0xFFF,d7		| wrap
 	* force tile draw
 	lea		(a5,d7.w),a0
 	
@@ -1099,19 +1095,19 @@ set_scroll_values:
 	
 	cmp.w	#GAME_MAX_SCROLL_X-BG_TILE_WIDTH,d0
 	jcs		0f
-	* game scroll X >= 0x1F0
+	* game scroll X >= 0x1F8
 	cmp.w	#BG_TILE_WIDTH,d1
 	jcc		0f
-	* previous scroll X < 0x10: wrap left
+	* previous scroll X < 0x8: wrap left
 	sub.w	#GAME_MAX_SCROLL_X,d2
 	jra		1f
 0:
 	cmp.w	#BG_TILE_WIDTH,d0
 	jcc		1f
-	* game scroll X < 0x10
+	* game scroll X < 0x8
 	cmp.w	#GAME_MAX_SCROLL_X-BG_TILE_WIDTH,d1
 	jcs		1f
-	* previous scroll X > 0x1F0: wrap right
+	* previous scroll X > 0x1F8: wrap right
 	add.w	#GAME_MAX_SCROLL_X,d2
 1:
 
@@ -2744,23 +2740,23 @@ compute_x_offset:
 	* establish min & max bounds including invisible tile used for scroll
 	* which is outside the screen
 	move.w	game_scroll_x,d0  | left of screen
-	lsr.w	#3,d0		| divide by 16 match tile
+	lsr.w	#3,d0		| divide by 8 match tile
 	move.w	d0,d1
-	add.w	#0x12,d1	| right part
+	add.w	#41,d1	| right part
 	
 	* is min X < d2
 	cmp.b	d0,d2
 	jcc		0f
 	move.w	d1,d3
-	and.w	#0x1F,d3
+	and.w	#0x3F,d3   | 64 columns
 	cmp.w	d0,d3
 	jcc		0f
 	* handle wrap
-	add.w	#0x20,d2
+	add.w	#0x40,d2	| 64 columns
 0:
 	cmp.w	d0,d2
 	jcs		10f
-	add.w	#0x11,d0			| visible tile span (including invisible scroll column)
+	add.w	#40,d0			| visible tile span (including invisible scroll column)
 	cmp.b	d0,d2
 	jcc		10f	| tile x+screen width < scroll x
 
@@ -2857,13 +2853,8 @@ update_bg0_tile:
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
 	subq	#3,d1		| first 3 rows aren't visible (well maybe after scroll)
-	* temp clip!!!
-	cmp.w	#0x24,d0
-	jcc		11f
-	cmp.w	#0x20,d1
-	jcc		11f
 	
-	* TODO: add x_offset
+	add.w	x_offset,d0
 	
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF

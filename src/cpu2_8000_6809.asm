@@ -11336,7 +11336,7 @@ D732: A6 41       LDA    $1,U
 D734: 84 02       ANDA   #$02
 D736: 26 16       BNE    $D74E
 D738: EC 5A       LDD    -$6,U
-D73A: E3 24       ADDD   $4,Y
+D73A: E3 24       ADDD   $4,Y		; [rom_address]
 D73C: A3 0A       SUBD   $A,X
 D73E: B3 E6 46    SUBD   $E646
 D741: 2B 16       BMI    $D759
