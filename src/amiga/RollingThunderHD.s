@@ -14,7 +14,7 @@ EXPMEM = 0
 	ELSE
 EXPMEM = $600000
 	ENDC
-CHIPSIZE = $1E0000
+CHIPSIZE = $200000
 
 _base	SLAVE_HEADER					; ws_security + ws_id
 	dc.w	17					; ws_version (was 10)

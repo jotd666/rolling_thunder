@@ -1020,15 +1020,16 @@ force_all_screen_redraw:
 	and.w	#0xFFF,d7		| wrap on memory
 	* force tile draw
 	lea		(a5,d7.w),a0
-	movem.l	d1-d2/d5-d6,-(a7)
+	movem.l	d1-d2/d5-d7/a5,-(a7)
 	move.b	(a0),d0
 	move.b	(1,a0),d1
 	jbsr	update_bg0_tile
-	movem.l	(a7),d1-d2/d5-d6
-*	move.b	(0x1000,a0),d0
-*	move.b	(0x1001,a0),d1
-*	jbsr	update_bg1_tile
-	movem.l	(a7)+,d1-d2/d5-d6
+	movem.l	(a7),d1-d2/d5-d7/a5
+	lea		(a5,d7.w),a0
+	move.b	(0x1000,a0),d0
+	move.b	(0x1001,a0),d1
+	jbsr	update_bg1_tile
+	movem.l	(a7)+,d1-d2/d5-d7/a5
 	add.w	#0x80,d7		| next row
 	dbf		d1,1b
 	addq.w	#0x2,d6			| next column
@@ -1069,16 +1070,17 @@ draw_column_tiles:
 	* force tile draw
 	lea		(a5,d7.w),a0
 	
-	* uncomment for wall of green bricks to test
-	*move.b	#0xE9,(a0)
-	*move.b	#0x41,(0x400,a0)
-	
-	
+
 	move.b	(a0),d0
 	move.b	(1,a0),d1
-	move.w	d2,-(a7)
+	movem.l	d2/d7/a5,-(a7)
 	jbsr	update_bg0_tile
-	move.w	(a7)+,d2
+	movem.l	(a7),d2/d7/a5
+	lea		(a5,d7.w),a0
+	move.b	(0x1000,a0),d0
+	move.b	(0x1001,a0),d1
+	jbsr	update_bg1_tile
+	movem.l	(a7)+,d2/d7/a5
 	
 	add.w	#0x80,d7			| next Y
 	dbf		d2,0b
@@ -3011,16 +3013,14 @@ update_bg1_tile:
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
 	subq	#3,d1		| first 3 rows aren't visible
-	* temp clip!!!
-	cmp.w	#0x20,d0
-	jcc		11f
-	cmp.w	#0x20,d1
-	jcc		11f
+
+	add.w	x_offset,d0
 	
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
 	move.l	#BG_SCREEN_PLANE_SIZE,d5
 	.else
+	moveq	#0,d5
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	.endif
 	
@@ -3171,11 +3171,9 @@ update_bg1_tile:
 100:
 	rts
 5:
-	CLEAR_TILE8_PLANE
 	jra		41b
 
 15:
-	CLEAR_TILE8_PLANE
 	jra		141b
 	
 * bruteforce all possible x/y combinations

@@ -704,7 +704,7 @@ update_scroll_layers_821d:
 821D: 8E 53 C0    LDX    #$53C0		; work RAM (shared with CPU2)
 8220: CE 83 3A    LDU    #$833A		; table of scrolling register addresses | ROM
 8223: B6 5F F6    LDA    flip_screen_5ff6		; screen flip flag (read by video HW via sprite regs)
-8226: 27 48       BEQ    $8270
+8226: 27 48       BEQ    not_flipped_8270
 8228: 10 8E 83 22 LDY    #$8322
 822C: EC 84       LDD    ,X
 822E: 44          LSRA
@@ -745,6 +745,9 @@ update_scroll_layers_821d:
 826A: 96 95       LDA    $95
 826C: B7 A0 00    STA    backcolor_a000
 826F: 39          RTS
+
+; update scrolling
+not_flipped_8270:
 8270: 10 8E 83 2E LDY    #$832E
 8274: EC 84       LDD    ,X
 8276: 44          LSRA
@@ -758,7 +761,7 @@ update_scroll_layers_821d:
 827E: E3 A1       ADDD   ,Y++
 8280: 84 01       ANDA   #$01
 8282: AA 04       ORA    $4,X
-8284: ED D1       STD    [,U++]
+8284: ED D1       STD    [,U++]		; table containing 9000, 9004 ...
 8286: EC 02       LDD    $2,X
 8288: 44          LSRA
 8289: 56          RORB

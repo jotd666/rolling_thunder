@@ -48,8 +48,6 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("move.w\t(4,a7),d4",lines,i)
     elif address in [0x8592,0x85a1]:
         line = change_instruction("rts",lines,i)  # rti => rts
-    elif address == 0x821d:
-        line = change_instruction("rts",lines,i)  # TEMP disable scrolling routine
     elif address in {0xb643,0xB8A4,0xb8bf}:
         line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
     elif address == 0x800a:
@@ -59,6 +57,10 @@ def game_specific_cpu1(address,lines,i):
         line += "\tjbsr\tosd_event_loop_cpu2\n"
     elif address in [0x94FB,0x9503]:
         line = f"\ttst.b\tinvincible_flag\njne\t0f\n{line}0:\n"
+    elif address == 0x8284:
+        lines[i+1] = change_instruction("jbsr\tosd_set_x_scroll_register\n",lines,i+1,False)
+    elif address == 0x8297:
+        lines[i+1] = change_instruction("jbsr\tosd_set_y_scroll_register\n",lines,i+1,False)
     return line
 
 sc_cpu2 = SourceChanger()

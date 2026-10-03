@@ -1,7 +1,10 @@
+scrolling: flash when drawing column
+scroll_y: shifted
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
+8DDB: when killed, tries to read from RAM on cpu2. debug this
 placement of the 5th sprite isn't correct
-invincibility use DSW instead of mame cheat
+invincibility use DSW instead of mame cheat: still vulnerable to bullets
 start skips the "select area" part
 fix body sprites
 fix fan trashing
@@ -12,8 +15,8 @@ lockup after game over (is that wait for music? maybe same thing for when exitin
 display sprites: X is shifted
 fan is completely trashed too
 attract mode runs properly until hero enters arms door: hero locks up
-demo times out
-maybe MCU protection, check MAME driver & debug
+demo times out: maybe music/sfx waiting to end (resplenish bullets)
+character falls through floor sometimes (overwrite of floor tile?)
 
 
 
