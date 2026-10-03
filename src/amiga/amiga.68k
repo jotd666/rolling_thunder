@@ -117,7 +117,7 @@ HUD_TILE_LOG_LENGTH = HUD_TILE_NB_CLUTS*HUD_TILE_COUNT
 BG_TILE_LOG_LENGTH = BG_TILE_NB_CLUTS*BG_TILE_COUNT
 
 SPRITE_X_CORRECTION = 8
-SPRITE_Y_CORRECTION = -32
+SPRITE_Y_CORRECTION = -16
 
 
 
@@ -2611,7 +2611,6 @@ compute_sprite_xy:
 		
 	rts
 	
-	*jbsr	get_sprite_pos_and_size_offset
 update_one_bob:
 
 	move.l	A0,-(a7)
@@ -2636,6 +2635,9 @@ update_one_bob:
 	move.b	d3,(TARGET_SPRITE_ATTRIBUTES_1,a0)
 	.endif
 	
+	*cmp.w	#0x300,d2
+	*jcc		33f
+
 	*cmp.w	#0x1b3,d2
 	*jeq		33f
 	*cmp.w	#0x1B9,d2
@@ -2801,7 +2803,7 @@ size_and_translation_done:
 	jne		7f
 	add.w	d1,d1		| times 4 (double width)
 7:
-	move.w	d5,d2			| width in bytes, 4 for 16 pixels+shift
+	move.w	d5,d2		| width in bytes, 4 for 16 pixels+shift
 	move.w	d1,d5		| set Y offset
 	moveq	#0,d1		| and coord = 0
 
@@ -2839,7 +2841,6 @@ size_and_translation_done:
 	neg.w	d4
 10:
 	moveq	#NB_PLAYFIELD_PLANES,d3
-	moveq	#0,d5 	| no y offset ATM
 	jbsr	blit_planes_any_internal_cookie_cut
 2:
 	move.l	(a7)+,a0
@@ -3904,7 +3905,6 @@ osd_set_scroll_3:
 * < D1.W: word to write
 
 osd_set_x_scroll_register:
-	move.b	#0,0x110
 	move.l	a6,a0
 	add.l	d4,a0
 	move.w	(a0),d7
@@ -5483,7 +5483,7 @@ get_sprite_pos_and_size_offset:
 	and.b	#0xc0,d0
 	lsr.b	#6,d0               | 2 first bits for size X
 	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d1
-	and.b	#0x6,d1
+	and.w	#0x6,d1
 	lsr.b	#1,d1				| 2 first bits for size Y
 	
 	* we have sizex & sizey, compute masks for tx/ty

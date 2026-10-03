@@ -95,8 +95,6 @@ def get_sprite_names():
     0x1af: "two_enemy_backs",
     0x1b3: "two_enemy_backs",
     0x186: "blue_enemy_legs",
-    0x308: "fan_left",
-    0x309: "fan_right",
     0x103: "shooter_legs",
     0xB: "player_shooting",
     0xc: "player_legs",
@@ -105,7 +103,9 @@ def get_sprite_names():
     0x112:"base_enemy_torsos",
     0x10E:"enemy_body_parts",
     }
-
+    rval.update({i:"fan_left" for i in [0x308,0x30A,0x30C,0x30E]})
+    rval.update({i:"fan_right" for i in [0x309,0x30b,0x30d,0x30f]})
+    rval.update({i:"boss" for i in range(0x380,0x391)})
     return rval
 
 def get_mirror_sprites():

@@ -1,29 +1,29 @@
-scrolling: flash when drawing column
+scrolling: do a flash when drawing column
 scroll_y: shifted
+missing body of main character at start
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
 8DDB: when killed, tries to read from RAM on cpu2. debug this
+  X is in input of the routine, and seems to select a wrong table?
 placement of the 5th sprite isn't correct
 invincibility use DSW instead of mame cheat: still vulnerable to bullets
 start skips the "select area" part
+X shift check X scroll on title screen, vertical bar at column 2
+reset copper grays if "rolling thunder" title isn't printed
 fix body sprites
-fix fan trashing
 life bar: color should change: use copper color (and restore color for "time")
 time: doesn't display at all
 
 lockup after game over (is that wait for music? maybe same thing for when exiting weapons?)
 display sprites: X is shifted
-fan is completely trashed too
 attract mode runs properly until hero enters arms door: hero locks up
-demo times out: maybe music/sfx waiting to end (resplenish bullets)
+but same happens with enemies exiting through doors
 character falls through floor sometimes (overwrite of floor tile?)
 
 
 
 
 optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
-
-check when bullets decrease (check cheat, track down to fire flag)
 
 
 
