@@ -37,7 +37,7 @@ RAM_START = 0x0000
 
 COPPER_NOP = 0x1FE
 
-START_X = 0x150
+START_X = 0x20
 START_Y = 0
 
 CORKSCREW_NB_SCREENS = 20
@@ -499,10 +499,10 @@ _user:
 	cmp.l	#game_sprites_end,a2
 	bcs		1b
 2:
-	* compute control words for each sprite pair
+	* compute control words for each sprite
 	lea		hw_sprite_pointers,a0
 	lea		HW_SpriteYTable_256,a1
-	moveq	#3,d7
+	moveq	#4,d7
 	moveq	#0x3F,d2	| sprite X start
 0:
 	move.w	d2,d0
@@ -511,15 +511,12 @@ _user:
 	add.w	#64,d2		| advance X
 	
 	* store control word
-	.rept	2
 	move.l	(a0)+,a2
 	move.w	d0,(8,a2)
 	swap 	d0
 	move.w	d0,(a2)
 	swap	d0
-	bset	#7,d0		| attach bit
 	addq	#8,a2
-	.endr
 	
 	dbf	d7,0b
 
@@ -819,7 +816,7 @@ demo_game:
 	* horizontal first
 	lea		(fg_tiles_address_3000+0x208,a6),a0
 	lea		(0x80*27,A0),a1
-	move	#26,d0
+	move	#0x23,d0
 	move.l	a0,a2
 0:
 	move.w	#0x11FC,(a2)
@@ -835,7 +832,7 @@ demo_game:
 	
 	lea		(fg_tiles_address_3000+0x288,a6),a0
 	move	#26,d0
-	lea		(0X33,a0),a1
+	lea		(0X44,a0),a1
 	move.l	a0,a2
 0:
 	move.w	#0x12FC,(a2)
@@ -865,7 +862,7 @@ demo_game:
 	WRITE_TEXT	x_offset_text,2
 	*WRITE_TEXT	xl_offset_text,2
 
-	jbsr	test_x_offset
+	*jbsr	test_x_offset
 	
 	
 	jbsr	osd_enable_interrupts
@@ -984,7 +981,7 @@ force_all_screen_redraw:
 	* given the current scroll X/Y, draw all tiles on screen
 	move.w	game_scroll_x,d0
 	move.w	d0,previous_scroll_x
-	add.w	#(CORKSCREW_NB_SCREENS/2)*288,d0			| give us some leeway to the left: 10 screens before havoc
+	add.w	#(CORKSCREW_NB_SCREENS/2)*256,d0			| give us some leeway to the left: 10 screens before havoc
 	move.w	d0,host_scroll_x
 	move.w	d0,min_scroll_x
 	move.w	d0,d1
@@ -1005,7 +1002,7 @@ force_all_screen_redraw:
 	move.w	d7,d6	| save current Y
 
 
-	move.w	#40,d2	| size of screen in tiles plus 32 pixels
+	move.w	#BG_NB_BYTES_PER_ROW,d2	| size of screen in tiles plus 32 pixels
 0:
 	move.w	d6,d7	| set current Y row
 	move.w	#COLUMN_SIZE,d1		|  (64 bit margin)
@@ -1187,8 +1184,6 @@ call_nmi:
 	WRITE_HEX	max_scroll_x,3
 	WRITE_HEX	min_scroll_x,3
 	WRITE_HEX	x_offset,3
-	*WRITE_HEX	xl_offset,3
-
 
 	
 	move.b	player_1_controls,d0
@@ -2331,8 +2326,8 @@ platform_init:
 
 
  	*         VVHH
-    move.w #0x89+((Y_START+0x10)<<8),d0
-    move.w #0x99+((Y_START)<<8),d1
+    move.w #0x71+((Y_START+0x10)<<8),d0
+    move.w #0xC0+((Y_START)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
 	sub.w	#NTSC_Y_SHIFT<<8,d0
@@ -2343,8 +2338,8 @@ platform_init:
 	.ifne	OPT_AGA_MODE
     move.w #BASE_BPLCON4_VALUE,bplcon4(a5)
     move.w #0x0C00+BORDERBLANK<<5,bplcon3(a5)     | no AGA specificities, default ECS
-    add	#AGA_X_SHIFT,d0
-    add	#AGA_X_SHIFT,d1
+    *add	#AGA_X_SHIFT,d0
+    *add	#AGA_X_SHIFT,d1
 	.endif
 	
     move.w d0,diwstrt(a5)
@@ -2734,7 +2729,7 @@ compute_x_offset:
 	movem.w	d1-d4,-(a7)
 	* we need to see if the tile is on screen considering X scolling
 	* positions. Compute first X & last X coord visible
-
+    moveq	#0,d4				| <-- initialisation, non-wrap case
 	move.w	d7,d2
 	and.w	#0x7F,d2
 	lsr.w	#1,d2	| get real X
@@ -2744,7 +2739,7 @@ compute_x_offset:
 	move.w	game_scroll_x,d0  | left of screen
 	lsr.w	#3,d0		| divide by 8 match tile
 	move.w	d0,d1
-	add.w	#41,d1	| right part
+	add.w	#BG_NB_BYTES_PER_ROW+1,d1	| right part
 	
 	* is min X < d2
 	cmp.b	d0,d2
@@ -2759,7 +2754,7 @@ compute_x_offset:
 0:
 	cmp.w	d0,d2
 	jcs		10f
-	add.w	#40,d0			| visible tile span (including invisible scroll column)
+	add.w	#BG_NB_BYTES_PER_ROW,d0			| visible tile span (including invisible scroll column)
 	cmp.b	d0,d2
 	jcc		10f	| tile x+screen width < scroll x
 
@@ -4630,6 +4625,7 @@ layer_1_restore_buffer:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
 	.skip	BG_SCREEN_PLANE_SIZE		| plus mask!
+	.skip	BG_SCREEN_PLANE_SIZE		| plus WTF???
 
 hw_sprite_ram_buffer:
 	.skip	HW_SPRITE_BUFFER_SIZE*8	| 8 64-bit wide sprites + control words + align

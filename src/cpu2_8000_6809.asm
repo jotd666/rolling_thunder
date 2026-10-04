@@ -6931,7 +6931,7 @@ B62D: 96 0E       LDA    dp_irqcount1_0e		; CPU1 IRQ/frame counter
 B62F: 84 02       ANDA   #$02
 B631: AB E0       ADDA   ,S+		; [local]
 B633: 44          LSRA
-B634: E6 C6       LDB    A,U
+B634: E6 C6       LDB    A,U		; [rom_address]
 B636: C1 0C       CMPB   #$0C
 B638: 27 01       BEQ    $B63B
 B63A: 39          RTS

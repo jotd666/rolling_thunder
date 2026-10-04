@@ -1,14 +1,59 @@
-scrolling: do a flash when drawing column
-scroll_y: shifted
-missing body of main character at start
+reinstate 1512 force_all_screen_redraw somehow check Claude advice on code
+
+2:
+	* now let's check absolute value of scroll diff
+	move.w	d2,d3
+	jpl		2f
+	neg.w	d3
+2:
+	cmp.w	#VISIBLE_SCROLL_WIDTH,d3
+	jcs		3f
+	* more than a whole screen in one go: nothing to salvage
+	jbsr	force_all_screen_redraw
+	rts
+3:
+	* update unwrapped host scroll X - we need it to be continuous!
+	move.w	host_scroll_x,d0
+	add.w	d2,d0
+	move.w	d0,host_scroll_x
+
+	* draw as many columns as the move requires, not just one
+0:
+	move.w	host_scroll_x,d0
+	cmp.w	min_scroll_x,d0
+	jcc		1f
+	jbsr	draw_left_tiles
+	sub.w	#BG_TILE_WIDTH,max_scroll_x
+	sub.w	#BG_TILE_WIDTH,min_scroll_x
+	jra		0b
+1:
+	move.w	host_scroll_x,d0
+	add.w	#VISIBLE_SCROLL_WIDTH,d0
+	cmp.w	max_scroll_x,d0
+	jcs		5f
+	jbsr	draw_right_tiles
+	add.w	#BG_TILE_WIDTH,max_scroll_x
+	add.w	#BG_TILE_WIDTH,min_scroll_x
+	jra		1b
+5:
+	rts
+	
+
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
 8DDB: when killed, tries to read from RAM on cpu2. debug this
   X is in input of the routine, and seems to select a wrong table?
+ function_8dc8:
+8DC8: 6F 09       CLR    $9,X   X = $410
+8DCA: CE 8D FB    LDU    #$8DFB		; ROM
+8DCD: A6 84       LDA    ,X  <= $FF read, this isn't good
+8DCF: 84 7C       ANDA   #$7C
+8DD1: 44          LSRA
+8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
+
 placement of the 5th sprite isn't correct
 invincibility use DSW instead of mame cheat: still vulnerable to bullets
 start skips the "select area" part
-X shift check X scroll on title screen, vertical bar at column 2
 reset copper grays if "rolling thunder" title isn't printed
 fix body sprites
 life bar: color should change: use copper color (and restore color for "time")

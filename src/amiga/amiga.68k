@@ -60,7 +60,7 @@ NB_PLAYFIELD_PLANES = 6
 BLITTER_LIST_SIZE = 10000*NB_PLAYFIELD_PLANES
 COPPER_NOP = 0x1FE
 
-START_X = 0
+START_X = 0x20
 START_Y = 0
 CORKSCREW_NB_SCREENS = 20
 BORDERBLANK = 1
@@ -72,7 +72,7 @@ CURRENT_SPRITE_SIZE = 0x10
 COLUMN_SIZE = 0x20
 ROW_SIZE = 0x10
 GAME_MAX_SCROLL_X = 0x200
-GAME_MAX_SCROLL_Y = 0x200
+GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
 BG_TILE_FILE_MAX_SIZE = 0x14000
@@ -116,7 +116,7 @@ SPRITE_LOG_LENGTH = SPRITE_COUNT*SPRITE_NB_CLUTS
 HUD_TILE_LOG_LENGTH = HUD_TILE_NB_CLUTS*HUD_TILE_COUNT
 BG_TILE_LOG_LENGTH = BG_TILE_NB_CLUTS*BG_TILE_COUNT
 
-SPRITE_X_CORRECTION = 8
+SPRITE_X_CORRECTION = -67
 SPRITE_Y_CORRECTION = -16
 
 
@@ -178,13 +178,13 @@ OPT_AGA_MODE=1
 OPT_AGA_MODE=0
 	.endif
 
-* a plane of attached sprites has 4 bitplanes	
-NB_FG_PLANES = 4
+* a plane of non-attached sprites has 2 bitplanes	
+NB_FG_PLANES = 2
 NB_BG_PLANES = NB_PLAYFIELD_PLANES	| same depth as sprites
 
 TOTAL_NB_COLORS = 1<<NB_PLAYFIELD_PLANES
 FG_NB_BYTES_PER_ROW = 0x20
-BG_NB_BYTES_PER_ROW = 0x28    | 288+32 pixels
+BG_NB_BYTES_PER_ROW = 0x28    | 288+32 pixels result in bytes must be a multiple of 4 (fmode=2)
 
 Y_START = 0x20
 
@@ -936,7 +936,7 @@ demo_game:
 
 	jbsr	cache_fg_tiles_address
 	jbsr	cache_bg_tiles_address
-
+	lea		bg_tile_address_table,A0
 	tst.b	no_level_music_flag
 	jeq		0f
 	jbsr	make_automatic_sound_channels
@@ -1344,7 +1344,7 @@ set_initial_scroll_values:
 force_all_screen_redraw:
 	lea		_custom,a5
 	REALLY_WAIT_BLIT
-	jbsr	osd_disable_interrupts
+	jbsr	disable_interrupts
 	CPU1_GET_MEMORY_START_IN_A6
 	* given the current scroll X/Y, draw all tiles on screen
 	jbsr	set_initial_scroll_values
@@ -1427,10 +1427,11 @@ draw_right_tiles:
 
 draw_column_tiles:
 	* compute X offset
+	move.b	#0,0x110
 	move.w	d0,-(a7)
 	lsr.w	#8,d0
-	lsr.w	#1,d0
-	lsl.w	#6,d0	
+	lsr.w	#1,d0	| divide by 512!
+	lsl.w	#6,d0	| multiply by 64
 	move.w	d0,x_offset
 	move.w	(a7)+,d0	
 	CPU1_GET_MEMORY_START_AND_DP
@@ -1467,10 +1468,14 @@ set_scroll_values:
 	* update host scroll
 	* handle 2 wrap points
 	move.w	game_scroll_x,d0
-	move.w	previous_scroll_x,d1
+	move.w	previous_scroll_x,d1	
 	move.w	d0,d2
-	sub.w	d1,d2		| d2: diff between game scroll before / after
 	
+	sub.w	d1,d2		| d2: diff between game scroll before / after
+	jne		0f
+	* optimization: no need to do anything, scroll value unchanged
+	rts
+0:
 	cmp.w	#GAME_MAX_SCROLL_X-BG_TILE_WIDTH,d0
 	jcs		0f
 	* game scroll X >= 0x1F8
@@ -1490,6 +1495,8 @@ set_scroll_values:
 1:
 
 0:
+	move.w	d0,previous_scroll_x		| update previous scroll now
+
 	* now let's check absolute value of scroll diff
 	move.w	d2,d3
 	jpl	2f
@@ -1502,11 +1509,10 @@ set_scroll_values:
 	* from somewhere else than a starting point. It could happen on
 	* real hardware with BG_TILE_WIDTH value (screen "shake" because of high
 	* object redraw time + erratic behaviour from the player :))
-	jbsr	force_all_screen_redraw
-	
+	*jbsr	force_all_screen_redraw
 	rts
 3:
-	move.w	d0,previous_scroll_x
+	
 	* update unwrapped host scroll X
 	* we need it to be continuous!
 	move.w	host_scroll_x,d0
@@ -1530,6 +1536,7 @@ set_scroll_values:
 	jcs		5f
 	* max overshoot: we have to do something on the right: draw the tiles
 
+	move.b	#0,0x110
 	jbsr	draw_right_tiles
 	add.w	#BG_TILE_WIDTH,max_scroll_x
 	add.w	#BG_TILE_WIDTH,min_scroll_x
@@ -2626,6 +2633,7 @@ update_one_bob:
 	tst.b	(TARGET_SPRITE_COLOR,a0)
 	jeq		2f					| 0+0 => out
 0:	
+
 	jbsr	compute_sprite_xy
 	cmp.w	#288,d0
 	jcc		2f			| some valid sprites on the right but not displayed
@@ -2728,8 +2736,12 @@ update_one_bob:
 	bchg	#4,translation_x+1	| 0 <=> 0x10	
 45:
 
-	jbsr	compose_16x16_dynamic_bob
+	jbsr	compose_16xw_dynamic_bob
 	move.w	#0x10,d4		| height
+	cmp.w	#2,size_y
+	jne		45f
+	move.w	#0x20,d4		| 16x32
+45:
 	moveq	#4,d5			| width
 	jra		size_and_translation_done
 40:
@@ -2872,8 +2884,8 @@ compose_32xsy_dynamic_bob:
 	RTS
 
 * < A0: bitplane list
-* > A0: 16x16 sprite structure (shifted bitplanes)
-compose_16x16_dynamic_bob:
+* > A0: 16xw sprite structure (shifted bitplanes)
+compose_16xw_dynamic_bob:
 	movem.l	d0-d3,-(a7)
 	lea		dynamic_bob,a1
 	moveq	#NB_PLAYFIELD_PLANES,d3
@@ -3607,8 +3619,8 @@ platform_init:
 
 
  	*         VVHH
-    move.w #0x89+((Y_START+0x10)<<8),d0
-    move.w #0x99+((Y_START)<<8),d1
+    move.w #0x71+((Y_START+0x10)<<8),d0
+    move.w #0xC0+((Y_START-0x10)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
 	sub.w	#NTSC_Y_SHIFT<<8,d0
@@ -3619,8 +3631,8 @@ platform_init:
 	.ifne	OPT_AGA_MODE
     move.w #BASE_BPLCON4_VALUE,bplcon4(a5)
     move.w #0x0C00+BORDERBLANK<<5,bplcon3(a5)     | no AGA specificities, default ECS
-    add	#AGA_X_SHIFT,d0
-    add	#AGA_X_SHIFT,d1
+   *add	#AGA_X_SHIFT,d0
+   *add	#AGA_X_SHIFT,d1
 	.endif
 	
     move.w d0,diwstrt(a5)
@@ -3911,6 +3923,10 @@ osd_set_x_scroll_register:
 	cmp.w	#0x9000,d7	| all scrolling X layers share the same value
 	jne		0f
 	move.w	d1,d7
+	* Claude suggested to add 20 which is exactly what we see:
+	* game sets scrolling at 12 but 4 first columns aren't visible
+	* so 32 pixels are skipped total, it makes sense!
+	add.w	#67-47,d7			| hbend - set_scrolldx(0) = +20
 	and.w	#0x1FF,d7
 	move.w	d7,game_scroll_x
 0:
@@ -4070,7 +4086,7 @@ do_bt:
 	move.w	#NB_BG_PLANES,d3
 	move.w	#288/8+2,d2
 	move.w	#256,d4
-	moveq	#0,d0
+	move.w	#START_X,d0
 	moveq	#0,d1
 	moveq	#0,d5
 	jbsr	blit_planes_any_internal_no_cookie_cut
@@ -4079,6 +4095,15 @@ do_bt:
 	
 update_random_bg0_tile:
 	and.w	#0xFFF,d7
+	cmp.w	#0x188,d7
+	jne		0f
+	lea		(BG_SCREEN_TILE_ADDRESS,a6),a0
+	move.b	(a0,d7.w),d0
+	move.b	(1,a0,d7.w),d1
+	cmp.b	#0x10,d0
+*	jne		0f
+*	BREAKPOINT	"corner"
+0:
 	
 	* we need to see if the tile is on screen considering X scolling
 	* positions. Compute first X & last X coord visible
@@ -4137,8 +4162,8 @@ compute_x_offset:
 	movem.w	d1-d4,-(a7)
 	* we need to see if the tile is on screen considering X scolling
 	* positions. Compute first X & last X coord visible
-
-	move.w	#0x40,d4			| FIX: tile is one map width ahead
+	moveq	#0,d4				| <-- initialisation, non-wrap case
+	move.w	#BG_NB_BYTES_PER_ROW-4,d4			| FIX: tile is one map width ahead
 	move.w	d7,d2
 	and.w	#0x7F,d2
 	lsr.w	#1,d2	| get real X
@@ -4148,7 +4173,7 @@ compute_x_offset:
 	move.w	game_scroll_x,d0  | left of screen
 	lsr.w	#3,d0		| divide by 8 match tile
 	move.w	d0,d1
-	add.w	#41,d1	| right part
+	add.w	#BG_NB_BYTES_PER_ROW+1,d1	| right part
 	
 	* is min X < d2
 	cmp.b	d0,d2
@@ -4159,10 +4184,11 @@ compute_x_offset:
 	jcc		0f
 	* handle wrap
 	add.w	#0x40,d2	| 64 columns
+	move.w	#0x40,d4	| <-- ONLY here: the tile is one map width ahead
 0:
 	cmp.w	d0,d2
 	jcs		10f
-	add.w	#40,d0			| visible tile span (including invisible scroll column)
+	add.w	#BG_NB_BYTES_PER_ROW,d0			| visible tile span (including invisible scroll column)
 	cmp.b	d0,d2
 	jcc		10f	| tile x+screen width < scroll x
 
@@ -4187,7 +4213,6 @@ compute_x_offset:
 
 update_bg_init:
 	DECODE_CODE_AND_ATTRIBUTES
-
 	* compute address
 
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
@@ -4197,8 +4222,6 @@ update_bg_init:
 	moveq	#0,d1
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
-	subq	#3,d1		| first 3 rows aren't visible
-	and.w	#0x1F,d1	| tile height is 32*8
 	add.w	x_offset,d0
 	
 	* updating bitplanes
@@ -4249,6 +4272,7 @@ update_bg0_tile:
 	lea		background_restore_buffer,a3
 	add.w	d0,a3
 	
+
 	*cmp.b	#0x20,d2
 	*jeq		11f				| optim: blank tile
 	*move.l		bg_tile_character_table,d0
@@ -4556,6 +4580,8 @@ compute_bg_tile_xy:
 	
 	move.w	d7,d1
 	lsr.w	#7,d1		| Y
+	subq	#3,d1		| first 3 rows aren't visible
+	and.w	#0x1F,d1	| tile height is 32*8
 
 	rts
 0:
@@ -4735,6 +4761,7 @@ HW_SpriteYTable_\height:
 
 set_bobs_bitplanes:
 	movem.l	a0-a1/d0-d2,-(a7)
+	move.b	#0,0x111
 	
 	* set bitplanes
 	moveq	#0,d0
@@ -5508,7 +5535,6 @@ get_sprite_pos_and_size_offset:
 
 	
 redraw_bg_tiles:
-	BREAKPOINT	"redraw bg tiles"
 	movem.l	d0-a6,-(a7)
 	jbsr 	force_all_screen_redraw
 	movem.l	(a7)+,d0-a6
@@ -7030,7 +7056,8 @@ layer_1_restore_buffer:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
 	.skip	BG_SCREEN_PLANE_SIZE		| plus mask!
-	
+	.skip	BG_SCREEN_PLANE_SIZE		| plus WTF???
+
 bobs_screen_buffer_1:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
