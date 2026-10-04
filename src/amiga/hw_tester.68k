@@ -3,6 +3,7 @@
 *
 * (c) JOTD 2026
 *
+SCROLL_STEP = 3
 
 start:
 	move.l	a7,old_stack
@@ -1185,27 +1186,35 @@ call_nmi:
 	WRITE_HEX	min_scroll_x,3
 	WRITE_HEX	x_offset,3
 
+	.ifndef	RELEASE
+	move.w	host_scroll_x,d0
+	sub.w	game_scroll_x,d0
+	and.w	#GAME_MAX_SCROLL_X-1,d0
+	jeq		0f
+	BREAKPOINT	"host/game scroll desync, drift in D0"
+0:
+	.endif
 	
 	move.b	player_1_controls,d0
 	btst	#BIT_RIGHT,d0
 	jne		0f
 	* move scrolling left
-	addq	#1,game_scroll_x
+	addq	#SCROLL_STEP,game_scroll_x
 0:
 	btst	#BIT_LEFT,d0
 	jne		0f
 	* move scrolling right
-	subq	#1,game_scroll_x
+	subq	#SCROLL_STEP,game_scroll_x
 0:
 	btst	#BIT_DOWN,d0
 	jne		0f
 	* move scrolling down
-	addq	#1,game_scroll_y
+	addq	#SCROLL_STEP,game_scroll_y
 0:
 	btst	#BIT_UP,d0
 	jne		0f
 	* move scrolling right
-	subq	#1,game_scroll_y
+	subq	#SCROLL_STEP,game_scroll_y
 0:
 	move.w	game_scroll_x,d0
 	and.w 	#GAME_MAX_SCROLL_X-1,D0
