@@ -364,7 +364,7 @@ dp_irqcount1_0e              = $0E		; DP $560E - CPU1 IRQ/frame counter
 dp_irqcount2_0f              = $0F		; DP $560F - CPU2 IRQ/frame counter
 dp_bank1_shadow_19           = $19		; DP $5619 - shadow of CPU1 ROM bank latch, re-armed every IRQ
 dp_bank2_shadow_1a           = $1A		; DP $561A - shadow of CPU2 ROM bank latch, re-armed every IRQ
-
+tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
 ;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
 ;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
 ;
@@ -4994,7 +4994,7 @@ A5DA: A7 E2       STA    ,-S		; [local]
 A5DC: A6 2B       LDA    $B,Y
 A5DE: 4A          DECA
 A5DF: A0 E0       SUBA   ,S+		; [local]
-A5E1: 97 AE       STA    $AE
+A5E1: 97 AE       STA    tile_related_counter_ae
 A5E3: EC 22       LDD    $2,Y
 A5E5: 84 0F       ANDA   #$0F
 A5E7: 83 01 00    SUBD   #$0100
@@ -5035,12 +5035,12 @@ A628: 44          LSRA
 A629: A7 25       STA    $5,Y
 A62B: A7 05       STA    $5,X
 A62D: 8D 10       BSR    function_a63f
-A62F: 0A AE       DEC    $AE
+A62F: 0A AE       DEC    tile_related_counter_ae
 A631: 2A 07       BPL    $A63A
 A633: 0C AC       INC    $AC
 A635: A6 2B       LDA    $B,Y
 A637: 4A          DECA
-A638: 97 AE       STA    $AE
+A638: 97 AE       STA    tile_related_counter_ae
 A63A: 0A B1       DEC    $B1
 A63C: 26 BB       BNE    $A5F9
 A63E: 39          RTS
@@ -6328,7 +6328,7 @@ B236: 39          RTS
 
 ; called 2x  from $B1ED, $B226
 function_b237:
-B237: EC 06       LDD    $6,X
+B237: EC 06       LDD    $6,X		; save value of $5506.w
 B239: ED E3       STD    ,--S		; [local]
 B23B: EC 03       LDD    $3,X
 B23D: 97 AC       STA    $AC
@@ -6344,7 +6344,7 @@ B24C: A7 E2       STA    ,-S		; [local]
 B24E: A6 2B       LDA    $B,Y
 B250: 4A          DECA
 B251: A0 E0       SUBA   ,S+		; [local]
-B253: 97 AE       STA    $AE
+B253: 97 AE       STA    tile_related_counter_ae
 B255: 86 20       LDA    #$20
 B257: 97 B1       STA    $B1
 B259: BD B4 D7    JSR    function_returns_z_b4d7
@@ -6354,6 +6354,7 @@ B261: 26 50       BNE    $B2B3
 B263: BD B5 1D    JSR    function_b51d
 B266: BD B5 31    JSR    function_b531
 B269: BD B5 6D    JSR    function_b56d
+; loop where column is drawn (scroll feed)
 B26C: DE A6       LDU    $A6
 B26E: 96 A8       LDA    $A8
 B270: EC C6       LDD    A,U		; [bank_address]
@@ -6368,8 +6369,8 @@ B281: EC E1       LDD    ,S++		; [local]
 B283: ED C4       STD    ,U		; [video_address_word]
 B285: 0A B1       DEC    $B1
 B287: 27 25       BEQ    $B2AE
-B289: 96 AE       LDA    $AE
-B28B: 0A AE       DEC    $AE
+B289: 96 AE       LDA    tile_related_counter_ae
+B28B: 0A AE       DEC    tile_related_counter_ae
 B28D: 2B 16       BMI    $B2A5
 B28F: 85 03       BITA   #$03
 B291: 27 08       BEQ    $B29B
@@ -6386,27 +6387,28 @@ B2A3: 20 C1       BRA    $B266
 B2A5: 0C AC       INC    $AC
 B2A7: A6 2B       LDA    $B,Y
 B2A9: 4A          DECA
-B2AA: 97 AE       STA    $AE
+B2AA: 97 AE       STA    tile_related_counter_ae
 B2AC: 20 AB       BRA    $B259
 B2AE: EC E1       LDD    ,S++		; [local]
-B2B0: ED 06       STD    $6,X
+B2B0: ED 06       STD    $6,X		; restore $5506.W in the end
 B2B2: 39          RTS
+
 B2B3: DE A9       LDU    $A9
 B2B5: EC 06       LDD    $6,X
 B2B7: 83 00 80    SUBD   #$0080
 B2BA: 84 0F       ANDA   #$0F
 B2BC: ED 06       STD    $6,X
 B2BE: 33 CB       LEAU   D,U
-B2C0: CC FF 03    LDD    #$FF03
+B2C0: CC FF 03    LDD    #$FF03	; empty tile
 B2C3: ED C4       STD    ,U		; [video_address]
 B2C5: 0A B1       DEC    $B1
 B2C7: 27 0E       BEQ    $B2D7
-B2C9: 0A AE       DEC    $AE
+B2C9: 0A AE       DEC    tile_related_counter_ae
 B2CB: 2A E6       BPL    $B2B3
 B2CD: 0C AC       INC    $AC
 B2CF: A6 2B       LDA    $B,Y
 B2D1: 4A          DECA
-B2D2: 97 AE       STA    $AE
+B2D2: 97 AE       STA    tile_related_counter_ae
 B2D4: 7E B2 59    JMP    $B259
 B2D7: EC E1       LDD    ,S++		; [local]
 B2D9: ED 06       STD    $6,X
@@ -6439,7 +6441,7 @@ B314: A7 E2       STA    ,-S		; [local]
 B316: A6 2B       LDA    $B,Y
 B318: 4A          DECA
 B319: A0 E0       SUBA   ,S+		; [local]
-B31B: 97 AE       STA    $AE
+B31B: 97 AE       STA    tile_related_counter_ae
 B31D: 8D 4F       BSR    function_b36e
 B31F: A6 84       LDA    ,X
 B321: 85 03       BITA   #$03
@@ -6475,7 +6477,7 @@ B354: A7 E2       STA    ,-S		; [local]
 B356: A6 2B       LDA    $B,Y
 B358: 4A          DECA
 B359: A0 E0       SUBA   ,S+		; [local]
-B35B: 97 AE       STA    $AE
+B35B: 97 AE       STA    tile_related_counter_ae
 B35D: 8D 0F       BSR    function_b36e
 B35F: A6 84       LDA    ,X
 B361: 85 03       BITA   #$03
@@ -6728,7 +6730,7 @@ B51C: 39          RTS
 
 ; called 3x  from $A64D, $B263, $B393
 function_b51d:
-B51D: 96 AE       LDA    $AE
+B51D: 96 AE       LDA    tile_related_counter_ae
 B51F: 44          LSRA
 B520: 44          LSRA
 B521: E6 28       LDB    $8,Y
@@ -6786,7 +6788,7 @@ B56D: D6 AD       LDB    $AD
 B56F: C4 03       ANDB   #$03
 B571: 58          ASLB
 B572: E7 E2       STB    ,-S		; [local]
-B574: D6 AE       LDB    $AE
+B574: D6 AE       LDB    tile_related_counter_ae
 B576: C4 03       ANDB   #$03
 B578: 58          ASLB
 B579: 58          ASLB

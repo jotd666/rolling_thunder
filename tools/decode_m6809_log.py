@@ -1,7 +1,10 @@
 import struct,re
-regslist = list("abdxyu")
+regslist = list("abdxyus")
 
 def load_amiga_log(log_name,out_name,cpu,existing_pcs=None,excluded_pcs=None,sorted_cmp=False,avoid_regs=""):
+    if cpu not in [1,2]:
+        raise Exception("Illegal cpu")
+    cpu -= 1
     with open(log_name,"rb") as f:
         contents = f.read()
         contents = contents[:-8]
@@ -24,6 +27,7 @@ def load_amiga_log(log_name,out_name,cpu,existing_pcs=None,excluded_pcs=None,sor
     move.w    d2,(a6)+
     move.w    d3,(a6)+
     move.w    d4,(a6)+
+    move.w    d5,(a6)+
     cmp.w    #0xCAFE,(a6)  | hitting the protection buffer
     jne        444f
     BREAKPOINT    "sub cpu log buffer full!"
@@ -55,7 +59,7 @@ def load_amiga_log(log_name,out_name,cpu,existing_pcs=None,excluded_pcs=None,sor
         if len(chunk)<len_block:
             break
         regs=dict()
-        regs["pc"],regs["cpu"],regs["a"],regs["d"],regs["x"],regs["y"],regs["u"],end = struct.unpack_from(">HHHHHHHH",chunk)
+        regs["pc"],regs["cpu"],regs["a"],regs["d"],regs["x"],regs["y"],regs["u"],regs["s"],end = struct.unpack_from(">HHHHHHHHH",chunk)
         if end==0xCCCC:
             break
         if regs["cpu"] != cpu:
@@ -76,7 +80,7 @@ def load_amiga_log(log_name,out_name,cpu,existing_pcs=None,excluded_pcs=None,sor
 
         regs['b'] = regs['d'] & 0xFF
 
-        regsize = {"a":2,"b":2,"d":4,"x":4,"y":4,"u":4}
+        regsize = {"a":2,"b":2,"d":4,"x":4,"y":4,"u":4,"s":4}
 
 
         regstr = ["{}={:0{}X}".format(reg.upper(),regs[reg],regsize[reg]) for reg in regslist if reg not in avoid_regs]
@@ -100,20 +104,21 @@ def load_amiga_log(log_name,out_name,cpu,existing_pcs=None,excluded_pcs=None,sor
 
 def load_mame_log(in_log,out_log,pcs,excluded_pcs=set(),avoid_regs = "",sorted_cmp=False):
     """ generated using log:
-        trace mame.tr,,noloop,{tracelog "A=%02X, B=%02X, D=%04X, X=%04X, Y=%04X, U=%04X ",a,b,d,x,y,u}
+        trace mame.tr,,noloop,{tracelog "A=%02X, B=%02X, D=%04X, X=%04X, Y=%04X, U=%04X, S=%04X ",a,b,d,x,y,u,s}
     """
     lst = []
     print("reading MAME trace file...")
     with open(in_log,"r") as f:
-        l = len("A=01, B=00, D=9300, X=8100, Y=9300, U=XXXX ")
+        l = len("A=01, B=00, D=9300, X=8100, Y=9300, U=XXXX, S=XXXX ")
         for line in f:
-            m = re.match("A=(..), B=(..), D=(....), X=(....), Y=(....), U=(....)",line)
+            m = re.match("A=(..), B=(..), D=(....), X=(....), Y=(....), U=(....), S=(....)",line)
             if m:
                 pc = line[l:l+4]
                 regs = dict()
                 pcval = int(pc,16)
                 if pcval in pcs and pcval not in excluded_pcs:
-                    regs["a"],regs["b"],regs["d"],regs["x"],regs["y"],regs["u"] = m.groups()
+                    regs["a"],regs["b"],regs["d"],regs["x"],regs["y"],regs["u"],regs["s"] = m.groups()
+                    regs["s"] = "{:04X}".format(int(regs["s"],16)+4)
                     regstr = ["{}={}".format(reg.upper(),regs[reg]) for reg in regslist if reg not in avoid_regs]
                     rest = ", ".join(regstr)
                     lst.append(f"{pc}: {rest}\n")
@@ -128,6 +133,5 @@ pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=1)
 if not pcs:
     raise Exception("No trace found on the amiga side for this cpu")
 
-# trace rolling.tr,,,{tracelog "A=%02X, B=%02X, D=%04X, X=%04X, Y=%04X, U=%04X ",a,b,d,x,y,u}
 load_mame_log(r"K:\Emulation\MAME\mame.tr","mame.tr",pcs)
 

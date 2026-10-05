@@ -94,7 +94,7 @@ MIRROR_BUFFER_SIZE = 0x15000
 	
 SCORE_FILE_SIZE = 90
 
-LOG_BUFFER_SIZE = 0x10000
+LOG_BUFFER_SIZE = 0x100000
 
 HUD_TILE_NB_CLUTS_POW = 6
 HUD_TILE_NB_CLUTS = 1<<HUD_TILE_NB_CLUTS_POW
@@ -1509,7 +1509,10 @@ set_scroll_values:
 	* from somewhere else than a starting point. It could happen on
 	* real hardware with BG_TILE_WIDTH value (screen "shake" because of high
 	* object redraw time + erratic behaviour from the player :))
-	*jbsr	force_all_screen_redraw
+	tst.b	block_tile_layer_0
+	jne		21f
+	jbsr	force_all_screen_redraw
+21:
 	rts
 3:
 	
@@ -1638,7 +1641,7 @@ call_irqs:
 	jeq		0f
 	clr.b	copy_sprites
 	
-	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-CURRENT_SPRITE_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
+	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
 	move.l	(4,a0),(10,a0)
@@ -6326,6 +6329,7 @@ osd_log_cpu:
 	move.w	d2,(a6)+
 	move.w	d3,(a6)+
 	move.w	d4,(a6)+
+	move.w	d5,(a6)+
 	move.w	#0xDEAD,(a6)+
 	move.l	a6,log_ptr
 	cmp.w	#0xCAFE,(a6)  | hitting the protection buffer
