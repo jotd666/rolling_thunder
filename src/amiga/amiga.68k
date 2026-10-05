@@ -80,7 +80,7 @@ SPRITE_FILE_MAX_SIZE = 0x1F000
 *SPRITE_FILE_MAX_SIZE = 0x1C800   | 8k smaller without the white arremers
 
 	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 385000
+BIGGEST_MUSIC_SIZE = 120000
 OPT_SPRITE_MIRRORING = 1
 	.else
 	* we can't afford the music (unless CD) or mirroring

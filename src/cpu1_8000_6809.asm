@@ -2687,11 +2687,11 @@ function_9360:
 9364: 8E 56 CC    LDX    #$56CC		; direct page (shared with CPU2 $1600)
 9367: CE 3F 16    LDU    #$3F16		; layer 3 tilemap / HUD
 936A: C6 FC       LDB    #$FC
-936C: BD 95 83    JSR    function_9583
+936C: BD 95 83    JSR    write_time_9583
 936F: 8E 56 CA    LDX    #$56CA
 9372: CE 3F 96    LDU    #$3F96
 9375: C6 FC       LDB    #$FC
-9377: 7E 95 83    JMP    function_9583
+9377: 7E 95 83    JMP    write_time_9583
 
 ; called 3x  from $92F7, $A444, $AD77
 function_937a:
@@ -2961,11 +2961,11 @@ function_9561:
 956F: E6 C0       LDB    ,U+
 9571: 8E 56 11    LDX    #$5611		; direct page (shared with CPU2 $1600)
 9574: CE 3F C8    LDU    #$3FC8		; layer 3 tilemap / HUD
-9577: 7E 95 83    JMP    function_9583
+9577: 7E 95 83    JMP    write_time_9583
 
 
 ; called 1x; jumped-to 2x  from $936C, $9377, $9577
-function_9583:
+write_time_9583:
 9583: 6F E2       CLR    ,-S		; [local]
 9585: A6 80       LDA    ,X+
 9587: 84 0F       ANDA   #$0F
@@ -6520,7 +6520,7 @@ B3A4: DE A9       LDU    $A9
 B3A6: A6 05       LDA    $5,X
 B3A8: 33 C6       LEAU   A,U
 B3AA: EC E1       LDD    ,S++		; [local]
-B3AC: ED C4       STD    ,U
+B3AC: ED C4       STD    ,U		; [video_address_word]
 B3AE: 0A B2       DEC    $B2
 B3B0: 27 2B       BEQ    $B3DD
 B3B2: A6 05       LDA    $5,X
@@ -6551,7 +6551,7 @@ B3E2: DE A9       LDU    $A9
 B3E4: A6 05       LDA    $5,X
 B3E6: 33 C6       LEAU   A,U
 B3E8: CC FF 03    LDD    #$FF03
-B3EB: ED C4       STD    ,U
+B3EB: ED C4       STD    ,U		; [video_address_word]
 B3ED: 0A B2       DEC    $B2
 B3EF: 27 17       BEQ    $B408
 B3F1: A6 05       LDA    $5,X

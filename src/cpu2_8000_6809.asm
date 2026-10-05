@@ -1181,10 +1181,10 @@ function_879a:
 87A5: 0C 07       INC    dp_sem_cpu2_07
 87A7: 0D 18       TST    $18
 87A9: 27 01       BEQ    $87AC
-87AB: 39          RTS
-87AC: BD B2 78    JSR    function_b278
+87AB: 39          RTS				; <<<< skips enemies AND doors
+87AC: BD B2 78    JSR    function_b278		; enemy pool
 87AF: 0C 07       INC    dp_sem_cpu2_07
-87B1: BD CE A3    JSR    function_cea3
+87B1: BD CE A3    JSR    handle_doors_cea3      ; door pool
 87B4: 0C 07       INC    dp_sem_cpu2_07
 87B6: 96 06       LDA    dp_sem_cpu1_06
 87B8: 81 02       CMPA   #$02
@@ -1414,7 +1414,7 @@ function_8917:
 8943: 26 3D       BNE    $8982
 8945: BD B2 78    JSR    function_b278
 8948: 0C 07       INC    dp_sem_cpu2_07
-894A: BD CE A3    JSR    function_cea3
+894A: BD CE A3    JSR    handle_doors_cea3
 894D: 0C 07       INC    dp_sem_cpu2_07
 894F: B7 80 00    STA    watchdog_8000
 8952: 96 06       LDA    dp_sem_cpu1_06
@@ -3971,7 +3971,7 @@ function_9e46:
 9E5A: A7 07       STA    $7,X
 9E5C: CE 9E 73    LDU    #$9E73		; ROM
 9E5F: A6 09       LDA    $9,X
-9E61: A6 C6       LDA    A,U
+9E61: A6 C6       LDA    A,U		; [rom_address]
 9E63: A7 09       STA    $9,X
 9E65: CE DA 64    LDU    #$DA64
 9E68: 7E 8D EA    JMP    $8DEA
@@ -3983,7 +3983,7 @@ function_9e46:
 
 
 ; 1 jump-table ref
-function_9e79:
+open_door_9e79:
 9E79: EE 10       LDU    -$10,X
 9E7B: A6 41       LDA    $1,U
 9E7D: 8A 01       ORA    #$01
@@ -3995,7 +3995,7 @@ function_9e79:
 9E89: 7E 8D E8    JMP    function_8de8
 
 ; 3 jump-table ref
-function_9e8c:
+walk_in_door_9e8c:
 9E8C: EE 10       LDU    -$10,X
 9E8E: A6 41       LDA    $1,U
 9E90: 8A 01       ORA    #$01
@@ -4012,7 +4012,7 @@ function_9e8c:
 9EA7: 7E 8D E8    JMP    function_8de8
 
 ; 1 jump-table ref
-function_9eaa:
+behind_door_9eaa:
 9EAA: EE 10       LDU    -$10,X
 9EAC: A6 41       LDA    $1,U
 9EAE: 8A 01       ORA    #$01
@@ -4025,14 +4025,14 @@ function_9eaa:
 9EBB: EC 1C       LDD    -$4,X
 9EBD: C3 00 20    ADDD   #$0020
 9EC0: ED 1C       STD    -$4,X
-9EC2: 6F 05       CLR    $5,X
+9EC2: 6F 05       CLR    $5,X		; sprite invisible ("behind door")
 9EC4: 86 20       LDA    #$20
 9EC6: A7 0A       STA    $A,X
 9EC8: 6C 09       INC    $9,X
 9ECA: 39          RTS
 
 ; 1 jump-table ref
-function_9ecb:
+wait_32_frames_9ecb:
 9ECB: 6D 0A       TST    $A,X
 9ECD: 27 03       BEQ    $9ED2
 9ECF: 6A 0A       DEC    $A,X
@@ -4047,7 +4047,7 @@ function_9ecb:
 9EE1: 39          RTS
 
 ; 1 jump-table ref
-function_9ee2:
+item_award_9ee2:
 9EE2: EE 10       LDU    -$10,X
 9EE4: A6 41       LDA    $1,U
 9EE6: 85 20       BITA   #$20
@@ -4081,7 +4081,7 @@ function_9ee2:
 9F20: A6 C0       LDA    ,U+		; [rom_address]
 9F22: A7 E2       STA    ,-S		; [local]
 9F24: A6 C0       LDA    ,U+		; [rom_address]
-9F26: ED A1       STD    ,Y++
+9F26: ED A1       STD    ,Y++		; [video_address_word]
 9F28: 6A E4       DEC    ,S		; [local]
 9F2A: 26 F8       BNE    $9F24
 9F2C: A6 E0       LDA    ,S+		; [local]
@@ -4144,8 +4144,8 @@ function_9f7f:
 9FA4: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=6]
 
 ; 2 jump-table ref
-function_9fa6:
-9FA6: EE 10       LDU    -$10,X
+player_door_interaction_9fa6:
+9FA6: EE 10       LDU    -$10,X      ; the door this actor latched onto
 9FA8: A6 41       LDA    $1,U
 9FAA: 8A 01       ORA    #$01
 9FAC: A7 41       STA    $1,U
@@ -8458,8 +8458,8 @@ C18F: 48          ASLA
 C190: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=6]
 
 ; 2 jump-table ref
-function_c192:
-C192: EE 10       LDU    -$10,X
+enemy_door_interaction_c192:
+C192: EE 10       LDU    -$10,X       ; the door this actor latched onto
 C194: A6 41       LDA    $1,U
 C196: 8A 01       ORA    #$01
 C198: A7 41       STA    $1,U
@@ -10170,16 +10170,17 @@ CEA0: E7 07       STB    $7,X
 CEA2: 39          RTS
 
 ; called 2x  from $87B1, $894A
-function_cea3:
-CEA3: 96 51       LDA    $51
+handle_doors_cea3:
+CEA3: 96 51       LDA    $51		; number of doors
 CEA5: 26 03       BNE    $CEAA
 CEA7: 97 53       STA    $53
 CEA9: 39          RTS
-CEAA: 8E 10 00    LDX    #$1000		; work RAM (shared with CPU1 $4400)
-CEAD: 97 55       STA    $55
+CEAA: 8E 10 00    LDX    #$1000		; work RAM (shared with CPU1 $4400) door pool
+CEAD: 97 55       STA    $55		; loop counter
 CEAF: 0F 53       CLR    $53
+; loop on doors
 CEB1: A6 84       LDA    ,X
-CEB3: 81 FF       CMPA   #$FF
+CEB3: 81 FF       CMPA   #$FF	; FF: inactive
 CEB5: 27 19       BEQ    $CED0
 CEB7: 84 7F       ANDA   #$7F
 CEB9: 81 48       CMPA   #$48
@@ -10187,17 +10188,17 @@ CEBB: 24 13       BCC    $CED0
 CEBD: 8D 2B       BSR    function_ceea
 CEBF: 2B 0A       BMI    $CECB
 CEC1: CE CE DA    LDU    #jump_table_ceda
-CEC4: A6 84       LDA    ,X
-CEC6: 80 40       SUBA   #$40
+CEC4: A6 84       LDA    ,X			; door type
+CEC6: 80 40       SUBA   #$40		; door types start at $40
 CEC8: 48          ASLA
 CEC9: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=8]
 CECB: 0A 55       DEC    $55
 CECD: 26 01       BNE    $CED0
 CECF: 39          RTS
-CED0: 30 88 10    LEAX   $10,X
-CED3: 8C 13 00    CMPX   #$1300
+CED0: 30 88 10    LEAX   $10,X		; next door
+CED3: 8C 13 00    CMPX   #$1300		; 48 doors sanity check
 CED6: 25 D9       BCS    $CEB1
-CED8: 20 FE       BRA    $CED8
+CED8: 20 FE       BRA    $CED8		; [breakpoint] (locks up if reaches here)
 
 
 ; called 1x  from $CEBD
@@ -10228,7 +10229,7 @@ CF1D: A7 84       STA    ,X
 CF1F: 39          RTS
 
 ; 1 jump-table ref
-function_cf20:
+function_nop_cf20:
 CF20: 39          RTS
 
 
@@ -10256,16 +10257,13 @@ jump_table_cf34:
 	
 jump_table_cf3e:
 	.word	function_cf48
-	.word	function_cf40
+	.word	door_open_state1_cf90
 	.word	function_cfb5 
 	.word	function_cfda
 	.word	function_cff2 
 	;.word	$cecf
 
 
-; 1 jump-table ref
-function_cf40:
-CF40: 39          RTS
 
 
 ; 1 jump-table ref
@@ -10297,6 +10295,9 @@ CF79: 48          ASLA
 CF7A: 10 AE C6    LDY    A,U		; [rom_address]
 CF7D: 7E D1 25    JMP    $D125
 
+door_open_state1_cf90:
+CF90: A6 01       LDA    $1,X                                       
+CF92: 84 3E       ANDA   #$3E                                       
 CF94: A7 01       STA    $1,X
 CF96: A6 03       LDA    $3,X
 CF98: 4C          INCA
@@ -10435,7 +10436,7 @@ D06B: CE D0 79    LDU    #$D079
 D06E: A6 84       LDA    ,X
 D070: 80 40       SUBA   #$40
 D072: 48          ASLA
-D073: 10 AE C6    LDY    A,U
+D073: 10 AE C6    LDY    A,U		; [rom_address]
 D076: 7E D1 25    JMP    $D125
 
 
@@ -11218,7 +11219,7 @@ D64B: 81 0D       CMPA   #$0D
 D64D: 27 D5       BEQ    $D624
 D64F: CE D6 5A    LDU    #$D65A		; ROM
 D652: 48          ASLA
-D653: EC C6       LDD    A,U
+D653: EC C6       LDD    A,U	; [rom_address]
 D655: E3 0C       ADDD   $C,X
 D657: ED 0C       STD    $C,X
 D659: 39          RTS
@@ -11386,7 +11387,7 @@ D78E: 7E D7 93    JMP    $D793
 D791: 4F          CLRA
 D792: 39          RTS
 D793: EC 5C       LDD    -$4,U
-D795: E3 A4       ADDD   ,Y
+D795: E3 A4       ADDD   ,Y		; [rom_address]
 D797: A3 0C       SUBD   $C,X
 D799: B3 E6 4A    SUBD   $E64A
 D79C: 2B 08       BMI    $D7A6
@@ -11397,7 +11398,7 @@ D7A5: 39          RTS
 D7A6: 53          COMB
 D7A7: 43          COMA
 D7A8: C3 00 01    ADDD   #$0001
-D7AB: 10 A3 22    CMPD   $2,Y
+D7AB: 10 A3 22    CMPD   $2,Y		; [rom_address]
 D7AE: 22 F4       BHI    $D7A4
 D7B0: 6D 06       TST    $6,X
 D7B2: 2B 50       BMI    $D804
@@ -11405,7 +11406,7 @@ D7B4: A6 41       LDA    $1,U
 D7B6: 84 02       ANDA   #$02
 D7B8: 26 22       BNE    $D7DC
 D7BA: EC 5A       LDD    -$6,U
-D7BC: E3 24       ADDD   $4,Y
+D7BC: E3 24       ADDD   $4,Y		; [rom_address]
 D7BE: A3 0A       SUBD   $A,X
 D7C0: B3 E6 4E    SUBD   $E64E
 D7C3: 2B 22       BMI    $D7E7
@@ -11421,14 +11422,14 @@ D7D7: 86 79       LDA    #$79
 D7D9: A7 47       STA    $7,U
 D7DB: 39          RTS
 D7DC: EC 5A       LDD    -$6,U
-D7DE: E3 26       ADDD   $6,Y
+D7DE: E3 26       ADDD   $6,Y		; [rom_address]
 D7E0: A3 0A       SUBD   $A,X
 D7E2: B3 E6 4E    SUBD   $E64E
 D7E5: 2A DE       BPL    $D7C5
 D7E7: 53          COMB
 D7E8: 43          COMA
 D7E9: C3 00 01    ADDD   #$0001
-D7EC: 10 A3 28    CMPD   $8,Y
+D7EC: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D7EF: 22 11       BHI    $D802
 D7F1: 96 15       LDA    $15
 D7F3: 8B 20       ADDA   #$20
@@ -11445,7 +11446,7 @@ D804: A6 41       LDA    $1,U
 D806: 84 02       ANDA   #$02
 D808: 26 22       BNE    $D82C
 D80A: EC 5A       LDD    -$6,U
-D80C: E3 24       ADDD   $4,Y
+D80C: E3 24       ADDD   $4,Y		; [rom_address]
 D80E: A3 0A       SUBD   $A,X
 D810: B3 E6 50    SUBD   $E650
 D813: 2B 22       BMI    $D837
@@ -11461,14 +11462,14 @@ D827: 86 62       LDA    #$62
 D829: A7 47       STA    $7,U
 D82B: 39          RTS
 D82C: EC 5A       LDD    -$6,U
-D82E: E3 26       ADDD   $6,Y
+D82E: E3 26       ADDD   $6,Y		; [rom_address]
 D830: A3 0A       SUBD   $A,X
 D832: B3 E6 50    SUBD   $E650
 D835: 2A DE       BPL    $D815
 D837: 53          COMB
 D838: 43          COMA
 D839: C3 00 01    ADDD   #$0001
-D83C: 10 A3 28    CMPD   $8,Y
+D83C: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D83F: 22 C1       BHI    $D802
 D841: 96 15       LDA    $15
 D843: 8B 20       ADDA   #$20
@@ -11507,7 +11508,7 @@ D878: 7E D8 7D    JMP    $D87D
 D87B: 4F          CLRA
 D87C: 39          RTS
 D87D: EC 5C       LDD    -$4,U
-D87F: E3 A4       ADDD   ,Y
+D87F: E3 A4       ADDD   ,Y		; [rom_address]
 D881: A3 0C       SUBD   $C,X
 D883: B3 E6 54    SUBD   $E654
 D886: 2B 08       BMI    $D890
@@ -11518,7 +11519,7 @@ D88F: 39          RTS
 D890: 53          COMB
 D891: 43          COMA
 D892: C3 00 01    ADDD   #$0001
-D895: 10 A3 22    CMPD   $2,Y
+D895: 10 A3 22    CMPD   $2,Y		; [rom_address]
 D898: 22 F4       BHI    $D88E
 D89A: 6D 06       TST    $6,X
 D89C: 2B 50       BMI    $D8EE
@@ -11526,7 +11527,7 @@ D89E: A6 41       LDA    $1,U
 D8A0: 84 02       ANDA   #$02
 D8A2: 26 22       BNE    $D8C6
 D8A4: EC 5A       LDD    -$6,U
-D8A6: E3 24       ADDD   $4,Y
+D8A6: E3 24       ADDD   $4,Y		; [rom_address]
 D8A8: A3 0A       SUBD   $A,X
 D8AA: B3 E6 58    SUBD   $E658
 D8AD: 2B 22       BMI    $D8D1
@@ -11542,14 +11543,14 @@ D8C1: 86 79       LDA    #$79
 D8C3: A7 47       STA    $7,U
 D8C5: 39          RTS
 D8C6: EC 5A       LDD    -$6,U
-D8C8: E3 26       ADDD   $6,Y
+D8C8: E3 26       ADDD   $6,Y		; [rom_address]
 D8CA: A3 0A       SUBD   $A,X
 D8CC: B3 E6 58    SUBD   $E658
 D8CF: 2A DE       BPL    $D8AF
 D8D1: 53          COMB
 D8D2: 43          COMA
 D8D3: C3 00 01    ADDD   #$0001
-D8D6: 10 A3 28    CMPD   $8,Y
+D8D6: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D8D9: 22 11       BHI    $D8EC
 D8DB: 96 15       LDA    $15
 D8DD: 8B 20       ADDA   #$20
@@ -11566,7 +11567,7 @@ D8EE: A6 41       LDA    $1,U
 D8F0: 84 02       ANDA   #$02
 D8F2: 26 22       BNE    $D916
 D8F4: EC 5A       LDD    -$6,U
-D8F6: E3 24       ADDD   $4,Y
+D8F6: E3 24       ADDD   $4,Y		; [rom_address]
 D8F8: A3 0A       SUBD   $A,X
 D8FA: B3 E6 5A    SUBD   $E65A
 D8FD: 2B 22       BMI    $D921
@@ -11582,14 +11583,14 @@ D911: 86 62       LDA    #$62
 D913: A7 47       STA    $7,U
 D915: 39          RTS
 D916: EC 5A       LDD    -$6,U
-D918: E3 26       ADDD   $6,Y
+D918: E3 26       ADDD   $6,Y		; [rom_address]
 D91A: A3 0A       SUBD   $A,X
 D91C: B3 E6 5A    SUBD   $E65A
 D91F: 2A DE       BPL    $D8FF
 D921: 53          COMB
 D922: 43          COMA
 D923: C3 00 01    ADDD   #$0001
-D926: 10 A3 28    CMPD   $8,Y
+D926: 10 A3 28    CMPD   $8,Y		; [rom_address]
 D929: 22 C1       BHI    $D8EC
 D92B: 96 15       LDA    $15
 D92D: 8B 20       ADDA   #$20
@@ -12021,15 +12022,15 @@ jump_table_9d1c:
 	dc.w	function_9d77	; $9d26
 
 jump_table_a013:
-	dc.w	function_9e79	; $a013
-	dc.w	function_9e8c	; $a015
-	dc.w	function_9e8c	; $a017
-	dc.w	function_9e8c	; $a019
-	dc.w	function_9eaa	; $a01b
-	dc.w	function_9ecb	; $a01d
-	dc.w	function_9ee2	; $a01f
+	dc.w	open_door_9e79	; $a013
+	dc.w	walk_in_door_9e8c	; $a015
+	dc.w	walk_in_door_9e8c	; $a017
+	dc.w	walk_in_door_9e8c	; $a019
+	dc.w	behind_door_9eaa	; $a01b
+	dc.w	wait_32_frames_9ecb	; $a01d
+	dc.w	item_award_9ee2	; $a01f
 	dc.w	function_9f4c	; $a021
-	dc.w	function_9fa6	; $a023
+	dc.w	player_door_interaction_9fa6	; $a023
 	dc.w	function_9fbb	; $a025
 	dc.w	function_9fbb	; $a027
 	dc.w	function_9fbb	; $a029
@@ -12037,7 +12038,7 @@ jump_table_a013:
 	dc.w	function_9fdf	; $a02d
 
 jump_table_a023:
-	dc.w	function_9fa6	; $a023
+	dc.w	player_door_interaction_9fa6	; $a023
 	dc.w	function_9fbb	; $a025
 	dc.w	function_9fbb	; $a027
 	dc.w	function_9fbb	; $a029
@@ -12526,14 +12527,14 @@ jump_table_c25b:
 	dc.w	function_c132	; $c263
 	dc.w	function_c152	; $c265
 	dc.w	function_c171	; $c267
-	dc.w	function_c192	; $c269
+	dc.w	enemy_door_interaction_c192	; $c269
 	dc.w	function_c1bd	; $c26b
 	dc.w	function_c1bd	; $c26d
 	dc.w	function_c1d7	; $c26f
 	dc.w	function_c227	; $c271
 	dc.w	function_c23e	; $c273
 jump_table_c269:
-	dc.w	function_c192	; $c269
+	dc.w	enemy_door_interaction_c192	; $c269
 	dc.w	function_c1bd	; $c26b
 	dc.w	function_c1bd	; $c26d
 	dc.w	function_c1d7	; $c26f
@@ -12710,7 +12711,7 @@ jump_table_ceda:
 	dc.w	function_cf21	; $ceda
 	dc.w	function_cf21	; $cedc
 	dc.w	function_cf21	; $cede
-	dc.w	function_cf20	; $cee0
+	dc.w	function_nop_cf20	; $cee0
 	dc.w	function_cf21	; $cee2
 	dc.w	function_cf21	; $cee4
 	dc.w	function_cf21	; $cee6
