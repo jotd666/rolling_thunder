@@ -3622,7 +3622,7 @@ platform_init:
 
 
  	*         VVHH
-    move.w #0x71+((Y_START+0x10)<<8),d0
+    move.w #0xA1+((Y_START+0x10)<<8),d0
     move.w #0xC0+((Y_START-0x10)<<8),d1
 	cmp.l	#NTSC_MONITOR_ID,monitor
 	jne		0f
