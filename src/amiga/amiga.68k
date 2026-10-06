@@ -4166,7 +4166,6 @@ compute_x_offset:
 	* we need to see if the tile is on screen considering X scolling
 	* positions. Compute first X & last X coord visible
 	moveq	#0,d4				| <-- initialisation, non-wrap case
-	move.w	#BG_NB_BYTES_PER_ROW-4,d4			| FIX: tile is one map width ahead
 	move.w	d7,d2
 	and.w	#0x7F,d2
 	lsr.w	#1,d2	| get real X
