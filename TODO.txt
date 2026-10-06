@@ -1,9 +1,12 @@
-- scrolling still not right.
+- layer / sprite priority sandwich mask issue
+- door sprite (?) overrides balcony??
+- confirm bad sorting: dump amiga sprites (with sign on top) and load in MAME
 - implement Y scroll
-- at start, full screen redraw seems to screw the left wall
-- during play, moving right, scroll still fails
 - blit title screen should reset scroll (host_scroll, etc.)
-
+- One unrelated bug while I was in there: update_one_bob stores the object code from d6 into the previous-BOB list ("D6 is trash ATM"), and the erase pass uses it to index object_type_table to decide whether to skip the background restore. On static-scroll frames that's an uninitialised byte deciding erases, and it can index out of bounds.
+  => static objects like signs (only those?) should benefit from non-erase optimization
+  
+  
 could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
 order the palette with those 16 first (also: would draw faster)
 optim: do not write HUD tiles (score, etc.) all the time

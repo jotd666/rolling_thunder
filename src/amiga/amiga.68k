@@ -2359,6 +2359,88 @@ blit_background:
 	movem.l	(a7)+,d2-d6/a0-a5
 	rts
 
+* what: blits data on bg plane, no horizontal shifting (erase)
+* args:
+* < A0: pristine background
+* < A1: dest buffer
+* < D0: X (rounded to smaller 8-multiple)
+* < D1: Y
+* < D2: width in bytes
+* < D4: height
+
+* trashes: D0-D1
+
+blit_background_cookie_cut:
+	movem.l	d2-d7/a0-a5,-(a7)
+	lea		_custom,a5
+	* adjust offset X: X//8
+	lsr.w	#3,d0
+	lea		mulBG_NB_BYTES_PER_ROW_table(pc),a4
+	.ifndef	MC68020
+	add.w	d1,d1
+	* add Y offset: Y*BG_NB_BYTES_PER_ROW
+	add.w	(a4,d1.w),d0
+	.else
+	add.w	(a4,d1.w*2),d0
+	.endif
+	* same offset for source and destination
+	add.w	d0,a1
+	add.w	d0,a0
+
+    move.l  #0x0FCA0000,d3
+	move.w	#BG_NB_BYTES_PER_ROW,d1		| blit modulo
+	move.l	#BG_SCREEN_PLANE_SIZE,d0	| pre-load
+
+    sub.w   d2,d1       | blit modulo
+    lsl.w   #6,d4
+    lsr.w   #1,d2		| blit width
+    add.w   d2,d4       | blit height
+	
+    * always the same settings
+	lea		(BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES,a0),a3	| mask
+    * now just wait for blitter ready to write all registers
+	WAIT_BLIT
+    
+    * blitter registers set
+
+	WRITE_BLITTER_REG_LONG	d3,bltcon0	| sets con0 and con1
+
+	WRITE_BLITTER_REG_WORD	d1,bltamod	|A modulo
+	WRITE_BLITTER_REG_WORD	d1,bltbmod	|A modulo
+	WRITE_BLITTER_REG_WORD	d1,bltcmod	|C modulo
+	WRITE_BLITTER_REG_WORD	d1,bltdmod	|D modulo
+							
+	WRITE_BLITTER_REG_LONG	a3,bltapt	|source graphic top left corner (mask)
+	WRITE_BLITTER_REG_LONG	a0,bltbpt	|source top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a1,bltcpt	|destination top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
+	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
+	
+	* all bitplanes
+	
+	move.w	#NB_PLAYFIELD_PLANES-2,d7
+10:
+	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
+	add.l	d0,a0
+	add.l	d0,a1
+	.else
+	add.w	d0,a0
+	add.w	d0,a1
+	.endif
+	WAIT_BLIT
+
+	* other bitplanes
+	WRITE_BLITTER_REG_LONG	a3,bltapt	|source graphic top left corner
+	WRITE_BLITTER_REG_LONG	a0,bltbpt	|source top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a1,bltcpt	|source top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
+	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
+	dbf		d7,10b
+1:
+	
+	movem.l	(a7)+,d2-d7/a0-a5
+	rts
+
 
 copy_function_table:
 	.word	copy_none-copy_function_table
@@ -2496,15 +2578,57 @@ really_update_sprites:
 	move.b	(0x07f7,a0),sprite_yoffs+1  | no sign extension
 	
  	add.w	#SPRITE_BUFFER_SIZE-2*CURRENT_SPRITE_SIZE,a0
+	move.l	a0,after_last_sprite_ptr
     lea _custom,A5
 	move.l	bob_previous_drawed_sprites(pc),a6
 	move.l	game_scroll_x,(a6)+	| note down scrolling values at the current time
 	
 	lea		shared_bob_table,a4
 	
+	* first pass: draw low-priority sprites
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d0
+	and.b	#0xE0,d0
+	cmp.b	#3<<5,d0
+	jcc		0f
 	jbsr	update_one_bob
+0:
+	sub.w	#CURRENT_SPRITE_SIZE,a0
+	dbf		d7,1b
+	
+	* now we use the bob_previous_drawed_sprites table, let's load it again
+	move.l	bob_previous_drawed_sprites(pc),a3
+	addq	#4,a3		| skip scroll
+	* A6 points after the last drawn sprite rect
+
+	WAIT_BLIT
+	WRITE_BLITTER_REG_WORD	#-1,bltalwm		| needed for blit_background
+
+10:
+	cmp.l	a3,a6
+	jeq		11f
+	move.w	(a3)+,d0		| X
+	move.w	(a3)+,d1		| Y
+	move.w	(a3)+,d4		| height
+	move.w	(a3)+,d2		| width in bytes
+	add.w	#2,a3			| object code, ignored
+	lea		layer_1_restore_buffer,a0
+	move.l	playfield_drawn_screen_ptr(pc),a1
+
+	jbsr blit_background_cookie_cut	
+	jra		10b
+11:
+	* now draw the higher priority sprites, reload sprite pointer
+	move.l	after_last_sprite_ptr,a0
+	moveq	#NB_TARGET_SPRITES-1,d7
+1:
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d0
+	and.b	#0xE0,d0
+	cmp.b	#3<<5,d0
+	jcs		0f
+	jbsr	update_one_bob
+0:
 	sub.w	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
 
@@ -3918,7 +4042,10 @@ osd_set_scroll_3:
 * < A6: ram
 * < D4: address of data to write into
 * < D1.W: word to write
-
+*
+* we ditch the priority value, it's static
+* playfield 0: priority 1 (lowest)
+* playfield 1: priority 3 (higher than sprite priority 2)
 osd_set_x_scroll_register:
 	move.l	a6,a0
 	add.l	d4,a0
@@ -6424,9 +6551,11 @@ sprite_mem_name:
 	.align	2
 	.endif	
 
-
+	* variable block
 
 	.align	2
+after_last_sprite_ptr:
+	.long	0
 previous_ctrl_press:
 	.byte	0
 previous_alt_press:

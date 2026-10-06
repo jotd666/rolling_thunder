@@ -364,6 +364,7 @@ dp_irqcount1_0e              = $0E		; DP $560E - CPU1 IRQ/frame counter
 dp_irqcount2_0f              = $0F		; DP $560F - CPU2 IRQ/frame counter
 dp_bank1_shadow_19           = $19		; DP $5619 - shadow of CPU1 ROM bank latch, re-armed every IRQ
 dp_bank2_shadow_1a           = $1A		; DP $561A - shadow of CPU2 ROM bank latch, re-armed every IRQ
+emitted_sprite_count_24 = $24
 tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
 ;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
 ;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
@@ -1017,7 +1018,7 @@ function_8459:
 function_846a:
 846A: 8E 58 00    LDX    #$5800		; sprite display list (written by CPU2)
 846D: CC 00 00    LDD    #$0000
-8470: 97 24       STA    $24
+8470: 97 24       STA    emitted_sprite_count_24
 8472: ED 81       STD    ,X++
 8474: 8C 5F F0    CMPX   #boot_barrier_5ff0
 8477: 25 F9       BCS    $8472

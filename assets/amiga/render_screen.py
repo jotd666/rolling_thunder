@@ -392,26 +392,26 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
 
         sx &= 0x1FF
         sy = ((sy + 16) & 0xFF) - 16
+        if sy:
+            cell = sheets.cell(sprite, color)
+            code = spr[o+11]
+            if dump_list and code and (cell is not None or spr[o + 11] or spr[o + 13]):
+                print(f"  @{o:04x} cell=0x{sprite:04x} (code=0x{code:03x} "
+                      f"bank={sprite_bank}) clut=0x{color:03x} "
+                      f"{sizex:2d}x{sizey:2d} src=({tx:2d},{ty:2d}) "
+                      f"pos=({sx:4d},{sy:4d}) pri={priority} "
+                      f"flip={flipx}{flipy}{'' if cell is not None else '  MISSING'}")
+            if cell is None:
+                continue
 
-        cell = sheets.cell(sprite, color)
-        code = spr[o+11]
-        if dump_list and code and (cell is not None or spr[o + 11] or spr[o + 13]):
-            print(f"  @{o:04x} cell=0x{sprite:04x} (code=0x{code:03x} "
-                  f"bank={sprite_bank}) clut=0x{color:03x} "
-                  f"{sizex:2d}x{sizey:2d} src=({tx:2d},{ty:2d}) "
-                  f"pos=({sx:4d},{sy:4d}) pri={priority} "
-                  f"flip={flipx}{flipy}{'' if cell is not None else '  MISSING'}")
-        if cell is None:
-            continue
+            sub = cell.crop((tx, ty, tx + sizex, ty + sizey))
+            if flipx:
+                sub = sub.transpose(Image.FLIP_LEFT_RIGHT)
+            if flipy:
+                sub = sub.transpose(Image.FLIP_TOP_BOTTOM)
 
-        sub = cell.crop((tx, ty, tx + sizex, ty + sizey))
-        if flipx:
-            sub = sub.transpose(Image.FLIP_LEFT_RIGHT)
-        if flipy:
-            sub = sub.transpose(Image.FLIP_TOP_BOTTOM)
-
-        _blit(screen_np, prio_np, sub, sx, sy, pri_mask)
-        drawn += 1
+            _blit(screen_np, prio_np, sub, sx, sy, pri_mask)
+            drawn += 1
 
     if verbose:
         print(f"{drawn} sprites drawn")
