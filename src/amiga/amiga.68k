@@ -4626,7 +4626,9 @@ update_bg1_tile:
 	TILE8_NEXT_PLANE
 	dbf		d4,14b
 	* last plane: mask data for later blit
-	move.l	(a6),a5			| reload plane mask
+	move.l	(a6),d0			| reload plane mask
+	jeq		100f
+	move.l	d0,a5
 	.set	offset,0
 	.rept	8
 	move.b	(a5)+,(offset,a1)
