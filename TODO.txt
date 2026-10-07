@@ -1,3 +1,5 @@
+- time: doesn't display at all: break on write on 3FC8 (word) see what fg tile does
+  also handle color depending on time value (directly read 5611.W and compare to 60/30/00)
 - layer / sprite priority sandwich mask issue
 - door sprite (?) overrides balcony??
 - implement Y scroll
@@ -26,15 +28,10 @@ D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME do
 placement of the 5th sprite isn't correct
 invincibility use DSW instead of mame cheat: still vulnerable to bullets
 start skips the "select area" part
-reset copper grays if "rolling thunder" title isn't printed
-life bar: color should change: use copper color (and restore color for "time")
-time: doesn't display at all
+optim: write same char (HUD): avoid, game does that all the time
 
-lockup after game over (is that wait for music? maybe same thing for when exiting weapons?)
-display sprites: X is shifted
-
-
-
+lockup after game over (is that wait for music end?)
+  => cpu 1 D650 cpu 2 B0C1
 
 
 optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task

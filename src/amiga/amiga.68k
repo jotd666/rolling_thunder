@@ -1805,13 +1805,40 @@ level1_interrupt:
 	jra		3f	| no need to update sprites we're in the middle of a frame
 2:
 
-
 	jbsr	call_irqs
 
+	* scan sound commands
 	CPU1_GET_MEMORY_START_IN_A6
-	
+	lea		(sound_table_4285+1,a6),a0  | skip credit direct MCU control
+	moveq	#1,d0
+0:
+	tst.b	(a0)+
+	jeq		1f
+	* != 0: ack & start sound
+	clr.b	(-1,a0)
+	jbsr 	osd_sound_start
+1:
+	addq	#1,d0
+	cmp.b	#0x11,d0
+	jne		0b
 
-	* ok now D5 can be used freely
+	* dynamic non black and non white color of energy bar
+	lea		life_bar_color,a0
+	move.b	(0x3FAD,a6),d0
+	cmp.b	#0xE8,d0
+	jne		10f
+	move.w	#0x0F0,(a0)		| green
+	jra		20f
+10:
+	cmp.b	#0xF0,d0
+	jne		15f
+	move.w	#0xFF0,(a0)		| yellow critical
+	jra		20f
+15:
+	cmp.b	#0xE4,d0
+	jne		20f
+	move.w	#0xF00,(a0)		| red is dead
+20:
 
 	tst.b	frameskip
 	jeq		0f
@@ -3887,6 +3914,16 @@ platform_init:
 	
 	jbsr		set_bobs_bitplanes
 	
+	lea		end_gray_gradient,a0
+	move.l	a0,d0
+	move.w	d0,copper_resume_low+2
+	swap	d0
+	move.w	d0,copper_resume_high+2
+	
+*enable_gray_gradient
+
+
+	
 	
 	lea		_custom,a5
 	lea		game_copperlist,a0
@@ -4738,6 +4775,19 @@ update_fg_tile:
 	DECODE_CODE_AND_ATTRIBUTES
 	lsr.b	#2,d3	| divide attribute by 4 on fg tiles
 
+
+	cmp.w	#0x512,d7
+	jne		0f
+	lea		enable_gray_gradient,a0
+	move.w	#copjmp2,(a0)
+	* default: disable copper bar
+	cmp.b	#0xFE/4,d3
+	jne		0f
+	cmp.b	#3,d2
+	jne		0f
+	* enable copper bar
+	move.w	#0x1FE,(a0)		| nop: copper bar active
+0:
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
 	lea		fg_tile_address_table,a1
 	move.w	(a1,d7.w),d0
@@ -5032,6 +5082,9 @@ decode_mcu_inputs:
 	st.b	detect_controllers
 	cmp.b	#9,(nb_credits_418a,a6)
 	jeq		0f
+	move.w	#CREDIT_00_SND,d0
+	jbsr	osd_sound_start
+	
 	addq.b	#1,(nb_credits_418a,a6)
 	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
 0:
@@ -5042,6 +5095,8 @@ decode_mcu_inputs:
 	st.b	detect_controllers
 	cmp.b	#9,(nb_credits_418a,a6)
 	jeq		0f
+	move.w	#CREDIT_00_SND,d0
+	jbsr	osd_sound_start
 	addq.b	#1,(nb_credits_418a,a6)
 	add.b	#1,(mcu_flag_41a5,a6)      | also has number of credits
 	cmp.b	#9,(nb_credits_418a,a6)
@@ -7099,6 +7154,13 @@ bobs_bitplanes:
 fine_x_scroll_value:
 	.word	0
 	
+copper_resume_high:
+	.word	cop2lc,0
+copper_resume_low:
+	.word	cop2lc+2,0
+enable_gray_gradient:
+	.word	copjmp2,0
+
 	.set	offset, 0
 	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
 	TITLE_SPRITE_COLOR	0x5E01,0x445
@@ -7114,7 +7176,7 @@ fine_x_scroll_value:
 	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x889
 	.set	offset,offset+2
 	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0xBBC
-
+end_gray_gradient:
 	
 	* here was first_rows (before I disabled it)
 	* mid-line wait & extra interrupt
@@ -7147,8 +7209,11 @@ pal_intreq_block_game:
 	.endif
 	* extra wait for PAL (NTSC can't afford this)
 	* here was fourth_rows (before I disabled it)
-
-
+	.word	0x0801,0xFFFE
+	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
+	.word	color+6+8
+life_bar_color:
+	.word	0x0F0
 
 	
 pal_wait:

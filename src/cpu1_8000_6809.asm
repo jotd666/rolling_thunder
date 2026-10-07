@@ -316,7 +316,7 @@ in_level_4281                = $4281		; input level [34] IN2.4 LEFT p1
 in_edge_4282                 = $4282		; input edge  [35] IN0.0 button3 p2 (unused)
 in_level_4283                = $4283		; input level [35] IN0.0 button3 p2 (unused)
 in_edge_4284                 = $4284		; input edge  [36] IN1.0 button3 p1 (unused)
-in_level_4285                = $4285		; input level [36] IN1.0 button3 p1 (unused)
+sound_table_4285                = $4285		; input level [36] IN1.0 button3 p1 (unused)
 snd_music_req_4380           = $4380		; -> MCU: music/BGM request code
 snd_4381                     = $4381		; -> MCU: sound scratch
 snd_4385                     = $4385		; <-> MCU: sound status
@@ -1897,7 +1897,7 @@ function_8937:
 8B2E: 20 03       BRA    $8B33
 8B30: 7C 5F F0    INC    boot_barrier_5ff0
 8B33: B6 5F F3    LDA    cpu2_ready_5ff3
-8B36: 8E 42 85    LDX    #in_level_4285		; input level [36] IN1.0 button3 p1 (unused)
+8B36: 8E 42 85    LDX    #sound_table_4285		; input level [36] IN1.0 button3 p1 (unused)
 8B39: F6 42 7E    LDB    in_edge_427e		; input edge  [33] IN2.5 RIGHT p1
 8B3C: FA 42 72    ORB    in_edge_4272		; input edge  [27] IN0.4 RIGHT p2
 8B3F: 26 0F       BNE    $8B50
@@ -1968,7 +1968,7 @@ function_8937:
 8BD3: BA 42 60    ORA    in_edge_4260		; input edge  [18] IN1.6 START2
 8BD6: 10 27 00 9A LBEQ   $8C74
 8BDA: B6 5F F3    LDA    cpu2_ready_5ff3
-8BDD: 8E 42 85    LDX    #in_level_4285
+8BDD: 8E 42 85    LDX    #sound_table_4285
 8BE0: 6C 86       INC    A,X
 8BE2: 7E 8C 74    JMP    $8C74
 8BE5: 26 33       BNE    $8C1A
@@ -2451,7 +2451,7 @@ function_917b:
 91C1: 39          RTS
 91C2: CE 56 11    LDU    #$5611		; direct page (shared with CPU2 $1600)
 91C5: CC 99 99    LDD    #$9999
-91C8: BD 98 EF    JSR    function_98ef
+91C8: BD 98 EF    JSR    bcd_decrease_98ef
 91CB: DC 11       LDD    $11
 91CD: 27 01       BEQ    $91D0
 91CF: 39          RTS
@@ -2686,19 +2686,19 @@ function_9360:
 9360: 96 CE       LDA    $CE
 9362: 27 0B       BEQ    $936F
 9364: 8E 56 CC    LDX    #$56CC		; direct page (shared with CPU2 $1600)
-9367: CE 3F 16    LDU    #$3F16		; layer 3 tilemap / HUD
+9367: CE 3F 16    LDU    #$3F16		; layer 3 tilemap / HUD : mega bullet count
 936A: C6 FC       LDB    #$FC
-936C: BD 95 83    JSR    write_time_9583
+936C: BD 95 83    JSR    write_number_9583
 936F: 8E 56 CA    LDX    #$56CA
-9372: CE 3F 96    LDU    #$3F96
+9372: CE 3F 96    LDU    #$3F96		; standard bullet count
 9375: C6 FC       LDB    #$FC
-9377: 7E 95 83    JMP    write_time_9583
+9377: 7E 95 83    JMP    write_number_9583
 
 ; called 3x  from $92F7, $A444, $AD77
 function_937a:
 937A: CE 54 5C    LDU    #$545C		; work RAM (shared with CPU2)
 937D: FC 54 5E    LDD    $545E
-9380: BD 98 EF    JSR    function_98ef
+9380: BD 98 EF    JSR    bcd_decrease_98ef
 9383: CE 54 54    LDU    #$5454
 9386: 96 01       LDA    $01
 9388: 48          ASLA
@@ -2933,40 +2933,40 @@ function_9507:
 ; called 1x  from $92FD
 function_9539:
 9539: DC 11       LDD    $11
-953B: 27 24       BEQ    function_9561
+953B: 27 24       BEQ    write_remaining_time_9561
 953D: B6 44 11    LDA    $4411		; work RAM (shared with CPU2)
 9540: 84 FC       ANDA   #$FC
 9542: 81 9C       CMPA   #$9C
-9544: 27 1B       BEQ    function_9561
+9544: 27 1B       BEQ    write_remaining_time_9561
 9546: 96 13       LDA    $13
 9548: 4C          INCA
 9549: 84 3F       ANDA   #$3F
 954B: 97 13       STA    $13
-954D: 26 12       BNE    function_9561
+954D: 26 12       BNE    write_remaining_time_9561
 954F: CE 56 11    LDU    #$5611		; direct page (shared with CPU2 $1600)
 9552: CC 99 99    LDD    #$9999
-9555: BD 98 EF    JSR    function_98ef
+9555: BD 98 EF    JSR    bcd_decrease_98ef
 9558: DC 11       LDD    $11
-955A: 26 05       BNE    function_9561
+955A: 26 05       BNE    write_remaining_time_9561
 955C: C6 60       LDB    #$60
 955E: F7 44 17    STB    $4417
 
 ; called 3x  from $953B, $9544, $954D, $955A, $A450, $A82B, $AD83
-function_9561:
+write_remaining_time_9561:
 9561: CE 95 7A    LDU    #$957A		; ROM
-9564: DC 11       LDD    $11
-9566: 10 A3 C1    CMPD   ,U++
+9564: DC 11       LDD    $11		; load time value from DP
+9566: 10 A3 C1    CMPD   ,U++		; compare with time thresholds to change color
 9569: 24 04       BCC    $956F
 956B: 33 41       LEAU   $1,U
 956D: 20 F7       BRA    $9566
-956F: E6 C0       LDB    ,U+
+956F: E6 C0       LDB    ,U+		; >60: green, >30: yellow, 0: red (dead)
 9571: 8E 56 11    LDX    #$5611		; direct page (shared with CPU2 $1600)
-9574: CE 3F C8    LDU    #$3FC8		; layer 3 tilemap / HUD
-9577: 7E 95 83    JMP    write_time_9583
+9574: CE 3F C8    LDU    #$3FC8		; layer 3 tilemap / HUD		: [breakpoint]
+9577: 7E 95 83    JMP    write_number_9583
 
 
 ; called 1x; jumped-to 2x  from $936C, $9377, $9577
-write_time_9583:
+write_number_9583:
 9583: 6F E2       CLR    ,-S		; [local]
 9585: A6 80       LDA    ,X+
 9587: 84 0F       ANDA   #$0F
@@ -3367,7 +3367,7 @@ function_98d6:
 
 
 ; called 9x  from $91C8, $9380, $9555, $A44D, $AD80, $C286, $C5A4, $C865, ...
-function_98ef:
+bcd_decrease_98ef:
 98EF: 34 06       PSHS   D		; [manual_stack_push]
 98F1: A6 41       LDA    $1,U
 98F3: AB 61       ADDA   $1,S		; [local]
@@ -4776,10 +4776,10 @@ A43B: FD 54 5C    STD    $545C
 A43E: CC 00 00    LDD    #$0000
 A441: FD 54 5E    STD    $545E
 A444: BD 93 7A    JSR    function_937a
-A447: CE 56 11    LDU    #$5611		; direct page (shared with CPU2 $1600)
+A447: CE 56 11    LDU    #$5611		; direct page (shared with CPU2 $1600): remaining time in BCD (01 50)
 A44A: CC 99 99    LDD    #$9999
-A44D: BD 98 EF    JSR    function_98ef
-A450: BD 95 61    JSR    function_9561
+A44D: BD 98 EF    JSR    bcd_decrease_98ef
+A450: BD 95 61    JSR    write_remaining_time_9561
 A453: DC 11       LDD    $11
 A455: 27 01       BEQ    $A458
 A457: 39          RTS
@@ -5288,7 +5288,7 @@ A820: ED 22       STD    $2,Y		; [video_address_word]
 A822: BD 93 E4    JSR    function_93e4
 A825: BD 93 60    JSR    function_9360
 A828: BD 95 07    JSR    function_9507
-A82B: BD 95 61    JSR    function_9561
+A82B: BD 95 61    JSR    write_remaining_time_9561
 A82E: 0C 06       INC    dp_sem_cpu1_06
 A830: 0F 0E       CLR    dp_irqcount1_0e		; CPU1 IRQ/frame counter
 A832: 0D 01       TST    $01
@@ -5937,8 +5937,8 @@ AD74: FD 54 5E    STD    $545E
 AD77: BD 93 7A    JSR    function_937a
 AD7A: CE 56 11    LDU    #$5611		; direct page (shared with CPU2 $1600)
 AD7D: CC 99 99    LDD    #$9999
-AD80: BD 98 EF    JSR    function_98ef
-AD83: BD 95 61    JSR    function_9561
+AD80: BD 98 EF    JSR    bcd_decrease_98ef
+AD83: BD 95 61    JSR    write_remaining_time_9561
 AD86: DC 11       LDD    $11
 AD88: 27 01       BEQ    $AD8B
 AD8A: 39          RTS
@@ -6154,7 +6154,7 @@ AF1D: 81 03       CMPA   #$03
 AF1F: 27 28       BEQ    $AF49
 AF21: 81 04       CMPA   #$04
 AF23: 27 24       BEQ    $AF49
-AF25: CE 42 85    LDU    #in_level_4285		; input level [36] IN1.0 button3 p1 (unused)
+AF25: CE 42 85    LDU    #sound_table_4285		; input level [36] IN1.0 button3 p1 (unused)
 AF28: 8E 53 40    LDX    #$5340		; work RAM (shared with CPU2)
 AF2B: 96 E1       LDA    $E1
 AF2D: 91 E0       CMPA   $E0
@@ -8809,7 +8809,7 @@ C27C: 84 1F       ANDA   #$1F
 C27E: 97 E2       STA    $E2
 C280: CE 54 5C    LDU    #$545C
 C283: CC 00 30    LDD    #$0030
-C286: BD 98 EF    JSR    function_98ef
+C286: BD 98 EF    JSR    bcd_decrease_98ef
 C289: A6 07       LDA    $7,X
 C28B: 88 03       EORA   #$03
 C28D: A7 07       STA    $7,X
@@ -9236,7 +9236,7 @@ C599: ED 16       STD    -$A,X
 C59B: 7E B5 AE    JMP    function_b5ae
 C59E: CE 54 5C    LDU    #$545C
 C5A1: CC 00 80    LDD    #$0080
-C5A4: BD 98 EF    JSR    function_98ef
+C5A4: BD 98 EF    JSR    bcd_decrease_98ef
 C5A7: E6 07       LDB    $7,X
 C5A9: C4 03       ANDB   #$03
 C5AB: CA 64       ORB    #$64
@@ -9562,7 +9562,7 @@ C85B: 84 1F       ANDA   #$1F
 C85D: 97 E2       STA    $E2
 C85F: CE 54 5C    LDU    #$545C
 C862: CC 00 80    LDD    #$0080
-C865: BD 98 EF    JSR    function_98ef
+C865: BD 98 EF    JSR    bcd_decrease_98ef
 C868: A6 07       LDA    $7,X
 C86A: 88 03       EORA   #$03
 C86C: A7 07       STA    $7,X
@@ -10817,7 +10817,7 @@ D1F2: 84 1F       ANDA   #$1F
 D1F4: 97 E2       STA    $E2
 D1F6: CE 54 5C    LDU    #$545C
 D1F9: CC 00 50    LDD    #$0050
-D1FC: BD 98 EF    JSR    function_98ef
+D1FC: BD 98 EF    JSR    bcd_decrease_98ef
 D1FF: A6 07       LDA    $7,X
 D201: 88 03       EORA   #$03
 D203: A7 07       STA    $7,X
