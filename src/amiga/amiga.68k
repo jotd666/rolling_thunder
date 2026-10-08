@@ -4116,8 +4116,6 @@ osd_set_x_scroll_register:
 * < D1.W: word to write
 
 osd_set_y_scroll_register:
-	rts		| disabled right now
-	
 	cmp.w	#0x9002,d4	| all scrolling X layers share the same value
 	jne		0f
 	move.b	d0,game_scroll_y+1
@@ -4516,23 +4514,21 @@ update_bg0_tile:
 	*REALLY_WAIT_BLIT
 	
 	
-	tst.b 	d6
-	jra		0f
+	
+	move.w	#NB_BG_PLANES-1,d4
 	movem.l	d0-D3/a0-a6,-(a7)
-	jsr		(a0)
+	jbsr		copy_tile
 	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
-	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
+	move.w	#BG_SCREEN_PLANE_SIZE/2,d6
 	add.w	d6,a1
 	add.w	d6,a3
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	add.w	d6,a4
 	.endif
 	move.w	#NB_BG_PLANES-1,d4
-0:
-	*jmp		(a0)
 
-
+copy_tile:
 	* just copy
 4:
 	move.l	(a2)+,d0		| next plane
