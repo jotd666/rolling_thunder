@@ -2961,7 +2961,7 @@ write_remaining_time_9561:
 956D: 20 F7       BRA    $9566
 956F: E6 C0       LDB    ,U+		; >60: green, >30: yellow, 0: red (dead)
 9571: 8E 56 11    LDX    #$5611		; direct page (shared with CPU2 $1600)
-9574: CE 3F C8    LDU    #$3FC8		; layer 3 tilemap / HUD		: [breakpoint]
+9574: CE 3F C8    LDU    #$3FC8		; layer 3 tilemap / HUD
 9577: 7E 95 83    JMP    write_number_9583
 
 

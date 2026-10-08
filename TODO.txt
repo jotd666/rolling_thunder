@@ -9,13 +9,14 @@
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
 - implement invincible by dsw
+- implement infinite bullets cheat
   
 could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
 order the palette with those 16 first (also: would draw faster)
 optim: do not write HUD tiles (score, etc.) all the time
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
-8DDB: when killed, tries to read from RAM on cpu2. debug this
+8DDB: when killed , tries to read from RAM on cpu2. debug this
   X is in input of the routine, and seems to select a wrong table?
  function_8dc8:
 8DC8: 6F 09       CLR    $9,X   X = $410
@@ -24,9 +25,10 @@ D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME do
 8DCF: 84 7C       ANDA   #$7C
 8DD1: 44          LSRA
 8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
+probably consequence of already corrupted state. Happens when Y scroll activates
+
 
 placement of the 5th sprite isn't correct
-invincibility use DSW instead of mame cheat: still vulnerable to bullets
 start skips the "select area" part
 optim: write same char (HUD): avoid, game does that all the time
 

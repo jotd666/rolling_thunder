@@ -4772,10 +4772,31 @@ update_fg_tile:
 	jcc		0f
 	rts
 0:
+
+	cmp.w	#0xFC8,d7
+	jcs		0f
+	* time value: 0xE4: red, 0xF0: yellow, 0xE8: green
+	* we have to change this using copper
+	move.b	#0xE4,d1	| non-black/non-white (default red)
+0:
+
+*   uncomment: fix 'O' for nonblank
+*	cmp.b	#0xFF,d0
+*	jeq		0f
+*	
+*	move.b	#0x18,d0
+*	move.b	#0xFC,d1
+*0:
+
 	DECODE_CODE_AND_ATTRIBUTES
 	lsr.b	#2,d3	| divide attribute by 4 on fg tiles
 
+	
 
+	* enable/disable gradient for "Rolling Thunder" big title
+	* we use a 3-color sprite layer white/black/red we cannot
+	* have more colors than that but with a few copper hacks it's 
+	* barely noticeable
 	cmp.w	#0x512,d7
 	jne		0f
 	lea		enable_gray_gradient,a0
@@ -4795,8 +4816,8 @@ update_fg_tile:
 	moveq	#0,d1
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
-	
-	* select which destination sprite (0-5)
+
+	* select which destination sprite (0-4)
 	move.w	d0,d4
 	lea		hw_sprite_pointers,a1
 	and.w	#0xF8,d4		| divide by 8 (8*8=64 pixels)
