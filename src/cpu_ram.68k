@@ -25,6 +25,10 @@
 
 	.ifeq	OPT_ALIGNED_MEMORY
 	.global	cpu1_videoram_buffer
+	.global	cpu1_ram_buffer
+	.global	cpu2_ram_buffer
+	.global	cpu1_rom_buffer
+	.global	cpu2_rom_buffer
 
 	.else
 	.global cpu1_ram_start_0000
@@ -45,6 +49,7 @@
 * interleaved mapping that advantages cpu1: its memory is contiguous
 
 	.ifeq	OPT_ALIGNED_MEMORY
+cpu1_ram_buffer:  | shared cpu1=0x0000, cpu2=0x2000, size=0x4000
 cpu1_videoram_buffer:  | shared cpu1=0x0000, cpu2=0x2000, size=0x4000
 	.skip	0x4000
 cpu2_ram_buffer:   | shared cpu2=0x0000, cpu1=0x4000, size=0x2000

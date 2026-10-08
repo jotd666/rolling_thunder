@@ -8,7 +8,7 @@ def add(contents,code,clut,nb_cluts):
 def rem(contents,code,clut,nb_cluts):
     contents[code*nb_cluts+clut] = 0
 
-def merge(used_name,nb_items,nb_cluts,overwrite=False):
+def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
     merged_path_file = used_graphics_dir
 
 
@@ -29,7 +29,11 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False):
 
     contents = bytearray([a|b for a,b in zip(new_contents,old_contents)])
 
-
+    if filter_out:
+        for code,cluts in filter_out.items():
+            for c in cluts:
+                # cancel usage
+                contents[code*nb_cluts+c]=0
 
     if old_contents == contents:
         print(f"Nothing new for {used_name}")
@@ -38,7 +42,8 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False):
         for i,(a,b) in enumerate(zip(old_contents,contents)):
             if a!=b:
                 code,clut = divmod(i,nb_cluts)
-                print(f"{used_name}: New: code={code:02x}, clut={clut:02x}")
+                status = "New" if contents else "Deleted"
+                print(f"{used_name}: {status}: code={code:02x}, clut={clut:02x}")
         rc = 1
 
         with open(merged_path_file / used_name,"wb") as f:
@@ -49,7 +54,9 @@ rc |= merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 rc |= merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 
 ####merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=True)
-rc |= merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False)
+rc |= merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False,filter_out={
+0x118:[0x41],0x1D8:[0x41],0x340:[0x40],0x341:[6,0x41,0X40],0x304:[0,0x41,0x46]}
+)
 
 sys.exit(not rc)
 ##  @00da cell=0x0319 (code=0x019 bank=6) clut=0x046 16x16 src=(16, 0) pos=( 175, 172) pri=4 flip=00
