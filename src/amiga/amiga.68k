@@ -207,6 +207,7 @@ FMODE_WIDTH_POWER=5
 VISIBLE_SCROLL_WIDTH = BG_NB_BYTES_PER_ROW*8-(1<<FMODE_WIDTH_POWER)
 
 BG_SCREEN_PLANE_SIZE = BG_NB_BYTES_PER_ROW*(BG_NB_LINES+16)
+BG_HALF_SCREEN_PLANE_SIZE = BG_NB_BYTES_PER_ROW*BG_NB_LINES/2
 
 BG_SCREEN_SIZE = BG_SCREEN_PLANE_SIZE*NB_PLAYFIELD_PLANES
 
@@ -2653,10 +2654,12 @@ really_update_sprites:
 	move.w	(a3)+,d4		| height
 	move.w	(a3)+,d2		| width in bytes
 	add.w	#2,a3			| object code, ignored
-	lea		layer_1_restore_buffer,a0
 	move.l	playfield_drawn_screen_ptr(pc),a1
 
+	lea		layer_1_restore_buffer,a0
 	jbsr blit_background_cookie_cut	
+	
+	
 	jra		10b
 11:
 	* now draw the higher priority sprites, reload sprite pointer
@@ -4118,7 +4121,10 @@ osd_set_x_scroll_register:
 osd_set_y_scroll_register:
 	cmp.w	#0x9002,d4	| all scrolling X layers share the same value
 	jne		0f
-	move.b	d0,game_scroll_y+1
+	move.b	d0,d7
+	neg.b	d7
+	move.b	d7,0x110
+	move.b	d7,game_scroll_y+1
 0:
 	rts
 	
@@ -4299,8 +4305,15 @@ update_random_bg0_tile:
 	move.b	(a0,d7.w),d0
 	move.b	(1,a0,d7.w),d1
 
+	move.w	d7,-(a7)                        | update_bg0_tile trashes d7
 	jbsr	update_bg0_tile
-
+	* layer 1 shares the playfield, so re-apply its tile over this cell
+	move.w	(a7)+,d7
+	lea		(BG_SCREEN_TILE_ADDRESS+0x1000,a6),a0
+	move.b	(a0,d7.w),d0
+	move.b	(1,a0,d7.w),d1
+	jbsr	update_bg1_tile
+	
 	jra		osd_w_videoram_out
 	
 	
@@ -4403,6 +4416,7 @@ update_bg_init:
 	
 	* updating bitplanes
 	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
+	* not the case here!
 	move.l	#BG_SCREEN_PLANE_SIZE,d5
 	.else
 	moveq	#0,d5
@@ -4518,9 +4532,8 @@ update_bg0_tile:
 	move.w	#NB_BG_PLANES-1,d4
 	movem.l	d0-D3/a0-a6,-(a7)
 	jbsr		copy_tile
-	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
-	move.w	#BG_SCREEN_PLANE_SIZE/2,d6
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
 	add.w	d6,a1
 	add.w	d6,a3
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
@@ -4618,25 +4631,21 @@ update_bg1_tile:
 
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
-	*lea		_custom,a5
-	*REALLY_WAIT_BLIT
+	lea		_custom,a5
+	REALLY_WAIT_BLIT
 	
 	lea		(a2,4*NB_PLAYFIELD_PLANES),a6	| mask plane address, fixed
-	tst.b 	d6
-	jra		0f
+
 	movem.l	d0-D3/a0-a6,-(a7)
 	jsr		4f
-	* lower part too TODO
 	movem.l	(a7)+,d0-D3/a0-a6
-	move.w	#2*BG_SCREEN_PLANE_SIZE/3,d6
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
 	add.w	d6,a1
 	add.w	d6,a3
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	add.w	d6,a4
 	.endif
 	move.w	#NB_BG_PLANES-1,d4
-0:
-	*jmp		(a0)
 
 	* just copy
 4:
@@ -4669,7 +4678,7 @@ update_bg1_tile:
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
 141:
-	TILE8_NEXT_PLANE
+	add.w	d5,a1	| next bitplane
 	dbf		d4,14b
 	* last plane: mask data for later blit
 	move.l	(a6),d0			| reload plane mask
@@ -4680,13 +4689,27 @@ update_bg1_tile:
 	move.b	(a5)+,(offset,a1)
 	.set	offset,offset+BG_NB_BYTES_PER_ROW
 	.endr
-	
+	rts
+	* empty mask: clear mask
 100:
+	.set	offset,0
+	.rept	8
+	clr.b	(offset,a1)
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
 	rts
 5:
 	jra		41b
-
+	
+	* clear in layer restore bitplane data when empty data
+	* (unlike when dest is screen in which case
+	* we just skip)
 15:
+	.set	offset,0
+	.rept	8
+	clr.b	(offset,a1)
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
 	jra		141b
 
 
@@ -4972,12 +4995,10 @@ HW_SpriteYTable_\height:
 
 set_bobs_bitplanes:
 	movem.l	a0-a1/d0-d2,-(a7)
-	move.b	#0,0x111
 	
 	* set bitplanes
 	moveq	#0,d0
 	move.w	game_scroll_y,d0
-
 	lea		mulBG_NB_BYTES_PER_ROW_table,a2
 	.ifdef	MC68020
 	move.w	(a2,d0.w*2),d0		| compute Y offset

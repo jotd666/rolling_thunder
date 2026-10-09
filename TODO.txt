@@ -1,11 +1,13 @@
-- door sprite (?) overrides balcony??
-- implement Y scroll: still fails: check how it changes in MAME
-- real hardware: character falls indefinitely!
+- osd_set_y_scroll_register monitor 110 when scrolling down
+- implement Y scroll: still fails: check how it changes in MAME. The fact that character falls in hole
+  means that Y memory is probably failing. Snap memory when it occurs on Amiga
+  => confirmed: MAME shows that screen is devoid from tiles / not reproductible 100%
+- real hardware: character falls indefinitely: try with cycle exact
 - part where player goes down: fall & dies then D13E programming error
-- layer 1 slightly corrupt after a while
+- hoodies partially drawn when climbing up/down railings: pause+render
+- implement savestate like Double Dragon
+- trashed tiles on the right just before going down
 - blit title screen should reset scroll (host_scroll, etc.)
-- One unrelated bug while I was in there: update_one_bob stores the object code from d6 into the previous-BOB list ("D6 is trash ATM"), and the erase pass uses it to index object_type_table to decide whether to skip the background restore. On static-scroll frames that's an uninitialised byte deciding erases, and it can index out of bounds.
-  => static objects like signs (only those?) should benefit from non-erase optimization
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
 - implement invincible by dsw
@@ -16,7 +18,9 @@ order the palette with those 16 first (also: would draw faster)
 optim: do not write HUD tiles (score, etc.) all the time
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
-8DDB: when killed , tries to read from RAM on cpu2. debug this
+
+when character is killed, it sometimes reaches
+8DDB: when killed (shot, not punched), tries to read from RAM on cpu2. debug this
   X is in input of the routine, and seems to select a wrong table?
  function_8dc8:
 8DC8: 6F 09       CLR    $9,X   X = $410
@@ -27,7 +31,7 @@ D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME do
 8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
 probably consequence of already corrupted state. Happens when Y scroll activates
 
-
+sometimes scroll column is skipped?? moving back & forth makes it work again
 placement of the 5th sprite isn't correct (1 pixel off!)
 start skips the "select area" part: needs DSW!!
 optim: write same char (HUD): avoid, game does that all the time

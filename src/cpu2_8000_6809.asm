@@ -1991,7 +1991,7 @@ function_8ebf:		; [cc_handled]
 8EC4: 84 70       ANDA   #$70
 8EC6: 26 25       BNE    $8EED
 8EC8: CC 01 00    LDD    #$0100
-8ECB: BD 93 02    JSR    function_9302
+8ECB: BD 93 02    JSR    get_ground_tile_type_9302
 8ECE: C4 01       ANDB   #$01
 8ED0: 39          RTS
 
@@ -2007,7 +2007,7 @@ function_8ed1:	; [cc_handled]
 8EE0: 84 70       ANDA   #$70
 8EE2: 26 09       BNE    $8EED
 8EE4: CC 01 00    LDD    #$0100
-8EE7: BD 93 02    JSR    function_9302
+8EE7: BD 93 02    JSR    get_ground_tile_type_9302
 8EEA: C4 01       ANDB   #$01
 8EEC: 39          RTS
 8EED: 5F          CLRB
@@ -2149,7 +2149,7 @@ function_8fe9:		; [cc_handled]
 8FEE: 84 70       ANDA   #$70
 8FF0: 26 25       BNE    $9017
 8FF2: CC FE 00    LDD    #$FE00
-8FF5: BD 93 02    JSR    function_9302
+8FF5: BD 93 02    JSR    get_ground_tile_type_9302
 8FF8: C4 01       ANDB   #$01
 8FFA: 39          RTS
 
@@ -2165,7 +2165,7 @@ function_8ffb:		; [cc_handled]
 900A: 84 70       ANDA   #$70
 900C: 26 09       BNE    $9017
 900E: CC FE 00    LDD    #$FE00
-9011: BD 93 02    JSR    function_9302
+9011: BD 93 02    JSR    get_ground_tile_type_9302
 9014: C4 01       ANDB   #$01
 9016: 39          RTS
 9017: 5F          CLRB
@@ -2338,7 +2338,7 @@ function_913d:	; [cc_handled]
 914A: 84 70       ANDA   #$70
 914C: 26 27       BNE    $9175
 914E: CC 00 03    LDD    #$0003
-9151: BD 93 02    JSR    function_9302
+9151: BD 93 02    JSR    get_ground_tile_type_9302
 9154: C4 08       ANDB   #$08
 9156: 39          RTS
 
@@ -2355,7 +2355,7 @@ function_9157:	; [cc_handled]
 9168: 84 70       ANDA   #$70
 916A: 26 09       BNE    $9175
 916C: CC 00 03    LDD    #$0003
-916F: BD 93 02    JSR    function_9302
+916F: BD 93 02    JSR    get_ground_tile_type_9302
 9172: C4 08       ANDB   #$08
 9174: 39          RTS
 9175: 5F          CLRB
@@ -2525,7 +2525,7 @@ function_92a5:		; [cc_handled]
 92AA: 84 70       ANDA   #$70
 92AC: 26 52       BNE    $9300
 92AE: CC 00 FF    LDD    #$00FF
-92B1: 8D 4F       BSR    function_9302
+92B1: 8D 4F       BSR    get_ground_tile_type_9302
 92B3: C5 06       BITB   #$06
 92B5: 27 49       BEQ    $9300
 92B7: A7 E2       STA    ,-S		; [local]
@@ -2555,7 +2555,7 @@ function_92d6:	; [cc_handled]
 92DF: 84 70       ANDA   #$70
 92E1: 26 1D       BNE    $9300
 92E3: CC 00 FF    LDD    #$00FF
-92E6: 8D 1A       BSR    function_9302
+92E6: 8D 1A       BSR    get_ground_tile_type_9302
 92E8: C5 06       BITB   #$06
 92EA: 27 14       BEQ    $9300
 92EC: A7 E2       STA    ,-S		; [local]
@@ -2572,19 +2572,19 @@ function_92d6:	; [cc_handled]
 9301: 39          RTS
 
 ; called 25x  from $8ECB, $8EE7, $8FF5, $9011, $9151, $916F, $92B1, $92E6, ...
-function_9302:
-9302: 8D 20       BSR    function_9324
+get_ground_tile_type_9302:
+9302: 8D 20       BSR    function_9324   ; world coords -> map offset in D
 9304: CE 40 00    LDU    #$4000		; layer 2 tilemap
-9307: EC CB       LDD    D,U		; [video_address]
+9307: EC CB       LDD    D,U		; [video_address] code + attribute
 9309: C4 03       ANDB   #$03
-930B: C1 03       CMPB   #$03
+930B: C1 03       CMPB   #$03		; attribute low bits == 3 ?
 930D: 27 02       BEQ    $9311
 930F: 5F          CLRB
-9310: 39          RTS
-9311: CE E6 7C    LDU    #$E67C		; ROM
+9310: 39          RTS				; -> nothing here
+9311: CE E6 7C    LDU    #$E67C		; ROM surface-type table
 9314: 44          LSRA
 9315: 44          LSRA
-9316: E6 05       LDB    $5,X
+9316: E6 05       LDB    $5,X            ; actor's tier/flags
 9318: C4 C0       ANDB   #$C0
 931A: 54          LSRB
 931B: 54          LSRB
@@ -2593,7 +2593,9 @@ function_9302:
 931E: 54          LSRB
 931F: EE C5       LDU    B,U		; [rom_address]
 9321: E6 C6       LDB    A,U		; [rom_address]
-9323: 39          RTS
+9323: 39          RTS               ; B = terrain attribute
+
+
 
 ; called 1x  from $9302
 function_9324:
@@ -2802,7 +2804,7 @@ function_9497:		; [cc_handled]
 94B6: C4 70       ANDB   #$70
 94B8: 26 0C       BNE    $94C6
 94BA: CC 01 00    LDD    #$0100
-94BD: BD 93 02    JSR    function_9302
+94BD: BD 93 02    JSR    get_ground_tile_type_9302
 94C0: A7 62       STA    $2,S		; [local]
 94C2: C4 01       ANDB   #$01
 94C4: 26 20       BNE    $94E6
@@ -2860,7 +2862,7 @@ function_9497:		; [cc_handled]
 952A: C4 70       ANDB   #$70
 952C: 26 0C       BNE    $953A
 952E: CC FE 00    LDD    #$FE00
-9531: BD 93 02    JSR    function_9302
+9531: BD 93 02    JSR    get_ground_tile_type_9302
 9534: A7 62       STA    $2,S		; [local]
 9536: C4 01       ANDB   #$01
 9538: 26 AC       BNE    $94E6
@@ -2895,7 +2897,7 @@ function_956d:		; [cc_handled]
 958E: C4 70       ANDB   #$70
 9590: 26 0C       BNE    $959E
 9592: CC 00 03    LDD    #$0003
-9595: BD 93 02    JSR    function_9302
+9595: BD 93 02    JSR    get_ground_tile_type_9302
 9598: A7 62       STA    $2,S		; [local]
 959A: C4 08       ANDB   #$08
 959C: 26 26       BNE    $95C4
@@ -2939,7 +2941,7 @@ function_956d:		; [cc_handled]
 95E9: C4 70       ANDB   #$70
 95EB: 26 24       BNE    $9611
 95ED: CC 00 FF    LDD    #$00FF
-95F0: BD 93 02    JSR    function_9302
+95F0: BD 93 02    JSR    get_ground_tile_type_9302
 95F3: A7 62       STA    $2,S		; [local]
 95F5: C5 06       BITB   #$06
 95F7: 27 18       BEQ    $9611
@@ -3448,7 +3450,7 @@ function_9a62:		; [cc_handled]
 9A6E: 2E 1B       BGT    $9A8B
 9A70: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9A73: CC 00 FF    LDD    #$00FF
-9A76: BD 93 02    JSR    function_9302
+9A76: BD 93 02    JSR    get_ground_tile_type_9302
 9A79: C5 20       BITB   #$20
 9A7B: 26 0A       BNE    $9A87
 9A7D: C5 02       BITB   #$02
@@ -3521,7 +3523,7 @@ function_9afa:
 9AFE: 26 2C       BNE    $9B2C
 9B00: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9B03: CC FF FF    LDD    #$FFFF
-9B06: BD 93 02    JSR    function_9302
+9B06: BD 93 02    JSR    get_ground_tile_type_9302
 9B09: C4 20       ANDB   #$20
 9B0B: 27 07       BEQ    $9B14
 9B0D: 84 01       ANDA   #$01
@@ -3530,7 +3532,7 @@ function_9afa:
 9B13: 39          RTS
 9B14: CE 13 E0    LDU    #$13E0
 9B17: CC 01 00    LDD    #$0100
-9B1A: BD 93 02    JSR    function_9302
+9B1A: BD 93 02    JSR    get_ground_tile_type_9302
 9B1D: C4 20       ANDB   #$20
 9B1F: 26 01       BNE    $9B22
 9B21: 39          RTS
@@ -3543,7 +3545,7 @@ function_9afa:
 9B2B: 39          RTS
 9B2C: CE 13 E0    LDU    #$13E0
 9B2F: CC FF 00    LDD    #$FF00
-9B32: BD 93 02    JSR    function_9302
+9B32: BD 93 02    JSR    get_ground_tile_type_9302
 9B35: C4 20       ANDB   #$20
 9B37: 27 07       BEQ    $9B40
 9B39: 84 01       ANDA   #$01
@@ -3552,7 +3554,7 @@ function_9afa:
 9B3F: 39          RTS
 9B40: CE 13 E0    LDU    #$13E0
 9B43: CC 01 FF    LDD    #$01FF
-9B46: BD 93 02    JSR    function_9302
+9B46: BD 93 02    JSR    get_ground_tile_type_9302
 9B49: C4 20       ANDB   #$20
 9B4B: 26 01       BNE    $9B4E
 9B4D: 39          RTS
@@ -3750,7 +3752,7 @@ function_9c96:
 function_9cc1:		; [cc_handled]
 9CC1: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9CC4: CC 01 00    LDD    #$0100
-9CC7: BD 93 02    JSR    function_9302
+9CC7: BD 93 02    JSR    get_ground_tile_type_9302
 9CCA: C4 20       ANDB   #$20
 9CCC: 26 01       BNE    $9CCF
 9CCE: 39          RTS
@@ -3761,7 +3763,7 @@ function_9cc1:		; [cc_handled]
 function_9cd2:		; [cc_handled]
 9CD2: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9CD5: CC FF 00    LDD    #$FF00
-9CD8: BD 93 02    JSR    function_9302
+9CD8: BD 93 02    JSR    get_ground_tile_type_9302
 9CDB: C4 20       ANDB   #$20
 9CDD: 26 01       BNE    $9CE0
 9CDF: 39          RTS
@@ -3861,7 +3863,7 @@ function_9d77:
 function_9d90:		; [cc_handled]
 9D90: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9D93: CC FF FF    LDD    #$FFFF
-9D96: BD 93 02    JSR    function_9302
+9D96: BD 93 02    JSR    get_ground_tile_type_9302
 9D99: C4 20       ANDB   #$20
 9D9B: 26 01       BNE    $9D9E
 9D9D: 39          RTS
@@ -3872,7 +3874,7 @@ function_9d90:		; [cc_handled]
 function_9da1:		; [cc_handled]
 9DA1: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 9DA4: CC 01 FF    LDD    #$01FF
-9DA7: BD 93 02    JSR    function_9302
+9DA7: BD 93 02    JSR    get_ground_tile_type_9302
 9DAA: C4 20       ANDB   #$20
 9DAC: 26 01       BNE    $9DAF
 9DAE: 39          RTS
@@ -5467,7 +5469,7 @@ AA20: 81 2C       CMPA   #$2C
 AA22: 27 10       BEQ    $AA34
 AA24: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 AA27: CC 00 03    LDD    #$0003
-AA2A: BD 93 02    JSR    function_9302
+AA2A: BD 93 02    JSR    get_ground_tile_type_9302
 AA2D: C4 10       ANDB   #$10
 AA2F: 27 1C       BEQ    $AA4D
 AA31: 7E 8D C8    JMP    function_8dc8
@@ -7857,7 +7859,7 @@ BCFE: 81 03       CMPA   #$03
 BD00: 26 1C       BNE    $BD1E
 BD02: CE 13 E0    LDU    #$13E0
 BD05: CC 00 FF    LDD    #$00FF
-BD08: BD 93 02    JSR    function_9302
+BD08: BD 93 02    JSR    get_ground_tile_type_9302
 BD0B: 81 23       CMPA   #$23
 BD0D: 27 09       BEQ    $BD18
 BD0F: 81 2F       CMPA   #$2F
@@ -7974,7 +7976,7 @@ BDE9: C6 84       LDB    #$84
 BDEB: 7E B4 29    JMP    function_b429
 BDEE: CE 13 E0    LDU    #$13E0
 BDF1: CC 00 03    LDD    #$0003
-BDF4: BD 93 02    JSR    function_9302
+BDF4: BD 93 02    JSR    get_ground_tile_type_9302
 BDF7: C4 10       ANDB   #$10
 BDF9: 27 05       BEQ    $BE00
 BDFB: C6 2C       LDB    #$2C
@@ -9668,7 +9670,7 @@ CB36: 27 01       BEQ    $CB39
 CB38: 39          RTS
 CB39: CE 13 E0    LDU    #$13E0		; work RAM (shared with CPU1 $4400)
 CB3C: CC 00 FF    LDD    #$00FF
-CB3F: BD 93 02    JSR    function_9302
+CB3F: BD 93 02    JSR    get_ground_tile_type_9302
 CB42: C5 02       BITB   #$02
 CB44: 27 06       BEQ    $CB4C
 CB46: C4 C0       ANDB   #$C0
