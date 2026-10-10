@@ -30,6 +30,7 @@ LOG_BUFFER_SIZE = 0x8000
 	lea		cpu2_rom_buffer-CPU2_ROM_START,a3
 	* videoram area (not continuous!)
 	lea		cpu1_videoram_buffer,a4
+	sub.w	#0x2000,a4			| cpu2 video ram starts at 0x2000
 	.else
 	move.l		cpu2_ram_start_0000,a6
 	* adjust offset to avoid subbing at run-time

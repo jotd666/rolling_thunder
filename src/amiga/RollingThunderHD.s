@@ -5,20 +5,28 @@
 
 ;CHIP_ONLY
 
+
+CHIPSIZE = $200000
+	IFD	DEV_MODE
+EXPMEM = $800000
+SAVEGAME_SIZE = $2800    ; size needed for savegame code, not save game data itself
+	ELSE
+EXPMEM = $200000
+SAVEGAME_SIZE = $0
+	ENDC
+
+SAVEGAME_FILE_SIZE = $6000
+
 ; lowest chip possible. CD32 version must fit in $1E0000 bytes
 ; including stack, which is very close. Why wasting precious kbs?
-CHIP_BASE = $200
+BASE_CHIP = $200
 
-	IFD	CD32_SLAVE
-EXPMEM = 0
-	ELSE
-EXPMEM = $800000
-	ENDC
-CHIPSIZE = $200000
+START_CHIP = BASE_CHIP+SAVEGAME_SIZE
+
 
 _base	SLAVE_HEADER					; ws_security + ws_id
 	dc.w	17					; ws_version (was 10)
-	dc.w	WHDLF_NoError|WHDLF_ReqAGA
+	dc.w	WHDLF_NoError|WHDLF_ReqAGA|WHDLF_Req68020
 	dc.l	CHIPSIZE
 	dc.l	0					; ws_execinstall
 	dc.w	start-_base		; ws_gameloader
@@ -44,10 +52,9 @@ _config
 	dc.b	"C1:X:infinite time:2;"
 	dc.b	"C1:X:cheat keys:4;"
 	dc.b	"C2:X:50 Hz update:0;"
-	dc.b	"C2:X:no level music:2;"
-	dc.b	"C2:X:service mode:3;"
-	dc.b	"C2:X:use up for jump:4;"
-	dc.b	"C2:X:startup menu:5;"
+	*dc.b	"C2:X:no level music:2;"
+	*dc.b	"C2:X:use up for jump:4;"
+	*dc.b	"C2:X:startup menu:5;"
 
 	dc.b	"C3:L:difficulty level:easy,normal,difficult,very difficult;"
 	dc.b	"C4:L:lives:3,4,5,7;"
@@ -94,7 +101,7 @@ start:
     
     IFEQ EXPMEM
     lea  _expmem(pc),a0
-    move.l  #CHIP_BASE,(a0)
+    move.l  #START_CHIP,(a0)
     ENDC
     lea progstart(pc),a0
     move.l  _expmem(pc),(a0)
@@ -104,7 +111,13 @@ start:
 	jsr	(resload_LoadFileDecrunch,a2)
 	move.l  progstart(pc),a0
     bsr   _Relocate
-	move.l	_resload(pc),a0
+	lea		_resload(pc),a0		; note: address of pointer on resload+_savegame_func+_loadgame_func
+	IFD	DEV_MODE
+	lea	loadgame(pc),a1
+	move.l	a1,(4,a0)
+	lea	savegame(pc),a1
+	move.l	a1,(8,a0)
+	ENDC
     move.l  #'WHDL',d0
     move.b  _keyexit(pc),d1
 	move.l  progstart(pc),-(a7)
@@ -119,7 +132,7 @@ _Relocate	movem.l	d0-d1/a0-a2,-(sp)
 ;        pea     -1                      ;true
 ;        pea     WHDLTAG_LOADSEG
 		IFNE		EXPMEM
-        move.l  #CHIP_BASE,-(a7)       ;chip area
+        move.l  #START_CHIP,-(a7)       ;chip area
         pea     WHDLTAG_CHIPPTR        
         pea     8                       ;8 byte alignment
         pea     WHDLTAG_ALIGN
@@ -136,8 +149,37 @@ _Relocate	movem.l	d0-d1/a0-a2,-(sp)
         movem.l	(sp)+,d0-d1/a0-a2
 		rts
 
+	IFD	DEV_MODE
+; < A0: game RAM
+loadgame
+    movem.l a0/a2,-(a7)
+	move.l	#SAVEGAME_FILE_SIZE,d0	; size of RAM
+	lea	BASE_CHIP,a1
+	bsr	_sg_load
+    movem.l (a7)+,a0/a2
+	; D0 success
+	rts
+; < A0: game ram
+savegame
+    movem.l a2,-(a7)
+;	move.l	trainer(PC),d0
+;	bne.s	.skip		;no save on trainer
+	lea	BASE_CHIP,a1
+	move.l	#SAVEGAME_FILE_SIZE,d0	; size of RAM
+	bsr	_sg_save
+.skip
+    movem.l (a7)+,a2
+	rts
+	ENDC
+_exit:
+	pea	TDREASON_OK
+	move.l	_resload(pc),-(a7)
+	addq.l	#resload_Abort,(a7)
+	rts
 _resload:
-	dc.l	0
+	dc.l	0	; resload
+	dc.l	0	; load game function
+	dc.l	0	; save game function
 progstart
     dc.l    0
 exe
@@ -145,4 +187,9 @@ exe
 	dc.b	"GhostsNGoblins_cd32",0
 	ELSE
 	dc.b	"RollingThunder_AGA",0
+	ENDC
+	IFD	DEV_MODE
+
+	even
+	include	savegame.s
 	ENDC

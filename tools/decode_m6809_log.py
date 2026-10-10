@@ -129,9 +129,9 @@ def load_mame_log(in_log,out_log,pcs,excluded_pcs=set(),avoid_regs = "",sorted_c
     with open(out_log,"w") as fw:
         fw.writelines(lst)
 
-pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=1)
+pcs = load_amiga_log(r"..\cpu_log","amiga.tr",cpu=1,avoid_regs="s")
 if not pcs:
     raise Exception("No trace found on the amiga side for this cpu")
 
-load_mame_log(r"K:\Emulation\MAME\mame.tr","mame.tr",pcs)
+load_mame_log(r"K:\Emulation\MAME\mame.tr","mame.tr",pcs,avoid_regs="s")
 

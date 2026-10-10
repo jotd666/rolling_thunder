@@ -4271,7 +4271,7 @@ A066: 44          LSRA
 A067: 44          LSRA
 A068: 26 02       BNE    $A06C
 A06A: 86 FF       LDA    #$FF
-A06C: ED A4       STD    ,Y
+A06C: ED A4       STD    ,Y		; [video_address_word]
 A06E: 96 C5       LDA    starting_area_c5
 A070: 84 0F       ANDA   #$0F
 A072: ED 22       STD    $2,Y
@@ -6291,7 +6291,7 @@ B1F3: 27 04       BEQ    $B1F9
 B1F5: 6A 84       DEC    ,X
 B1F7: 20 C0       BRA    function_b1b9
 B1F9: 6F 84       CLR    ,X
-B1FB: 0C B4       INC    $B4
+B1FB: 0C B4       INC    $B4		; event: scroll right
 B1FD: 39          RTS
 
 ; 1 jump-table ref; jumped-to 1x  from $B230
@@ -6323,7 +6323,7 @@ B22C: 27 04       BEQ    $B232
 B22E: 6A 84       DEC    ,X
 B230: 20 CC       BRA    function_b1fe
 B232: 6F 84       CLR    ,X
-B234: 0C B4       INC    $B4
+B234: 0C B4       INC    $B4	; event: scroll left
 B236: 39          RTS
 
 
@@ -6367,6 +6367,7 @@ B27B: 84 0F       ANDA   #$0F
 B27D: ED 06       STD    $6,X
 B27F: 33 CB       LEAU   D,U
 B281: EC E1       LDD    ,S++		; [local]
+; seems to feed horizontal scrolling
 B283: ED C4       STD    ,U		; [video_address_word]
 B285: 0A B1       DEC    $B1
 B287: 27 25       BEQ    $B2AE
@@ -6417,6 +6418,7 @@ B2DB: 39          RTS
 
 
 ; 1 jump-table ref; jumped-to 1x  from $B327
+; < X
 function_b2ec:
 B2EC: 10 8E B2 DC LDY    #$B2DC		; ROM
 B2F0: CE B2 E4    LDU    #$B2E4
@@ -6443,7 +6445,7 @@ B316: A6 2B       LDA    $B,Y
 B318: 4A          DECA
 B319: A0 E0       SUBA   ,S+		; [local]
 B31B: 97 AE       STA    tile_related_counter_ae
-B31D: 8D 4F       BSR    function_b36e
+B31D: 8D 4F       BSR    vertical_tile_feed_b36e
 B31F: A6 84       LDA    ,X
 B321: 85 03       BITA   #$03
 B323: 27 04       BEQ    $B329
@@ -6479,18 +6481,19 @@ B356: A6 2B       LDA    $B,Y
 B358: 4A          DECA
 B359: A0 E0       SUBA   ,S+		; [local]
 B35B: 97 AE       STA    tile_related_counter_ae
-B35D: 8D 0F       BSR    function_b36e
+B35D: 8D 0F       BSR    vertical_tile_feed_b36e
 B35F: A6 84       LDA    ,X
 B361: 85 03       BITA   #$03
 B363: 27 04       BEQ    $B369
 B365: 6A 84       DEC    ,X
 B367: 20 C5       BRA    function_b32e
 B369: 6F 84       CLR    ,X
-B36B: 0C B4       INC    $B4
+B36B: 0C B4       INC    $B4	; event: scroll down
 B36D: 39          RTS
 
 ; called 2x  from $B31D, $B35D
-function_b36e:
+; < X: pointer on RAM
+vertical_tile_feed_b36e:
 B36E: A6 05       LDA    $5,X
 B370: A7 E2       STA    ,-S		; [local]
 B372: EC 01       LDD    $1,X
@@ -6520,6 +6523,7 @@ B3A2: ED E3       STD    ,--S		; [local]
 B3A4: DE A9       LDU    $A9
 B3A6: A6 05       LDA    $5,X
 B3A8: 33 C6       LEAU   A,U
+; seems to feed the vertical scrolling tiles
 B3AA: EC E1       LDD    ,S++		; [local]
 B3AC: ED C4       STD    ,U		; [video_address_word]
 B3AE: 0A B2       DEC    $B2
@@ -6577,11 +6581,12 @@ B40D: D6 B4       LDB    $B4
 B40F: D1 B3       CMPB   $B3
 B411: 26 01       BNE    $B414
 B413: 39          RTS
+; we need to process an event
 B414: 8E 55 00    LDX    #$5500		; work RAM (shared with CPU2)
 B417: 58          ASLB
 B418: 58          ASLB
-B419: 58          ASLB
-B41A: 3A          ABX
+B419: 58          ASLB		; multiply B by 8
+B41A: 3A          ABX	; X += B
 B41B: CE B4 27    LDU    #jump_table_b427
 B41E: A6 84       LDA    ,X
 B420: 2B 0F       BMI    function_b431

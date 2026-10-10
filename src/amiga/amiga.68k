@@ -357,7 +357,6 @@ BIT_FIRE_2 = 5
 	.global	osd_latch_sprites
 	.global osd_set_x_scroll_register
 	.global osd_set_y_scroll_register
-	
 	.global	osd_video_byte_dirty_cpu1
 	.global	osd_video_byte_dirty_cpu2
 	.global	osd_video_word_dirty_cpu1
@@ -410,9 +409,13 @@ _user:
     cmp.l   #0x05748444c,D0	| WHDL
     bne.b   .standard
 	move.b	d1,_keyexit
-    move.l a0,_resload
+        move.l (a0)+,a2
+	move.l	a2,_resload
+	.ifndef	RELEASE
+	move.l	(a0)+,loadgame_function
+	move.l	(a0)+,savegame_function
+	.endif
 
-	move.l	a0,a2
 	lea	(_tag,pc),a0
 	jsr	(resload_Control,a2)
 	
@@ -1033,6 +1036,7 @@ mirror_common_sprites:
 	* set top address as base for contextual mirror data
 	move.l	mirror_buffer_ptr,mirror_buffer_context_ptr
 	rts
+
 	
 * < A2: bitplane pointer list to fill
 * < A3: original bitplane pointers (with headers)
@@ -1118,11 +1122,34 @@ copyright_message:
 	*.asciz	"ALL RIGHT RESEVED"
 	 .asciz	"AMIGA PORT : JOTD"
 
+	
+restore_custom_registers:
+	CPU1_GET_MEMORY_START_IN_A6
+	lea	_custom,a5
+	jbsr	set_screen_params
+	move.w	#0x8080,(dmacon,a5)
+	rts	
+	
+prepare_custom_registers:
+	lea	_custom,a5
+	move.w	#0x80,(dmacon,a5)
+	clr.w	(bplcon3,a5)
+	move.w	#0x30A0,(diwstrt,a5)
+	move.w	#0xd0,(ddfstop,a5)	
+	move.w	#0x0,(bplcon2,a5)	
+
+	move.l	#0x6000,d0
+	move.l	a6,a0			| RAM
+	lea		savegame_file,a2
+	rts
+
 	.ifndef	RELEASE
+
 dump_and_quit:	
 	jbsr	osd_dump_logs
 	illegal
 	.endif
+
 
 make_automatic_sound_channels:
 	* if music is off, set most sounds in automatic channel
@@ -1399,22 +1426,14 @@ force_all_screen_redraw:
 	
 	clr.w	x_offset
 	
-	* last precaution, as some BOBs now are optimized to never erase
-	* if we're called that's because the scrolling has completely reset/changed
-	* so it's time to clear the last bob-only layer. Using the cpu is probably best at this point
-	move.l	playfield_drawn_screen_ptr,a0
-	add.l	#BG_SCREEN_PLANE_SIZE*NB_BG_PLANES,a0	| skip tile planes
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	move.l	playfield_displayed_screen_ptr,a1
-	add.l	#BG_SCREEN_PLANE_SIZE*NB_BG_PLANES,a1	| skip tile planes
-	.endif
-	move.l	#BG_SCREEN_PLANE_SIZE/4-1,d0
+	* refresh HUD layer too
+	CPU1_GET_MEMORY_START_IN_A6
+	lea	(0x3000,a6),a0
+	move.w	#0x7FF,d0
 0:
-	clr.l	(a0)+
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	clr.l	(a1)+
-	.endif
-	dbf		d0,0b
+	jbsr	osd_video_word_dirty_cpu1
+	addq	#2,a0
+	dbf		d7,0b
 	
 	jbsr	enable_interrupts
 	
@@ -1430,7 +1449,6 @@ draw_right_tiles:
 
 draw_column_tiles:
 	* compute X offset
-	move.b	#0,0x110
 	move.w	d0,-(a7)
 	lsr.w	#8,d0
 	lsr.w	#1,d0	| divide by 512!
@@ -1542,7 +1560,6 @@ set_scroll_values:
 	jcs		5f
 	* max overshoot: we have to do something on the right: draw the tiles
 
-	move.b	#0,0x110
 	jbsr	draw_right_tiles
 	add.w	#BG_TILE_WIDTH,max_scroll_x
 	add.w	#BG_TILE_WIDTH,min_scroll_x
@@ -1577,7 +1594,52 @@ load_file:
 0:
 	illegal
 
+* called at start of mainloop, A6 contains RAM start
+* load/save is only enabled for debug purposes.
+
+main_loop_hook:
+	.ifndef	RELEASE
+	tst.l	_resload
+	jeq		10f
+	tst.b	save_state_requested
+	jeq		5f
+	clr.b	save_state_requested
+	movem.l	d0-d7/a0-a6,-(a7)
+	move.l	savegame_function,a1
+	jbsr	prepare_custom_registers
+	*move.w	current_context,(0x3000,a6)
+	jbsr	(a1)
+	jbsr	restore_custom_registers
+	movem.l	(a7)+,d0-d7/a0-a6
+	jra		10f
+5:
+	tst.b	load_state_requested
+	jeq		10f
+	clr.b	load_state_requested
+	movem.l	d0-d7/a0-a6,-(a7)
+	move.l	loadgame_function,a1
+	jbsr	prepare_custom_registers
+	jbsr	(a1)
+	*move.w	(port_1_3800,a6),d2		| save previous context that we loaded
+	jbsr	restore_custom_registers
+	swap	d0		| returncode seems broken! if escaped MSW is zero
+	tst.w	d0
+	jeq		9f
+	moveq	#0,d0
+	move.w	d2,d0
+	* now we should load the context
+	*jbsr	load_context
+	jbsr	force_all_screen_redraw
+9:
+	movem.l	(a7)+,d0-d7/a0-a6
+	
+10:
+	.endif
+	rts
+	
 osd_event_loop_cpu2:
+	jbsr	main_loop_hook
+
 	* maybe it would be necessary to protect against
 	* irq from cpu2 or from both cpus
 	movem.l	d0-a6,-(a7)
@@ -3756,30 +3818,7 @@ restore_system:
 	moveq	#0,d0
 	rts
 
-
-	
-platform_init:
-	bsr		store_system
-	
-
-	lea		_custom,a5
-	move.w	#0x7FFF,dmacon(a5)
-	move.w	#0x7FFF,intena(a5)
-	* set blitter parameters
-	move.l	#-1,bltafwm(a5)
-	
-	move.l	monitor,d0
-	cmp.l	#NTSC_MONITOR_ID,D0
-	bne		0f
-	st.b	ntsc_flag
-	* disable extra mid-screen interrupt, as it would be too fast (NTSC)
-	move.w	#COPPER_NOP,pal_intreq_block_game
-	* also change screen start position, make it higher
-	move.w	#0x01+(0xC<<8),screen_start
-
-	
-	*move.w	#0x0401,pal_wait			| else intreq never happens
-0:
+set_screen_params:
 	.if		NB_PLAYFIELD_PLANES==8
     move.w #0x0210+BORDERBLANK,bplcon0(a5) | 8 bitplanes, borderblank
 	.else
@@ -3823,6 +3862,32 @@ platform_init:
     move.w d0,bpl1mod(a5)
     move.w d0,bpl2mod(a5)
 
+	rts
+	
+	
+platform_init:
+	bsr		store_system
+	
+
+	lea		_custom,a5
+	move.w	#0x7FFF,dmacon(a5)
+	move.w	#0x7FFF,intena(a5)
+	* set blitter parameters
+	move.l	#-1,bltafwm(a5)
+	
+	move.l	monitor,d0
+	cmp.l	#NTSC_MONITOR_ID,D0
+	bne		0f
+	st.b	ntsc_flag
+	* disable extra mid-screen interrupt, as it would be too fast (NTSC)
+	move.w	#COPPER_NOP,pal_intreq_block_game
+	* also change screen start position, make it higher
+	move.w	#0x01+(0xC<<8),screen_start
+
+	
+	*move.w	#0x0401,pal_wait			| else intreq never happens
+0:
+	jbsr	set_screen_params
 	
 	lea		hw_sprite_ram_buffer,a0
 	jbsr	align_for_fmode
@@ -4119,7 +4184,10 @@ osd_set_x_scroll_register:
 * < D1.W: word to write
 
 osd_set_y_scroll_register:
-	cmp.w	#0x9002,d4	| all scrolling X layers share the same value
+	move.l	a6,a0
+	add.l	d4,a0
+	move.w	(a0),d7
+	cmp.w	#0x9002,d7	| all scrolling X layers share the same value
 	jne		0f
 	move.b	d0,d7
 	neg.b	d7
@@ -4234,8 +4302,8 @@ video_word_dirty_cpu1:
 	* layer 1 & 2: same processing
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
-	cmp.b	#0xFF,d0
-	jeq		osd_w_videoram_out
+	*cmp.b	#0xFF,d0
+	*jeq		osd_w_videoram_out
 
 	and.w	#0xFFF,d7
 	jra		update_random_bg1_tile
@@ -4582,6 +4650,13 @@ update_bg1_tile:
 
 	add.w	#0x400,d2
 	
+	* handling 2 layers in 1 is a nice challenge :)
+	* sometimes we need opacity, but sometimes not. The planar nature
+	* of the amiga display can create wrong tile colors with some zero-plane tiles
+	* make it a special case and move on
+	cmp.w	#0x6FC,d2
+	seq		opaque_bg1_tile
+	
 	*move.l		bg_tile_character_table,d0
 	*jeq		100f			| no context loaded: out
 	*move.l	d0,a0
@@ -4653,6 +4728,19 @@ update_bg1_tile:
 	jeq		5f
 	move.l	(a6),a5			| reload plane mask
 	move.l	d0,a0
+	tst.b	opaque_bg1_tile
+	jeq		441f
+	* opaque: don't try to preserve layer 0
+	.set	offset,0
+	.rept	8
+	move.b	(a0)+,d0
+	COPY_TILE8_PLANE_ROW
+	.set	offset,offset+BG_NB_BYTES_PER_ROW
+	.endr
+	TILE8_NEXT_PLANE
+	dbf		d4,4b
+	jra		50f
+441:
 	.set	offset,0
 	.rept	8
 	move.b	(a0)+,d0
@@ -4662,7 +4750,7 @@ update_bg1_tile:
 41:
 	TILE8_NEXT_PLANE
 	dbf		d4,4b
-	
+50:
 	* now same thing for layer 1 restore
 	move.l 	layer_1_restore_screen_pointer,a1
 	lea		(a6,-4*NB_PLAYFIELD_PLANES),a2	| happy to restore input data
@@ -4699,6 +4787,9 @@ update_bg1_tile:
 	.endr
 	rts
 5:
+	tst.b	opaque_bg1_tile
+	jeq		41b
+	CLEAR_TILE8_PLANE
 	jra		41b
 	
 	* clear in layer restore bitplane data when empty data
@@ -4728,7 +4819,10 @@ cache_fg_tiles_address:
 	jne		0b
 	rts
 
-
+opaque_bg1_tile:
+	.byte	0
+	.byte	0
+	
 * < D7: 0-0x1000
 * > D0/D1: screen X/Y coords 
 compute_fg_tile_xy:
@@ -5895,6 +5989,15 @@ handle_keyboard:
 	illegal
 0:
 
+	cmp.b	#33,d0	| "S"
+	jne		0f
+	st.b	save_state_requested
+0:
+	cmp.b	#40,d0	| "L"
+	jne		0f
+	st.b	load_state_requested
+0:
+
 	.endif
 
 	cmp.b	_keyexit,d0	| "ESC" key or whdload quitkey
@@ -6741,6 +6844,8 @@ last_sound_played:
 	.byte	0
 normal_hiscorename:
 	.asciz	"rolling_thunder.high"
+savegame_file:
+	.asciz	"savegame"
 	
 
 lives_table:
@@ -6960,6 +7065,12 @@ vbl_counter:
 	.word	0
 _resload:
 	.long	0
+	.ifndef	RELEASE
+loadgame_function:
+	.long	0
+savegame_function:
+	.long	0
+	.endif
 joypad_1_state:
 	.long	0
 joypad_2_state:
@@ -7052,6 +7163,11 @@ osd_debug_active:
 	.endif
 
 	.section	.bsspublic
+save_state_requested:
+	.byte	0
+load_state_requested:
+	.byte	0
+	.align 2
 
 mirror_buffer_ptr:
 	.long	0

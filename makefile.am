@@ -21,6 +21,7 @@ HWT = ../hw_tester
 CDLOADER = ..\$(PROGNAME).cdslave
 WHDLOADER_AGA = ..\$(PROGNAME)_AGA.slave
 WHDLOADER_AGA_CHIP = ..\$(PROGNAME)_AGA_chip.slave
+WHDLOADER_AGA_DEV = ..\$(PROGNAME)_AGA_dev.slave
 WHDLOADER_CD32 = ..\$(PROGNAME)_CD32.slave
 WHDLOADER_OCS = ..\$(PROGNAME)_OCS.slave
 WHDLOADER_OCS_CHIP = ..\$(PROGNAME)_OCS_chip.slave
@@ -44,7 +45,7 @@ AGA_OBJS = amiga_aga.o sounds.o cpu1_8000_020.o cpu2_8000_020.o $(MEM_OBJS) grap
 CD32_OBJS = amiga_cd32.o sounds.o main_code_6000_020.o $(MEM_OBJS) graphics.o vbr.o ReadJoyPad.o ptplayer.o
 
 
-all:  $(HW_TESTER_AGA) ../hw_tester $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
+all:  $(HW_TESTER_AGA) ../hw_tester $(MAIN_AGA) $(WHDLOADER_AGA) $(WHDLOADER_AGA_DEV) $(WHDLOADER_AGA_CHIP) $(AMIGASRC)/graphics.68k $(AMIGASRC)/sounds.68k
 
 
 
@@ -125,7 +126,9 @@ ReadJoyPad.o: $(AMIGASRC)/ReadJoyPad.68k amiga/ReadJoyPad.i
 graphics.o: $(AMIGASRC)/graphics.68k
 	$(ASM) $(AMIGASRC)/graphics.68k -o graphics.o
 
-
+$(WHDLOADER_AGA_DEV) : $(AMIGASRC)/$(PROGNAME)HD.s $(AMIGASRC)/savegame.s
+	wdate.py> datetime
+	$(WHDASM) -DDEV_MODE -o $(WHDLOADER_AGA_DEV) $(AMIGASRC)/$(PROGNAME)HD.s
 
 $(WHDLOADER_AGA) : $(AMIGASRC)/$(PROGNAME)HD.s
 	wdate.py> datetime

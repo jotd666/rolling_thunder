@@ -2391,7 +2391,7 @@ function_9177:
 91AA: 3A          ABX
 91AB: A6 84       LDA    ,X
 91AD: 27 01       BEQ    $91B0
-91AF: 12          NOP
+91AF: 12          NOP		; [breakpoint]
 91B0: DC 80       LDD    $80
 91B2: ED 01       STD    $1,X
 91B4: DC 82       LDD    $82
@@ -2659,8 +2659,8 @@ function_9355:
 9388: 58          ASLB
 9389: 3A          ABX
 938A: A6 84       LDA    ,X
-938C: 27 01       BEQ    $938F
-938E: 12          NOP
+938C: 27 01       BEQ    $938F		; skips nop!!
+938E: 12          NOP		; [breakpoint]
 938F: DC 80       LDD    $80
 9391: ED 01       STD    $1,X
 9393: DC 82       LDD    $82
