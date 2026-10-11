@@ -1,10 +1,6 @@
-- character scrolling in Y: seems that there's a race condition between tile write
-  and tile read to detect floor. Doesn't fail each time.
-  
-- overflow B445 on lower part of level 1 check again
+- merge layer 0 and 1 draw (and repair random tile write)
+- when going down, bug of scrolling not advancing is back
 - function_8343 cpu#2: overflow on sprite fill loop at the end of level
-- real hardware: character falls indefinitely: try with cycle exact/retry
-- part where player goes down: fall & dies then D13E programming error
 - hoodies partially drawn when climbing up/down railings: pause+render
 - trashed tiles on the right just before going down: transparency issue (in progress, double
 buffer not processed properly)
