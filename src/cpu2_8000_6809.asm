@@ -774,7 +774,7 @@ function_8343:
 8392: 20 1D       BRA    $83B1
 8394: EC 84       LDD    ,X		; [bank_address]
 8396: 88 20       EORA   #$20
-8398: ED 24       STD    $4,Y
+8398: ED 24       STD    $4,Y		; sprite memory	
 839A: E6 04       LDB    $4,X		; [bank_address]
 839C: 1D          SEX
 839D: D3 26       ADDD   $26
@@ -784,7 +784,7 @@ function_8343:
 83A9: 2D 22       BLT    $83CD
 83AB: 84 01       ANDA   #$01
 83AD: AA 44       ORA    $4,U
-83AF: ED 26       STD    $6,Y
+83AF: ED 26       STD    $6,Y		; sprite memory	
 83B1: E6 05       LDB    $5,X		; [bank_address]
 83B3: 1D          SEX
 83B4: D3 28       ADDD   $28
@@ -794,7 +794,7 @@ function_8343:
 83C0: 2D 0B       BLT    $83CD
 83C2: A6 02       LDA    $2,X		; [bank_address]
 83C4: AA 45       ORA    $5,U
-83C6: ED 28       STD    $8,Y
+83C6: ED 28       STD    $8,Y		; sprite memory	
 83C8: 0C 24       INC    $24
 83CA: 31 A8 10    LEAY   $10,Y
 83CD: 30 06       LEAX   $6,X
@@ -6795,7 +6795,7 @@ B43D: 24 08       BCC    $B447
 B43F: CE B4 4F    LDU    #jump_table_b44f
 B442: C4 FC       ANDB   #$FC
 B444: 54          LSRB
-B445: 6E D5       JMP    [B,U]		; [indirect_jump] [nb_entries=53]
+B445: 6E D5       JMP    [B,U]		; [indirect_jump] [nb_entries=106] not sure about 106, maybe 53!!
 B447: CE B4 B9    LDU    #jump_table_b4b9
 B44A: C4 FC       ANDB   #$FC
 B44C: 54          LSRB

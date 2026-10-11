@@ -11,7 +11,7 @@ CHIPSIZE = $200000
 EXPMEM = $800000
 SAVEGAME_SIZE = $2800    ; size needed for savegame code, not save game data itself
 	ELSE
-EXPMEM = $200000
+EXPMEM = $400000
 SAVEGAME_SIZE = $0
 	ENDC
 

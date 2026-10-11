@@ -1599,6 +1599,7 @@ load_file:
 
 main_loop_hook:
 	.ifndef	RELEASE
+	move.b	#0,0x120   | temp debug hook
 	tst.l	_resload
 	jeq		10f
 	tst.b	save_state_requested
@@ -4181,18 +4182,16 @@ osd_set_x_scroll_register:
 	rts
 
 * < D4: address of data to write into
-* < D1.W: word to write
+* < D1.B: byte to write
 
 osd_set_y_scroll_register:
 	move.l	a6,a0
 	add.l	d4,a0
 	move.w	(a0),d7
-	cmp.w	#0x9002,d7	| all scrolling X layers share the same value
+	cmp.w	#0x9002,d7	| all scrolling Y layers share the same value
 	jne		0f
-	move.b	d0,d7
-	neg.b	d7
-	move.b	d7,0x110
-	move.b	d7,game_scroll_y+1
+
+	move.b	d1,game_scroll_y+1
 0:
 	rts
 	
@@ -4650,11 +4649,13 @@ update_bg1_tile:
 
 	add.w	#0x400,d2
 	
-	* handling 2 layers in 1 is a nice challenge :)
+	* handling 2 (or 3) layers in 1 is a nice challenge :)
 	* sometimes we need opacity, but sometimes not. The planar nature
 	* of the amiga display can create wrong tile colors with some zero-plane tiles
 	* make it a special case and move on
-	cmp.w	#0x6FC,d2
+	move.w	d2,d0
+	and.w	#0xFF00,d0
+	cmp.w	#0x600,d0
 	seq		opaque_bg1_tile
 	
 	*move.l		bg_tile_character_table,d0
@@ -5093,6 +5094,7 @@ set_bobs_bitplanes:
 	* set bitplanes
 	moveq	#0,d0
 	move.w	game_scroll_y,d0
+	move.w	d0,0x112
 	lea		mulBG_NB_BYTES_PER_ROW_table,a2
 	.ifdef	MC68020
 	move.w	(a2,d0.w*2),d0		| compute Y offset
@@ -6635,12 +6637,6 @@ osd_log_cpu:
 	move.w	(6,a7),last_known_m6809_pc
 	move.w	(4,a7),0x104   | last active cpu
 
-	cmp.w	#0x2000,d3
-	jne		0f
-	cmp.w	#1,0x104
-	jne		0f
-	BREAKPOINT	"2000 IN Y CPU #2"
-0:
 	
 	movem.l	a6/d7,-(a7)
 	move.w 	(12,a7),d7		| active cpu
