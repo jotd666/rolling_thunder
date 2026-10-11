@@ -66,6 +66,9 @@ CORKSCREW_NB_SCREENS = 20
 BORDERBLANK = 1
 START_HOST_SCROLL_X = (CORKSCREW_NB_SCREENS/2)*256
 
+* one tile map size is 0x1000: 0x20*0x40*2 bytes per tile 
+NB_TILE_ROWS = 0x20
+NB_TILES_PER_ROW = 0x40
 
 PREVIOUS_SPRITE_SIZE = 10
 CURRENT_SPRITE_SIZE = 0x10
@@ -1799,6 +1802,9 @@ level3_interrupt:
 	bne.b	0f
 	jbsr		toggle_pause
 0:
+	CPU1_GET_MEMORY_START_IN_A6
+	jbsr	update_hud_layer
+	
 	.ifne	OPT_ENABLE_LOGGING
 	* log fg_tiles/bg_tiles
 	jbsr	log_used_hud_tiles
@@ -4222,27 +4228,72 @@ osd_video_byte_dirty_cpu2:
 * a0=screen address (preserved)
 * a6=ram base
 * should preserve all registers
-* allows 2000-3000 range
-* 2000: foreground/HUD (2400: attributes)
-* 2800: background
+* just note down which tile must be redrawn
+* there are 2 layers: 0/1/2 are 1 layer
+* 3 is HUD layer
+
+* allows 0000-4000 range
+
 osd_video_word_dirty_cpu1:
-	OSD_ENTER
-	movem.l	d0-d7/a0-a6,-(a7)
-	jbsr	video_word_dirty_cpu1
-	movem.l	(a7)+,d0-d7/a0-a6
-	OSD_EXIT
+	movem.l	a0-a1,-(a7)
+	move.l	a0,d7		| save address
+	sub.l	a6,d7
+	jmi		100f
+	* D7 >= 0x3000: sprite hud
+	lea		layer012_row_flags,a0
+	lea		layer012_flags,a1
+	cmp.w	#0x3000,d7
+	jcs		0f
+	lea		layer3_row_flags,a0
+	lea		layer3_flags,a1
+0:
+	and.w	#0xFFF,d7		| 0->FFF
+	move.w	d7,d6
+	lsr.w	#7,d6 			| divide by 0x80 (size of row)
+	st.b	(a0,d6.w)       | mark row as "needs inspection"
+	st.b	(a1,d7.w)       | mark precise tile as "needs redraw"
+100:
+	movem.l	(a7)+,a0-a1
+	rts
+	
+update_hud_layer:
+	add.w	#0x3000,a6
+	lea	layer3_row_flags,a0
+	lea	layer3_flags,a1
+	move.w	#NB_TILE_ROWS-1,d0
+	moveq	#0,d6
+0:
+	tst.b	(a0)+
+	jeq		1f
+	clr.b	(-1,a0)
+	* loop on the row		| ack row
+	move	#NB_TILES_PER_ROW-1,d2
+	move	d6,d7		| address of start of row
+2:
+	tst.w	(a1,d7.w)
+	jeq		3f
+	clr.w	(a1,d7.w)		| ack tile
+	movem.l	a0-a1/d0-d7,-(a7)
+	move.b	(a6,d7.w),d0
+	move.b	(1,a6,d7.w),d1
+	jbsr	update_fg_tile
+	movem.l	(a7)+,a0-a1/d0-d7
+3:
+	addq	#2,d7
+	dbf		d2,2b
+1:
+	add.w	#NB_TILES_PER_ROW*2,d6
+	dbf		D0,0b
 	rts
 	
 osd_video_word_dirty_cpu2:
-	OSD_ENTER
-	movem.l	d0-d7/a0-a6,-(a7)
-	jbsr 	video_word_dirty_cpu2
-	movem.l	(a7)+,d0-d7/a0-a6
-	OSD_EXIT
+	move.l	a6,-(a7)
+	lea	(0x2000,a4),a6		| set video base (which is cpu1 ram zero address) & shift it to match cpu1
+	jbsr 	osd_video_word_dirty_cpu1
+	move.l	(a7)+,a6
 	rts
 
 video_word_dirty_cpu2:
-	lea	(0x2000,a4),a6		| set video base (which is cpu1 ram zero address) & shift it to match cpu1
 video_word_dirty_cpu1:
 	move.l	a0,d7		| save address
 	sub.l	a6,d7
@@ -4338,7 +4389,7 @@ do_bt:
 	move.w	#288/8+2,d2
 	move.w	#256,d4
 	move.w	#START_X,d0
-	moveq	#0,d1
+	move.w	#256,d1		| wrapped scroll (scroll value = 255)
 	moveq	#0,d5
 	jbsr	blit_planes_any_internal_no_cookie_cut
 	rts
@@ -6761,6 +6812,15 @@ sprite_mem_name:
 	* variable block
 
 	.align	2
+layer012_row_flags:
+	.skip	NB_TILE_ROWS
+layer012_flags:
+	.skip	NB_TILES_PER_ROW*NB_TILE_ROWS*2
+layer3_row_flags:
+	.skip	NB_TILE_ROWS
+layer3_flags:
+	.skip	NB_TILES_PER_ROW*NB_TILE_ROWS*2
+
 after_last_sprite_ptr:
 	.long	0
 previous_ctrl_press:
