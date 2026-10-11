@@ -4301,8 +4301,8 @@ video_word_dirty_cpu1:
 	* layer 1 & 2: same processing
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
-	*cmp.b	#0xFF,d0
-	*jeq		osd_w_videoram_out
+	cmp.b	#0xFF,d0
+	jeq		osd_w_videoram_out
 
 	and.w	#0xFFF,d7
 	jra		update_random_bg1_tile

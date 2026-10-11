@@ -2413,11 +2413,11 @@ function_9177:
 91D4: EC 1C       LDD    -$4,X
 91D6: 10 83 07 80 CMPD   #$0780
 91DA: 24 1E       BCC    $91FA
-91DC: 8D 78       BSR    function_9256
+91DC: 8D 78       BSR    function_9256	; READ  - end-of-map guard
 91DE: 27 1A       BEQ    $91FA
-91E0: BD 92 A5    JSR    function_92a5
+91E0: BD 92 A5    JSR    function_92a5	; READ  - via $9302
 91E3: 26 15       BNE    $91FA
-91E5: BD 93 55    JSR    function_9355
+91E5: BD 93 55    JSR    function_9355	; PRODUCE - INC $B3
 91E8: 0A 90       DEC    $90
 91EA: 26 E8       BNE    $91D4
 91EC: EC 18       LDD    -$8,X
