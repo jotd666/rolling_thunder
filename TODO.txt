@@ -1,5 +1,7 @@
 - merge layer 0 and 1 draw (and repair random tile write)
 - when going down, bug of scrolling not advancing is back
+* One 16-bit value: $82 at CPU1 $5682 (CPU2 $1682), logged through the fall, port vs MAME. On the original the descent must stop with $82 comfortably positive — the stopper being function_9256's $FF03 readback, which fires only every 8 px ($9256: LDA $83 / ANDA #$07 / BNE).
+
 - function_8343 cpu#2: overflow on sprite fill loop at the end of level
 - hoodies partially drawn when climbing up/down railings: pause+render
 - trashed tiles on the right just before going down: transparency issue (in progress, double
