@@ -51,3 +51,26 @@ optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
 
 tunes: https://vgmrips.net/packs/pack/rolling-thunder-namco-system-86
 to rip sounds/voices: select service mode!
+
+so basically you're suggesting to remove the mainloop and process that in the irq
+Checking whether removing the leftover main-loop call stays safe.
+
+Not the main loop — one of its two calls.
+
+CPU1’s main loop is literally this:
+asm
+
+81B4: ANDCC #$EF                          ; enable interrupts
+81B6: JSR process_event_b40d              ; drains the $5500 tile-feed ring
+81B9: JSR cpu1_run_task_queue_d64a        ; drains the $5320 section-load queue
+81BC: BRA $81B6
+
+There’s no game logic in it. All of that lives in the IRQ handlers. The “main loop” is a background worker that drains two queues, so relocating one of the two drains doesn’t restructure anything — it just gives that queue a different owner.
+
+So: move process_event_b40d into the IRQ, called from CPU2’s producer right after INC $B3, draining until $B4 == $B3. Its dependency is within-frame and tight — CPU2 reads the tilemap a few instructions later, in the same $91D4 iteration.
+
+Leave cpu1_run_task_queue_d64a where it is. It has the same structural split (produced by CPU1’s $D2F5-family steppers inside CPU1’s IRQ at $91A7/$91B5, consumed in the main loop), but its timing is far looser — a section crossing happens every 256 px, not every 8 — and it’s the heavy one, loading whole sections. Pulling it into the IRQ would be a real spike for a dependency that currently has frames of slack. If evidence later says it needs the same treatment, it already drains to empty in one pass, so it’s an independent decision.
+
+Once the IRQ is the sole consumer of the feed ring, the main loop’s process_event_b40d call always finds the queue empty. You can leave it as a 4-instruction no-op or delete it — but deleting it is what buys the clean guarantee, because with two callers the IRQ can land mid-feed and you’re back to needing the in_tile_feed guard and the hole it leaves.
+
+Worth checking before you commit: that all four INC $B3 producers really are reachable only from CPU2’s IRQ chain. Your earlier experiment (disabling CPU2’s non-IRQ code didn’t change the scrolling) says yes for the vertical ones, but the two horizontal producers at $8F4D and $9072 are worth confirming, since a producer outside run_frame would leave requests stranded with no consumer.

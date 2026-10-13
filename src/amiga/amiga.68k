@@ -2025,6 +2025,7 @@ level1_interrupt:
 	* interrupt arrived during this interrupt: this is taking too long
 	* so skip the refresh
 	move.b	#1,flip_flop
+	move.w	#4,(intreq,a5)  | screw this tick
 23:
 
 3:
@@ -4471,7 +4472,7 @@ update_random_bg0_tile:
 	lea		(BG_SCREEN_TILE_ADDRESS+0x1000,a6),a0
 	move.b	(a0,d7.w),d0
 	move.b	(1,a0,d7.w),d1
-	jbsr	update_bg1_tile
+	*jbsr	update_bg1_tile
 	
 	jra		osd_w_videoram_out
 	
@@ -4495,7 +4496,7 @@ update_random_bg1_tile:
 	move.b	(a0,d7.w),d0
 	move.b	(1,a0,d7.w),d1
 
-	jbsr	update_bg1_tile
+	*jbsr	update_bg1_tile
 
 	jra		osd_w_videoram_out
 	
@@ -4559,9 +4560,10 @@ compute_x_offset:
 	
 
 * common init for both tile layers
+* < D7: address 0-0x0FFF
+* > A1,A2,A3,A4 screen/buffer output pointers
 
 update_bg_init:
-	DECODE_CODE_AND_ATTRIBUTES
 	* compute address
 
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
@@ -4589,7 +4591,6 @@ update_bg_init:
 	move.l		playfield_displayed_screen_ptr,a4
 	.endif
 	
-	moveq	#NB_BG_PLANES-1,d4   | needed even if no tile
 	lea		mulBG_NB_BYTES_PER_ROW_table,A2
 	.ifdef	NO68020
 	add.w	d1,d1
@@ -4605,30 +4606,19 @@ update_bg_init:
 	* double buffering
 	add.w	d0,a4
 	.endif
+	lea		background_restore_buffer,a3
+	add.w	d0,a3
 
 	rts
 0:
 	addq	#4,a7		| pops up stack
 	rts
 	
-* < D7: 0-0xFFF address
-* < D0: tile code
-* < D1: color code
-* uses x_offset computed from scrolling current params
+* < D0/D1: coords
+* > D0: pointer on tile for that layer or 0 if not found
 
-update_bg0_tile:
-	jbsr	update_bg_init
-	
-	lea		background_restore_buffer,a3
-	add.w	d0,a3
-	
-
-	*cmp.b	#0x20,d2
-	*jeq		11f				| optim: blank tile
-	*move.l		bg_tile_character_table,d0
-	*jeq		100f			| no context loaded: out
-	*move.l	d0,a0
-	lea		bg0_character_table,a0
+load_tile_bitmap:
+	DECODE_CODE_AND_ATTRIBUTES
 	.ifdef	NO68020
 	add.w	d2,d2
 	add.w	d2,d2	
@@ -4669,18 +4659,33 @@ update_bg0_tile:
 	jra		11f
 	.endif
 12:
-	move.l	d0,a2					| pointer on bitplanes
-
-
-	*lea		mirror_jump_table,a0
-	*.ifdef	NO68020
-	*add.w	d1,d1
-	*add.w	d1,d1
-	*move.l	(a0,d1.w),a0
-	*.else
-	*move.l	(a0,d1.w*4),a0
-	*.endif
+	rts
+11:
+	moveq	#0,d0
+	rts
 	
+* < D7: 0-0xFFF address
+* < D0: tile code
+* < D1: color code
+* uses x_offset computed from scrolling current params
+
+update_bg0_tile:
+	move.w	d0,d6
+	move.w 	d1,d4
+	jbsr	update_bg_init
+	move.w	d6,d0
+	move.w	d4,d1
+	
+	*move.l		bg_tile_character_table,d0
+	*jeq		100f			| no context loaded: out
+	*move.l	d0,a0
+	lea		bg0_character_table,a0
+	jbsr	load_tile_bitmap
+	tst.l	d0
+	jeq		11f
+	
+	move.l	d0,a2		| pointer on proper clut of tile
+
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
 	*lea		_custom,a5
