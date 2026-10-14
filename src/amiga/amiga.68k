@@ -1409,16 +1409,12 @@ force_all_screen_redraw:
 
 	and.w	#0xFFF,d7		| wrap on memory
 	* force tile draw
-	lea		(a5,d7.w),a0
 	movem.l	d1-d2/d5-d7/a5,-(a7)
-	move.b	(a0),d0
-	move.b	(1,a0),d1
 	jbsr	update_bg0_tile
 	movem.l	(a7),d1-d2/d5-d7/a5
 	lea		(a5,d7.w),a0
 	move.b	(0x1000,a0),d0
 	move.b	(0x1001,a0),d1
-	jbsr	update_bg1_tile
 	movem.l	(a7)+,d1-d2/d5-d7/a5
 	add.w	#0x80,d7		| next row
 	dbf		d1,1b
@@ -1460,7 +1456,6 @@ draw_column_tiles:
 	move.w	(a7)+,d0	
 	CPU1_GET_MEMORY_START_AND_DP
 
-	lea		(bg_tiles_address_0000,a6),a5
 	lsr.w	#3,D0	| divide by 8 to get real X tile offset
 	* now compute start address to fetch data from
 	lsl.w	#1,d0	| times 2
@@ -1471,17 +1466,9 @@ draw_column_tiles:
 0:
 	and.w	#0xFFF,d7		| wrap
 	* force tile draw
-	lea		(a5,d7.w),a0
-	
-	move.b	(a0),d0
-	move.b	(1,a0),d1
+
 	movem.l	d2/d7/a5,-(a7)
 	jbsr	update_bg0_tile
-	movem.l	(a7),d2/d7/a5
-	lea		(a5,d7.w),a0
-	move.b	(0x1000,a0),d0
-	move.b	(0x1001,a0),d1
-	jbsr	update_bg1_tile
 	movem.l	(a7)+,d2/d7/a5
 	
 	add.w	#0x80,d7			| next Y
@@ -4284,7 +4271,6 @@ update_other_layers:
 	
 update_hud_layer:
 	CPU1_GET_MEMORY_START_IN_A6
-	add.w	#0x3000,a6
 	lea	layer3_row_flags,a0
 	lea	layer3_flags,a1
 	lea	update_fg_tile,a2
@@ -4305,8 +4291,6 @@ update_the_layer:
 
 	clr.w	(a1,d7.w)		| ack tile
 	movem.l	a0-a2/d0-d7,-(a7)
-	move.b	(a6,d7.w),d0
-	move.b	(1,a6,d7.w),d1
 	
 *	cmp.w	#0x188,d7
 *	jne		666f
@@ -4353,8 +4337,6 @@ video_word_dirty_cpu1:
 	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
 	jcs		0f
 	
-	move.b	(a6,d7.w),d0		| code
-	move.b	(1,a6,d7.w),d1		| attribute
 	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
 
 	jra	update_fg_tile
@@ -4444,9 +4426,6 @@ update_random_bg0_tile:
 	and.w	#0xFFF,d7
 	cmp.w	#0x188,d7
 	jne		0f
-	lea		(BG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	move.b	(1,a0,d7.w),d1
 
 
 	* we need to see if the tile is on screen considering X scolling
@@ -4460,19 +4439,10 @@ update_random_bg0_tile:
 	* tile is in screen considered the current scrolling: update it
 	* (don't check Y we need update no matter when in that case)
 	
-	
-	lea		(BG_SCREEN_TILE_ADDRESS,a6),a0
-	move.b	(a0,d7.w),d0
-	move.b	(1,a0,d7.w),d1
 
-	move.w	d7,-(a7)                        | update_bg0_tile trashes d7
 	jbsr	update_bg0_tile
-	* layer 1 shares the playfield, so re-apply its tile over this cell
-	move.w	(a7)+,d7
-	lea		(BG_SCREEN_TILE_ADDRESS+0x1000,a6),a0
-	move.b	(a0,d7.w),d0
-	move.b	(1,a0,d7.w),d1
-	*jbsr	update_bg1_tile
+
+
 	
 	jra		osd_w_videoram_out
 	
@@ -4492,9 +4462,7 @@ update_random_bg1_tile:
 	* (don't check Y we need update no matter when in that case)
 	
 	
-	lea		(BG_SCREEN_TILE_ADDRESS+0x1000,a6),a0
-	move.b	(a0,d7.w),d0
-	move.b	(1,a0,d7.w),d1
+
 
 	*jbsr	update_bg1_tile
 
@@ -4561,7 +4529,8 @@ compute_x_offset:
 
 * common init for both tile layers
 * < D7: address 0-0x0FFF
-* > A1,A2,A3,A4 screen/buffer output pointers
+* > d0 screen offset to apply to all pointers
+* > D5 plane size
 
 update_bg_init:
 	* compute address
@@ -4583,31 +4552,16 @@ update_bg_init:
 	moveq	#0,d5
 	move.w	#BG_SCREEN_PLANE_SIZE,d5
 	.endif
-	
-	move.l		playfield_drawn_screen_ptr,a1
-	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
-	.else 
-	* double buffering
-	move.l		playfield_displayed_screen_ptr,a4
-	.endif
-	
-	lea		mulBG_NB_BYTES_PER_ROW_table,A2
+		
+	lea		mulBG_NB_BYTES_PER_ROW_table,A3
 	.ifdef	NO68020
 	add.w	d1,d1
-	move.w	(a2,d1.w),d1
+	move.w	(A3,d1.w),d1
 	.else
-	move.w	(a2,d1.w*2),d1
+	move.w	(A3,d1.w*2),d1
 	.endif
 	lsl.w	#3,d1	| 8 pixels
 	add.w	d1,d0
-	add.w	d0,a1
-	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
-	.else 
-	* double buffering
-	add.w	d0,a4
-	.endif
-	lea		background_restore_buffer,a3
-	add.w	d0,a3
 
 	rts
 0:
@@ -4663,69 +4617,150 @@ load_tile_bitmap:
 11:
 	moveq	#0,d0
 	rts
+
+
 	
 * < D7: 0-0xFFF address
-* < D0: tile code
-* < D1: color code
+* < A6: CPU 1 RAM
 * uses x_offset computed from scrolling current params
 
 update_bg0_tile:
-	move.w	d0,d6
-	move.w 	d1,d4
-	jbsr	update_bg_init
-	move.w	d6,d0
-	move.w	d4,d1
+	move.b	#0,0x110
 	
+	jbsr	update_bg_init
+	move.w	d0,plane_offset
+
+	move.b	(a6,d7.w),d0
+	move.b	(1,a6,d7.w),d1
 	*move.l		bg_tile_character_table,d0
 	*jeq		100f			| no context loaded: out
 	*move.l	d0,a0
 	lea		bg0_character_table,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
-	jeq		11f
-	
-	move.l	d0,a2		| pointer on proper clut of tile
+	jeq		11f		| no bitmap: exit (don't even try to look for layer 1)
+	move.l	d0,a5		| pointer on proper clut of tile for layer 0
 
+	add.w	#0x1000,d7
+	move.b	(a6,d7.w),d0
+	move.b	(1,a6,d7.w),d1
+	* now layer 1
+	lea		bg1_character_table,a0
+	jbsr	load_tile_bitmap
+	tst.l	d0
+	jeq		11f		| no bitmap: exit (don't even try to look for layer 1)
+	move.l	d0,a6
+	* now, layer 0 tile is loaded in A5
+	* now, layer 1 tile is loaded in A6
+	exg		a5,a6
+	
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
 	*lea		_custom,a5
 	*REALLY_WAIT_BLIT
 	
-	
-	
+
 	move.w	#NB_BG_PLANES-1,d4
-	movem.l	d0-D3/a0-a6,-(a7)
-	jbsr		copy_tile
-	movem.l	(a7)+,d0-D3/a0-a6
-	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
-	add.w	d6,a1
-	add.w	d6,a3
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d6,a4
-	.endif
-	move.w	#NB_BG_PLANES-1,d4
+*	jbsr	copy_tile
+*	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
+*	add.w	d6,a1
+*	add.w	d6,a2
+*	add.w	d6,a3
+*	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+*	add.w	d6,a4
+*	.endif
+*	move.w	#NB_BG_PLANES-1,d4
 
 copy_tile:
 	* just copy
+	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
+	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
+	lea		layer_1_restore_buffer,a4
+	move.w	plane_offset,d6
+	add.w	d6,a4
 4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
+	move.l	(a5)+,d1		| next plane for layer 1
+	jne		44f
+	move.l	#empty_row,d1
+44:
+	move.l	(a6)+,d0		| next plane for layer 0
+	jne		45f				| if layer 0 
+	move.l	#empty_row,d0	
+45:
 	move.l	d0,a0
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	COPY_TILE8_PLANE_ROW
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
+	move.l	d1,a1
+	
+	moveq	#7,d7
+46:
+	move.b	(a0)+,d0	| layer #0
+	move.b	(a1)+,d1	| layer #1
+	move.b	d1,(a4)		| store layer 1 as is (to write on sprites)
+	move.b	(a2)+,d2	| layer #1 mask
+	jeq		47f			| zero mask: don't do anything with layer 1
+	not.b	d2
+	and.b	d2,d0		| cut out layer 0 with mask from layer 1
+	or.b	d1,d0		| imprint layer 1
+47:
+	move.b	d0,(a3)+	| save in temp buffer
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d7,46b
+	
 41:
-	TILE8_NEXT_PLANE
+	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
 	dbf		d4,4b
 	
+	move.l	(a5)+,d1		| next plane for layer 1
+	jne		44f
+	move.l	#empty_row,d1
+44:
+	move.l	d1,a2		| mask again
+	moveq	#7,d2
+45:
+	* don't forget last plane for layer_1_restore_buffer: the mask plane
+	move.b	(a2)+,(a4)
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d2,45b
+	
+	* now copy the tile at the proper locations. There are 3 locations to copy on
+	* (we processed the layer 1 overlay above)
+	move.l		playfield_drawn_screen_ptr,a1
+	add.w	d6,a1
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a4
+	add.w	d6,a4
+	lea		background_restore_buffer,a3
+	add.w	d6,a3
+	move.w	#NB_BG_PLANES-1,d4
+	lea		temp_buffer,a0
+	move.w	#BG_NB_BYTES_PER_ROW,d6
+	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
+50:
+	moveq	#7,d7
+51:
+	move.b	(a0)+,d0
+	move.b	d0,(a1)
+	add.w	d6,a1
+	move.b	d0,(a3)
+	add.w	d6,a3
+	move.b	d0,(a4)
+	add.w	d6,a4
+	dbf		d7,51b
+	add.w	d5,a1
+	add.w	d5,a3
+	add.w	d5,a4
+	dbf		d4,50b
 100:
 	rts
 5:
 	CLEAR_TILE8_PLANE
 	jra		41b
+	
+
+temp_buffer:
+	.skip	8*NB_PLAYFIELD_PLANES
+	
+plane_offset:
+	.word	0
 	
 * < D7: 0-0xFFF address
 * < D0: tile code
@@ -4733,6 +4768,8 @@ copy_tile:
 * uses x_offset computed from scrolling current params
 
 update_bg1_tile:
+	rts
+	
 	jbsr	update_bg_init
 	
 	* save address of layer 1 restore buffer
@@ -4987,8 +5024,7 @@ compute_bg_tile_xy:
 
 	
 * < D7: 0x3000-0x3FFF offset
-* < D0: tile code
-* < D1: tile attribute
+* < A6: cpu 1 RAM
 
 update_fg_tile:
 	* if < 0x208 bail out as not visible
@@ -4997,6 +5033,11 @@ update_fg_tile:
 	rts
 0:
 
+	add.w	#FG_SCREEN_TILE_ADDRESS,d7
+	move.b	(a6,d7.w),d0		| code
+	move.b	(1,a6,d7.w),d1		| attribute
+	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
+	
 	cmp.w	#0xFC8,d7
 	jcs		0f
 	* time value: 0xE4: red, 0xF0: yellow, 0xE8: green
@@ -5122,7 +5163,10 @@ update_fg_tile:
 
 11:
 	rts
-
+110:
+	move.w	(a7)+,d1
+	move.w	(a7)+,d0
+	rts
 
 empty_row:
 	.skip	8
