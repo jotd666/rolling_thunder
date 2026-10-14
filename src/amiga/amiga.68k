@@ -1384,7 +1384,6 @@ force_all_screen_redraw:
 	
 	move.w	host_scroll_x,d0
 	move.w	d0,d5				| save scroll X
-	lea		(bg_tiles_address_0000,a6),a5
 	lsr.w	#3,D0	| divide by 8 to get real X tile offset
 	* now compute start address to fetch data from
 	move.w	#3*0x80,d7		| first rows are not visible with scroll=0, visible with=$10 ??
@@ -1409,13 +1408,10 @@ force_all_screen_redraw:
 
 	and.w	#0xFFF,d7		| wrap on memory
 	* force tile draw
-	movem.l	d1-d2/d5-d7/a5,-(a7)
+	movem.l	d1-d2/d5-d7/a6,-(a7)
 	jbsr	update_bg0_tile
-	movem.l	(a7),d1-d2/d5-d7/a5
-	lea		(a5,d7.w),a0
-	move.b	(0x1000,a0),d0
-	move.b	(0x1001,a0),d1
-	movem.l	(a7)+,d1-d2/d5-d7/a5
+	movem.l	(a7)+,d1-d2/d5-d7/a6
+
 	add.w	#0x80,d7		| next row
 	dbf		d1,1b
 	addq.w	#0x2,d6			| next column
@@ -1467,9 +1463,9 @@ draw_column_tiles:
 	and.w	#0xFFF,d7		| wrap
 	* force tile draw
 
-	movem.l	d2/d7/a5,-(a7)
+	movem.l	d2/d7/a6,-(a7)
 	jbsr	update_bg0_tile
-	movem.l	(a7)+,d2/d7/a5
+	movem.l	(a7)+,d2/d7/a6
 	
 	add.w	#0x80,d7			| next Y
 	dbf		d2,0b
@@ -4230,6 +4226,10 @@ osd_video_word_dirty_cpu1:
 	jcc		0f
 	lea		layer012_row_flags,a0
 	lea		layer012_flags,a1
+	cmp.w	#0x188,d7
+	jne		666f
+	move.b	#0,0x111
+666:
 	cmp.w	#0x2000,d7
 	jcc		101f		| layer 2 is ignored	
 0:
@@ -4281,7 +4281,7 @@ update_the_layer:
 0:
 	tst.b	(a0)+
 	jeq		1f
-	clr.b	(-1,a0)
+	
 	* loop on the row		| ack row
 	move	#NB_TILES_PER_ROW-1,d2
 	move	d6,d7		| address of start of row
@@ -4290,7 +4290,7 @@ update_the_layer:
 	jeq		3f
 
 	clr.w	(a1,d7.w)		| ack tile
-	movem.l	a0-a2/d0-d7,-(a7)
+	movem.l	a0-a2/a6/d0-d7,-(a7)
 	
 *	cmp.w	#0x188,d7
 *	jne		666f
@@ -4300,7 +4300,7 @@ update_the_layer:
 *666:
 
 	jsr		(a2)
-	movem.l	(a7)+,a0-a2/d0-d7
+	movem.l	(a7)+,a0-a2/a6/d0-d7
 3:
 	addq	#2,d7
 	dbf		d2,2b
@@ -4316,70 +4316,7 @@ osd_video_word_dirty_cpu2:
 	move.l	(a7)+,a6
 	rts
 
-video_word_dirty_cpu2:
-video_word_dirty_cpu1:
-	move.l	a0,d7		| save address
-	sub.l	a6,d7
-	jmi		osd_w_videoram_out
 
-	* we now suppose that we're in 0-4000 (cpu1)
-	* or 2000-6000 (cpu2)
-	* check that in debug mode
-	.ifndef		RELEASE
-	cmp.w	#FG_SCREEN_TILE_ADDRESS+0x1000,d7
-	jcs		0f
-1:
-	BREAKPOINT	"write videoram out of range (D7)"
-	jra	osd_w_videoram_out	
-0:
-	.endif
-	
-	cmp.w	#FG_SCREEN_TILE_ADDRESS,d7
-	jcs		0f
-	
-	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
-
-	jra	update_fg_tile
-0:
-	* background tiles have 3 layers, not sure all 3 layers are active
-	* simultaneously fortunately!
-	* layer 0: background
-	* layer 1: used for ramps
-	* layer 2: used for intro computer room
-	cmp.w	#0x1000,d7
-	jcc		0f
-	tst.b	block_tile_layer_0
-	jne		osd_w_videoram_out
-	
-	jra		update_random_bg0_tile
-0:
-	cmp.w	#0x2188,d7
-	jne		0f
-	* upper left corner, check if computer panel of title is displaying
-	move.b	(a6,d7.w),d0		| code
-	jne		1f
-	move.b	(1,a6,d7.w),d1
-	cmp.b	#0x61,d1
-	jne		1f
-	* title panel: load pic and display it, bypassing the
-	* multi-layer mode (layer 0 + layer 2, preferably with
-	* layer 0 overwriting layer 2!!)
-	jbsr	blit_title
-	st.b	block_tile_layer_0
-	jra		osd_w_videoram_out
-0:
-	cmp.w	#0x2000,d7
-	jcc		osd_w_videoram_out
-	* layer 1 & 2: same processing
-	move.b	(a6,d7.w),d0		| code
-	move.b	(1,a6,d7.w),d1		| attribute
-	cmp.b	#0xFF,d0
-	jeq		osd_w_videoram_out
-
-	and.w	#0xFFF,d7
-	jra		update_random_bg1_tile
-1:
-	clr.b	block_tile_layer_0
 osd_w_videoram_out:
 	rts	
 	
@@ -4420,56 +4357,9 @@ update_bg_tile:
 	jbsr	compute_x_offset
 	movem.w	(a7)+,d0
 	jmi		osd_w_videoram_out
+	clr.b	(-1,a0)		| ack write
 	jra		update_bg0_tile
 	
-update_random_bg0_tile:
-	and.w	#0xFFF,d7
-	cmp.w	#0x188,d7
-	jne		0f
-
-
-	* we need to see if the tile is on screen considering X scolling
-	* positions. Compute first X & last X coord visible
-
-	* here we have to compute x_offset, this is the game displaying a random
-	* tile on screen
-	jbsr	compute_x_offset
-	jmi		osd_w_videoram_out
-	
-	* tile is in screen considered the current scrolling: update it
-	* (don't check Y we need update no matter when in that case)
-	
-
-	jbsr	update_bg0_tile
-
-
-	
-	jra		osd_w_videoram_out
-	
-	
-update_random_bg1_tile:
-	and.w	#0xFFF,d7
-	
-	* we need to see if the tile is on screen considering X scolling
-	* positions. Compute first X & last X coord visible
-
-	* here we have to compute x_offset, this is the game displaying a random
-	* tile on screen
-	jbsr	compute_x_offset
-	jmi		osd_w_videoram_out
-	
-	* tile is in screen considered the current scrolling: update it
-	* (don't check Y we need update no matter when in that case)
-	
-	
-
-
-	*jbsr	update_bg1_tile
-
-	jra		osd_w_videoram_out
-	
-	
-
 
 * compute X offset (0,0x40,0x80 ...) that makes up for
 * corkscrew effect
@@ -4642,17 +4532,20 @@ update_bg0_tile:
 	move.l	d0,a5		| pointer on proper clut of tile for layer 0
 
 	add.w	#0x1000,d7
+	moveq	#0,d0
 	move.b	(a6,d7.w),d0
 	move.b	(1,a6,d7.w),d1
 	* now layer 1
 	lea		bg1_character_table,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
-	jeq		11f		| no bitmap: exit (don't even try to look for layer 1)
+	jne		0f		| no bitmap: exit (don't even try to look for layer 1)
+	move.l	#empty_planes,d0
+0:
 	move.l	d0,a6
-	* now, layer 0 tile is loaded in A5
-	* now, layer 1 tile is loaded in A6
 	exg		a5,a6
+	* now, layer 0 tile is loaded in A6
+	* now, layer 1 tile is loaded in A5
 	
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
@@ -4660,7 +4553,6 @@ update_bg0_tile:
 	*REALLY_WAIT_BLIT
 	
 
-	move.w	#NB_BG_PLANES-1,d4
 *	jbsr	copy_tile
 *	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
 *	add.w	d6,a1
@@ -4672,6 +4564,8 @@ update_bg0_tile:
 *	move.w	#NB_BG_PLANES-1,d4
 
 copy_tile:
+	move.w	#NB_BG_PLANES-1,d4
+	move.b	#0,0x110
 	* just copy
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
 	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
@@ -4689,7 +4583,7 @@ copy_tile:
 45:
 	move.l	d0,a0
 	move.l	d1,a1
-	
+	move.l	a2,d3
 	moveq	#7,d7
 46:
 	move.b	(a0)+,d0	| layer #0
@@ -4706,9 +4600,9 @@ copy_tile:
 	dbf		d7,46b
 	
 41:
+	move.l	d3,a2		| restore mask pointer
 	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
 	dbf		d4,4b
-	
 	move.l	(a5)+,d1		| next plane for layer 1
 	jne		44f
 	move.l	#empty_row,d1
@@ -4732,17 +4626,21 @@ copy_tile:
 	add.w	d6,a3
 	move.w	#NB_BG_PLANES-1,d4
 	lea		temp_buffer,a0
-	move.w	#BG_NB_BYTES_PER_ROW,d6
 	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
+	move.w	#BG_NB_BYTES_PER_ROW,d6
 50:
 	moveq	#7,d7
 51:
 	move.b	(a0)+,d0
 	move.b	d0,(a1)
-	add.w	d6,a1
+	move.b	d0,(a1,d2.w)
+	add.w	d6,a1	| next row
 	move.b	d0,(a3)
+	move.b	d0,(a3,d2.w)
 	add.w	d6,a3
 	move.b	d0,(a4)
+	move.b	d0,(a4,d2.w)
 	add.w	d6,a4
 	dbf		d7,51b
 	add.w	d5,a1
@@ -4751,192 +4649,18 @@ copy_tile:
 	dbf		d4,50b
 100:
 	rts
-5:
-	CLEAR_TILE8_PLANE
-	jra		41b
-	
 
+	
+empty_planes:
+	.skip	(NB_PLAYFIELD_PLANES)*4
+	.long	empty_planes		| mask is zeroes
+	
 temp_buffer:
 	.skip	8*NB_PLAYFIELD_PLANES
 	
 plane_offset:
 	.word	0
 	
-* < D7: 0-0xFFF address
-* < D0: tile code
-* < D1: color code
-* uses x_offset computed from scrolling current params
-
-update_bg1_tile:
-	rts
-	
-	jbsr	update_bg_init
-	
-	* save address of layer 1 restore buffer
-	* (we just don't have enough registers)
-	lea		layer_1_restore_buffer,a3
-	add.w	d0,a3
-	move.l	a3,layer_1_restore_screen_pointer
-	
-	lea		background_restore_buffer,a3
-	add.w	d0,a3
-
-	add.w	#0x400,d2
-	
-	* handling 2 (or 3) layers in 1 is a nice challenge :)
-	* sometimes we need opacity, but sometimes not. The planar nature
-	* of the amiga display can create wrong tile colors with some zero-plane tiles
-	* make it a special case and move on
-	move.w	d2,d0
-	and.w	#0xFF00,d0
-	cmp.w	#0x600,d0
-	seq		opaque_bg1_tile
-	
-	*move.l		bg_tile_character_table,d0
-	*jeq		100f			| no context loaded: out
-	*move.l	d0,a0
-	lea		bg1_character_table,a0
-	.ifdef	NO68020
-	add.w	d2,d2
-	add.w	d2,d2	
-	move.l	(a0,d2.w),d0		| tile pointer
-	.else
-	move.l	(a0,d2.w*4),d0		| tile pointer
-	.endif
-	.ifdef	RELEASE
-	jeq		11f					| clear tile, no error (release)
-	.else
-	jne		12f
-	move.w	d7,-(a7)
-	add.w	#BG_SCREEN_TILE_ADDRESS,d7
-	.ifdef	NO68020
-	lsr.w	#2,d2
-	.endif
-	*COLOR0_FLASH	0xF0F
-	move.w	(a7)+,d7
-	jra		11f
-12:
-	.endif
-	move.l	d0,a2
-	.ifdef	NO68020
-	add.w	d3,d3
-	add.w	d3,d3
-	move.l	(a2,d3.w),d0			| pointer on tile bitplanes for that CLUT
-	.else
-	move.l	(a2,d3.w*4),d0			| pointer on tile bitplanes for that CLUT	
-	.endif
-	.ifdef	RELEASE
-	jeq		11f						| not necessarily a problem
-	.else
-	jne		12f
-	move.w	d7,-(a7)
-	add.w	#BG_SCREEN_TILE_ADDRESS,d7
-	*COLOR0_FLASH	0xFF0
-	move.w	(a7)+,d7
-	jra		11f
-	.endif
-12:
-	move.l	d0,a2					| pointer on bitplanes
-
-
-	* we wait just in case a blitter operation is in progress
-	* it rarely conflicts
-	lea		_custom,a5
-	REALLY_WAIT_BLIT
-	
-	lea		(a2,4*NB_PLAYFIELD_PLANES),a6	| mask plane address, fixed
-
-	movem.l	d0-D3/a0-a6,-(a7)
-	jsr		4f
-	movem.l	(a7)+,d0-D3/a0-a6
-	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
-	add.w	d6,a1
-	add.w	d6,a3
-	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	add.w	d6,a4
-	.endif
-	move.w	#NB_BG_PLANES-1,d4
-
-	* just copy
-4:
-	move.l	(a2)+,d0		| next plane
-	jeq		5f
-	move.l	(a6),a5			| reload plane mask
-	move.l	d0,a0
-	tst.b	opaque_bg1_tile
-	jeq		441f
-	* opaque: don't try to preserve layer 0
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	COPY_TILE8_PLANE_ROW
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-	TILE8_NEXT_PLANE
-	dbf		d4,4b
-	jra		50f
-441:
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,d0
-	MASK_TILE8_PLANE_ROW
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-41:
-	TILE8_NEXT_PLANE
-	dbf		d4,4b
-50:
-	* now same thing for layer 1 restore
-	move.l 	layer_1_restore_screen_pointer,a1
-	lea		(a6,-4*NB_PLAYFIELD_PLANES),a2	| happy to restore input data
-	move.w	#NB_BG_PLANES-1,d4
-
-14:
-	move.l	(a2)+,d0		| next plane
-	jeq		15f
-	move.l	d0,a0
-	.set	offset,0
-	.rept	8
-	move.b	(a0)+,(offset,a1)  | layer 1 buffer
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-141:
-	add.w	d5,a1	| next bitplane
-	dbf		d4,14b
-	* last plane: mask data for later blit
-	move.l	(a6),d0			| reload plane mask
-	jeq		100f
-	move.l	d0,a5
-	.set	offset,0
-	.rept	8
-	move.b	(a5)+,(offset,a1)
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-	rts
-	* empty mask: clear mask
-100:
-	.set	offset,0
-	.rept	8
-	clr.b	(offset,a1)
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-	rts
-5:
-	tst.b	opaque_bg1_tile
-	jeq		41b
-	CLEAR_TILE8_PLANE
-	jra		41b
-	
-	* clear in layer restore bitplane data when empty data
-	* (unlike when dest is screen in which case
-	* we just skip)
-15:
-	.set	offset,0
-	.rept	8
-	clr.b	(offset,a1)
-	.set	offset,offset+BG_NB_BYTES_PER_ROW
-	.endr
-	jra		141b
 
 
 	
@@ -5027,6 +4751,8 @@ compute_bg_tile_xy:
 * < A6: cpu 1 RAM
 
 update_fg_tile:
+	clr.b	(-1,a0)		| ack write
+
 	* if < 0x208 bail out as not visible
 	cmp.w	#0x208,d7
 	jcc		0f
@@ -7203,7 +6929,7 @@ pause_flag:
 frameskip:
 	.byte	0
 startup_menu_flag:
-	.byte
+	.byte	0
 no_main_tune:
 	.word	0
 	
