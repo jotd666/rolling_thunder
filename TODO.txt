@@ -1,7 +1,8 @@
 - reinstate opaque tile layer 1
 - tile layer 1 is never drawn
-- move process_event_b40d into the IRQ to fix blocking scrolling, possibly wrong columns
-
+- draw tiles: optimize if tile 1 is $FF code: clear back buffer for tile 1, then draw only
+  tile 0, no masking
+- sprites 128 colors, bg in 64 to avoid washed down
 - function_8343 cpu#2: overflow on sprite fill loop at the end of level
 - hoodies partially drawn when climbing up/down railings: pause+render
 - trashed tiles on the right just before going down: transparency issue (in progress, double

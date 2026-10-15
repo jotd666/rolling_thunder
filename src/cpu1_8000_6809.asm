@@ -6576,7 +6576,7 @@ B40C: 39          RTS
 
 
 ; called 1x  from $81B6
-process_event_b40d:
+process_event_b40d:		; [global]
 B40D: D6 B4       LDB    $B4
 B40F: D1 B3       CMPB   $B3
 B411: 26 01       BNE    $B414

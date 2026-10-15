@@ -245,6 +245,11 @@ BIT_FIRE_2 = 5
 	move.w	#\v,_custom+color	
 	.endm
 
+	.macro	ACK_TILE_DIRTY
+	clr.b	(-1,a0)		| ack write
+	clr.w	(a1,d7.w)
+	.endm
+	
 	.macro	WRITE_TEXT	text,x_offset
 	lea		\text,a1
 	lea		(0x2047+\x_offset+0x20*row,a6),a0
@@ -286,9 +291,8 @@ BIT_FIRE_2 = 5
 	.endm
 
 	.macro	DECODE_CODE_AND_ATTRIBUTES
-	moveq	#0,d2
 	moveq	#0,d3
-	move.b	d0,d2	| code
+	move.w	d0,d2	| code
 	move.b	d1,d3	| attribute+tile extend bits
 	and.b	#3,d1	| tile upper select 0-3
 	lsl.w	#8,d1	| *256
@@ -1692,6 +1696,7 @@ call_irqs:
 	tst.b	copy_sprites
 	jeq		0f
 	clr.b	copy_sprites
+
 	
 	lea		(SPRITE_ADDRESS+SPRITE_BUFFER_SIZE-2*CURRENT_SPRITE_SIZE,a6),a0
 	moveq	#NB_TARGET_SPRITES-1,d7
@@ -1704,6 +1709,13 @@ call_irqs:
 	jbsr	decode_mcu_inputs
 
 	move.w	currently_running_cpu,-(a7)
+	* we move the event queue processor from cpu #1 in the irq to avoid
+	* a nasty race condition that prevents scrolling to work or creates gaps
+	jbsr	cpu_init
+	move.l	#0x5780,d5		| re-set stack somewhere, hoping it doesn't conflict
+	move.b	#1,currently_running_cpu+1
+	jbsr	process_event_b40d
+	
 	jbsr	run_frame
 	move.w	(a7)+,currently_running_cpu
 	rts
@@ -2710,6 +2722,7 @@ really_update_sprites:
 	move.l	playfield_drawn_screen_ptr(pc),a1
 
 	lea		layer_1_restore_buffer,a0
+	BREAKPOINT	"overlay"
 	jbsr blit_background_cookie_cut	
 	
 	
@@ -4255,7 +4268,7 @@ osd_video_word_dirty_cpu1:
 	* title panel: load pic and display it, bypassing the
 	* multi-layer mode (layer 0 + layer 2, preferably with
 	* layer 0 overwriting layer 2!!)
-	jbsr	blit_title
+	st.b	blit_title_requested	
 	st.b	block_tile_layer_0
 	
 102:
@@ -4263,6 +4276,16 @@ osd_video_word_dirty_cpu1:
 	jra		100b
 
 update_other_layers:
+	tst.b	blit_title_requested
+	jeq		0f
+	clr.b	blit_title_requested
+	jbra	blit_title
+
+0:
+	tst.b	block_tile_layer_0
+	jeq		0f
+	rts
+0:
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	layer012_row_flags,a0
 	lea	layer012_flags,a1
@@ -4289,7 +4312,6 @@ update_the_layer:
 	tst.w	(a1,d7.w)
 	jeq		3f
 
-	clr.w	(a1,d7.w)		| ack tile
 	movem.l	a0-a2/a6/d0-d7,-(a7)
 	
 *	cmp.w	#0x188,d7
@@ -4357,7 +4379,7 @@ update_bg_tile:
 	jbsr	compute_x_offset
 	movem.w	(a7)+,d0
 	jmi		osd_w_videoram_out
-	clr.b	(-1,a0)		| ack write
+	ACK_TILE_DIRTY		| ack write
 	jra		update_bg0_tile
 	
 
@@ -4458,7 +4480,7 @@ update_bg_init:
 	addq	#4,a7		| pops up stack
 	rts
 	
-* < D0/D1: coords
+* < D0.W/D1.B: code/attribute
 * > D0: pointer on tile for that layer or 0 if not found
 
 load_tile_bitmap:
@@ -4515,13 +4537,14 @@ load_tile_bitmap:
 * uses x_offset computed from scrolling current params
 
 update_bg0_tile:
-	move.b	#0,0x110
-	
+
 	jbsr	update_bg_init
 	move.w	d0,plane_offset
 
-	move.b	(a6,d7.w),d0
-	move.b	(1,a6,d7.w),d1
+	lea		(a6,d7.w),a6
+	moveq	#0,d0
+	move.b	(a6)+,d0
+	move.b	(a6),d1
 	*move.l		bg_tile_character_table,d0
 	*jeq		100f			| no context loaded: out
 	*move.l	d0,a0
@@ -4531,10 +4554,11 @@ update_bg0_tile:
 	jeq		11f		| no bitmap: exit (don't even try to look for layer 1)
 	move.l	d0,a5		| pointer on proper clut of tile for layer 0
 
-	add.w	#0x1000,d7
-	moveq	#0,d0
-	move.b	(a6,d7.w),d0
-	move.b	(1,a6,d7.w),d1
+	add.w	#0xFFF,a6
+	move.w	#0x400,d0	| add 0x400 offset for layer 1 tileset
+	move.b	(a6)+,d0
+	move.b	(a6),d1
+	
 	* now layer 1
 	lea		bg1_character_table,a0
 	jbsr	load_tile_bitmap
@@ -4565,7 +4589,6 @@ update_bg0_tile:
 
 copy_tile:
 	move.w	#NB_BG_PLANES-1,d4
-	move.b	#0,0x110
 	* just copy
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
 	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
@@ -4577,18 +4600,37 @@ copy_tile:
 	jne		44f
 	move.l	#empty_row,d1
 44:
+	cmp.l	#empty_row,d1
+	jeq		555f
+	move.b	#0,0x110
+	
+555:
 	move.l	(a6)+,d0		| next plane for layer 0
 	jne		45f				| if layer 0 
 	move.l	#empty_row,d0	
 45:
 	move.l	d0,a0
 	move.l	d1,a1
-	move.l	a2,d3
 	moveq	#7,d7
+	move.l	a2,d3
+	jne		450f
+* tile 1 has no mask: optimize
+46:	
+	move.b	(a0)+,d0	| layer #0
+	clr.b	(a4)		| store layer 1 as is (to write on sprites)
+	clr.b	(BG_HALF_SCREEN_PLANE_SIZE,a4)
+	move.b	d0,(a3)+	| save in temp buffer
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d7,46b
+	jra		41f
+	
+450:
+* with non-empty tile 1
 46:
 	move.b	(a0)+,d0	| layer #0
 	move.b	(a1)+,d1	| layer #1
 	move.b	d1,(a4)		| store layer 1 as is (to write on sprites)
+	move.b	d1,(BG_HALF_SCREEN_PLANE_SIZE,a4)		| store layer 1 as is (to write on sprites)
 	move.b	(a2)+,d2	| layer #1 mask
 	jeq		47f			| zero mask: don't do anything with layer 1
 	not.b	d2
@@ -4751,7 +4793,7 @@ compute_bg_tile_xy:
 * < A6: cpu 1 RAM
 
 update_fg_tile:
-	clr.b	(-1,a0)		| ack write
+	ACK_TILE_DIRTY
 
 	* if < 0x208 bail out as not visible
 	cmp.w	#0x208,d7
@@ -4760,6 +4802,7 @@ update_fg_tile:
 0:
 
 	add.w	#FG_SCREEN_TILE_ADDRESS,d7
+	moveq	#0,d0
 	move.b	(a6,d7.w),d0		| code
 	move.b	(1,a6,d7.w),d1		| attribute
 	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
@@ -4778,7 +4821,7 @@ update_fg_tile:
 *	move.b	#0x18,d0
 *	move.b	#0xFC,d1
 *0:
-
+	
 	DECODE_CODE_AND_ATTRIBUTES
 	lsr.b	#2,d3	| divide attribute by 4 on fg tiles
 
@@ -4834,11 +4877,11 @@ update_fg_tile:
 	* updating bitplanes
 
 	.ifdef	MC68020
-	move.l	(a0,d2.l*4),d0		| tile pointer as LONG!
+	move.l	(a0,d2.w*4),d0		| tile pointer as LONG!
 	.else
 	add.w	d2,d2
 	add.w	d2,d2	
-	move.l	(a0,d2.l),d0		| tile pointer as LONG!
+	move.l	(a0,d2.w),d0		| tile pointer as LONG!
 	.endif
 	
 	.ifdef	RELEASE
@@ -4961,7 +5004,6 @@ set_bobs_bitplanes:
 	* set bitplanes
 	moveq	#0,d0
 	move.w	game_scroll_y,d0
-	move.w	d0,0x112
 	lea		mulBG_NB_BYTES_PER_ROW_table,a2
 	.ifdef	MC68020
 	move.w	(a2,d0.w*2),d0		| compute Y offset
@@ -6656,6 +6698,8 @@ return_address:
 current_music_name:
 	.long	0
 	
+blit_title_requested:
+	.byte	0
 block_tile_layer_0:
 	.byte	0
 menu_flip_flop:

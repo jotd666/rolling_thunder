@@ -61,6 +61,9 @@ def game_specific_cpu1(address,lines,i):
         lines[i+1] = change_instruction("jbsr\tosd_set_x_scroll_register\n",lines,i+1,False)
     elif address == 0x8297:
         lines[i+1] = change_instruction("jbsr\tosd_set_y_scroll_register\n",lines,i+1,False)
+    elif address == 0x81B6:
+        line = remove_instruction(lines,i)
+
     return line
 
 sc_cpu2 = SourceChanger()
