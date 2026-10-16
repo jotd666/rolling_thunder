@@ -1,4 +1,7 @@
-- A3A6: new level: load new context
+- try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
+- caution: chipmem limit??? check top chip in exe
+- maybe create per-level contexts
+- A3A6: new level
 - start skips the "select area" part doesn't work
 - unknown sound D2 when completing level = A
 

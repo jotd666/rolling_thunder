@@ -6545,11 +6545,11 @@ B1C0: 2B 15       BMI    $B1D7
 B1C2: D1 78       CMPB   $78
 B1C4: 24 19       BCC    $B1DF
 B1C6: 1D          SEX
-B1C7: ED E3       STD    ,--S		; [local]
+B1C7: ED E3       STD    ,--S		; [local_no_irq]
 B1C9: 96 63       LDA    $63
 B1CB: D6 78       LDB    $78
 B1CD: 3D          MUL
-B1CE: E3 E1       ADDD   ,S++		; [local]
+B1CE: E3 E1       ADDD   ,S++		; [local_no_irq]
 B1D0: 58          ASLB
 B1D1: 49          ROLA
 B1D2: 10 AE CB    LDY    D,U
