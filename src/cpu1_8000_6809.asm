@@ -321,7 +321,7 @@ snd_music_req_4380           = $4380		; -> MCU: music/BGM request code
 snd_4381                     = $4381		; -> MCU: sound scratch
 snd_4385                     = $4385		; <-> MCU: sound status
 boot_barrier_5ff0            = $5FF0		; boot barrier counter, shared with CPU2 ($1FF0)
-post_errors_5ff1             = $5FF1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 $10=RAM2 $20=MCU
+post_errors_5ff1             = $5FF1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 invulnerable_10=RAM2 $20=MCU
 sprite_latch_5ff2            = $5FF2		; write = tell sprite chip to buffer the list (CPU2 $1FF2)
 cpu2_ready_5ff3              = $5FF3		; CPU2 -> CPU1 'POST finished' handshake ($1FF3)
 flip_screen_5ff6             = $5FF6		; screen flip flag (read by video HW via sprite regs)
@@ -364,8 +364,11 @@ dp_irqcount1_0e              = $0E		; DP $560E - CPU1 IRQ/frame counter
 dp_irqcount2_0f              = $0F		; DP $560F - CPU2 IRQ/frame counter
 dp_bank1_shadow_19           = $19		; DP $5619 - shadow of CPU1 ROM bank latch, re-armed every IRQ
 dp_bank2_shadow_1a           = $1A		; DP $561A - shadow of CPU2 ROM bank latch, re-armed every IRQ
+invulnerable_10              = $10
+difficulty_3c                = $3c
 emitted_sprite_count_24 = $24
 tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
+
 ;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
 ;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
 ;
@@ -452,7 +455,7 @@ cpu1_boot_8000:   ; [global]
 800E: B7 62 00    STA    cus115_63701x_1_6200		; bank switch?
 8011: B7 66 00    STA    cus115_63701x_3_6600		; bank switch?
 8014: B7 6C 00    STA    cus115_clear_6c00		; bank switch?
-8017: 7F 5F F1    CLR    post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 $10=RAM2 $20=MCU
+8017: 7F 5F F1    CLR    post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 invulnerable_10=RAM2 $20=MCU
 801A: 7F 5F F3    CLR    cpu2_ready_5ff3		; CPU2 -> CPU1 'POST finished' handshake ($1FF3)
 801D: 7F 5F F0    CLR    boot_barrier_5ff0
 ; copy RAM with ROM start several times
@@ -600,7 +603,7 @@ cpu1_boot_8000:   ; [global]
 8180: 84 01       ANDA   #$01
 8182: 10 8E 81 CA LDY    #$81CA
 8186: A6 A6       LDA    A,Y
-8188: ED C8 10    STD    $10,U
+8188: ED C8 10    STD    invulnerable_10,U
 ; infinite loop
 818B: B7 80 00    STA    watchdog_8000
 818E: 20 FB       BRA    $818B
@@ -652,9 +655,9 @@ irq_update_video_state_81cc:
 81D0: BB 42 47    ADDA   in_level_4247		; input level [ 5] dip SWA:6 (freeze)
 81D3: 97 00       STA    dp_frame_parity_00
 81D5: B6 42 45    LDA    in_level_4245		; input level [ 4] dip SWA:5 (invuln)
-81D8: 97 10       STA    $10
+81D8: 97 10       STA    invulnerable_10
 81DA: B6 42 53    LDA    in_level_4253		; input level [11] dip SWB:4 (difficulty)
-81DD: 97 3C       STA    $3C
+81DD: 97 3C       STA    difficulty_3c
 81DF: 8D 07       BSR    compute_flip_screen_81e8
 81E1: 8D 20       BSR    compute_active_player_side_8203
 81E3: 8D 38       BSR    update_scroll_layers_821d
@@ -734,7 +737,7 @@ update_scroll_layers_821d:
 824C: 56          RORB
 824D: EB A0       ADDB   ,Y+
 824F: E7 D1       STB    [,U++]
-8251: 30 88 10    LEAX   $10,X
+8251: 30 88 10    LEAX   invulnerable_10,X
 8254: 8C 53 F0    CMPX   #$53F0
 8257: 23 D3       BLS    $822C
 8259: CC 00 9D    LDD    #$009D
@@ -777,7 +780,7 @@ not_flipped_8270:
 8292: C3 00 01    ADDD   #$0001
 8295: EB A0       ADDB   ,Y+
 8297: E7 D1       STB    [,U++]
-8299: 30 88 10    LEAX   $10,X
+8299: 30 88 10    LEAX   invulnerable_10,X
 829C: 8C 53 F0    CMPX   #$53F0
 829F: 23 D3       BLS    $8274
 82A1: CC 00 43    LDD    #$0043
@@ -1025,7 +1028,7 @@ function_846a:
 8479: 8E 58 09    LDX    #$5809
 847C: 86 E0       LDA    #$E0
 847E: A7 84       STA    ,X
-8480: 30 88 10    LEAX   $10,X
+8480: 30 88 10    LEAX   invulnerable_10,X
 8483: 8C 5F F0    CMPX   #boot_barrier_5ff0
 8486: 25 F6       BCS    $847E
 8488: B7 80 00    STA    watchdog_8000
@@ -1048,7 +1051,7 @@ function_848c:
 84A8: 8E 50 00    LDX    #$5000
 84AB: CC 30 FF    LDD    #$30FF
 84AE: E7 84       STB    ,X
-84B0: 30 88 10    LEAX   $10,X
+84B0: 30 88 10    LEAX   invulnerable_10,X
 84B3: 4A          DECA
 84B4: 26 F8       BNE    $84AE
 84B6: B7 80 00    STA    watchdog_8000
@@ -1316,7 +1319,7 @@ function_8614:
 
 ; 1 jump-table ref
 function_8627:
-8627: B6 5F F1    LDA    post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 $10=RAM2 $20=MCU
+8627: B6 5F F1    LDA    post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 invulnerable_10=RAM2 $20=MCU
 862A: 8A 80       ORA    #$80
 862C: B7 5F F1    STA    post_errors_5ff1
 862F: 7C 54 2B    INC    $542B		; work RAM (shared with CPU2)
@@ -1336,7 +1339,7 @@ function_8633:
 ; 1 jump-table ref
 function_8646:
 8646: 86 01       LDA    #$01
-8648: B4 5F F1    ANDA   post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 $10=RAM2 $20=MCU
+8648: B4 5F F1    ANDA   post_errors_5ff1		; POST error bits: 1=ROM1 2=ROM2 4=RAM0 8=RAM1 invulnerable_10=RAM2 $20=MCU
 864B: 27 19       BEQ    $8666
 864D: CE 8D 1B    LDU    #$8D1B		; ROM
 8650: 10 8E 32 92 LDY    #$3292		; layer 3 tilemap / HUD
@@ -2889,7 +2892,7 @@ function_94e4:
 94E6: 27 1F       BEQ    function_9507
 94E8: 7D 44 0C    TST    $440C		; work RAM (shared with CPU2)
 94EB: 2B 08       BMI    $94F5
-94ED: 0D 10       TST    $10
+94ED: 0D 10       TST    invulnerable_10
 94EF: 27 04       BEQ    $94F5
 94F1: 0F 14       CLR    $14
 94F3: 0F 15       CLR    $15
@@ -3836,7 +3839,7 @@ function_9cb6:
 9CE1: 6F 4E       CLR    $E,U
 9CE3: 6F 4F       CLR    $F,U
 9CE5: 86 01       LDA    #$01
-9CE7: A7 C8 10    STA    $10,U
+9CE7: A7 C8 10    STA    invulnerable_10,U
 9CEA: 39          RTS
 
 ; called 4x  from $9C77, $9C91, $9CA6, $9CAB
@@ -4693,10 +4696,11 @@ A398: 44          LSRA
 A399: 44          LSRA
 A39A: 26 02       BNE    $A39E
 A39C: 86 FF       LDA    #$FF
-A39E: ED A4       STD    ,Y
+A39E: ED A4       STD    ,Y		; [video_address_word]
 A3A0: 96 C5       LDA    starting_area_c5
 A3A2: 84 0F       ANDA   #$0F
-A3A4: ED 22       STD    $2,Y
+A3A4: ED 22       STD    $2,Y		; [video_address_word]
+; increase level number
 A3A6: 96 C5       LDA    starting_area_c5
 A3A8: 8B 01       ADDA   #$01
 A3AA: 19          DAA
@@ -10218,7 +10222,7 @@ CD49: 39          RTS
 CD4A: 0A 54       DEC    $54
 CD4C: 26 01       BNE    $CD4F
 CD4E: 39          RTS
-CD4F: 33 C8 10    LEAU   $10,U
+CD4F: 33 C8 10    LEAU   invulnerable_10,U
 CD52: 20 A1       BRA    $CCF5
 CD54: 04 70       LSR    $70
 CD56: 03 F0       COM    $F0
@@ -11091,7 +11095,7 @@ D3E2: A7 84       STA    ,X
 D3E4: 0A 51       DEC    $51
 D3E6: 0A 54       DEC    $54
 D3E8: 27 05       BEQ    $D3EF
-D3EA: 30 88 10    LEAX   $10,X
+D3EA: 30 88 10    LEAX   invulnerable_10,X
 D3ED: 20 CB       BRA    $D3BA
 D3EF: B7 80 00    STA    watchdog_8000
 D3F2: 39          RTS
@@ -11121,7 +11125,7 @@ D41E: A7 84       STA    ,X
 D420: 0A 51       DEC    $51
 D422: 0A 54       DEC    $54
 D424: 27 05       BEQ    $D42B
-D426: 30 88 10    LEAX   $10,X
+D426: 30 88 10    LEAX   invulnerable_10,X
 D429: 20 CB       BRA    $D3F6
 D42B: B7 80 00    STA    watchdog_8000
 D42E: 39          RTS
@@ -11151,7 +11155,7 @@ D45A: A7 84       STA    ,X
 D45C: 0A 51       DEC    $51
 D45E: 0A 54       DEC    $54
 D460: 27 05       BEQ    $D467
-D462: 30 88 10    LEAX   $10,X
+D462: 30 88 10    LEAX   invulnerable_10,X
 D465: 20 CB       BRA    $D432
 D467: B7 80 00    STA    watchdog_8000
 D46A: 39          RTS
@@ -11187,7 +11191,7 @@ D4A6: A7 84       STA    ,X
 D4A8: 0A 51       DEC    $51
 D4AA: 0A 54       DEC    $54
 D4AC: 27 05       BEQ    $D4B3
-D4AE: 30 88 10    LEAX   $10,X
+D4AE: 30 88 10    LEAX   invulnerable_10,X
 D4B1: 20 BB       BRA    $D46E
 D4B3: B7 80 00    STA    watchdog_8000
 D4B6: 39          RTS
@@ -11223,7 +11227,7 @@ D4F2: A7 84       STA    ,X
 D4F4: 0A 51       DEC    $51
 D4F6: 0A 54       DEC    $54
 D4F8: 27 05       BEQ    $D4FF
-D4FA: 30 88 10    LEAX   $10,X
+D4FA: 30 88 10    LEAX   invulnerable_10,X
 D4FD: 20 BB       BRA    $D4BA
 D4FF: B7 80 00    STA    watchdog_8000
 D502: 39          RTS
@@ -11253,7 +11257,7 @@ D52E: A7 84       STA    ,X
 D530: 0A 51       DEC    $51
 D532: 0A 54       DEC    $54
 D534: 27 05       BEQ    $D53B
-D536: 30 88 10    LEAX   $10,X
+D536: 30 88 10    LEAX   invulnerable_10,X
 D539: 20 CB       BRA    $D506
 D53B: B7 80 00    STA    watchdog_8000
 D53E: 39          RTS
@@ -11289,7 +11293,7 @@ D57A: A7 84       STA    ,X
 D57C: 0A 51       DEC    $51
 D57E: 0A 54       DEC    $54
 D580: 27 05       BEQ    $D587
-D582: 30 88 10    LEAX   $10,X
+D582: 30 88 10    LEAX   invulnerable_10,X
 D585: 20 BB       BRA    $D542
 D587: B7 80 00    STA    watchdog_8000
 D58A: 39          RTS
@@ -11325,7 +11329,7 @@ D5C6: A7 84       STA    ,X
 D5C8: 0A 51       DEC    $51
 D5CA: 0A 54       DEC    $54
 D5CC: 27 05       BEQ    $D5D3
-D5CE: 30 88 10    LEAX   $10,X
+D5CE: 30 88 10    LEAX   invulnerable_10,X
 D5D1: 20 BB       BRA    $D58E
 D5D3: B7 80 00    STA    watchdog_8000
 D5D6: 39          RTS
@@ -11583,7 +11587,7 @@ function_d776:
 D776: A6 84       LDA    ,X
 D778: 81 FF       CMPA   #$FF
 D77A: 27 0A       BEQ    $D786
-D77C: 30 88 10    LEAX   $10,X
+D77C: 30 88 10    LEAX   invulnerable_10,X
 D77F: 8C 53 00    CMPX   #$5300
 D782: 25 F2       BCS    function_d776
 D784: 20 FE       BRA    $D784
@@ -11665,7 +11669,7 @@ D862: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=24]
 D864: 0A 54       DEC    $54
 D866: 26 01       BNE    $D869
 D868: 39          RTS
-D869: 30 88 10    LEAX   $10,X
+D869: 30 88 10    LEAX   invulnerable_10,X
 D86C: 20 D6       BRA    $D844
 
 
@@ -11849,7 +11853,7 @@ D9BD: CE 4C 00    LDU    #$4C00		; work RAM (shared with CPU2)
 D9C0: 86 FF       LDA    #$FF
 D9C2: A1 C4       CMPA   ,U
 D9C4: 27 05       BEQ    $D9CB
-D9C6: 33 C8 10    LEAU   $10,U
+D9C6: 33 C8 10    LEAU   invulnerable_10,U
 D9C9: 20 F7       BRA    $D9C2
 D9CB: E7 C4       STB    ,U
 D9CD: A6 01       LDA    $1,X
@@ -12003,7 +12007,7 @@ DAD0: AD D6       JSR    [A,U]		; [indirect_jump] [nb_entries=8]
 DAD2: 0A 47       DEC    $47
 DAD4: 26 01       BNE    $DAD7
 DAD6: 39          RTS
-DAD7: 30 88 10    LEAX   $10,X
+DAD7: 30 88 10    LEAX   invulnerable_10,X
 DADA: 20 BA       BRA    $DA96
 DADC: C6 FF       LDB    #$FF
 DADE: E7 84       STB    ,X
@@ -12011,7 +12015,7 @@ DAE0: 0A 45       DEC    $45
 DAE2: 0A 47       DEC    $47
 DAE4: 26 01       BNE    $DAE7
 DAE6: 39          RTS
-DAE7: 30 88 10    LEAX   $10,X
+DAE7: 30 88 10    LEAX   invulnerable_10,X
 DAEA: 20 AA       BRA    $DA96
 DAEC: 39          RTS
 DAED: DB EE       ADDB   $EE
@@ -12336,14 +12340,14 @@ DD27: C6 76       LDB    #$76
 
 ; called 6x; jumped-to 4x  from $DB38, $DB41, $DB5D, $DB66, $DC34, $DC3D, $DC46, $DC7B, ...
 function_dd29:
-DD29: 33 88 10    LEAU   $10,X
+DD29: 33 88 10    LEAU   invulnerable_10,X
 DD2C: 11 83 50 00 CMPU   #$5000
 DD30: 25 01       BCS    $DD33
 DD32: 39          RTS
 DD33: 86 FF       LDA    #$FF
 DD35: A1 C4       CMPA   ,U
 DD37: 27 0A       BEQ    $DD43
-DD39: 33 C8 10    LEAU   $10,U
+DD39: 33 C8 10    LEAU   invulnerable_10,U
 DD3C: 11 83 50 00 CMPU   #$5000
 DD40: 25 F3       BCS    $DD35
 DD42: 39          RTS

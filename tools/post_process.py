@@ -63,7 +63,10 @@ def game_specific_cpu1(address,lines,i):
         lines[i+1] = change_instruction("jbsr\tosd_set_y_scroll_register\n",lines,i+1,False)
     elif address == 0x81B6:
         line = remove_instruction(lines,i)
-
+    elif address in [0x8ab0,0x9e27]:
+        line = change_instruction("tst.b\tlevel_select_flag",lines,i)
+    elif address == 0x81d5:
+        line = change_instruction("move.b\tinvincible_flag,d0",lines,i)
     return line
 
 sc_cpu2 = SourceChanger()

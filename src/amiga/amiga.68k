@@ -551,8 +551,13 @@ apply_settings:
 	sne		infinite_lives_flag
 	btst	#2,d0
 	sne		infinite_time_flag
+	btst	#3,d0
+	sne		infinite_bullets_flag
 	move.b	d0,d1
-	and.b	#3,d1
+	btst	#4,d0
+	sne		level_select_flag
+	move.b	d0,d1
+	and.b	#0xF,d1
 	jeq		2f
 	* cheat key disable highscore only if used
 	st.b	cheat_used
@@ -566,13 +571,7 @@ apply_settings:
 	btst	#0,d1
 	seq		frameskip
 
-	btst	#2,d1
-	sne		no_level_music_flag
-	btst	#3,d1
-	sne		service_mode_flag
-	btst	#4,d1
-	sne		up_for_jump_flag
-	btst	#5,d1
+
 	sne		startup_menu_flag
 	.ifne	OPT_CD32_VERSION
 	* force the flag
@@ -601,15 +600,7 @@ apply_settings:
 0:
 
 0:
-	* set dip switches
-	* (some settings are not modifiable)
-	move.b	#0x20,d0	| demo sounds on
-	tst.b	service_mode_flag
-	jeq		0f
-	bset	#6,d0
-0:
-	not.b	d0
-	move.b	d0,dip_switches_1
+
 
 	lea		lives_table,a0
 	move.b	start_lives+3,d1
@@ -1009,6 +1000,7 @@ demo_game:
 	jbsr	cpu2_boot_8000
 	
 	CPU1_GET_MEMORY_START_AND_DP
+
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
 	clr.b	currently_running_cpu+1
@@ -2722,7 +2714,6 @@ really_update_sprites:
 	move.l	playfield_drawn_screen_ptr(pc),a1
 
 	lea		layer_1_restore_buffer,a0
-	BREAKPOINT	"overlay"
 	jbsr blit_background_cookie_cut	
 	
 	
@@ -4653,7 +4644,9 @@ copy_tile:
 	moveq	#7,d2
 45:
 	* don't forget last plane for layer_1_restore_buffer: the mask plane
-	move.b	(a2)+,(a4)
+	move.b	(a2)+,d0
+	move.b	d0,(a4)
+	move.b	d0,(BG_HALF_SCREEN_PLANE_SIZE,a4)
 	add.w	#BG_NB_BYTES_PER_ROW,a4
 	dbf		d2,45b
 	
@@ -5794,6 +5787,13 @@ skip_level:
 0:
 	movem.l	(a7)+,d0-a6
 	rts
+toggle_invulnerability:
+	movem.l	d0-a6,-(a7)
+	CPU1_GET_MEMORY_START_IN_A6
+	eor.b	#1,(in_level_4245,a6)
+0:
+	movem.l	(a7)+,d0-a6
+	rts
 	
 handle_keyboard:
 	movem.l	D0/A0/A5,-(a7)
@@ -5848,7 +5848,7 @@ handle_keyboard:
 	cmp.b	#0x50,d0	| F1 key: toggle invincible
 	bne.b	0f
 	st.b	cheat_used
-	not.b	invincible_flag
+	jbsr	toggle_invulnerability
 	COLOR0_FLASH	0x0FF
 	
 0:
@@ -6885,7 +6885,7 @@ dip_switches_2:
 	.byte	0
 ntsc_flag:
 	.byte 	0
-service_mode_flag:
+level_select_flag:
 	.byte	0
 no_level_music_flag:
 	.byte	0

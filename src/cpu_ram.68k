@@ -6,7 +6,8 @@
 
 	.global invincible_flag
 	.global start_level_flag
-	.global up_for_jump_flag
+	.global infinite_bullets_flag
+	.global level_select_flag
 	.global up_previously_pressed_flag
 	.global skip_first_loop_flag
 	.global vb_ticks_count
@@ -98,9 +99,9 @@ infinite_time_flag:
 	.byte	0
 up_previously_pressed_flag:
 	.byte	0
-up_for_jump_flag:
+level_select_flag:
 	.byte	0
-music_off_flag:
+infinite_bullets_flag:
 	.byte 	0
 
 	.ifndef	OPT_ENABLE_LOGGING
