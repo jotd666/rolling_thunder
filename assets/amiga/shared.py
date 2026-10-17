@@ -3,7 +3,7 @@ import os,sys,bitplanelib,subprocess,json,pathlib
 
 this_dir = pathlib.Path(__file__).absolute().parent
 
-data_dir = this_dir / ".." / ".."
+data_dir = this_dir / ".." / ".." / "data"
 
 
 src_dir = this_dir / ".." / ".." / "src" / "amiga"
@@ -17,6 +17,10 @@ dump_dir = this_dir / "dumps"
 used_sprite_cluts_file = this_dir / "used_sprite_cluts.json"
 fg_used_tile_cluts_file = this_dir / "fg_used_tile_cluts.json"
 used_graphics_dir = this_dir / "used_graphics"
+
+bank_dir = src_dir / "banks"
+bank_dir.mkdir(exist_ok=True)
+
 
 FG_NB_TILES = 0x400
 FG_NB_CLUTS = 64

@@ -13,7 +13,7 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
 
 
     # merge sprites with existing file + moves from level 1
-    used_dump = data_dir / os.path.basename(used_name)
+    used_dump = data_dir / used_name.name
     if used_dump.exists():
         with open(used_dump,"rb") as f:
             new_contents = f.read()
@@ -49,12 +49,16 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
         with open(merged_path_file / used_name,"wb") as f:
             f.write(contents)
     return rc
+
+context = pathlib.Path("level1")
+
 rc = merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
-rc |= merge("bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
-rc |= merge("bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
+rc |= merge(context / "bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
+rc |= merge(context / "bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
 
 ####merge("bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=True)
-rc |= merge("used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False,filter_out={
+
+rc |= merge(context / "used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=False,filter_out={
 0x118:[0x41],0x1D8:[0x41],0x340:[0x40],0x341:[6,0x41,0X40],0x304:[0,0x41,0x46],0x309:[2,6,0x40],
 0x30B:[2,6],0x13F:[0x46],0x3AC:[6]}
 )
