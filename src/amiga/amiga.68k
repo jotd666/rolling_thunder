@@ -78,9 +78,8 @@ GAME_MAX_SCROLL_X = 0x200
 GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
-BG_TILE_FILE_MAX_SIZE = 0x14000
-SPRITE_FILE_MAX_SIZE = 0x1F000
-*SPRITE_FILE_MAX_SIZE = 0x1C800   | 8k smaller without the white arremers
+BG_TILE_FILE_MAX_SIZE = 540000
+SPRITE_FILE_MAX_SIZE = 920000
 
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 120000
@@ -978,6 +977,9 @@ demo_game:
 	pea		level1_interrupt(pc)
 	move.l	(a7)+,(0x64,a1)
 
+	moveq	#0,d0
+	jbsr	load_context
+
 	* enable interrupts on the host side
 	* (still off on the target side)
 	jbsr	enable_interrupts
@@ -1010,7 +1012,7 @@ demo_game:
 	
 	.ifne	OPT_SPRITE_MIRRORING
 mirror_common_sprites:
-	lea		shared_bob_table,a0
+	move.l		sprite_table,a0
 	move.w	#0x3FF,d7
 0:
 	move.l	(a0)+,d0
@@ -1176,7 +1178,7 @@ make_automatic_sound_channels:
 
 
 current_context:
-	.word	0
+	.word	-1
 previous_context:
 	.word	0
 	
@@ -1188,7 +1190,7 @@ load_context:
 	rts
 0:
 	movem.l	d0-a6,-(a7)
-	jbsr	osd_disable_interrupts
+	jbsr	disable_interrupts
 	
 	.ifne	OPT_ENABLE_LOGGING
 	* reset logged tiles
@@ -1196,6 +1198,17 @@ load_context:
 0:
 	clr.l	(a0)+
 	cmp.l	#bg0_tile_log_table_end,A0
+	jne	0b
+	lea	bg1_tile_log_table,a0
+0:
+	clr.l	(a0)+
+	cmp.l	#bg1_tile_log_table_end,A0
+	jne	0b
+	* reset logged tiles
+	lea	sprite_log_table,a0
+0:
+	clr.l	(a0)+
+	cmp.l	#sprite_log_table_end,A0
 	jne	0b
 	.endif
 	
@@ -1205,11 +1218,11 @@ load_context:
 	move.w	current_context,previous_context
 	move.w	d0,current_context
 
-	*lea	tile_context_name_table,A0
+	lea		tile_context_name_table,A0
 	add.w	d0,d0	
 	add.w	d0,d0
 	move.l	(a0,d0.w),a0
-	clr.l	context_sprite_table_ptr		| "free" sprites too
+	clr.l	sprite_table		| "free" sprites too
 	lea		bg_character_table_buffer,a1
 	move.l	a1,bg_character_table_buffer_ptr
 	move.l	#BG_TILE_FILE_MAX_SIZE,d0
@@ -1220,29 +1233,24 @@ load_context:
 	* thus allowing pre-computed symmetric bitmaps
 
 	move.w	current_context,d0
-	*lea	sprite_context_name_table,A0
+	lea	sprite_context_name_table,A0
 	add.w	d0,d0	
 	add.w	d0,d0
 	move.l	(a0,d0.w),a0
 	lea		sprite_table_buffer,a1
-	move.l	a1,context_sprite_table_ptr
+	move.l	a1,sprite_table
 	move.l	#SPRITE_FILE_MAX_SIZE,d0
 	jbsr	load_file
 	* todo: copy the first level of pointers in fastmem (256*4: 1kb)
 	jbsr	relocate_sprites_file
 
 	jbsr	relocate_tiles_file
-30:
-	* re-set pointer
-	move.l	bg_character_table_buffer_ptr,a0
-	lea		(TOTAL_NB_COLORS,a0),a0		| skip 32 color palette
-	move.l	a0,bg_tile_character_table				| set character table pointer
-	
+
 	* optimize: should we mirror Y tiles? only in some contexts
-	move.w	current_context,d0
-	lea		mirror_y_tile_table,a0
-	tst.b	(a0,d0.w)
-	sne		must_mirror_y_tiles
+*	move.w	current_context,d0
+*	lea		mirror_y_tile_table,a0
+*	tst.b	(a0,d0.w)
+*	sne		must_mirror_y_tiles
 	
 
 	* at start redraw everything
@@ -1263,6 +1271,11 @@ load_context:
 0:
 	.endif
 	
+	move.l	bg_tile_palette,a0
+	move.l	color_copper_pointers,a1	| entries 0-63
+	move.w	#TOTAL_NB_COLORS,d0
+	jbsr	load_palette
+
 	jbsr	enable_interrupts
 
 	movem.l	(a7)+,d0-a6
@@ -1271,16 +1284,35 @@ load_context:
 relocate_tiles_file:
 	* now relocate the tile file
 	move.l	bg_character_table_buffer_ptr,a0
-	lea		(TOTAL_NB_COLORS,a0),a0		| skip 32 color palette
-	move.l	a0,bg_tile_character_table				| set character table pointer
-	move.l	a0,d0
+	move.l	(a0),a1		| bg0 character table base
+	add.l	a0,a1		| make it absolute
+	move.l	a1,bg0_character_table
+	move.l	(4,a0),a1		| bg0 character table base
+	add.l	a0,a1		| make it absolute
+	move.l	a1,bg1_character_table
+	
+	addq	#8,a0
+	move.l	a0,bg_tile_palette
+	
+	move.w	#NB_BG_PLANES-1,d4
+	move.l	bg0_character_table,A0
+	jbsr	reloc_tiles
+	move.w	#NB_BG_PLANES,d4			| this layer has a mask
+	move.l	bg1_character_table,A0
+	jbsr	reloc_tiles
+	
+	rts
+	
+reloc_tiles:
 	move.w	#BG_TILE_COUNT-1,d7
+	move.l	a0,d0		| reloc base
 0:
 	move.l	(a0)+,d1
 	jeq		10f
+	* not 0: relocate
 	add.l	d0,d1
 	move.l 	d1,(-4,a0)
-	move.l	d1,a1
+	move.l	d1,a1		| clut layer
 
 	* relocate pointers on bitplane list in clut table
 	move.w	#BG_TILE_NB_CLUTS-1,d6
@@ -1291,7 +1323,7 @@ relocate_tiles_file:
 	move.l	d2,(-4,a1)
 	move.l	d2,a2
 	* relocate pointers on bitplanes
-	moveq	#NB_BG_PLANES-1,D5	| 5 bitplanes
+	move	d4,D5	| 6 or 7 bitplanes
 2:
 	move.l	(a2)+,d3
 	jeq		4f
@@ -1308,7 +1340,7 @@ relocate_tiles_file:
 
 relocate_sprites_file:
 	* now relocate the tile file
-	move.l	context_sprite_table_ptr,a0
+	move.l	sprite_table,a0
 	move.l	a0,d0
 	jne		0f
 	rts
@@ -1330,8 +1362,6 @@ relocate_sprites_file:
 	move.l	d2,(-4,a1)
 	move.l	d2,a2
 	* relocate pointers on bitplanes
-	move.l	a2,a3		| store bitplane data with headers for later
-	addq	#8,a2		| skip dimensions (else boom!)
 	moveq	#NB_PLAYFIELD_PLANES-1+1,D5  | mask!!
 2:
 	move.l	(a2)+,d3
@@ -1340,14 +1370,14 @@ relocate_sprites_file:
 	move.l	d3,(-4,a2)
 4:
 	dbf		D5,2b
-	* finished processing bitplanes. Do we have to compute mirror bitplanes?
-	cmp.w	#-2,(a2)
-	jeq		5f
-	* yes, we need to fill the data
-
-
-
-	*jbsr	compute_mirror_bitplanes
+*	* finished processing bitplanes. Do we have to compute mirror bitplanes?
+*	cmp.w	#-2,(a2)
+*	jeq		5f
+*	* yes, we need to fill the data
+*
+*
+*
+*	*jbsr	compute_mirror_bitplanes
 5:
 	dbf		d6,1b
 10:
@@ -1371,9 +1401,6 @@ set_initial_scroll_values:
 	rts
 	
 force_all_screen_redraw:
-	lea		_custom,a5
-	REALLY_WAIT_BLIT
-	jbsr	disable_interrupts
 	CPU1_GET_MEMORY_START_IN_A6
 	* given the current scroll X/Y, draw all tiles on screen
 	jbsr	set_initial_scroll_values
@@ -1426,7 +1453,6 @@ force_all_screen_redraw:
 	addq	#2,a0
 	dbf		d7,0b
 	
-	jbsr	enable_interrupts
 	
 	rts
 	
@@ -1590,7 +1616,7 @@ main_loop_hook:
 	movem.l	d0-d7/a0-a6,-(a7)
 	move.l	savegame_function,a1
 	jbsr	prepare_custom_registers
-	*move.w	current_context,(0x3000,a6)
+	move.w	current_context,(0x3000,a6)
 	jbsr	(a1)
 	jbsr	restore_custom_registers
 	movem.l	(a7)+,d0-d7/a0-a6
@@ -1603,7 +1629,7 @@ main_loop_hook:
 	move.l	loadgame_function,a1
 	jbsr	prepare_custom_registers
 	jbsr	(a1)
-	*move.w	(port_1_3800,a6),d2		| save previous context that we loaded
+	move.w	(0x3000,a6),d2		| save previous context that we loaded
 	jbsr	restore_custom_registers
 	swap	d0		| returncode seems broken! if escaped MSW is zero
 	tst.w	d0
@@ -1611,8 +1637,7 @@ main_loop_hook:
 	moveq	#0,d0
 	move.w	d2,d0
 	* now we should load the context
-	*jbsr	load_context
-	jbsr	force_all_screen_redraw
+	jbsr	load_context
 9:
 	movem.l	(a7)+,d0-d7/a0-a6
 	
@@ -2679,8 +2704,9 @@ really_update_sprites:
 	move.l	bob_previous_drawed_sprites(pc),a6
 	move.l	game_scroll_x,(a6)+	| note down scrolling values at the current time
 	
-	lea		shared_bob_table,a4
-	
+	move.l		sprite_table,d0
+	jeq			200f
+	move.l	d0,a4
 	* first pass: draw low-priority sprites
 	moveq	#NB_TARGET_SPRITES-1,d7
 1:
@@ -2730,7 +2756,7 @@ really_update_sprites:
 0:
 	add.w	#CURRENT_SPRITE_SIZE,a0
 	dbf		d7,1b
-
+200:
 	rts
 	
 *void namcos86_state::draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
@@ -2890,6 +2916,7 @@ update_one_bob:
 	lea		sprite_translation_data,a1
 	movem.w	d0-d3,(a1)
 	movem.w	(a7)+,d0-d3
+	
 	.ifndef	NO68020
 	move.l	(a4,d2.w*4),d4		| get pointer from shared bob table
 	.else
@@ -2940,9 +2967,9 @@ update_one_bob:
 	move.l	(a0,d2.w),d4
 	.endif
 	jeq		2f		| invalid clut: can happen in transition phases
+
 	move.l	d4,a0
-	
-	lea	(8,a0),a0		| skip dimensions immediately we know them
+	* there are no dimension values. Everything is 32x32, no need to skip anything
 	move.l	a0,raw_32x32_sprite_data
 	
 	* 32x32 sprite+cluts are chosen. Now see if we must create a sub-sprite
@@ -3149,15 +3176,12 @@ compose_16xw_dynamic_bob:
 
 * < A0: plane list <= fixed on internal variable
 * < D3: required orientation
-* < D4: height		<= fixed to 32
-* < D5: width (bytes) including 16 bit shift <= fixed to 6
 * trashes: only unused registers :) A3
 
 mirror_sprite_planes_32x32:
 	movem.l	d0-d2/d4-d6/a0,-(a7)
 	move.l	raw_32x32_sprite_data,a0
-	move.w	#0x20,d4
-	moveq	#6,d5
+	move.w	#0x20,d4		| 32 pixels high
 	
 	* bitplanes aren't pre-computed: check bitplanes current orientation and swap
 	* if required. This is slow but saves memory
@@ -3165,14 +3189,7 @@ mirror_sprite_planes_32x32:
 	lea		mirror_table,a1
 	.endif
 	moveq	#NB_PLAYFIELD_PLANES+1-1,d6
-	lea		mirror_function_table(pc),a3
-	.ifndef	MC68020
-	move.w	d5,d0       | number of byte values (ex: 4: 16 bits + shifting)
-	add.w	d0,d0
-	move.l	(a3,d0.w),a3
-	.else
-	move.l	(a3,d5.w*2),a3		| compute mirror function once and for all
-	.endif
+	lea		mirror_32_bit_wide(pc),a3
 0:
 	move.l	(a0)+,d1		| current plane data
 	jeq		1f				| no data: skip
@@ -3982,10 +3999,6 @@ platform_init:
 	dbf		d7,0b
 	
 	
-	lea		bg_tile_palette,a0
-	move.l	color_copper_pointers,a1	| entries 0-63
-	move.w	#TOTAL_NB_COLORS,d0
-	jbsr	load_palette
 	
 	
 	jbsr		set_bobs_bitplanes
@@ -4536,13 +4549,12 @@ update_bg0_tile:
 	moveq	#0,d0
 	move.b	(a6)+,d0
 	move.b	(a6),d1
-	*move.l		bg_tile_character_table,d0
-	*jeq		100f			| no context loaded: out
-	*move.l	d0,a0
-	lea		bg0_character_table,a0
+	move.l	bg0_character_table,d6
+	jeq		100f			| no context loaded: out
+	move.l	d6,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
-	jeq		11f		| no bitmap: exit (don't even try to look for layer 1)
+	jeq		11f		    | no bitmap: exit (don't even try to look for layer 1)
 	move.l	d0,a5		| pointer on proper clut of tile for layer 0
 
 	add.w	#0xFFF,a6
@@ -4551,7 +4563,7 @@ update_bg0_tile:
 	move.b	(a6),d1
 	
 	* now layer 1
-	lea		bg1_character_table,a0
+	move.l	bg1_character_table,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
 	jne		0f		| no bitmap: exit (don't even try to look for layer 1)
@@ -4593,8 +4605,7 @@ copy_tile:
 44:
 	cmp.l	#empty_row,d1
 	jeq		555f
-	move.b	#0,0x110
-	
+
 555:
 	move.l	(a6)+,d0		| next plane for layer 0
 	jne		45f				| if layer 0 
@@ -5771,7 +5782,11 @@ get_sprite_pos_and_size_offset:
 	
 redraw_bg_tiles:
 	movem.l	d0-a6,-(a7)
+	lea		_custom,a5
+	REALLY_WAIT_BLIT
+	jbsr	disable_interrupts
 	jbsr 	force_all_screen_redraw
+	jbsr	enable_interrupts
 	movem.l	(a7)+,d0-a6
 	rts
 	
@@ -6669,7 +6684,28 @@ sprite_mem_name:
 
 	* variable block
 
+tile_level_1:
+	.asciz	"level1_tiles"
+sprite_level_1:
+	.asciz	"level1_sprites"
+
 	.align	2
+
+tile_context_name_table:
+	.long	tile_level_1
+sprite_context_name_table:
+	.long	sprite_level_1
+	
+	
+bg0_character_table:
+	.long	0
+bg1_character_table:
+	.long	0
+sprite_table:
+	.long	0
+bg_tile_palette:	
+	.long	0
+
 layer012_row_flags:
 	.skip	NB_TILE_ROWS
 layer012_flags:
@@ -7089,10 +7125,7 @@ mirror_buffer_ptr:
 	.long	0
 mirror_buffer_context_ptr:
 	.long	0
-context_sprite_table_ptr:
-	.long	0
-bg_tile_character_table:
-	.long 	0
+
 bg_character_table_buffer_ptr:
 	.long	0
 bg_character_table_buffer:
