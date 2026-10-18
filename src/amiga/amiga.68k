@@ -3027,14 +3027,15 @@ size_and_translation_done:
 
 * now we have to check if mirror must be performed, either by doing this in-place
 * or by selecting already mirrored data
-	tst.w		((NB_PLAYFIELD_PLANES+1)*4,a0)		| load mirrored data pointers
-	jmi		101f		| invalid pointers: we must do in-place
-	btst	#MIRROR_BIT,d3
-	jeq		102f
-	* to mirror, just change pointer list
-	lea	((NB_PLAYFIELD_PLANES+1)*4,a0),a0
-	* and skip mirroring bit
-	jra		103f
+* here we never pre-mirror stuff, not enough chip!
+*	tst.w		((NB_PLAYFIELD_PLANES+1)*4,a0)		| load mirrored data pointers
+*	jmi		101f		| invalid pointers: we must do in-place
+*	btst	#MIRROR_BIT,d3
+*	jeq		102f
+*	* to mirror, just change pointer list
+*	lea	((NB_PLAYFIELD_PLANES+1)*4,a0),a0
+*	* and skip mirroring bit
+*	jra		103f
 101:
 	btst	#MIRROR_BIT,d3
 102:
