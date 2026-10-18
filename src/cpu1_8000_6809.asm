@@ -7010,6 +7010,7 @@ B89C: C1 C0       CMPB   #$C0
 B89E: 25 01       BCS    $B8A1
 B8A0: 39          RTS
 
+; triggers at level 3
 B8A1: C4 FC       ANDB   #$FC
 B8A3: 54          LSRB
 B8A4: CE B8 B7    LDU    #table_of_jump_tables_b8b7
@@ -7020,7 +7021,7 @@ B8AD: 2A 01       BPL    $B8B0
 B8AF: 39          RTS
 B8B0: 84 7C       ANDA   #$7C
 B8B2: 44          LSRA
-B8B3: EE C6       LDU    A,U		; [breakpoint] select proper table 0-3 (unreferenced jump_table_b7a6 ??)
+B8B3: EE C6       LDU    A,U	    	; select proper table 0-3 (unreferenced jump_table_b7a6 ??)
 B8B5: 6E D5       JMP    [B,U]		; [indirect_jump] [nb_entries=127]
 
 table_of_jump_tables_b8b7:

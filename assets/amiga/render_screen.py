@@ -395,7 +395,7 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
         if sy:
             cell = sheets.cell(sprite, color)
             code = spr[o+11]
-            if dump_list and code and (cell is not None or spr[o + 11] or spr[o + 13]):
+            if dump_list and (cell is not None or spr[o + 11] or spr[o + 13]):
                 print(f"  @{o:04x} cell=0x{sprite:04x} (code=0x{code:03x} "
                       f"bank={sprite_bank}) clut=0x{color:03x} "
                       f"{sizex:2d}x{sizey:2d} src=({tx:2d},{ty:2d}) "
@@ -436,7 +436,10 @@ def render_screen(dump, sheets=None, *, prom=None, tilebank=0,
     backcolor   : back colour register, pen 7 of that tile clut fills the screen
     """
     if len(dump) < SPRITE_LIST + 0x800:
-        raise ValueError(f"dump too short: {len(dump)} bytes")
+        print("padding tile zone with zeroes (only sprites used)")
+        dump = bytes(0x5800) + dump
+    if len(dump) < SPRITE_LIST + 0x800:
+        raise ValueError(f"dump too short: {len(dump):x} bytes")
     if sheets is None:
         sheets = default_sheets(verbose, rom_path)
     if prom is None:

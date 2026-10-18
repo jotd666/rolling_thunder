@@ -79,7 +79,7 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
 BG_TILE_FILE_MAX_SIZE = 800000
-SPRITE_FILE_MAX_SIZE = 1000000
+SPRITE_FILE_MAX_SIZE = 0x110000
 
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 120000
@@ -1821,7 +1821,6 @@ level3_interrupt:
 	jbsr		toggle_pause
 0:
 	jbsr	update_hud_layer
-	jbsr	update_other_layers
 	
 	.ifne	OPT_ENABLE_LOGGING
 	* log fg_tiles/bg_tiles
@@ -1975,7 +1974,9 @@ level1_interrupt:
 
 	.if		OPT_BLIT_CHAIN_MODE==0
 	jbsr	set_scroll_values
+	jbsr	update_other_layers
 	jbsr		really_update_sprites
+
 
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
 	jbsr		switch_screen_buffers
@@ -2859,10 +2860,6 @@ update_one_bob:
 	and.b	#7,d1				| sprite bank
 	lsl.w	#7,d1				| times 0x80
 	add.w	d1,d2				| extended sprite code
-	jne		0f
-	tst.b	(TARGET_SPRITE_COLOR,a0)
-	jeq		2f					| 0+0 => out
-0:	
 
 	jbsr	compute_sprite_xy
 	cmp.w	#288,d0
@@ -4222,10 +4219,7 @@ osd_video_word_dirty_cpu1:
 	jcc		0f
 	lea		layer012_row_flags,a0
 	lea		layer012_flags,a1
-	cmp.w	#0x188,d7
-	jne		666f
-	move.b	#0,0x111
-666:
+
 	cmp.w	#0x2000,d7
 	jcc		101f		| layer 2 is ignored	
 0:
@@ -6675,14 +6669,32 @@ tile_level_2:
 	.asciz	"level2_tiles"
 sprite_level_2:
 	.asciz	"level2_sprites"
+tile_level_3:
+	.asciz	"level3_tiles"
+sprite_level_3:
+	.asciz	"level3_sprites"
+tile_level_4:
+	.asciz	"level4_tiles"
+sprite_level_4:
+	.asciz	"level4_sprites"
+tile_level_5:
+	.asciz	"level5_tiles"
+sprite_level_5:
+	.asciz	"level5_sprites"
 
 	.align	2
 
 tile_context_name_table:
 	.long	tile_level_1
 	.long	tile_level_2
+	.long	tile_level_3
+	.long	tile_level_2
+	.long	tile_level_2
 sprite_context_name_table:
 	.long	sprite_level_1
+	.long	sprite_level_2
+	.long	sprite_level_3
+	.long	sprite_level_2
 	.long	sprite_level_2
 	
 	

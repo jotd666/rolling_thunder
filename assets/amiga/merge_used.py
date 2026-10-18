@@ -50,7 +50,7 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
             f.write(contents)
     return rc
 
-context = pathlib.Path("level2")
+context = pathlib.Path("level3")
 
 rc = merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 rc |= merge(context / "bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)

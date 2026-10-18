@@ -48,7 +48,7 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("move.w\t(4,a7),d4",lines,i)
     elif address in [0x8592,0x85a1]:
         line = change_instruction("rts",lines,i)  # rti => rts
-    elif address in {0xb643,0xB8A4,0xb8bf}:
+    elif address in {0xb643,0xb8bf}:
         line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
     elif address == 0x800a:
         # skip memory/video memory test of boot

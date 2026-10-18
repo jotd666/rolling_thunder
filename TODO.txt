@@ -1,11 +1,15 @@
+- hoodies partially drawn when climbing up/down railings: pause+render
+- load game: clear HUD doesn't work
+- probably level 3 uses different tile bank ex osd_set_tilebank_8c00
+- extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
+  is done in-screen
+- force tile 0 clut 0
+
 - caution: chipmem limit??? check top chip in exe
-- A3A6: new level
 - start skips the "select area" part doesn't work
-- unknown sound D2 when completing level = A, C (time count bonus)
 
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
 - sprites 128 colors, bg in 64 to avoid washed down
-- hoodies partially drawn when climbing up/down railings: pause+render
 - blit title screen should reset scroll (host_scroll, etc.)
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
