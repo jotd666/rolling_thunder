@@ -78,8 +78,8 @@ GAME_MAX_SCROLL_X = 0x200
 GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
-BG_TILE_FILE_MAX_SIZE = 540000
-SPRITE_FILE_MAX_SIZE = 920000
+BG_TILE_FILE_MAX_SIZE = 800000
+SPRITE_FILE_MAX_SIZE = 1000000
 
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 120000
@@ -249,21 +249,22 @@ BIT_FIRE_2 = 5
 	clr.w	(a1,d7.w)
 	.endm
 	
-	.macro	WRITE_TEXT	text,x_offset
+	.macro	WRITE_TEXT	text,color
+	lea		(0x3208+4+0x80*row,a6),a0
 	lea		\text,a1
-	lea		(0x2047+\x_offset+0x20*row,a6),a0
-	move.b	current_color,d0
+	move.b	#\color,d0
 	jbsr	display_text
 	.set	row,row+1
 	.endm
 
-	.macro	WRITE_HEX	value
+	.macro	WRITE_HEX	value,color
 	move.w	\value,d1
-	lea		(0x2047+0x20*row+14,a6),a0
-	move.b	current_color,d0
+	lea		(0x3208+0x80*row+14*2,a6),a0
+	move.b	#\color,d0
 	jbsr	display_number
 	.set	row,row+1
 	.endm
+
 	
 	* S aka D5 is used a lot in the code as virtual stack, not only
 	* using host 68k SP. So we need to be consistent with its value
@@ -352,8 +353,7 @@ BIT_FIRE_2 = 5
 	.global osd_yield    | A.I. generated task switcher
 	.global osd_break		| for debug	
 	.global osd_blitz		| for debug
-	.global osd_read_dsw1
-	.global osd_read_dsw2
+	.global osd_set_context
 	.global osd_event_loop_cpu2
 	.global	osd_set_cpu1_bank
 	.global	osd_set_cpu2_bank
@@ -618,18 +618,21 @@ apply_settings:
 	rts
 
 display_text:
-	move.l	a0,-(a7)
 0:
 	move.b	(a1)+,d1
 	jmi		1f
+	cmp.b	#0xA,d1
+	jcs		2f
+	sub.b	#0x41-0xA,d1
+2:
 	move.b	d1,(a0)
-	move.b	d0,(0x400,a0)
+	move.b	#0xFC,(1,a0)
 	jbsr	osd_video_byte_dirty_cpu1
-	addq	#1,a0
+	addq	#2,a0
 	jra		0b
 1:
-	move.l	(a7)+,a0
 	rts
+	
 
 	.ifndef	RELEASE
 	
@@ -1179,8 +1182,7 @@ make_automatic_sound_channels:
 
 current_context:
 	.word	-1
-previous_context:
-	.word	0
+
 	
 * < D0: context name
 load_context:
@@ -1215,7 +1217,6 @@ load_context:
 	* clear mirror buffer (reset it just after the shared bob mirror data)
 	move.l	mirror_buffer_context_ptr,mirror_buffer_ptr
 
-	move.w	current_context,previous_context
 	move.w	d0,current_context
 
 	lea		tile_context_name_table,A0
@@ -1668,6 +1669,11 @@ osd_set_tilebank_8800:
 osd_set_tilebank_8c00:
 	rts
 	
+osd_set_context:
+	subq	#1,d0
+	jbsr	load_context
+	rts
+	
 * < D0: bank number	
 osd_set_cpu1_bank:
 	moveq	#0,d7
@@ -1982,49 +1988,21 @@ level1_interrupt:
 	jeq		0f
 	.set	row,2
 	CPU1_GET_MEMORY_START_IN_A6
-	move.b	#2,current_color
-	WRITE_TEXT	scrollx_text,0
-	WRITE_TEXT	scrolly_text,0
-	WRITE_TEXT	hscrollx_text,0
-	WRITE_TEXT	last_x_offset_text,0
-	move.b	#4,current_color
-	WRITE_TEXT	debug_1_text,0
-	WRITE_TEXT	debug_2_text,0
-	WRITE_TEXT	debug_3_text,0
+	WRITE_TEXT	scrollx_text,2
+	WRITE_TEXT	scrolly_text,2
+	WRITE_TEXT	hscrollx_text,2
+	WRITE_TEXT	max_scrollx_text,2
+	WRITE_TEXT	min_scrollx_text,2
+	WRITE_TEXT	x_offset_text,2
 
-	.set		row,2
-	move.b	#3,current_color
-	WRITE_HEX	game_scroll_x
-	WRITE_HEX	game_scroll_y
-	WRITE_HEX	host_scroll_x
-	WRITE_HEX	x_offset
-	lea		display_slots,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1	
-10:
-	.set	row,row+1	
-	addq	#4,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1		
-10:
-	.set	row,row+1	
-	addq	#4,a2
-	tst.b	(a2)
-	jeq		10f
-	move.w	(2,a2),d0
-	move.w	(a6,d0.w),d0
-	WRITE_HEX	d0
-	.set	row,row-1		
-10:
-	
+	.set		row,5
+	WRITE_HEX	game_scroll_x,3
+	WRITE_HEX	game_scroll_y,3
+	WRITE_HEX	host_scroll_x,3
+	WRITE_HEX	max_scroll_x,3
+	WRITE_HEX	min_scroll_x,3
+	WRITE_HEX	x_offset,3
+
 	
 0:
 	.endif
@@ -6458,26 +6436,30 @@ run_text:
 
 	.ifndef	RELEASE
 scrollx_text:
-	.ascii	"Game ScrollX "
+	.ascii	"GAME SCROLLX "
 	.byte	0xff
 hscrollx_text:
-	.ascii	"Host ScrollX "
+	.ascii	"HOST SCROLLX "
 	.byte	0xff
 scrolly_text:
-	.ascii	"Game ScrollY "
-	.byte	0xff	
-last_x_offset_text:
-	.ascii	"Last Xoffset "
+	.ascii	"GAME SCROLLY "
 	.byte	0xff
-debug_1_text:
-	.ascii	"User 1 "
+hscrolly_text:
+	.ascii	"HOST SCROLLY "
 	.byte	0xff
-debug_2_text:
-	.ascii	"User 2 "
+max_scrollx_text:
+	.ascii	"MAX SCROLLX "
 	.byte	0xff
-debug_3_text:
-	.ascii	"User 3 "
+min_scrollx_text:
+	.ascii	"MIN SCROLLX "
 	.byte	0xff
+x_offset_text:
+	.ascii	"X OFFSET "
+	.byte	0xff
+xl_offset_text:
+	.ascii	"XL OFFSET "
+	.byte	0xff
+	.align 2
 
 
 	.align	2
@@ -6689,13 +6671,19 @@ tile_level_1:
 	.asciz	"level1_tiles"
 sprite_level_1:
 	.asciz	"level1_sprites"
+tile_level_2:
+	.asciz	"level2_tiles"
+sprite_level_2:
+	.asciz	"level2_sprites"
 
 	.align	2
 
 tile_context_name_table:
 	.long	tile_level_1
+	.long	tile_level_2
 sprite_context_name_table:
 	.long	sprite_level_1
+	.long	sprite_level_2
 	
 	
 bg0_character_table:

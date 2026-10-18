@@ -4856,7 +4856,7 @@ A559: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=5]
 A55B: 10 8E 5F 08 LDY    #$5F08		; layer 3 tilemap / HUD
 A55F: 86 FF       LDA    #$FF
 A561: F6 8C E9    LDB    $8CE9		; ROM
-A564: A7 A1       STA    ,Y++
+A564: A7 A1       STA    ,Y++		; [video_address]
 A566: 5A          DECB
 A567: 26 FB       BNE    $A564
 A569: 0F CE       CLR    $CE
@@ -6552,7 +6552,7 @@ B1CD: 3D          MUL
 B1CE: E3 E1       ADDD   ,S++		; [local_no_irq]
 B1D0: 58          ASLB
 B1D1: 49          ROLA
-B1D2: 10 AE CB    LDY    D,U
+B1D2: 10 AE CB    LDY    D,U		; [bank_address]
 B1D5: 8D 09       BSR    function_b1e0
 B1D7: 0C 62       INC    $62
 B1D9: D6 62       LDB    $62

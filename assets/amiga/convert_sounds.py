@@ -3,7 +3,7 @@ import shutil
 
 from shared import *
 
-gamename = "vulgus"
+gamename = "rolling_thunder"
 sox = "sox"
 
 sound_dir = this_dir / ".." / "sounds" / "synth"
@@ -38,6 +38,7 @@ def convert():
 
     dummy_sounds = {
 3,
+0xC, # no sound!
     }
 
 

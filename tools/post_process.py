@@ -67,6 +67,8 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("tst.b\tlevel_select_flag",lines,i)
     elif address == 0x81d5:
         line = change_instruction("move.b\tinvincible_flag,d0",lines,i)
+    elif address == 0xA3AD:
+        line = "\tjbsr\tosd_set_context   | next level: set new context\n"+line
     return line
 
 sc_cpu2 = SourceChanger()

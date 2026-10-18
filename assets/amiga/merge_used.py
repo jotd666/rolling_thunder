@@ -13,7 +13,7 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
 
 
     # merge sprites with existing file + moves from level 1
-    used_dump = data_dir / used_name.name
+    used_dump = data_dir / pathlib.Path(used_name).name
     if used_dump.exists():
         with open(used_dump,"rb") as f:
             new_contents = f.read()
@@ -50,7 +50,7 @@ def merge(used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
             f.write(contents)
     return rc
 
-context = pathlib.Path("level1")
+context = pathlib.Path("level2")
 
 rc = merge("hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 rc |= merge(context / "bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=False)
