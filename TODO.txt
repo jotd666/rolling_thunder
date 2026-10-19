@@ -1,9 +1,11 @@
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
-- probably level 3 uses different tile bank ex osd_set_tilebank_8c00
+- joystick not very responsive (keys work great)
+- rip level 3, 4, 5 !!!!
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen
-- force tile 0 clut 0
+- force tile 0 clut 0 in level 3
+- level 3 fully horizontal: optimize: don't do tile vertical duplication
 
 - caution: chipmem limit??? check top chip in exe
 - start skips the "select area" part doesn't work

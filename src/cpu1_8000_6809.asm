@@ -6921,10 +6921,10 @@ B64C: 44          LSRA
 B64D: EE C6       LDU    A,U
 B64F: E6 01       LDB    $1,X
 B651: C1 C0       CMPB   #$C0
-B653: 24 05       BCC    $B65A		; [breakpoint]
+B653: 24 05       BCC    $B65A
 B655: C4 FC       ANDB   #$FC
 B657: 54          LSRB
-B658: AD D5       JSR    [B,U]		; [indirect_jump] [nb_entries=2]
+B658: AD D5       JSR    [B,U]		; [indirect_jump] [nb_entries=127] (we don't know!)
 B65A: 0A 3A       DEC    $3A
 B65C: 26 01       BNE    $B65F
 B65E: 39          RTS
@@ -6935,6 +6935,7 @@ table_of_jump_tables_b664:
 	dc.w	jump_table_b6e6	; $b664
 	dc.w	jump_table_b750	; $b666
 	dc.w	jump_table_b7ba	; $b668
+	dc.w	jump_table_b824	; $b668
 
 
 B66C: 20 FE       BRA    $B66C
@@ -7697,7 +7698,7 @@ B8C2: A6 84       LDA    ,X
 B8C4: 80 20       SUBA   #$20
 B8C6: 84 7C       ANDA   #$7C
 B8C8: 44          LSRA
-B8C9: EE C6       LDU    A,U		; [breakpoint] select proper table
+B8C9: EE C6       LDU    A,U		; select proper table
 B8CB: E6 07       LDB    $7,X
 B8CD: C4 FC       ANDB   #$FC
 B8CF: 54          LSRB
@@ -7831,7 +7832,7 @@ BB6C: 35 82       PULS   A,PC		; [manual_stack_pull]
 function_bb6e:
 BB6E: 8D 20       BSR    function_bb90
 BB70: CE 20 00    LDU    #$2000		; layer 2 tilemap
-BB73: EC CB       LDD    D,U
+BB73: EC CB       LDD    D,U		; [video_address_word]
 BB75: C4 03       ANDB   #$03
 BB77: C1 03       CMPB   #$03
 BB79: 27 02       BEQ    $BB7D
@@ -13472,3 +13473,57 @@ jump_table_b7ba:
 
 
 
+jump_table_b824:
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_d105 
+	.word	function_d105
+	.word	function_cd73
+	.word	function_cd73 
+	.word	function_ce39 
+	.word	function_cf6d 
+	.word	function_cd73 
+	.word	function_ceec 
+	.word	function_d030 
+	.word	function_cc2c
+	.word	function_cc2c 
+	.word	function_cd73 
+	.word	function_d08d
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_d0c5 
+	.word	function_cc2c 
+	.word	function_cc2c
+	.word	function_d208 
+	.word	function_d208 
+	.word	function_d208 
+	.word	function_d208 
+	.word	function_d030 
+	.word	function_d030 
+	.word	function_d105 
+	.word	function_d105
+	.word	function_b8bf 
+	.word	function_cd73 
+	.word	function_cd73 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_d105 
+	.word	function_d105 
+	.word	function_cc2c
+	.word	function_cd73 
+	.word	function_cd73 
+	.word	function_cc2c 
+	.word	function_d133 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c 
+	.word	function_cc2c

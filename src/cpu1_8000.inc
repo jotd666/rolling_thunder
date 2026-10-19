@@ -35,6 +35,7 @@
 	jbsr	osd_video_word_dirty_cpu1
 	.endm
 
+
 * the function that accesses all memory (except banks)
 * without any check
 	.macro	GET_UNCHECKED_ADDRESS_FUNC
@@ -536,6 +537,10 @@ okay\@:
 	.endm
 	.macro GET_REG_VIDEO_ADDRESS	offset,reg
 	GET_REG_UNCHECKED_ADDRESS	\offset,\reg
+	.endm
+	
+	.macro GET_REG_VIDEO_ADDRESS_FROM_REG	reg,reg2
+	GET_REG_UNCHECKED_ADDRESS_FROM_REG	\reg,\reg2
 	.endm
 	
 	.macro GET_UNCHECKED_ADDRESS	offset

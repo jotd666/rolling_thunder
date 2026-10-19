@@ -46,10 +46,15 @@ def game_specific_cpu1(address,lines,i):
     elif address == 0xC663:
         # replace stack pull by direct read of B/D1
         line = change_instruction("move.w\t(4,a7),d4",lines,i)
+    elif address in [0xb8a4,0xb8bf]:
+        line = change_instruction("lea\ttable_of_jump_tables_b8b7,a2",lines,i)
+    elif address in [0xb8c9,0xb8b3,0xb64d]:
+        # select proper jump table (3 locations)
+        line = "\tadd.w\td6,d6\n"+change_instruction("move.l\t(a2,d6.w),a2",lines,i)
     elif address in [0x8592,0x85a1]:
         line = change_instruction("rts",lines,i)  # rti => rts
-    elif address in {0xb643,0xb8bf}:
-        line = change_instruction(f'BREAKPOINT "{address:04x}"',lines,i)
+    elif address in {0xb643}:
+        line = change_instruction("lea\ttable_of_jump_tables_b664,a2",lines,i)
     elif address == 0x800a:
         # skip memory/video memory test of boot
         line = change_instruction("jra\tnormal_start_8190",lines,i)

@@ -570,8 +570,7 @@ apply_settings:
 	btst	#0,d1
 	seq		frameskip
 
-
-	sne		startup_menu_flag
+	*sne		startup_menu_flag
 	.ifne	OPT_CD32_VERSION
 	* force the flag
 	st		no_level_music_flag
@@ -1463,6 +1462,7 @@ draw_left_tiles:
 	sub.w	#BG_TILE_WIDTH,d0		| else refresh will be okay but visible
 	jra		draw_column_tiles
 draw_right_tiles:
+	rts
 	move.w	max_scroll_x,d0
 
 draw_column_tiles:
@@ -1617,7 +1617,10 @@ main_loop_hook:
 	movem.l	d0-d7/a0-a6,-(a7)
 	move.l	savegame_function,a1
 	jbsr	prepare_custom_registers
+	* early 3000 addresses are HUD tiles that are never shown
+	* we can use that memory to save extra data
 	move.w	current_context,(0x3000,a6)
+	move.w	tile_bank_offset,(0x3002,a6)
 	jbsr	(a1)
 	jbsr	restore_custom_registers
 	movem.l	(a7)+,d0-d7/a0-a6
@@ -1631,6 +1634,7 @@ main_loop_hook:
 	jbsr	prepare_custom_registers
 	jbsr	(a1)
 	move.w	(0x3000,a6),d2		| save previous context that we loaded
+	move.w	(0x3002,a6),tile_bank_offset
 	jbsr	restore_custom_registers
 	swap	d0		| returncode seems broken! if escaped MSW is zero
 	tst.w	d0
@@ -1663,10 +1667,11 @@ osd_event_loop_cpu2:
 	movem.l	(a7)+,d0-a6
 	rts
 	
-* ATM disabled
 osd_set_tilebank_8800:
+	clr.w	tile_bank_offset
 	rts
 osd_set_tilebank_8c00:
+	move.w	#0x800,tile_bank_offset
 	rts
 	
 osd_set_context:
@@ -4519,7 +4524,7 @@ update_bg0_tile:
 	move.w	d0,plane_offset
 
 	lea		(a6,d7.w),a6
-	moveq	#0,d0
+	move.w	tile_bank_offset,d0
 	move.b	(a6)+,d0
 	move.b	(a6),d1
 	move.l	bg0_character_table,d6
@@ -4532,6 +4537,7 @@ update_bg0_tile:
 
 	add.w	#0xFFF,a6
 	move.w	#0x400,d0	| add 0x400 offset for layer 1 tileset
+	add.w	tile_bank_offset,d0
 	move.b	(a6)+,d0
 	move.b	(a6),d1
 	
@@ -5349,7 +5355,6 @@ log_used_bgx_tiles:
 0:
 
 	moveq	#0,d1
-	moveq	#0,d0
 	move.b	(a5,d7.w),d0	| tile code
 	move.b	(1,a5,d7.w),d1	| tile attribute
 
@@ -5359,6 +5364,7 @@ log_used_bgx_tiles:
 	move.b	d1,d3	| attribute + tile msbits
 	and.w	#0x3,d3
 	lsl.w	#8,d3	| tile offset
+	add.w	tile_bank_offset,d3
 	add.w	d3,d2	| extended tile code
 	* clut lowest bits kind of "conflicts" with tile number
 	* highest bits
@@ -6707,6 +6713,8 @@ sprite_table:
 bg_tile_palette:	
 	.long	0
 
+tile_bank_offset:
+	.word	0
 layer012_row_flags:
 	.skip	NB_TILE_ROWS
 layer012_flags:
