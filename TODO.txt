@@ -1,3 +1,4 @@
+- rip sound 8 (level 4)
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)
