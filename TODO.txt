@@ -1,4 +1,4 @@
-- level 4: 82B6: EF 85       STU    B,X  B=$80 X=$0 => negative? game error?
+- 
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)
@@ -17,6 +17,8 @@
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
 - implement infinite bullets cheat
+- maybe create context for cut scenes as big pics are sprites and aren't used
+  in the game: wastes sprite data & also possibly palette entries
   
 could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
 order the palette with those 16 first (also: would draw faster)
@@ -35,7 +37,6 @@ when character is killed, it sometimes reaches
 8DCF: 84 7C       ANDA   #$7C
 8DD1: 44          LSRA
 8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
-
 
 placement of the 5th sprite isn't correct (1 pixel off!)
 optim: write same char (HUD): avoid, game does that all the time

@@ -4744,15 +4744,16 @@ A3FA: 44          LSRA
 A3FB: 44          LSRA
 A3FC: 26 02       BNE    $A400
 A3FE: 86 FF       LDA    #$FF
-A400: ED A4       STD    ,Y
+A400: ED A4       STD    ,Y		; [video_address_word]
 A402: 96 C3       LDA    $C3
 A404: 84 0F       ANDA   #$0F
-A406: ED 22       STD    $2,Y
+A406: ED 22       STD    $2,Y		; [video_address_word]
 A408: 96 C3       LDA    $C3
 A40A: 8B 01       ADDA   #$01
 A40C: 19          DAA
 A40D: 97 C3       STA    $C3
 A40F: 0F C4       CLR    $C4
+; increase level number (stage 5)
 A411: 96 C5       LDA    starting_area_c5
 A413: 8B 01       ADDA   #$01
 A415: 19          DAA
@@ -9345,6 +9346,7 @@ C660: 7E B5 AE    JMP    function_b5ae
 
 
 ; called 6x  from $C629, $C631, $C639, $C6AC, $C6B4, $C6BC
+; when shooting fire man, it explodes in several fire men
 function_c663:		; [cc_handled]
 C663: EE 62       LDU    $2,S		; [pushed_parameter] retrieve pushed object number from stack (X)
 C665: BD B5 80    JSR    function_b580
@@ -9352,12 +9354,12 @@ C668: 26 01       BNE    $C66B
 C66A: 39          RTS
 C66B: 86 20       LDA    #$20
 C66D: A7 04       STA    $4,X
-C66F: A6 45       LDA    $5,U		; [video_address]
+C66F: A6 45       LDA    $5,U
 C671: A7 05       STA    $5,X
-C673: EC 5A       LDD    -$6,U		; [video_address]
+C673: EC 5A       LDD    -$6,U
 C675: E3 A1       ADDD   ,Y++
 C677: ED 1A       STD    -$6,X
-C679: EC 5C       LDD    -$4,U		; [video_address]
+C679: EC 5C       LDD    -$4,U
 C67B: E3 A1       ADDD   ,Y++
 C67D: ED 1C       STD    -$4,X
 C67F: EC A4       LDD    ,Y

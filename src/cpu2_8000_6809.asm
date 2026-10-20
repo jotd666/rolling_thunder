@@ -621,29 +621,30 @@ build_sprite_list_81bb:
 826A: A7 01       STA    $1,X
 826C: 5A          DECB
 826D: 26 F6       BNE    $8265
+; X = base of the sorted pointer array (CPU2-only RAM)
 826F: 8E 00 00    LDX    #$0000		; work RAM (CPU2 only - hidden behind sound RAM on CPU1)
-8272: 10 8E 18 01 LDY    #$1801
+8272: 10 8E 18 01 LDY    #$1801		; Y = base of the per-bucket index counters
 8276: 96 20       LDA    $20
 8278: 97 21       STA    $21
 827A: 96 52       LDA    $52
 827C: 9B 53       ADDA   $53
-827E: 27 21       BEQ    $82A1
-8280: CE 10 00    LDU    #$1000
-8283: 97 55       STA    $55
+827E: 27 21       BEQ    $82A1		; no objects at all -> skip
+8280: CE 10 00    LDU    #$1000		; the scenery/door object pool (CPU1 $5000)
+8283: 97 55       STA    $55          ; $55 = object count = loop counter
 8285: A6 C4       LDA    ,U
-8287: 2B 13       BMI    $829C
-8289: A6 44       LDA    $4,U
+8287: 2B 13       BMI    $829C		; slot not eligible -> next slot
+8289: A6 44       LDA    $4,U		; A = bucket selector (should be 0,$10,$20..$70)
 828B: 44          LSRA
-828C: E6 A6       LDB    A,Y
-828E: 58          ASLB
-828F: EF 85       STU    B,X
-8291: 6C A6       INC    A,Y
+828C: E6 A6       LDB    A,Y       ; B = that bucket's current write index
+828E: 58          ASLB             ; *2, pointers are 16-bit
+828F: EF 85       STU    B,X       ; store the object pointer into the sorted array
+8291: 6C A6       INC    A,Y       ; bump the bucket's index
 8293: 0A 21       DEC    $21
 8295: 26 01       BNE    $8298
 8297: 39          RTS
 8298: 0A 55       DEC    $55
 829A: 27 05       BEQ    $82A1
-829C: 33 C8 10    LEAU   $10,U
+829C: 33 C8 10    LEAU   $10,U		; next object
 829F: 20 E4       BRA    $8285
 82A1: 96 32       LDA    $32
 82A3: 9B 33       ADDA   $33
@@ -652,11 +653,11 @@ build_sprite_list_81bb:
 82AA: 97 35       STA    $35
 82AC: A6 C4       LDA    ,U
 82AE: 2B 12       BMI    $82C2
-82B0: A6 45       LDA    $5,U
+82B0: A6 45       LDA    $5,U		; A = bucket selector (should be 0,$20,$40..$80)
 82B2: 44          LSRA
-82B3: E6 A6       LDB    A,Y
-82B5: 58          ASLB
-82B6: EF 85       STU    B,X
+82B3: E6 A6       LDB    A,Y      ; B = that bucket's current write index
+82B5: 58          ASLB             ; *2, pointers are 16-bit
+82B6: EF 85       STU    B,X      ; store the object pointer into the sorted array
 82B8: 6C A6       INC    A,Y
 82BA: 0A 21       DEC    $21
 82BC: 27 4B       BEQ    $8309
@@ -6991,7 +6992,7 @@ B698: 27 17       BEQ    $B6B1
 B69A: 10 8E B6 DB LDY    #$B6DB		; ROM
 B69E: EC 4C       LDD    $C,U
 B6A0: A3 1C       SUBD   -$4,X
-B6A2: A3 A4       SUBD   ,Y
+B6A2: A3 A4       SUBD   ,Y		; [rom_address]
 B6A4: 26 29       BNE    $B6CF
 B6A6: A6 C4       LDA    ,U
 B6A8: 81 43       CMPA   #$43
@@ -7007,7 +7008,7 @@ B6B9: 44          LSRA
 B6BA: 31 A6       LEAY   A,Y
 B6BC: EC 4C       LDD    $C,U
 B6BE: A3 1C       SUBD   -$4,X
-B6C0: A3 A4       SUBD   ,Y
+B6C0: A3 A4       SUBD   ,Y		; [rom_address]
 B6C2: 26 0B       BNE    $B6CF
 B6C4: A6 C4       LDA    ,U
 B6C6: 81 43       CMPA   #$43

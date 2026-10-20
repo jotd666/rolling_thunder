@@ -6695,13 +6695,13 @@ tile_context_name_table:
 	.long	tile_level_2
 	.long	tile_level_3
 	.long	tile_level_4
-	.long	tile_level_2
+	.long	tile_level_5
 sprite_context_name_table:
 	.long	sprite_level_1
 	.long	sprite_level_2
 	.long	sprite_level_3
 	.long	sprite_level_4
-	.long	sprite_level_2
+	.long	sprite_level_5
 	
 	
 bg0_character_table:

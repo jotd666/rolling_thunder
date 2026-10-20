@@ -44,8 +44,9 @@ def game_specific_cpu1(address,lines,i):
     elif address in [0x972D,0x9753]:
         line = remove_instruction(lines,i)
     elif address == 0xC663:
-        # replace stack pull by direct read of B/D1
-        line = change_instruction("move.w\t(4,a7),d4",lines,i)
+        # original reads stack+2. we need to read stack+6 as 1. 4 bytes return address
+        # and 2. X pushed on stack as long (to avoid sign extend on return) but we need LSW
+        line = change_instruction("move.w\t(6,a7),d4",lines,i)
     elif address in [0xb8a4,0xb8bf]:
         line = change_instruction("lea\ttable_of_jump_tables_b8b7,a2",lines,i)
     elif address in [0xb8c9,0xb8b3,0xb64d]:
@@ -72,7 +73,7 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("tst.b\tlevel_select_flag",lines,i)
     elif address == 0x81d5:
         line = change_instruction("move.b\tinvincible_flag,d0",lines,i)
-    elif address == 0xA3AD:
+    elif address in [0xA3AD,0xA418]:
         line = "\tjbsr\tosd_set_context   | next level: set new context\n"+line
     return line
 
