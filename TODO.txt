@@ -1,4 +1,4 @@
-- rip sound 8 (level 4)
+- level 4: 82B6: EF 85       STU    B,X  B=$80 X=$0 => negative? game error?
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)

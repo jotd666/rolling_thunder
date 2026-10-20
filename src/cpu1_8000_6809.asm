@@ -9347,17 +9347,17 @@ C660: 7E B5 AE    JMP    function_b5ae
 ; called 6x  from $C629, $C631, $C639, $C6AC, $C6B4, $C6BC
 function_c663:		; [cc_handled]
 C663: EE 62       LDU    $2,S		; [pushed_parameter] retrieve pushed object number from stack (X)
-C665: BD B5 80    JSR    function_b580		; [breakpoint]
+C665: BD B5 80    JSR    function_b580
 C668: 26 01       BNE    $C66B
 C66A: 39          RTS
 C66B: 86 20       LDA    #$20
 C66D: A7 04       STA    $4,X
-C66F: A6 45       LDA    $5,U
+C66F: A6 45       LDA    $5,U		; [video_address]
 C671: A7 05       STA    $5,X
-C673: EC 5A       LDD    -$6,U
+C673: EC 5A       LDD    -$6,U		; [video_address]
 C675: E3 A1       ADDD   ,Y++
 C677: ED 1A       STD    -$6,X
-C679: EC 5C       LDD    -$4,U
+C679: EC 5C       LDD    -$4,U		; [video_address]
 C67B: E3 A1       ADDD   ,Y++
 C67D: ED 1C       STD    -$4,X
 C67F: EC A4       LDD    ,Y
@@ -9374,7 +9374,7 @@ C695: A7 84       STA    ,X
 C697: E6 07       LDB    $7,X
 C699: E7 01       STB    $1,X
 C69B: 7E B5 AE    JMP    function_b5ae
-C69E: 34 10       PSHS   X
+C69E: 34 10       PSHS   X			; parameter for function_c663 (level 4)
 C6A0: 96 30       LDA    $30
 C6A2: 9B 31       ADDA   $31
 C6A4: 81 28       CMPA   #$28
@@ -9387,7 +9387,7 @@ C6B4: 8D AD       BSR    function_c663
 C6B6: 27 06       BEQ    $C6BE
 C6B8: 10 8E C7 25 LDY    #$C725
 C6BC: 8D A5       BSR    function_c663
-C6BE: 35 10       PULS   X
+C6BE: 35 10       PULS   X			; restore parameter
 C6C0: 10 8E C7 30 LDY    #$C730
 C6C4: EC 1A       LDD    -$6,X
 C6C6: E3 A1       ADDD   ,Y++

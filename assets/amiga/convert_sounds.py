@@ -235,9 +235,9 @@ def convert():
 
 
         # make sure next section will be aligned
-        with open(os.path.join(sound_dir,f"rollingtndr1_conv.mod"),"rb") as f:
-            contents = f.read()
-
+##        with open(os.path.join(sound_dir,f"rollingtndr1_conv.mod"),"rb") as f:
+##            contents = f.read()
+##
         fw.write("{}:".format(music_module_label))
         write_asm(contents,fw)
 

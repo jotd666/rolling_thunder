@@ -5063,7 +5063,7 @@ A702: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=5]
 A704: 10 8E 5F 08 LDY    #$5F08		; layer 3 tilemap / HUD
 A708: 86 FF       LDA    #$FF
 A70A: F6 8C E9    LDB    $8CE9		; ROM
-A70D: A7 A1       STA    ,Y++
+A70D: A7 A1       STA    ,Y++		; [video_address_word]
 A70F: 5A          DECB
 A710: 26 FB       BNE    $A70D
 A712: 0F CE       CLR    $CE
