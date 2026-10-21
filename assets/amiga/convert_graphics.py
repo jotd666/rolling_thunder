@@ -541,8 +541,8 @@ with open(dump_dir / "used_hud_tiles.json","w") as f:
 
 bg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8())}
 
-context_list = ["level1","level2","level3","level4","level5","level6","level7"]
-context_list = ["level3","level4","level5"]
+context_list = ["level1","level2","level3","level4","level5"]
+
 
 for context in context_list:
     context = pathlib.Path(context)

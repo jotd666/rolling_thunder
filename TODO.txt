@@ -1,14 +1,19 @@
-- 
+- load context for intermissions (after levels), load context again after intermissions
+  debug to find the counters/states that control it
+- log sprites/tiles again for levels from scratch, using second loop (6,7,8,9,10)
+  making sure there's no leak
+
+- rip layer 2 tiles, display only if no layer 1 tile, and over the layer 0 tile
+  but under the sprites
+- remove dashboard pic
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)
-- rip level 3, 4, 5 !!!!
+- rip level 3, 4, 5 second pass
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen
-- force tile 0 clut 0 in level 3
-- level 3 fully horizontal: optimize: don't do tile vertical duplication
-
-- caution: chipmem limit??? check top chip in exe
+- force tile 0 clut 0 if missing
+- level 3 & 5 are fully horizontal: optimize: don't do tile vertical duplication
 - start skips the "select area" part doesn't work
 
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
@@ -17,8 +22,7 @@
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
 - implement infinite bullets cheat
-- maybe create context for cut scenes as big pics are sprites and aren't used
-  in the game: wastes sprite data & also possibly palette entries
+
   
 could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
 order the palette with those 16 first (also: would draw faster)

@@ -79,10 +79,10 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
 BG_TILE_FILE_MAX_SIZE = 950000
-SPRITE_FILE_MAX_SIZE = 0x110000
+SPRITE_FILE_MAX_SIZE = 0x123000 
 
 	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 200000
+BIGGEST_MUSIC_SIZE = 120000
 OPT_SPRITE_MIRRORING = 0
 	.else
 	* we can't afford the music (unless CD) or mirroring
@@ -6691,17 +6691,21 @@ sprite_level_5:
 	.align	2
 
 tile_context_name_table:
+	.rept	2
 	.long	tile_level_1
 	.long	tile_level_2
 	.long	tile_level_3
 	.long	tile_level_4
 	.long	tile_level_5
+	.endr
 sprite_context_name_table:
+	.rept	2
 	.long	sprite_level_1
 	.long	sprite_level_2
 	.long	sprite_level_3
 	.long	sprite_level_4
 	.long	sprite_level_5
+	.endr
 	
 	
 bg0_character_table:
