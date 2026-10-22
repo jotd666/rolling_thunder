@@ -423,7 +423,7 @@ tilebank_select_8c00 = $8c00
 
 ; DP (56xx)
 
-; game state:
+; game state: (dp_state_cpu1_02)
 ; 0: ??
 ; 1: ??
 ; 2: menu/title

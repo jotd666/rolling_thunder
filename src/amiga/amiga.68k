@@ -79,8 +79,8 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
 BG_TILE_FILE_MAX_SIZE = 950000
-SPRITE_FILE_MAX_SIZE = 0x123000 
-
+SPRITE_FILE_BITMAP_MAX_SIZE = 0xF0000 
+SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 120000
 OPT_SPRITE_MIRRORING = 0
@@ -1236,12 +1236,22 @@ load_context:
 	lea	sprite_context_name_table,A0
 	add.w	d0,d0	
 	add.w	d0,d0
-	move.l	(a0,d0.w),a0
-	lea		sprite_table_buffer,a1
-	move.l	a1,sprite_table
-	move.l	#SPRITE_FILE_MAX_SIZE,d0
+	add.w	d0,d0
+	move.l	(a0,d0.w),a3
+	move.l	(4,a0,d0.w),a0
+	* load bitmap data
+	lea		sprite_bitmap_buffer,a1
+	move.l	#SPRITE_FILE_BITMAP_MAX_SIZE,d0
 	jbsr	load_file
-	* todo: copy the first level of pointers in fastmem (256*4: 1kb)
+	move.l	a3,a0
+	* load header data
+	lea		sprite_table_header,a1
+	move.l	a1,sprite_table
+	move.l	#SPRITE_FILE_HEADER_MAX_SIZE,d0
+	jbsr	load_file
+	
+	* tricky: we have to relocate the tables (easy)
+	* but also connect both files together
 	jbsr	relocate_sprites_file
 
 	jbsr	relocate_tiles_file
@@ -1338,9 +1348,14 @@ reloc_tiles:
 	rts
 	
 
+* < D0: header length
 relocate_sprites_file:
-	* now relocate the tile file
+	* now relocate the sprite files
+	* first the header
 	move.l	sprite_table,a0
+	lea	    sprite_bitmap_buffer,a3
+	* fake header address, like when header was before the bitmap data
+	sub.l	d0,a3		
 	move.l	a0,d0
 	jne		0f
 	rts
@@ -1366,7 +1381,7 @@ relocate_sprites_file:
 2:
 	move.l	(a2)+,d3
 	jeq		4f
-	add.l	d0,d3
+	add.l	a3,d3		| reloc offset is different
 	move.l	d3,(-4,a2)
 4:
 	dbf		D5,2b
@@ -1586,7 +1601,7 @@ load_file:
 	move.l	_resload,d1
 	jeq		0f
 	move.l	d1,a2
-	movem.l	d0-d3/a0/a1,-(a7)
+	movem.l	d0-d2/a0/a1,-(a7)
 	move.l	d0,d2		| store max size
 	move.l	a0,d3		| store filename
 	jbsr	resload_GetFileSizeDec(a2)
@@ -1596,9 +1611,10 @@ load_file:
 	BREAKPOINT	"file size too big vs buffer. D0=size, D2=max, D3=filename"
 0:
 	.endif
-	movem.l	(a7)+,d0-d3/a0/a1
+	movem.l	(a7)+,d0-d2/a0/a1
 	
 	jbsr	resload_LoadFileDecrunch(a2)
+
 	rts
 0:
 	illegal
@@ -6669,24 +6685,34 @@ sprite_mem_name:
 
 tile_level_1:
 	.asciz	"level1_tiles"
-sprite_level_1:
-	.asciz	"level1_sprites"
+sprite_level_1_header:
+	.asciz	"level1_sprites_header"
+sprite_level_1_bitmap:
+	.asciz	"level1_sprites_bitmap"
 tile_level_2:
 	.asciz	"level2_tiles"
-sprite_level_2:
-	.asciz	"level2_sprites"
+sprite_level_2_header:
+	.asciz	"level2_sprites_header"
+sprite_level_2_bitmap:
+	.asciz	"level2_sprites_bitmap"
 tile_level_3:
 	.asciz	"level3_tiles"
-sprite_level_3:
-	.asciz	"level3_sprites"
+sprite_level_3_header:
+	.asciz	"level3_sprites_header"
+sprite_level_3_bitmap:
+	.asciz	"level3_sprites_bitmap"
 tile_level_4:
 	.asciz	"level4_tiles"
-sprite_level_4:
-	.asciz	"level4_sprites"
+sprite_level_4_header:
+	.asciz	"level4_sprites_header"
+sprite_level_4_bitmap:
+	.asciz	"level4_sprites_bitmap"
 tile_level_5:
 	.asciz	"level5_tiles"
-sprite_level_5:
-	.asciz	"level5_sprites"
+sprite_level_5_header:
+	.asciz	"level1_sprites_header"
+sprite_level_5_bitmap:
+	.asciz	"level1_sprites_bitmap"
 
 	.align	2
 
@@ -6700,11 +6726,16 @@ tile_context_name_table:
 	.endr
 sprite_context_name_table:
 	.rept	2
-	.long	sprite_level_1
-	.long	sprite_level_2
-	.long	sprite_level_3
-	.long	sprite_level_4
-	.long	sprite_level_5
+	.long	sprite_level_1_header
+	.long	sprite_level_1_bitmap
+	.long	sprite_level_2_header
+	.long	sprite_level_2_bitmap
+	.long	sprite_level_3_header
+	.long	sprite_level_3_bitmap
+	.long	sprite_level_4_header
+	.long	sprite_level_4_bitmap
+	.long	sprite_level_5_header
+	.long	sprite_level_5_bitmap
 	.endr
 	
 	
@@ -7149,6 +7180,8 @@ fg_tile_address_table:
 bg_tile_address_table:
 	.skip	0x800*2
 
+sprite_table_header:
+	.skip	SPRITE_FILE_HEADER_MAX_SIZE 
 
 	
 	.ifne	OPT_ENABLE_LOGGING
@@ -7371,8 +7404,8 @@ mirror_buffer:
 mirror_buffer_end:
 	.endif
 	
-sprite_table_buffer:
-	.skip	SPRITE_FILE_MAX_SIZE    | biggest contextual sprite file
+sprite_bitmap_buffer:
+	.skip	SPRITE_FILE_BITMAP_MAX_SIZE    | biggest contextual sprite file
 	
 module_buffer:
 	.skip	BIGGEST_MUSIC_SIZE		| biggest tune
