@@ -78,11 +78,11 @@ GAME_MAX_SCROLL_X = 0x200
 GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 
-BG_TILE_FILE_MAX_SIZE = 950000
-SPRITE_FILE_BITMAP_MAX_SIZE = 0xF0000 
+BG_TILE_FILE_MAX_SIZE = 1300000
+SPRITE_FILE_BITMAP_MAX_SIZE = 0x101000 
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 120000
+BIGGEST_MUSIC_SIZE = 10000
 OPT_SPRITE_MIRRORING = 0
 	.else
 	* we can't afford the music (unless CD) or mirroring
@@ -979,7 +979,7 @@ demo_game:
 	pea		level1_interrupt(pc)
 	move.l	(a7)+,(0x64,a1)
 
-	moveq	#0,d0
+	moveq	#0,d0			| load intermission context
 	jbsr	load_context
 
 	* enable interrupts on the host side
@@ -1635,7 +1635,9 @@ main_loop_hook:
 	jbsr	prepare_custom_registers
 	* early 3000 addresses are HUD tiles that are never shown
 	* we can use that memory to save extra data
-	move.w	current_context,(0x3000,a6)
+	move.w	current_context,d2
+	subq	#1,d2
+	move.w	d2,(0x3000,a6)
 	move.w	tile_bank_offset,(0x3002,a6)
 	jbsr	(a1)
 	jbsr	restore_custom_registers
@@ -1650,6 +1652,7 @@ main_loop_hook:
 	jbsr	prepare_custom_registers
 	jbsr	(a1)
 	move.w	(0x3000,a6),d2		| save previous context that we loaded
+	addq	#1,d2
 	move.w	(0x3002,a6),tile_bank_offset
 	jbsr	restore_custom_registers
 	swap	d0		| returncode seems broken! if escaped MSW is zero
@@ -1691,7 +1694,6 @@ osd_set_tilebank_8c00:
 	rts
 	
 osd_set_context:
-	subq	#1,d0
 	jbsr	load_context
 	rts
 	
@@ -1848,7 +1850,7 @@ level3_interrupt:
 	jbsr	log_used_hud_tiles
 	jbsr	log_used_bg0_tiles
 	jbsr	log_used_bg1_tiles
-	*jbsr	log_used_bg2_tiles
+	jbsr	log_used_bg2_tiles
 	jbsr	log_used_sprites
 	lea		_custom,a5
 	.endif
@@ -6613,6 +6615,18 @@ osd_dump_logs:
 	lea		hud_tile_log_name(pc),a0
 	move.l	#HUD_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
+
+	move.w	current_context,d4
+	cmp.b	#6,d4
+	jcs		0f
+	* levels 6,7,8,9,10 add to contexts 1,2,3,4,5
+	sub.b	#5,d4
+0:
+	add.b	#0x30,d4
+	move.b	d4,bg0_tile_log_index
+	move.b	d4,bg1_tile_log_index
+	move.b	d4,bg2_tile_log_index
+	move.b	d4,sprite_log_index
 	
 	lea		bg0_tile_log_table,a1
 	lea		bg0_tile_log_name(pc),a0
@@ -6624,10 +6638,10 @@ osd_dump_logs:
 	move.l	#BG_TILE_LOG_LENGTH,d0
 	jbsr	resload_SaveFile(a2)
 	
-*	lea		bg2_tile_log_table,a1
-*	lea		bg2_tile_log_name(pc),a0
-*	move.l	#BG_TILE_LOG_LENGTH,d0
-*	jbsr	resload_SaveFile(a2)
+	lea		bg2_tile_log_table,a1
+	lea		bg2_tile_log_name(pc),a0
+	move.l	#BG_TILE_LOG_LENGTH,d0
+	jbsr	resload_SaveFile(a2)
 	
 	lea		sprite_log_table,a1
 	lea		sprite_log_name(pc),a0
@@ -6669,13 +6683,21 @@ cpu_log_name:
 hud_tile_log_name:
 	.asciz	"hud_used_tiles"
 bg0_tile_log_name:
-	.asciz	"bg0_used_tiles"
+	.ascii	"bg0_used_tiles_"
+bg0_tile_log_index:
+	.asciz	"0"
 bg1_tile_log_name:
-	.asciz	"bg1_used_tiles"
+	.ascii	"bg1_used_tiles_"
+bg1_tile_log_index:
+	.asciz	"0"
 bg2_tile_log_name:
-	.asciz	"bg2_used_tiles"
+	.ascii	"bg2_used_tiles_"
+bg2_tile_log_index:
+	.asciz	"0"
 sprite_log_name:
-	.asciz	"used_sprites"
+	.ascii	"used_sprites_"
+sprite_log_index:
+	.asciz	"0"
 sprite_mem_name:
 	.asciz	"sprites"
 	.align	2
@@ -6683,6 +6705,12 @@ sprite_mem_name:
 
 	* variable block
 
+tile_intermission:
+	.asciz	"intermission_tiles"
+sprite_intermission_header:
+	.asciz	"intermission_sprites_header"
+sprite_intermission_bitmap:
+	.asciz	"intermission_sprites_bitmap"
 tile_level_1:
 	.asciz	"level1_tiles"
 sprite_level_1_header:
@@ -6717,6 +6745,7 @@ sprite_level_5_bitmap:
 	.align	2
 
 tile_context_name_table:
+	.long	tile_intermission
 	.rept	2
 	.long	tile_level_1
 	.long	tile_level_2
@@ -6725,6 +6754,8 @@ tile_context_name_table:
 	.long	tile_level_5
 	.endr
 sprite_context_name_table:
+	.long	sprite_intermission_header
+	.long	sprite_intermission_bitmap
 	.rept	2
 	.long	sprite_level_1_header
 	.long	sprite_level_1_bitmap

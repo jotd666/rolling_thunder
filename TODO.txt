@@ -1,15 +1,17 @@
-- load context for intermissions (after levels), load context again after intermissions
-  debug to find the counters/states that control it
+
 - log sprites/tiles again for levels from scratch, using second loop (6,7,8,9,10)
-  making sure there's no leak
+- level 6 ok
+- level 7 ok
+- level 8 in progress
+- level 9 todo
+- level 10 todo
 
 - rip layer 2 tiles, display only if no layer 1 tile, and over the layer 0 tile
   but under the sprites
-- remove dashboard pic
+- remove dashboard pic, render with layer 2 tiles
 - hoodies partially drawn when climbing up/down railings: pause+render
 - load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)
-- rip level 3, 4, 5 second pass
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen
 - force tile 0 clut 0 if missing

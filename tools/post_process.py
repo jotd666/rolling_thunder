@@ -73,8 +73,14 @@ def game_specific_cpu1(address,lines,i):
         line = change_instruction("tst.b\tlevel_select_flag",lines,i)
     elif address == 0x81d5:
         line = change_instruction("move.b\tinvincible_flag,d0",lines,i)
-    elif address in [0xA3AD,0xA418]:
-        line = "\tjbsr\tosd_set_context   | next level: set new context\n"+line
+
+    # context changes (file loading)
+    elif address == 0xa53b:
+        line = "\tjbsr\tset_level_context   | next level: set new context\n"+line
+    elif address == 0x903d:
+        line = "\tjbsr\tset_level1_context   | attract mode level 1\n"+line
+    elif address in [0x9DDD,0x9210]:
+        line = "\tjbsr\tset_intermission_context\n"+line
     return line
 
 sc_cpu2 = SourceChanger()
@@ -445,6 +451,28 @@ def doit(cpu):
 
         fw.writelines(lines)
 
+        if cpu==1:
+            # add some code
+            fw.write("""
+set_level_context:
+    move.l  d0,-(a7)
+    OP_R_ON_DP_ADDRESS    move,starting_area_c5,d0
+    jbsr    osd_set_context
+    move.l  (a7)+,d0
+    rts
+set_intermission_context:
+    move.l  d0,-(a7)
+    moveq   #0,d0
+    jbsr    osd_set_context
+    move.l  (a7)+,d0
+    rts
+set_level1_context:
+    move.l  d0,-(a7)
+    moveq   #1,d0
+    jbsr    osd_set_context
+    move.l  (a7)+,d0
+    rts
+""")
 
     with open(source_dir / f"cpu{cpu}_data.inc","w") as fw:
         fw.writelines(equates)

@@ -404,6 +404,8 @@ tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs
 ;  about 40 clock cycles) it expects CPU2 to clear 5607.
 
 bg_tiles_address_0000 = $0
+; can be 1 or 2 (second loop)
+story_number_c3 = $c3
 starting_area_c5 = $c5
 energy_c1 = $c1
 ; managed by cpu2
@@ -2246,7 +2248,7 @@ function_9028:
 
 
 ; 1 jump-table ref
-function_903d:
+to_attract_play_903d:
 903D: BD B4 B8    JSR    clear_hud_rect_b4b8
 9040: BD 84 8C    JSR    function_848c
 9043: 0C D1       INC    $D1
@@ -2386,7 +2388,7 @@ function_9138:
 913C: 0F C2       CLR    $C2
 913E: 0F C4       CLR    $C4
 9140: 86 01       LDA    #$01
-9142: 97 C3       STA    $C3
+9142: 97 C3       STA    story_number_c3
 9144: 97 C5       STA    starting_area_c5
 9146: CC 00 50    LDD    #$0050
 9149: DD CA       STD    $CA
@@ -2498,6 +2500,7 @@ credit_inserted_from_demo_91fb:
 9208: BD 84 8C    JSR    function_848c
 920B: 7D 41 A5    TST    mcu_flag_41a5		; <- MCU: coin inserted flag
 920E: 26 0F       BNE    $921F
+; 
 9210: 86 04       LDA    #$04
 9212: 97 02       STA    dp_state_cpu1_02
 9214: 0F 04       CLR    dp_sub_cpu1_04		; CPU1 sub-state
@@ -3953,7 +3956,8 @@ function_9d0d:
 9DD7: 6A E4       DEC    ,S		; [local]
 9DD9: 26 F8       BNE    $9DD3
 9DDB: A6 E0       LDA    ,S+		; [local]
-9DDD: 86 0B       LDA    #$0B
+; sets intermission substate
+9DDD: 86 0B       LDA    #$0B		; $B=intermission
 9DDF: 97 04       STA    dp_sub_cpu1_04
 9DE1: 0F 06       CLR    dp_sem_cpu1_06
 9DE3: 97 05       STA    dp_sub_cpu2_05
@@ -4335,6 +4339,7 @@ A0E8: F6 B0 BE    LDB    $B0BE
 A0EB: A7 A1       STA    ,Y++		; [video_address_word]
 A0ED: 5A          DECB
 A0EE: 26 FB       BNE    $A0EB
+; start game
 A0F0: 0C 04       INC    dp_sub_cpu1_04		; CPU1 sub-state
 A0F2: 0F 06       CLR    dp_sem_cpu1_06
 A0F4: 0C 05       INC    dp_sub_cpu2_05		; CPU2 sub-state
@@ -4737,7 +4742,7 @@ A3EC: 26 F8       BNE    $A3E6
 A3EE: A6 E0       LDA    ,S+		; [local]
 A3F0: 10 8E 36 A8 LDY    #$36A8
 A3F4: C6 FC       LDB    #$FC
-A3F6: 96 C3       LDA    $C3
+A3F6: 96 C3       LDA    story_number_c3
 A3F8: 44          LSRA
 A3F9: 44          LSRA
 A3FA: 44          LSRA
@@ -4745,13 +4750,13 @@ A3FB: 44          LSRA
 A3FC: 26 02       BNE    $A400
 A3FE: 86 FF       LDA    #$FF
 A400: ED A4       STD    ,Y		; [video_address_word]
-A402: 96 C3       LDA    $C3
+A402: 96 C3       LDA    story_number_c3
 A404: 84 0F       ANDA   #$0F
 A406: ED 22       STD    $2,Y		; [video_address_word]
-A408: 96 C3       LDA    $C3
+A408: 96 C3       LDA    story_number_c3
 A40A: 8B 01       ADDA   #$01
 A40C: 19          DAA
-A40D: 97 C3       STA    $C3
+A40D: 97 C3       STA    story_number_c3
 A40F: 0F C4       CLR    $C4
 ; increase level number (stage 5)
 A411: 96 C5       LDA    starting_area_c5
@@ -4901,19 +4906,20 @@ A52B: CE 54 80    LDU    #$5480
 A52E: 7E A2 25    JMP    function_a225
 A531: CE 54 A0    LDU    #$54A0
 A534: 7E A2 25    JMP    function_a225
-A537: 01 20       NEG    $20
-A539: 01 50       NEG    $50
+
 
 ; 1 jump-table ref
-function_a53b:
+resume_play_a53b:
 A53B: 0D C4       TST    $C4
 A53D: 27 0D       BEQ    $A54C
+; re sets game in play
 A53F: 86 04       LDA    #$04
 A541: 97 04       STA    dp_sub_cpu1_04		; CPU1 sub-state
 A543: 0F 06       CLR    dp_sem_cpu1_06
 A545: 97 05       STA    dp_sub_cpu2_05		; CPU2 sub-state
 A547: 0F 07       CLR    dp_sem_cpu2_07
 A549: 7E B4 B8    JMP    clear_hud_rect_b4b8
+; re sets game in play (after new story/loop ?)
 A54C: 86 03       LDA    #$03
 A54E: 97 04       STA    dp_sub_cpu1_04
 A550: 0F 06       CLR    dp_sem_cpu1_06
@@ -5266,7 +5272,7 @@ A7EE: 26 F8       BNE    $A7E8
 A7F0: A6 E0       LDA    ,S+		; [local]
 A7F2: 10 8E 3A 2E LDY    #$3A2E
 A7F6: C6 FC       LDB    #$FC
-A7F8: 96 C3       LDA    $C3
+A7F8: 96 C3       LDA    story_number_c3
 A7FA: 44          LSRA
 A7FB: 44          LSRA
 A7FC: 44          LSRA
@@ -5274,7 +5280,7 @@ A7FD: 44          LSRA
 A7FE: 26 02       BNE    $A802
 A800: 86 FF       LDA    #$FF
 A802: ED A4       STD    ,Y		; [video_address_word]
-A804: 96 C3       LDA    $C3
+A804: 96 C3       LDA    story_number_c3
 A806: 84 0F       ANDA   #$0F
 A808: ED 22       STD    $2,Y		; [video_address_word]
 A80A: 10 8E 3B 2E LDY    #$3B2E
@@ -12548,7 +12554,7 @@ jump_table_886f:
 jump_table_8f49:
     dc.w	function_8f4f 	; $8f49
 	dc.w	function_9028 	; $8f4b
-	dc.w	function_903d 	; $8f4d
+	dc.w	to_attract_play_903d 	; $8f4d
  
 jump_table_9124:
 	dc.w	function_9138	; $9124
@@ -12617,7 +12623,7 @@ jump_table_a316:
 	dc.w	function_a4bc	; $a322
 	dc.w	function_a4d1	; $a324
 	dc.w	function_a4fd	; $a326
-	dc.w	function_a53b	; $a328
+	dc.w	resume_play_a53b	; $a328
 jump_table_a566:
 	dc.w	function_a56a	; $a566
 	dc.w	function_a57c	; $a568
