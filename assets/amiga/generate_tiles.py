@@ -14,9 +14,9 @@ import gen_cluts
 # 1) upper half tiles are discarded
 # 2) 256 cluts => 64 cluts one out of 4
 
-def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,dump_it=False):
+def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,select_half=0,dump_it=False):
     cluts = gen_cluts.doit(nb_colors)
-    tilegen = dump_dir / "tilegen" / kind
+    tilegen = dump_dir / "tilegen" / f"{kind}_{select_half}"
     pal4_file = sheets_path / f"{kind}_color_{ref_clut_index:02x}.png"  # reference sheet with all colors represented
 
     cluts = cluts[offset:]
@@ -26,7 +26,9 @@ def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,dump_it=False):
         tilegen.mkdir(exist_ok=True,parents=True)
 
     source = Image.open(pal4_file)
-    if hud:
+    if select_half==1:
+        source = source.crop((0,0,source.size[0],source.size[1]//2))
+    if select_half==2:
         source = source.crop((0,source.size[1]//2,source.size[0],source.size[1]))
 
     # this reference clut has all 4 colors different. We can use that to generate
@@ -66,7 +68,9 @@ def doit(nb_colors,offset,nb_cluts,kind,ref_clut_index,hud=False,dump_it=False):
     return rval
 
 def doit_hud_tiles(dump_it=False):
-    return doit(8,0,256,"hud",ref_clut_index=0x0,hud=True,dump_it=dump_it)
+    return doit(8,0,256,"hud",ref_clut_index=0x0,hud=True,select_half=2,dump_it=dump_it)
+def doit_tiles_8x8_layer2(dump_it=False):
+    return doit(8,0,256,"hud",ref_clut_index=0x0,select_half=1,dump_it=dump_it)
 def doit_tiles_8x8(dump_it=False):
     return doit(8,0,256,"tiles_8x8",ref_clut_index=0,dump_it=dump_it)
 def doit_sprites_32x32(dump_it=False):
@@ -75,4 +79,4 @@ def doit_sprites_32x32(dump_it=False):
 if __name__ == "__main__":
     #doit_hud_tiles(True)
     #doit_tiles_8x8(True)
-    doit_sprites_32x32(True)
+    doit_tiles_8x8_layer2(True)

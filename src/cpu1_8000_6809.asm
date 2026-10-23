@@ -4281,7 +4281,7 @@ A06A: 86 FF       LDA    #$FF
 A06C: ED A4       STD    ,Y		; [video_address_word]
 A06E: 96 C5       LDA    starting_area_c5
 A070: 84 0F       ANDA   #$0F
-A072: ED 22       STD    $2,Y
+A072: ED 22       STD    $2,Y	; [video_address_word]
 A074: 39          RTS
 
 ; 1 jump-table ref

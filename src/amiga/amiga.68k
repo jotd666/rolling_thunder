@@ -1297,9 +1297,12 @@ relocate_tiles_file:
 	move.l	(a0),a1		| bg0 character table base
 	add.l	a0,a1		| make it absolute
 	move.l	a1,bg0_character_table
-	move.l	(4,a0),a1		| bg0 character table base
+	move.l	(4,a0),a1		| bg1 character table base
 	add.l	a0,a1		| make it absolute
 	move.l	a1,bg1_character_table
+	move.l	(8,a0),a1		| bg1 character table base
+	add.l	a0,a1		| make it absolute
+	move.l	a1,bg2_character_table
 	
 	addq	#8,a0
 	move.l	a0,bg_tile_palette
@@ -1309,6 +1312,9 @@ relocate_tiles_file:
 	jbsr	reloc_tiles
 	move.w	#NB_BG_PLANES,d4			| this layer has a mask
 	move.l	bg1_character_table,A0
+	jbsr	reloc_tiles
+	move.w	#NB_BG_PLANES,d4			| this layer has a mask
+	move.l	bg2_character_table,A0
 	jbsr	reloc_tiles
 	
 	rts
@@ -1554,10 +1560,9 @@ set_scroll_values:
 	* from somewhere else than a starting point. It could happen on
 	* real hardware with BG_TILE_WIDTH value (screen "shake" because of high
 	* object redraw time + erratic behaviour from the player :))
-	tst.b	block_tile_layer_0
-	jne		21f
+
 	jbsr	force_all_screen_redraw
-21:
+
 	rts
 3:
 	
@@ -1651,7 +1656,7 @@ main_loop_hook:
 	move.l	loadgame_function,a1
 	jbsr	prepare_custom_registers
 	jbsr	(a1)
-	move.w	(0x3000,a6),d2		| save previous context that we loaded
+	move.w	(0x3000,a6),d2		| get previous context that we loaded
 	addq	#1,d2
 	move.w	(0x3002,a6),tile_bank_offset
 	jbsr	restore_custom_registers
@@ -4243,9 +4248,7 @@ osd_video_word_dirty_cpu1:
 	lea		layer012_row_flags,a0
 	lea		layer012_flags,a1
 
-	cmp.w	#0x2000,d7
-	jcc		101f		| layer 2 is ignored	
-0:
+
 	and.w	#0xFFF,d7		| 0->FFF
 	move.w	d7,d6
 	lsr.w	#7,d6 			| divide by 0x80 (size of row)
@@ -4254,38 +4257,9 @@ osd_video_word_dirty_cpu1:
 100:
 	movem.l	(a7)+,a0-a1
 	rts
-101:
-	clr.b	block_tile_layer_0
-	cmp.w	#0x2188,d7
-	jne		100b
-	movem.l	a0-a5/d0-d5,-(a7)
-	* upper left corner, check if computer panel of title is displaying
-	move.b	(a6,d7.w),d0		| code
-	jne		102f
-	move.b	(1,a6,d7.w),d1
-	cmp.b	#0x61,d1
-	jne		102f
-	* title panel: load pic and display it, bypassing the
-	* multi-layer mode (layer 0 + layer 2, preferably with
-	* layer 0 overwriting layer 2!!)
-	st.b	blit_title_requested	
-	st.b	block_tile_layer_0
-	
-102:
-	movem.l	(a7)+,a0-a5/d0-d5
-	jra		100b
+
 
 update_other_layers:
-	tst.b	blit_title_requested
-	jeq		0f
-	clr.b	blit_title_requested
-	jbra	blit_title
-
-0:
-	tst.b	block_tile_layer_0
-	jeq		0f
-	rts
-0:
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	layer012_row_flags,a0
 	lea	layer012_flags,a1
@@ -4342,37 +4316,7 @@ osd_video_word_dirty_cpu2:
 osd_w_videoram_out:
 	rts	
 	
-blit_title:
-	.if	BG_SCREEN_PLANE_SIZE>0x7FFF
-	move.l	#BG_SCREEN_PLANE_SIZE,d5
-	.else
-	move.w	#BG_SCREEN_PLANE_SIZE,d5
-	.endif
-	
-	lea	_custom,a5
-	move.l		playfield_drawn_screen_ptr,a1
-	jbsr		do_bt
-	lea		background_restore_buffer,a1
-	jbsr		do_bt
-	.ifeq	OPT_ENABLE_DOUBLE_BUFFERING
-	.else 
-	* double buffering
-	move.l		playfield_displayed_screen_ptr,a1
-	jbsr		do_bt
-	.endif
-	
-	RTS
 
-do_bt:
-	lea 	title_pic,a0
-	move.w	#NB_BG_PLANES,d3
-	move.w	#288/8+2,d2
-	move.w	#256,d4
-	move.w	#START_X,d0
-	move.w	#256,d1		| wrapped scroll (scroll value = 255)
-	moveq	#0,d5
-	jbsr	blit_planes_any_internal_no_cookie_cut
-	rts
 
 update_bg_tile:
 	move.w	d0,-(a7)
@@ -4547,29 +4491,44 @@ update_bg0_tile:
 	move.b	(a6),d1
 	move.l	bg0_character_table,d6
 	jeq		100f			| no context loaded: out
+	* layer 0: always present
 	move.l	d6,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
 	jeq		11f		    | no bitmap: exit (don't even try to look for layer 1)
 	move.l	d0,a5		| pointer on proper clut of tile for layer 0
-
+	* layer 1: often empty
 	add.w	#0xFFF,a6
 	move.w	#0x400,d0	| add 0x400 offset for layer 1 tileset
 	add.w	tile_bank_offset,d0
 	move.b	(a6)+,d0
 	move.b	(a6),d1
-	
 	* now layer 1
 	move.l	bg1_character_table,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
-	jne		0f		| no bitmap: exit (don't even try to look for layer 1)
-	move.l	#empty_planes,d0
+	jne		0f
+	* layer 1 is not active: look for layer 2
+	add.w	#0xFFF,a6
+	move.w	tile_bank_offset,d0
+	move.b	(a6)+,d0
+	move.b	(a6),d1
+	* now layer 2
+	move.l	bg2_character_table,a0
+	jbsr	load_tile_bitmap
+	tst.l	d0
+	jeq		2f		| no bitmap: skip
+	clr.b	layer_1_active
+	jra		1f
+2:
+	move.l	#empty_row,d0
 0:
+	st.b	layer_1_active
+1:
 	move.l	d0,a6
 	exg		a5,a6
 	* now, layer 0 tile is loaded in A6
-	* now, layer 1 tile is loaded in A5
+	* now, layer 1 or 2 tile is loaded in A5
 	
 	* we wait just in case a blitter operation is in progress
 	* it rarely conflicts
@@ -4588,6 +4547,9 @@ update_bg0_tile:
 *	move.w	#NB_BG_PLANES-1,d4
 
 copy_tile:
+	tst.b	layer_1_active
+	jeq		copy_tile_layer_1_inactive
+
 	move.w	#NB_BG_PLANES-1,d4
 	* just copy
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
@@ -4611,7 +4573,7 @@ copy_tile:
 	move.l	d0,a0
 	move.l	d1,a1
 	moveq	#7,d7
-	move.l	a2,d3
+	move.l	a2,d3		| save mask
 	jne		450f
 * tile 1 has no mask: optimize
 46:	
@@ -4644,7 +4606,7 @@ copy_tile:
 	move.l	d3,a2		| restore mask pointer
 	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
 	dbf		d4,4b
-	move.l	(a5)+,d1		| next plane for layer 1
+	move.l	(a5)+,d1		| next plane for layer 1/2
 	jne		44f
 	move.l	#empty_row,d1
 44:
@@ -4693,7 +4655,113 @@ copy_tile:
 100:
 	rts
 
+
+copy_tile_layer_1_inactive:
+	move.w	#NB_BG_PLANES-1,d4
+	* just copy
+	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
+	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
+	lea		layer_1_restore_buffer,a4
+	move.w	plane_offset,d6
+	add.w	d6,a4
+4:
+	move.l	(a5)+,d1		| next plane for layer 1
+	jne		44f
+	move.l	#empty_row,d1
+44:
+	cmp.l	#empty_row,d1
+	jeq		555f
+
+555:
+	move.l	(a6)+,d0		| next plane for layer 0
+	jne		45f				| if layer 0 
+	move.l	#empty_row,d0	
+45:
+	move.l	d0,a0
+	move.l	d1,a1
+	moveq	#7,d7
+	move.l	a2,d3		| save mask
+	jne		450f
+* tile 1 has no mask: optimize
+46:	
+	move.b	(a0)+,d0	| layer #0
+	clr.b	(a4)		| store layer 1 as is (to write on sprites)
+	clr.b	(BG_HALF_SCREEN_PLANE_SIZE,a4)
+	move.b	d0,(a3)+	| save in temp buffer
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d7,46b
+	jra		41f
 	
+450:
+* with non-empty tile 1
+46:
+	move.b	(a0)+,d0	| layer #0
+	move.b	(a1)+,d1	| layer #1
+	move.b	d1,(a4)		| store layer 1 as is (to write on sprites)
+	move.b	d1,(BG_HALF_SCREEN_PLANE_SIZE,a4)		| store layer 1 as is (to write on sprites)
+	move.b	(a2)+,d2	| layer #1 mask
+	jeq		47f			| zero mask: don't do anything with layer 1
+	not.b	d2
+	and.b	d2,d0		| cut out layer 0 with mask from layer 1
+	or.b	d1,d0		| imprint layer 1
+47:
+	move.b	d0,(a3)+	| save in temp buffer
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d7,46b
+	
+41:
+	move.l	d3,a2		| restore mask pointer
+	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
+	dbf		d4,4b
+	move.l	(a5)+,d1		| next plane for layer 1/2
+	jne		44f
+	move.l	#empty_row,d1
+44:
+	move.l	d1,a2		| mask again
+	moveq	#7,d2
+45:
+	* don't forget last plane for layer_1_restore_buffer: the mask plane
+	move.b	(a2)+,d0
+	move.b	d0,(a4)
+	move.b	d0,(BG_HALF_SCREEN_PLANE_SIZE,a4)
+	add.w	#BG_NB_BYTES_PER_ROW,a4
+	dbf		d2,45b
+	
+	* now copy the tile at the proper locations. There are 3 locations to copy on
+	* (we processed the layer 1 overlay above)
+	move.l		playfield_drawn_screen_ptr,a1
+	add.w	d6,a1
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a4
+	add.w	d6,a4
+	lea		background_restore_buffer,a3
+	add.w	d6,a3
+	move.w	#NB_BG_PLANES-1,d4
+	lea		temp_buffer,a0
+	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
+	move.w	#BG_NB_BYTES_PER_ROW,d6
+50:
+	moveq	#7,d7
+51:
+	move.b	(a0)+,d0
+	move.b	d0,(a1)
+	move.b	d0,(a1,d2.w)
+	add.w	d6,a1	| next row
+	move.b	d0,(a3)
+	move.b	d0,(a3,d2.w)
+	add.w	d6,a3
+	move.b	d0,(a4)
+	move.b	d0,(a4,d2.w)
+	add.w	d6,a4
+	dbf		d7,51b
+	add.w	d5,a1
+	add.w	d5,a3
+	add.w	d5,a4
+	dbf		d4,50b
+100:
+	rts
+
 empty_planes:
 	.skip	(NB_PLAYFIELD_PLANES)*4
 	.long	empty_planes		| mask is zeroes
@@ -6617,11 +6685,8 @@ osd_dump_logs:
 	jbsr	resload_SaveFile(a2)
 
 	move.w	current_context,d4
-	cmp.b	#6,d4
-	jcs		0f
-	* levels 6,7,8,9,10 add to contexts 1,2,3,4,5
-	sub.b	#5,d4
-0:
+	lea		level_context_table,a0
+	move.b	(a0,d4.w),d4
 	add.b	#0x30,d4
 	move.b	d4,bg0_tile_log_index
 	move.b	d4,bg1_tile_log_index
@@ -6703,6 +6768,24 @@ sprite_mem_name:
 	.align	2
 	.endif	
 
+level_context_table:
+	.byte	0
+	.byte	1
+	.byte	2
+	.byte	3
+	.byte	4
+	.byte	5
+	.byte	1
+	.byte	2
+	.byte	3
+	.byte	9		| level 9 has nothing to do with level 4
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	5		| 10 in BCD
 	* variable block
 
 tile_intermission:
@@ -6735,6 +6818,12 @@ sprite_level_4_header:
 	.asciz	"level4_sprites_header"
 sprite_level_4_bitmap:
 	.asciz	"level4_sprites_bitmap"
+tile_level_9:
+	.asciz	"level9_tiles"
+sprite_level_9_header:
+	.asciz	"level9_sprites_header"
+sprite_level_9_bitmap:
+	.asciz	"level9_sprites_bitmap"
 tile_level_5:
 	.asciz	"level5_tiles"
 sprite_level_5_header:
@@ -6746,17 +6835,27 @@ sprite_level_5_bitmap:
 
 tile_context_name_table:
 	.long	tile_intermission
-	.rept	2
 	.long	tile_level_1
 	.long	tile_level_2
 	.long	tile_level_3
 	.long	tile_level_4
 	.long	tile_level_5
-	.endr
+	.long	tile_level_1
+	.long	tile_level_2
+	.long	tile_level_3
+	.long	tile_level_9
+	.long	0
+	.long	0
+	.long	0
+	.long	0
+	.long	0
+	.long	0
+	.long	tile_level_5
+
 sprite_context_name_table:
 	.long	sprite_intermission_header
 	.long	sprite_intermission_bitmap
-	.rept	2
+
 	.long	sprite_level_1_header
 	.long	sprite_level_1_bitmap
 	.long	sprite_level_2_header
@@ -6767,12 +6866,27 @@ sprite_context_name_table:
 	.long	sprite_level_4_bitmap
 	.long	sprite_level_5_header
 	.long	sprite_level_5_bitmap
+	.long	sprite_level_1_header
+	.long	sprite_level_1_bitmap
+	.long	sprite_level_2_header
+	.long	sprite_level_2_bitmap
+	.long	sprite_level_3_header
+	.long	sprite_level_3_bitmap
+	.long	sprite_level_9_header
+	.long	sprite_level_9_bitmap
+	.rept	12
+	.long	0
 	.endr
+	.long	sprite_level_5_header
+	.long	sprite_level_5_bitmap
+
 	
 	
 bg0_character_table:
 	.long	0
 bg1_character_table:
+	.long	0
+bg2_character_table:
 	.long	0
 sprite_table:
 	.long	0
@@ -6809,9 +6923,8 @@ return_address:
 current_music_name:
 	.long	0
 	
-blit_title_requested:
-	.byte	0
-block_tile_layer_0:
+
+layer_1_active:
 	.byte	0
 menu_flip_flop:
 	.byte	0

@@ -59,7 +59,7 @@ def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
 rc = merge(None,"hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 
 contexts = {0:"intermission"}
-for i in [3]: #[1,2,3,4,5,6]:
+for i in [5]: #[1,2,3,4,5,6]:
     contexts[i] = f"level{i}"
 
 ovw = False

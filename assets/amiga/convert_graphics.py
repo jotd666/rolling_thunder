@@ -489,7 +489,6 @@ if dump_it:
 
 
 
-title_layers = Image.open(sheets_path / "title_layers.png")
 
 sprite_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_sprites_32x32())}
 fg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_hud_tiles())}
@@ -557,9 +556,10 @@ with open(dump_dir / "used_hud_tiles.json","w") as f:
 ###############
 
 bg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8())}
+bg_tile_sheet_layer2_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8_layer2())}
 
-context_list = ["intermission","level1","level2","level3","level4","level5"]
-
+context_list = ["intermission","level1","level2","level3","level4","level5","level9"]
+context_list = ["intermission","level9"]
 
 for context in context_list:
     context = pathlib.Path(context)
@@ -568,6 +568,8 @@ for context in context_list:
     read_used_tiles(context / "bg0_used_tiles",bg0_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
     bg1_tile_cluts = {}
     read_used_tiles(context / "bg1_used_tiles",bg1_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
+    bg2_tile_cluts = {}
+    read_used_tiles(context / "bg2_used_tiles",bg2_tile_cluts,BG_NB_TILES,BG_NB_CLUTS)
     sprite_cluts = {}
     read_used_tiles(context / "used_sprites",sprite_cluts,SPRITE_NB_TILES,SPRITE_NB_CLUTS)
 
@@ -577,6 +579,7 @@ for context in context_list:
     bg_tile_palette = set()
     bg0_tile_set_list = []
     bg1_tile_set_list = []
+    bg2_tile_set_list = []
 
     # layer 0: pure copy, layer 1 & 2: masked copies
     # so we need to generate the graphics separately, but the palette is shared
@@ -589,7 +592,6 @@ for context in context_list:
         tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_0",ctx_dump_dir,dump=dump_it,
         cluts=bg0_tile_cluts,
         name_dict=None)
-
         bg0_tile_set_list.append(tile_set)
         bg_tile_palette.update(tp)
 
@@ -597,11 +599,16 @@ for context in context_list:
         tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_1",ctx_dump_dir,dump=dump_it,
         cluts=bg1_tile_cluts,
         name_dict=None)
-
         bg1_tile_set_list.append(tile_set)
         bg_tile_palette.update(tp)
 
-    bg_tile_palette.update(bitplanelib.palette_extract(title_layers))
+    for i,tsd in bg_tile_sheet_layer2_dict.items():
+        tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_2",ctx_dump_dir,dump=dump_it,
+        cluts=bg2_tile_cluts,
+        name_dict=None)
+        bg2_tile_set_list.append(tile_set)
+        bg_tile_palette.update(tp)
+
     ##
     sprite_set_list = []
     for i,tsd in sprite_sheet_dict.items():
@@ -631,8 +638,8 @@ for context in context_list:
 
         apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
         apply_color_replacement(bg1_tile_set_list,sprite_replacement_dict)
+        apply_color_replacement(bg2_tile_set_list,sprite_replacement_dict)
         apply_color_replacement(sprite_set_list,sprite_replacement_dict)
-        bitplanelib.replace_color_from_dict(title_layers,sprite_replacement_dict)
 
     # pad if needed
     bg_tile_palette.remove(magenta)
@@ -655,12 +662,17 @@ for context in context_list:
             with open(ctx_dump_dir / "used_bg1_tiles.json","w") as f:
                 bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg1_tile_cluts.items() if v}
                 json.dump(bg_tile_cluts_dict,f,indent=2)
+            with open(ctx_dump_dir / "used_bg2_tiles.json","w") as f:
+                bg_tile_cluts_dict = {hex(k):[hex(x) for x in v] for k,v in bg2_tile_cluts.items() if v}
+                json.dump(bg_tile_cluts_dict,f,indent=2)
 
     bg_tile_plane_cache = {}
 
     bg0_tile_table,next_bg_id = read_tileset(bg0_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
     is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black)
     bg1_tile_table,next_bg_id = read_tileset(bg1_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
+    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
+    bg2_tile_table,next_bg_id = read_tileset(bg2_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
     is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
 
 
@@ -677,21 +689,20 @@ for context in context_list:
 
     sprite_table,_ = read_tileset(sprite_set_list,bg_tile_palette,[True,False,False,False],cache=bob_plane_cache, is_bob=True, mask_color=magenta, nb_cluts=SPRITE_NB_CLUTS)
 
-    title_raw = bitplanelib.palette_image2raw(title_layers,None,bg_tile_palette)
-    title_raw_plane_len = len(title_raw)//nb_bg_layer_planes
-
 
     bank = bank_dir / f"{context}_tiles.68k"
     with open(bank,"w") as f:
         f.write("""base:
     .long\tbg0_character_table-base
     .long\tbg1_character_table-base
+    .long\tbg2_character_table-base
 """)
         f.write("palette:\n")
         bitplanelib.palette_dump(bg_tile_palette,f,bitplanelib.PALETTE_FORMAT_ASMGNU)
 
         dump_tile_layer(bg0_tile_table,"bg","",f,relative_root="bg0_character_table")
         dump_tile_layer(bg1_tile_table,"bg","",f,relative_root="bg1_character_table")
+        dump_tile_layer(bg2_tile_table,"bg","",f,relative_root="bg2_character_table")
 
         for k,v in bg_tile_plane_cache.items():
             f.write(f"tile_plane_{v:02d}:")
@@ -726,7 +737,6 @@ with open(src_dir / "palette.68k","w") as f:
 
 with open(src_dir / "graphics.68k","w") as f:
     f.write(generated_message)
-    f.write("\t.global\ttitle_pic\n")
     f.write("\t.global\tfg_character_table\n")
     f.write("\t.global\tend_tables\n")
     f.write("fg_character_table:\n")
@@ -750,16 +760,6 @@ with open(src_dir / "graphics.68k","w") as f:
 ##    f.write("shared_bob_table:\n")
 ##    dump_bob_layer(sprite_table,f)
 
-    f.write("title_pic:\n")
-    for i in range(nb_bg_layer_planes):
-        f.write(f"\t.long\ttitle_pic_plane_{i}\n")
-
-
-    f.write("\t.section\t.datachip\n")
-
-    for i in range(nb_bg_layer_planes):
-        f.write(f"title_pic_plane_{i}:\n")
-        bitplanelib.dump_asm_bytes(title_raw[i*title_raw_plane_len:(i+1)*title_raw_plane_len],f,mit_format=True)
 
 
 

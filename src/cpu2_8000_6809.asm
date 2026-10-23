@@ -10024,7 +10024,7 @@ CDA7: B3 04 0A    SUBD   $040A		; work RAM (shared with CPU1 $4400)
 CDAA: 10 83 0C 00 CMPD   #$0C00
 CDAE: 2D 01       BLT    $CDB1
 CDB0: 39          RTS
-CDB1: CE DF 4C    LDU    #$DF4C		; ROM   [breakpoint]
+CDB1: CE DF 4C    LDU    #$DF4C		; ROM 
 CDB4: 7E 8D E8    JMP    function_8de8
 
 ; 2 jump-table ref
@@ -10032,7 +10032,7 @@ function_cdb7:
 CDB7: 6A 0A       DEC    $A,X
 CDB9: 27 01       BEQ    $CDBC
 CDBB: 39          RTS
-CDBC: CE DF 4C    LDU    #$DF4C		; ROM  [breakpoint]
+CDBC: CE DF 4C    LDU    #$DF4C		; ROM 
 CDBF: 7E 8D E8    JMP    function_8de8
 
 ; 1 jump-table ref
