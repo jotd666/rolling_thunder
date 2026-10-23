@@ -2,7 +2,7 @@
 - log sprites/tiles again for levels from scratch, using second loop (6,7,8,9,10)
 - level 6 ok
 - level 7 ok
-- level 8 in progress
+- level 8 ok
 - level 9 todo
 - level 10 todo
 

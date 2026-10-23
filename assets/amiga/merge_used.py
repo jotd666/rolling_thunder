@@ -58,11 +58,11 @@ def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
 
 rc = merge(None,"hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 
-contexts = {} # {0:"intermission"}
-for i in [4,5]: #[1,2,3,4,5,6]:
+contexts = {0:"intermission"}
+for i in [3]: #[1,2,3,4,5,6]:
     contexts[i] = f"level{i}"
 
-ovw = True
+ovw = False
 fake = {
 0x118:[0x41],0x1D8:[0x41],0x340:[6,0x41,0X40,2,0XA,0x43,0x46],0x341:[6,0x41,0X40,2,0XA,0x43,0x46],0x304:[0,0x41,0x46],0x309:[2,6,0x40],
 0x30B:[2,6],0x13F:[0x46],0x3AC:[6]}
