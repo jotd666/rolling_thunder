@@ -1466,7 +1466,7 @@ force_all_screen_redraw:
 0:
 	jbsr	osd_video_word_dirty_cpu1
 	addq	#2,a0
-	dbf		d7,0b
+	dbf		d0,0b
 	
 	
 	rts

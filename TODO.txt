@@ -10,7 +10,6 @@
   but under the sprites
 - remove dashboard pic, render with layer 2 tiles
 - hoodies partially drawn when climbing up/down railings: pause+render
-- load game: clear HUD doesn't work
 - joystick not very responsive (keys work great)
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen
