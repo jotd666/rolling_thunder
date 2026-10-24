@@ -370,7 +370,7 @@ def dump_tile_layer(tile_table,prefix,bp_prefix,f,relative_root=None):
                 f.write(f"-{relative_root}")
         else:
             f.write("0")
-        f.write("\n")
+        f.write(f" | 0x{i:04x}\n")
 
     for i,tile_entry in enumerate(tile_table):
         if tile_entry and any(tile_entry):
@@ -559,7 +559,7 @@ bg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8
 bg_tile_sheet_layer2_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8_layer2())}
 
 context_list = ["intermission","level1","level2","level3","level4","level5","level9"]
-context_list = ["intermission","level9"]
+#context_list = ["intermission","level9"]
 
 for context in context_list:
     context = pathlib.Path(context)
@@ -673,7 +673,7 @@ for context in context_list:
     bg1_tile_table,next_bg_id = read_tileset(bg1_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
     is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
     bg2_tile_table,next_bg_id = read_tileset(bg2_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
-    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
+    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=magenta, generate_mask=True, next_cache_id=next_bg_id)
 
 
 
@@ -700,9 +700,9 @@ for context in context_list:
         f.write("palette:\n")
         bitplanelib.palette_dump(bg_tile_palette,f,bitplanelib.PALETTE_FORMAT_ASMGNU)
 
-        dump_tile_layer(bg0_tile_table,"bg","",f,relative_root="bg0_character_table")
-        dump_tile_layer(bg1_tile_table,"bg","",f,relative_root="bg1_character_table")
-        dump_tile_layer(bg2_tile_table,"bg","",f,relative_root="bg2_character_table")
+        dump_tile_layer(bg0_tile_table,"bg0_","",f,relative_root="bg0_character_table")
+        dump_tile_layer(bg1_tile_table,"bg1_","",f,relative_root="bg1_character_table")
+        dump_tile_layer(bg2_tile_table,"bg2_","",f,relative_root="bg2_character_table")
 
         for k,v in bg_tile_plane_cache.items():
             f.write(f"tile_plane_{v:02d}:")

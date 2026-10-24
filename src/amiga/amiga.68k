@@ -1205,6 +1205,11 @@ load_context:
 	clr.l	(a0)+
 	cmp.l	#bg1_tile_log_table_end,A0
 	jne	0b
+	lea	bg2_tile_log_table,a0
+0:
+	clr.l	(a0)+
+	cmp.l	#bg2_tile_log_table_end,A0
+	jne	0b
 	* reset logged tiles
 	lea	sprite_log_table,a0
 0:
@@ -1294,33 +1299,34 @@ load_context:
 relocate_tiles_file:
 	* now relocate the tile file
 	move.l	bg_character_table_buffer_ptr,a0
-	move.l	(a0),a1		| bg0 character table base
-	add.l	a0,a1		| make it absolute
+	move.l	a0,a2
+	move.l	(a0)+,a1		| bg0 character table base
+	add.l	a2,a1		| make it absolute
 	move.l	a1,bg0_character_table
-	move.l	(4,a0),a1		| bg1 character table base
-	add.l	a0,a1		| make it absolute
+	move.l	(a0)+,a1		| bg1 character table base
+	add.l	a2,a1		| make it absolute
 	move.l	a1,bg1_character_table
-	move.l	(8,a0),a1		| bg1 character table base
-	add.l	a0,a1		| make it absolute
+	move.l	(a0)+,a1		| bg1 character table base
+	add.l	a2,a1		| make it absolute
 	move.l	a1,bg2_character_table
 	
-	addq	#8,a0
 	move.l	a0,bg_tile_palette
 	
+	move.w	#BG_TILE_COUNT-1,d7
 	move.w	#NB_BG_PLANES-1,d4
 	move.l	bg0_character_table,A0
 	jbsr	reloc_tiles
+	move.w	#BG_TILE_COUNT-1,d7
 	move.w	#NB_BG_PLANES,d4			| this layer has a mask
 	move.l	bg1_character_table,A0
 	jbsr	reloc_tiles
+	move.w	#BG_TILE_COUNT/4-1,d7
 	move.w	#NB_BG_PLANES,d4			| this layer has a mask
 	move.l	bg2_character_table,A0
 	jbsr	reloc_tiles
-	
 	rts
 	
 reloc_tiles:
-	move.w	#BG_TILE_COUNT-1,d7
 	move.l	a0,d0		| reloc base
 0:
 	move.l	(a0)+,d1
@@ -1336,6 +1342,11 @@ reloc_tiles:
 	move.l	(a1)+,d2
 	jeq		5f
 	add.l	d0,d2
+	cmp.l   #0x50000000,d2
+	jcs		555f
+	move.l	bg2_character_table,A5
+	BREAKPOINT	"fjgjgjj"
+555:
 	move.l	d2,(-4,a1)
 	move.l	d2,a2
 	* relocate pointers on bitplanes
@@ -1676,6 +1687,13 @@ main_loop_hook:
 	
 osd_event_loop_cpu2:
 	jbsr	main_loop_hook
+	* trainer
+	tst.b	infinite_bullets_flag
+	jeq		0f
+	move.b	#0x99,(0x56CB,a6)
+	move.b	#0x99,(0x56CD,a6)
+	move.b	#0x1,(0x56CE,a6)  | machine gun
+0:
 
 	* maybe it would be necessary to protect against
 	* irq from cpu2 or from both cpus
@@ -4247,8 +4265,7 @@ osd_video_word_dirty_cpu1:
 	jcc		0f
 	lea		layer012_row_flags,a0
 	lea		layer012_flags,a1
-
-
+0:
 	and.w	#0xFFF,d7		| 0->FFF
 	move.w	d7,d6
 	lsr.w	#7,d6 			| divide by 0x80 (size of row)
@@ -4508,12 +4525,13 @@ update_bg0_tile:
 	jbsr	load_tile_bitmap
 	tst.l	d0
 	jne		0f
+	
 	* layer 1 is not active: look for layer 2
 	add.w	#0xFFF,a6
-	move.w	tile_bank_offset,d0
+	moveq	#0,d0
 	move.b	(a6)+,d0
 	move.b	(a6),d1
-	* now layer 2
+
 	move.l	bg2_character_table,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
@@ -4535,27 +4553,26 @@ update_bg0_tile:
 	*lea		_custom,a5
 	*REALLY_WAIT_BLIT
 	
-
-*	jbsr	copy_tile
-*	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d6
-*	add.w	d6,a1
-*	add.w	d6,a2
-*	add.w	d6,a3
-*	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-*	add.w	d6,a4
-*	.endif
-*	move.w	#NB_BG_PLANES-1,d4
+	* there are 2 cases to make it (relatively) simpler
+	* case 1: 
+	*   layer 0 + layer 1 cookie cut on top, plus layer 1 saved alone
+	*   with mask on the layer that can be blitted above the low priority sprites
+	* case 2: (layer_1_active == 0)
+	*   layer 0 + layer 2 cookie cut on top. Layer 2 is always below the sprites
+	*   so no special extra handling is needed except maybe
+	*   clearing the layer_1_restore_buffer previous data (TODO)
 
 copy_tile:
-	tst.b	layer_1_active
-	jeq		copy_tile_layer_1_inactive
-
 	move.w	#NB_BG_PLANES-1,d4
 	* just copy
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
-	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
-	lea		layer_1_restore_buffer,a4
+	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1 or 2)
 	move.w	plane_offset,d6
+
+	tst.b	layer_1_active
+	jeq		copy_tile_layer_1_inactive
+
+	lea		layer_1_restore_buffer,a4
 	add.w	d6,a4
 4:
 	move.l	(a5)+,d1		| next plane for layer 1
@@ -4622,6 +4639,7 @@ copy_tile:
 	
 	* now copy the tile at the proper locations. There are 3 locations to copy on
 	* (we processed the layer 1 overlay above)
+copy_the_tile:
 	move.l		playfield_drawn_screen_ptr,a1
 	add.w	d6,a1
 	* double buffering
@@ -4657,13 +4675,6 @@ copy_tile:
 
 
 copy_tile_layer_1_inactive:
-	move.w	#NB_BG_PLANES-1,d4
-	* just copy
-	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
-	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1)
-	lea		layer_1_restore_buffer,a4
-	move.w	plane_offset,d6
-	add.w	d6,a4
 4:
 	move.l	(a5)+,d1		| next plane for layer 1
 	jne		44f
@@ -4682,24 +4693,20 @@ copy_tile_layer_1_inactive:
 	moveq	#7,d7
 	move.l	a2,d3		| save mask
 	jne		450f
-* tile 1 has no mask: optimize
+* tile 2 has no mask: optimize
 46:	
 	move.b	(a0)+,d0	| layer #0
-	clr.b	(a4)		| store layer 1 as is (to write on sprites)
-	clr.b	(BG_HALF_SCREEN_PLANE_SIZE,a4)
 	move.b	d0,(a3)+	| save in temp buffer
 	add.w	#BG_NB_BYTES_PER_ROW,a4
 	dbf		d7,46b
 	jra		41f
 	
 450:
-* with non-empty tile 1
+* with non-empty tile 2
 46:
 	move.b	(a0)+,d0	| layer #0
-	move.b	(a1)+,d1	| layer #1
-	move.b	d1,(a4)		| store layer 1 as is (to write on sprites)
-	move.b	d1,(BG_HALF_SCREEN_PLANE_SIZE,a4)		| store layer 1 as is (to write on sprites)
-	move.b	(a2)+,d2	| layer #1 mask
+	move.b	(a1)+,d1	| layer #2
+	move.b	(a2)+,d2	| layer #2 mask
 	jeq		47f			| zero mask: don't do anything with layer 1
 	not.b	d2
 	and.b	d2,d0		| cut out layer 0 with mask from layer 1
@@ -4713,54 +4720,9 @@ copy_tile_layer_1_inactive:
 	move.l	d3,a2		| restore mask pointer
 	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
 	dbf		d4,4b
-	move.l	(a5)+,d1		| next plane for layer 1/2
-	jne		44f
-	move.l	#empty_row,d1
-44:
-	move.l	d1,a2		| mask again
-	moveq	#7,d2
-45:
-	* don't forget last plane for layer_1_restore_buffer: the mask plane
-	move.b	(a2)+,d0
-	move.b	d0,(a4)
-	move.b	d0,(BG_HALF_SCREEN_PLANE_SIZE,a4)
-	add.w	#BG_NB_BYTES_PER_ROW,a4
-	dbf		d2,45b
-	
-	* now copy the tile at the proper locations. There are 3 locations to copy on
-	* (we processed the layer 1 overlay above)
-	move.l		playfield_drawn_screen_ptr,a1
-	add.w	d6,a1
-	* double buffering
-	move.l		playfield_displayed_screen_ptr,a4
-	add.w	d6,a4
-	lea		background_restore_buffer,a3
-	add.w	d6,a3
-	move.w	#NB_BG_PLANES-1,d4
-	lea		temp_buffer,a0
-	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
-	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
-	move.w	#BG_NB_BYTES_PER_ROW,d6
-50:
-	moveq	#7,d7
-51:
-	move.b	(a0)+,d0
-	move.b	d0,(a1)
-	move.b	d0,(a1,d2.w)
-	add.w	d6,a1	| next row
-	move.b	d0,(a3)
-	move.b	d0,(a3,d2.w)
-	add.w	d6,a3
-	move.b	d0,(a4)
-	move.b	d0,(a4,d2.w)
-	add.w	d6,a4
-	dbf		d7,51b
-	add.w	d5,a1
-	add.w	d5,a3
-	add.w	d5,a4
-	dbf		d4,50b
-100:
-	rts
+
+	jra		copy_the_tile
+
 
 empty_planes:
 	.skip	(NB_PLAYFIELD_PLANES)*4

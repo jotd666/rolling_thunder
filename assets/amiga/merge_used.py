@@ -8,7 +8,7 @@ def add(contents,code,clut,nb_cluts):
 def rem(contents,code,clut,nb_cluts):
     contents[code*nb_cluts+clut] = 0
 
-def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
+def merge(ctx_id,used_name,nb_items,nb_cluts,shift=0,overwrite=False,filter_out=None):
     merged_path_file = used_graphics_dir
 
 
@@ -18,7 +18,9 @@ def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
         # merge sprites with existing file + moves from level 1
         used_dump = data_dir / f'{pathlib.Path(used_name).name}_{ctx_id}'
     if used_dump.exists():
-        with open(used_dump,"rb") as f:
+
+        with used_dump.open("rb") as f:
+            f.seek(shift)
             new_contents = f.read()
     else:
         new_contents = bytearray(nb_cluts*nb_items)
@@ -26,6 +28,7 @@ def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
     old_used = merged_path_file / used_name
     if old_used.exists() and not overwrite:
         with open(old_used,"rb") as f:
+            f.seek(shift)
             old_contents = bytearray(f.read())
     else:
         old_contents = bytearray(nb_cluts*nb_items)
@@ -59,7 +62,7 @@ def merge(ctx_id,used_name,nb_items,nb_cluts,overwrite=False,filter_out=None):
 rc = merge(None,"hud_used_tiles",FG_NB_TILES,FG_NB_CLUTS,overwrite=False)
 
 contexts = {0:"intermission"}
-for i in [5]: #[1,2,3,4,5,6]:
+for i in [1]: #[1,2,3,4,5,6]:
     contexts[i] = f"level{i}"
 
 ovw = False
@@ -71,7 +74,7 @@ for i,context in contexts.items():
     context = pathlib.Path(context)
     rc |= merge(i,context / "bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=ovw)
     rc |= merge(i,context / "bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=ovw)
-    rc |= merge(i,context / "bg2_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=ovw)
+    rc |= merge(i,context / "bg2_used_tiles",0x400,BG_NB_CLUTS,shift=0x400*BG_NB_CLUTS,overwrite=True)
 
     rc |= merge(i,context / "used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=ovw,filter_out=fake)
 
