@@ -4524,7 +4524,7 @@ update_bg0_tile:
 	move.w	(a6),d1
 	cmp.w	#0xFF03,d1	| empty tile layer 1: bypass (else layer 2 never reached)
 	jeq		22f
-	move.b	(a6)+,d0
+	move.b	(a6),d0
 	* now layer 1
 	move.l	bg1_character_table,a0
 	jbsr	load_tile_bitmap
@@ -4534,10 +4534,11 @@ update_bg0_tile:
 	jra		tile_layers_done
 22:
 	* layer 1 is not active: look for layer 2
-	add.w	#0xFFF,a6
+	add.w	#0x1000,a6
 	moveq	#0,d0
 	move.w	(a6),d1
 	cmp.w	#0xFF03,d1	| empty tile layer 2
+	jeq		tile_layers_done
 	move.b	(a6)+,d0
 
 	move.l	bg2_character_table,a0
@@ -4563,19 +4564,18 @@ tile_layers_done:
 	*   so no special extra handling is needed except maybe
 	*   clearing the layer_1_restore_buffer previous data (TODO)
 
-	jra		copy_tile_layer_0  | TEMP TEMP
-	move.l	d0,a6
-	exg		a5,a6
 	
 	move.w	plane_offset,d6
 	move.w	#NB_BG_PLANES-1,d4
 	tst.b	layer_1_active
 	jeq		copy_tile_layer_1_inactive
 
+	move.l	d0,a6
+	exg		a5,a6
+
 	* just copy
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
 	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1 or 2)
-	move.w	plane_offset,d6
 
 	lea		layer_1_restore_buffer,a4
 	add.w	d6,a4
@@ -4683,37 +4683,29 @@ copy_tile_layer_1_inactive:
 	* just copy
 
 	tst.b	layer_2_active
-	jeq		copy_tile_layer_0
+	jra		copy_tile_layer_0
+
 	
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
-	move.l	(NB_PLAYFIELD_PLANES*4,a5),a2		| mask plane (layer 1 or 2)
+	move.l	(NB_PLAYFIELD_PLANES*4,a6),a2		| mask plane (layer 2)
 4:
-	move.l	(a5)+,d1		| next plane for layer 1
-	jne		44f
-	move.l	#empty_row,d1
-44:
-	cmp.l	#empty_row,d1
-	jeq		555f
-
-555:
-	move.l	(a6)+,d0		| next plane for layer 0
+	move.l	(a5)+,d0		| next plane for layer 0
 	jne		45f				| if layer 0 
 	move.l	#empty_row,d0	
 45:
 	move.l	d0,a0
-	move.l	d1,a1
+
+	move.l	(a6)+,d1		| next plane for layer 2
+	jne		46f
+* tile 2 has no mask: optimize, direct copy layer 0 in temp buffer
+	move.l	(a0)+,(a3)+	| layer #0
+	move.l	(a0)+,(a3)+	| save in temp buffer
+	jra		41f
+
+46:	
+	move.l	d1,a1		| layer 2
 	moveq	#7,d7
 	move.l	a2,d3		| save mask
-	jne		450f
-* tile 2 has no mask: optimize
-46:	
-	move.b	(a0)+,d0	| layer #0
-	move.b	d0,(a3)+	| save in temp buffer
-	add.w	#BG_NB_BYTES_PER_ROW,a4
-	dbf		d7,46b
-	jra		41f
-	
-450:
 * with non-empty tile 2
 46:
 	move.b	(a0)+,d0	| layer #0
@@ -4741,7 +4733,6 @@ copy_tile_layer_0:
 	move.w	plane_offset,d6
 	move.w	#NB_BG_PLANES-1,d4
 
-	move.b	#0,0x110
 	move.l		playfield_drawn_screen_ptr,a1
 	add.w	d6,a1
 	* double buffering
