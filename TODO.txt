@@ -1,4 +1,4 @@
-- context switch not detected when starting the game
+- context switch end of level/game? 0xA62F not suitable reloads all the time
 - level 6 ok
 - level 7 ok
 - level 8 ok
@@ -7,7 +7,8 @@
 - level 4 suspicious tile size 1.8MB!!! rip again?
 
 - transparency issue for layer 1 tiles (black is transparent!)
-- level 10: when boss killed the game locks up: same issue as game over
+- level 10: when boss killed the game locks up
+
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying

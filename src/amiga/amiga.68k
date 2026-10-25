@@ -1943,20 +1943,7 @@ level1_interrupt:
 
 	jbsr	call_irqs
 
-	* scan sound commands
-	CPU1_GET_MEMORY_START_IN_A6
-	lea		(sound_table_4285+1,a6),a0  | skip credit direct MCU control
-	moveq	#1,d0
-0:
-	tst.b	(a0)+
-	jeq		1f
-	* != 0: ack & start sound
-	clr.b	(-1,a0)
-	jbsr 	osd_sound_start
-1:
-	addq	#1,d0
-	cmp.b	#0x11,d0
-	jne		0b
+	jbsr	handle_sounds_in_irq
 
 	* dynamic non black and non white color of energy bar
 	lea		life_bar_color,a0
@@ -2080,6 +2067,55 @@ level1_interrupt:
 	move.l	(a7)+,d0
 	.endif
     rte
+	
+handle_sounds_in_irq:
+	* scan sound commands (synthetic)
+	CPU1_GET_MEMORY_START_IN_A6
+	lea		(sound_table_4285+1,a6),a0  | skip credit direct MCU control
+	moveq	#1,d0
+0:
+	tst.b	(a0)+
+	jeq		1f
+	* != 0: ack & start sound
+	clr.b	(-1,a0)
+	jbsr 	osd_sound_start
+1:
+	addq	#1,d0
+	cmp.b	#0x11,d0
+	jne		0b
+	* scan music play
+	moveq	#0,d0
+	move.b	(snd_music_req_4380,a6),d0
+	jeq		osd_music_stop
+	jmi		playing_out
+	st.b	(snd_music_req_4380,a6)		| set as playing
+	add.b	#0xF0,d0		| match our sound indexes
+	clr.b	last_e8_trigger
+	jbsr	osd_sound_start
+playing_out:
+
+	* check for music trigger
+	move.b	_mt_E8Trigger,d0
+	jeq		0f
+	* workaround for stupid trigger firing several times
+	cmp.b	last_e8_trigger,d0
+	jeq		0f
+	move.b	d0,last_e8_trigger
+	
+	jbsr	osd_music_stop
+	clr.b	_mt_E8Trigger
+	cmp.b	#2,d0
+	jne		1f
+	* continues music
+	move.w	#MAIN_BGM_CONT_SND,d0
+	jbsr	osd_sound_start
+	
+	rts
+1:
+	* track ended: ack
+	clr.b	(snd_music_req_4380,a6)
+0:
+	rts
 	
 select_sprite_color:	
 	cmp.b	#0xE8,d0
@@ -6342,7 +6378,18 @@ osd_sound_start:
 	* music
 4:
 
+ 	movem.l	d0/a0,-(a7)
+	lsr.w	#3,d0
+	sub.b	#0xF0,d0
+	add.w	d0,d0
+	add.w	d0,d0
+	lea		tunes_table(pc),a0
+	move.l	(a0,d0.w),d0
+	jmi		0f
+	move.l	d0,a0
 	jbsr	load_music_if_needed
+0:
+    movem.l (a7)+,d0/a0
 	
 	* don't play if already playing
 	* (music_tick value is not important for looped tunes
@@ -6360,49 +6407,19 @@ osd_sound_start:
     lea _custom,a6
  	movem.l	d0/a0,-(a7)
 	
-	.ifne	OPT_CD32_VERSION
-	
-	lea		cdtrack_table,a0
-	lsr.w	#3,d0			| divide by 8
-	move.b	(a0,d0.w),d0	| get CD track to play
-	jeq		55f				| not a CD track: normal operation
-	cmp.b	previous_cd_track,D0
-	jeq		55f				| don't launch same track twice
-	move.b	d0,previous_cd_track
-	* it's CD music, play only if not map context
-	* (else data load will stop music)
-	* we'll delay the load at the end of load_context routine
-	cmp.w	#MAP_CONTEXT,current_context
-	jeq		54f
-	move.l	_cdplay,a0
-	moveq	#0,d1
-	jbsr	(a0)
-	st.b	music_playing
-54:
-	add		#8,a7		| pop stack to restore it for a0 and d0
-	jra		60f			| skip all module stuff
-55:
-	movem.l	(a7),d0/a0	| restore d0, no stack pop
-	.endif
 	
 	move.w	(2,a0,d0.w),d1	| pattern number in .mod file
 	lea		module_buffer,a0
 	moveq	#0,d0
 	move.w	d1,d0
     sub.l   a1,a1		| samples are in the module
+
     jsr _mt_init
 	movem.l	(a7)+,d0/a0
 
     * set master volume a little less loud if needed
 	move.b	(6,a0,d0.w),music_volume
-	*move.b	(7,a0,d0.w),music_loops
-	*move.w	(4,a0,d0.w),d2
 
-	*move.w	d2,music_duration
-	*move.w	d2,music_tick
-
-	* stop music (needed for CD tracks)
-	jbsr	osd_music_stop
 
 	st.b	music_playing
 
@@ -6419,86 +6436,10 @@ no_tune:
 	movem.l	(a7)+,d0/a0
 	jra		5b
 	
-	.ifne	OPT_CD32_VERSION
-cdtrack_table:
-	.byte	0	| 00
-	.byte	0	| 01
-	.byte	0	| 02
-	.byte	0	| 03
-	.byte	0	| 04
-	.byte	0	| 05
-	.byte	0	| 06
-	.byte	0	| 07
-	.byte	0	| 08
-	.byte	0	| 09
-	.byte	0	| 0a
-	.byte	0	| 0b
-	.byte	0	| 0c
-	.byte	0	| 0d
-	.byte	0	| 0e
-	.byte	0	| 0f
-	.byte	0	| 10
-	.byte	0	| 11
-	.byte	0	| 12
-	.byte	0	| 13
-	.byte	0	| 14
-	.byte	0	| 15
-	.byte	0	| 16
-	.byte	0	| 17
-	.byte	0	| 18
-	.byte	0	| 19
-	.byte	0	| 1a
-	.byte	0	| 1b
-	.byte	6	| LEVEL7_END1_SND 1c
-	.byte	0	| 1d
-	.byte	0	| 1e
-	.byte	0	| 1f
-	.byte	0	| 20
-	.byte	0	| 21
-	.byte	0	| 22
-	.byte	0	| 23
-	.byte	0	| 24
-	.byte	0	| 25
-	.byte	0	| 26
-	.byte	0	| 27
-	.byte	0	| 28
-	.byte	10	| LEVEL56_TUNE_SND 29
-	.byte	5	| BOSS7_TUNE_SND 2a
-	.byte	8	| LEVEL12_TUNE_SND 2b
-	.byte	0	| 2c
-	.byte	2	| BOSS12_TUNE_SND 2d
-	.byte	4	| BOSS56_TUNE_SND 2e
-	.byte	0	| 2f
-	.byte	0	| 30
-	.byte	0	| 31
-	.byte	7	| LEVEL7_END2_SND 32
-	.byte	9	| LEVEL34_TUNE_SND 33
-	.byte	3	| BOSS34_TUNE_SND 34
-	.byte	0	| 35
-	.byte	0	| 36
-	.byte	0	| 37
-	.byte	0	| 38
-	.byte	0	| 39
-	.byte	0	| 3a
-	.byte	0	| 3b
-	.byte	0	| 3c
-	.byte	0	| 3d
-	.byte	0	| LEVEL_COMPLETE_TUNE_SND 3e
-	.byte	0	| 3f	
-	.endif
+
 	
 load_music_if_needed:
 	movem.l	d0/a0/a1,-(a7)
-	tst.b	no_level_music_flag
-	jeq		0f
-	* no music: don't load level tunes
-
-	jra		75f
-0:
- 
-	jra		75f
-
-70:
 	cmp.l	current_music_name,a0
 	jeq		75f
 	* stop current music if any
@@ -6899,8 +6840,44 @@ sprite_level_5_header:
 sprite_level_5_bitmap:
 	.asciz	"level5_sprites_bitmap"
 
+mission_complete_09:
+	.asciz	"mission_complete_09.mod"
+game_over_0c:
+	.asciz	"game_over_0c.mod"
+high_score_0b:
+	.asciz	"high_score_0b.mod"
+alt_bgm_0a:
+	.asciz	"tune_0a.mod"
+alt_bgm_0a_cont:
+	.asciz	"tune_0a_cont.mod"
+main_bgm_06:
+	.asciz	"tune_06.mod"
+main_bgm_06_continued:
+	.asciz	"tune_06_cont.mod"
+	
 	.align	2
 
+tunes_table:
+	.long 	0		| stop
+	.long 	-1
+	.long 	-1
+	.long 	-1
+	.long 	-1
+	.long	-1      | level complete
+	.long	main_bgm_06      | level 1 tune
+	.long	-1      | 7: boss killed jingle
+	.long	-1      | 8
+	.long	mission_complete_09      | 9
+	.long	alt_bgm_0a      | a
+	.long	high_score_0b      | b
+	.long	game_over_0c      | c
+	.long 	-1
+	.long 	main_bgm_06_continued   | fake e
+	.long 	alt_bgm_0a_cont        | fake f
+
+	
+	
+	
 tile_context_name_table:
 	.long	tile_intermission
 	.long	tile_level_1
@@ -6978,6 +6955,9 @@ previous_ctrl_press:
 	.byte	0
 previous_alt_press:
 	.byte	0
+last_e8_trigger:
+	.byte	0
+	.align	2
 cpu_interrupts:
 	.word	0
 looped_sound_enabled:

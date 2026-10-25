@@ -79,7 +79,7 @@ def game_specific_cpu1(address,lines,i):
         line = "\tjbsr\tset_level_context   | next level: set new context\n"+line
     elif address == 0x903d:
         line = "\tjbsr\tset_level1_context   | attract mode level 1\n"+line
-    elif address in [0x9DDD,0x9210,0xA62F]:
+    elif address in [0x9DDD,0x9210]:
         line = "\tjbsr\tset_intermission_context\n"+line
     return line
 

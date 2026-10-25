@@ -370,6 +370,23 @@ emitted_sprite_count_24 = $24
 tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
 player_number_01 = $01
 
+;CPU #1 4380 write controls MCU tune play: 
+;
+;0: stop music
+;1-4: various sound tests
+;5: level complete
+;6: level 1 tune
+;7: boss killed jingle
+;9: end music
+;A: alt BGM
+;B: high score
+;C: game over
+;D: alt BGM second part (used?)
+;E: unused end
+;F: unused soft short loop tune
+;10: unused suspense short loop tune
+
+
 ;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
 ;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
 ;

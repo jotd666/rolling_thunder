@@ -5,8 +5,10 @@ from shared import *
 
 gamename = "rolling_thunder"
 sox = "sox"
-
-sound_dir = this_dir / ".." / "sounds" / "synth"
+sound_dir_master = this_dir / ".." / "sounds"
+sound_dir = sound_dir_master / "synth"
+sample_dir = sound_dir_master / "voices"
+tunes_dir = sound_dir_master / "tunes"
 
 # default channel = 3, default priority = 40
 # put below some exceptions
@@ -75,8 +77,17 @@ def convert():
 
 
     music_dict = {
-   # "MAIN_TUNE_SND"      :{"index":0x80,"pattern":0,"volume":32},
-    }
+"LEVEL_COMPLETE_SND" : {"index":0xF5,"pattern":0,"volume":32},
+"MAIN_BGM_SND" : {"index":0xF6,"pattern":0,"volume":32},
+"MAIN_BGM_CONT_SND" : {"index":0xFE,"pattern":0,"volume":32},
+"BOSS_KILLED_SND" : {"index":0xF7,"pattern":0,"volume":32},
+"MISSION_COMPLETE_SND" : {"index":0xF9,"pattern":0,"volume":32},
+"ALT_BGM_SND" : {"index":0xFA,"pattern":0,"volume":32},
+"ALT_BGM_CONT_SND" : {"index":0xFF,"pattern":0,"volume":32},
+"HIGH_SCORE_SND" : {"index":0xFB,"pattern":0,"volume":32},
+"GAME_OVER_SND" : {"index":0xFB,"pattern":0,"volume":32},
+}
+
 
     sound_dict.update(music_dict)
 
@@ -234,14 +245,6 @@ def convert():
                 write_asm(contents,fw)
 
 
-        # make sure next section will be aligned
-##        with open(os.path.join(sound_dir,f"rollingtndr1_conv.mod"),"rb") as f:
-##            contents = f.read()
-##
-        fw.write("{}:".format(music_module_label))
-        write_asm(contents,fw)
-
-
 
         fw.write("\t.align\t8\n")
 
@@ -258,6 +261,9 @@ def convert():
     unused_indexes = set(range(0,0x3E))-sfx_list-dummy_sounds-music_list
     print("Unmapped sound indexes: ")
     print(sorted(hex(x) for x in unused_indexes))
+
+    for mod in tunes_dir.glob("*.mod"):
+        shutil.copy(mod,data_dir)
 convert()
 
 
