@@ -74,7 +74,7 @@ for i,context in contexts.items():
     context = pathlib.Path(context)
     rc |= merge(i,context / "bg0_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=ovw)
     rc |= merge(i,context / "bg1_used_tiles",BG_NB_TILES,BG_NB_CLUTS,overwrite=ovw)
-    rc |= merge(i,context / "bg2_used_tiles",0x400,BG_NB_CLUTS,shift=0x400*BG_NB_CLUTS,overwrite=True)
+    rc |= merge(i,context / "bg2_used_tiles",0x400,BG_NB_CLUTS,shift=0x400*BG_NB_CLUTS,overwrite=ovw)
 
     rc |= merge(i,context / "used_sprites",SPRITE_NB_TILES,SPRITE_NB_CLUTS,overwrite=ovw,filter_out=fake)
 

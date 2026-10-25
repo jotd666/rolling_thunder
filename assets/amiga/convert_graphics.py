@@ -559,7 +559,7 @@ bg_tile_sheet_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8
 bg_tile_sheet_layer2_dict = {i:img for i,img in enumerate(generate_tiles.doit_tiles_8x8_layer2())}
 
 context_list = ["intermission","level1","level2","level3","level4","level5","level9"]
-context_list = ["intermission","level1"]
+
 
 for context in context_list:
     context = pathlib.Path(context)

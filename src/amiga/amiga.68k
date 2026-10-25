@@ -79,8 +79,8 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
-BG_TILE_FILE_MAX_SIZE = 1300000
-SPRITE_FILE_BITMAP_MAX_SIZE = 0x101000 
+BG_TILE_FILE_MAX_SIZE = 1810000
+SPRITE_FILE_BITMAP_MAX_SIZE = 970000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 10000
@@ -4686,27 +4686,32 @@ copy_tile_layer_1_inactive:
 	jeq		copy_tile_layer_0
 
 	move.l	d0,a6
-	exg		a5,a6
+	move.l	(NB_PLAYFIELD_PLANES*4,a6),d0
+	jeq		copy_tile_layer_0		| no mask on tile: empty: screw it
 	
+	jbsr	clear_layer_1
+	
+	* now compose tile to temp buffer using layer 0 and 2
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
-	move.l	(NB_PLAYFIELD_PLANES*4,a6),a2		| mask plane (layer 2)
+	move.l	d0,a2		| mask plane (layer 2)
+	move.w	#NB_BG_PLANES-1,d4
 4:
+	move.l	a2,d3		| save mask
 	move.l	(a5)+,d0		| next plane for layer 0
 	jne		45f				| if layer 0 
 	move.l	#empty_row,d0	
 45:
 	move.l	d0,a0
 	move.l	(a6)+,d1		| next plane for layer 2
-	**jne		40f
-* tile 2 has no mask: optimize, direct copy layer 0 in temp buffer
+	jne		40f
+* tile 2 has no data: optimize, direct copy layer 0 in temp buffer
 	move.l	(a0)+,(a3)+	| layer #0
 	move.l	(a0)+,(a3)+	| save in temp buffer
 	jra		41f
 
 40:	
 	move.l	d1,a1		| layer 2
-	moveq	#7,d7
-	move.l	a2,d3		| save mask
+	moveq	#BG_TILE_HEIGHT-1,d7
 * with non-empty tile 2
 46:
 	move.b	(a0)+,d0	| layer #0
@@ -4718,12 +4723,10 @@ copy_tile_layer_1_inactive:
 	or.b	d1,d0		| imprint layer 1
 47:
 	move.b	d0,(a3)+	| save in temp buffer
-	add.w	#BG_NB_BYTES_PER_ROW,a4
 	dbf		d7,46b
 	
 41:
 	move.l	d3,a2		| restore mask pointer
-	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
 	dbf		d4,4b
 
 	jra		copy_the_tile
@@ -4731,6 +4734,8 @@ copy_tile_layer_1_inactive:
 * the simplest way: only layer 0 is active
 
 copy_tile_layer_0:
+	jbsr	clear_layer_1
+	
 	move.w	plane_offset,d6
 	move.w	#NB_BG_PLANES-1,d4
 
@@ -4774,6 +4779,25 @@ copy_tile_layer_0:
 	
 100:
 	rts
+	
+clear_layer_1:
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
+	lea		layer_1_restore_buffer,a4
+	add.w	d6,a4
+	* clear layer 1 completely
+	move.w	#BG_NB_BYTES_PER_ROW,d5
+	move.w	#NB_BG_PLANES,d4
+10:
+	moveq	#BG_TILE_HEIGHT-1,d7
+101:
+	clr.b	(a4)
+	clr.b	(a4,d2.w)
+	add.w	d5,a4
+	dbf		d7,101b
+	add.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,a4	| plane 1 buffer next plane
+	dbf		d4,10b
+	rts
+	
 clear_row:
 51:
 *	clr.b	(a4)		| store layer 1 as is (to write on sprites)

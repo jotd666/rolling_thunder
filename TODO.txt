@@ -1,12 +1,12 @@
-- render dashboard pic with layer 2 tiles: debug this!!!
 - context switch not detected when starting the game
-- log sprites/tiles again for levels from scratch, using second loop (6,7,8,9,10)
 - level 6 ok
 - level 7 ok
 - level 8 ok
 - level 9 todo
-- level 10 todo
+- level 10 wrong colors wtf
+- level 4 suspicious tile size 1.8MB!!! rip again?
 
+- use 50Hz scroll
 - hoodies partially drawn when climbing up/down railings: pause+render
 - joystick not very responsive (keys work great)
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
@@ -19,7 +19,6 @@
 - sprites 128 colors, bg in 64 to avoid washed down
 - snd_music_req_4380: write: start music (and write $FF when done ? )  
 - 4385-95 (included): sounds, rip in service mode
-- implement "always have machine gun" cheat
 
   
 could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
