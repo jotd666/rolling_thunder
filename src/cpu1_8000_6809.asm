@@ -368,6 +368,7 @@ invulnerable_10              = $10
 difficulty_3c                = $3c
 emitted_sprite_count_24 = $24
 tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
+player_number_01 = $01
 
 ;	map(0x0000, 0x1fff).ram().w(FUNC(namcos86_state::videoram1_w)).share("videoram1");  background tiles layer 1 / layer 2
 ;	map(0x2000, 0x3fff).ram().w(FUNC(namcos86_state::videoram2_w)).share("videoram2");  around 3000: OSD
@@ -3102,7 +3103,7 @@ function_9642:
 96D3: 5F          CLRB
 96D4: 33 CB       LEAU   D,U
 96D6: CC E4 15    LDD    #$E415
-96D9: A7 C1       STA    ,U++
+96D9: A7 C1       STA    ,U++		; [video_address_word]
 96DB: 5A          DECB
 96DC: 26 FB       BNE    $96D9
 96DE: 7C 54 2D    INC    $542D
@@ -3963,9 +3964,10 @@ function_9d0d:
 9DE3: 97 05       STA    dp_sub_cpu2_05
 9DE5: 0F 07       CLR    dp_sem_cpu2_07
 9DE7: 39          RTS
+; game completed: wait for sfx to complete to show credits
 9DE8: 7D 43 80    TST    snd_music_req_4380		; -> MCU: music/BGM request code
 9DEB: 27 01       BEQ    $9DEE
-9DED: 39          RTS
+;9DED: 39          RTS
 9DEE: CE AF D6    LDU    #$AFD6
 9DF1: 10 8E 32 10 LDY    #$3210
 9DF5: C6 FC       LDB    #$FC
@@ -3987,6 +3989,7 @@ function_9d0d:
 9E18: 26 F8       BNE    $9E12
 9E1A: A6 E0       LDA    ,S+		; [local]
 9E1C: 86 0C       LDA    #$0C
+; game completed
 9E1E: 97 04       STA    dp_sub_cpu1_04
 9E20: 0F 06       CLR    dp_sem_cpu1_06
 9E22: 97 05       STA    dp_sub_cpu2_05
@@ -4375,9 +4378,9 @@ A123: 39          RTS
 
 ; 1 jump-table ref
 function_a124:
-A124: 96 01       LDA    $01
+A124: 96 01       LDA    player_number_01
 A126: 26 06       BNE    $A12E
-A128: 8E 54 80    LDX    #$5480		; work RAM (shared with CPU2)
+A128: 8E 54 80    LDX    #$5480		; player 1 stats. work RAM (shared with CPU2)
 A12B: 7E A1 31    JMP    $A131
 A12E: 8E 54 A0    LDX    #$54A0
 A131: CE 56 C0    LDU    #$56C0		; direct page (shared with CPU2 $1600)
@@ -4469,7 +4472,7 @@ A1C9: 0C 05       INC    dp_sub_cpu2_05		; CPU2 sub-state
 A1CB: 0F 06       CLR    dp_sem_cpu1_06
 A1CD: 0F 07       CLR    dp_sem_cpu2_07
 A1CF: 39          RTS
-A1D0: 0D 01       TST    $01
+A1D0: 0D 01       TST    player_number_01
 A1D2: 26 16       BNE    $A1EA
 A1D4: CE 54 80    LDU    #$5480
 A1D7: 8D 4C       BSR    function_a225
@@ -4477,9 +4480,9 @@ A1D9: 0D C0       TST    $C0
 A1DB: 27 EA       BEQ    $A1C7
 A1DD: 7D 54 A0    TST    $54A0
 A1E0: 27 1C       BEQ    $A1FE
-A1E2: 96 01       LDA    $01
+A1E2: 96 01       LDA    player_number_01
 A1E4: 88 01       EORA   #$01
-A1E6: 97 01       STA    $01
+A1E6: 97 01       STA    player_number_01
 A1E8: 20 14       BRA    $A1FE
 A1EA: CE 54 A0    LDU    #$54A0
 A1ED: 8D 36       BSR    function_a225
@@ -4487,9 +4490,9 @@ A1EF: 0D C0       TST    $C0
 A1F1: 27 D4       BEQ    $A1C7
 A1F3: 7D 54 80    TST    $5480
 A1F6: 27 06       BEQ    $A1FE
-A1F8: 96 01       LDA    $01
+A1F8: 96 01       LDA    player_number_01
 A1FA: 88 01       EORA   #$01
-A1FC: 97 01       STA    $01
+A1FC: 97 01       STA    player_number_01
 A1FE: CE A2 21    LDU    #$A221		; ROM
 A201: B6 42 51    LDA    in_level_4251		; input level [10] dip SWB:3 (timer)
 A204: 48          ASLA
@@ -4900,7 +4903,7 @@ A51F: 23 02       BLS    $A523
 A521: DD CA       STD    $CA
 A523: 0C 06       INC    dp_sem_cpu1_06
 A525: 0C 07       INC    dp_sem_cpu2_07
-A527: 0D 01       TST    $01
+A527: 0D 01       TST    player_number_01
 A529: 26 06       BNE    $A531
 A52B: CE 54 80    LDU    #$5480
 A52E: 7E A2 25    JMP    function_a225
@@ -5046,7 +5049,7 @@ A627: 44          LSRA
 A628: 44          LSRA
 A629: A7 25       STA    $5,Y
 A62B: A7 05       STA    $5,X
-A62D: 8D 10       BSR    function_a63f
+A62D: 8D 10       BSR    display_congrats_a63f
 A62F: 0A AE       DEC    tile_related_counter_ae
 A631: 2A 07       BPL    $A63A
 A633: 0C AC       INC    $AC
@@ -5059,7 +5062,7 @@ A63E: 39          RTS
 
 
 ; called 1x  from $A62D
-function_a63f:
+display_congrats_a63f:
 A63F: 86 2C       LDA    #$2C
 A641: 97 B2       STA    $B2
 A643: BD B4 D7    JSR    function_returns_z_b4d7
@@ -5302,7 +5305,7 @@ A828: BD 95 07    JSR    function_9507
 A82B: BD 95 61    JSR    write_remaining_time_9561
 A82E: 0C 06       INC    dp_sem_cpu1_06
 A830: 0F 0E       CLR    dp_irqcount1_0e		; CPU1 IRQ/frame counter
-A832: 0D 01       TST    $01
+A832: 0D 01       TST    player_number_01
 A834: 26 18       BNE    $A84E
 A836: CE B0 BE    LDU    #$B0BE
 A839: 10 8E 37 22 LDY    #$3722
@@ -5389,7 +5392,7 @@ A8D0: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=10]
 function_a8e6:
 A8E6: 86 0C       LDA    #$0C
 A8E8: 97 E8       STA    $E8
-A8EA: 0D 01       TST    $01
+A8EA: 0D 01       TST    player_number_01
 A8EC: 26 35       BNE    $A923
 A8EE: CE B0 BE    LDU    #$B0BE		; ROM
 A8F1: 10 8E 37 22 LDY    #$3722		; layer 3 tilemap / HUD
@@ -5601,13 +5604,13 @@ AAA2: BD 84 8C    JSR    function_848c
 AAA5: BD 83 CB    JSR    clear_layer_0_83cb
 AAA8: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
 AAAB: 27 37       BEQ    $AAE4
-AAAD: 0D 01       TST    $01
+AAAD: 0D 01       TST    player_number_01
 AAAF: 26 2E       BNE    $AADF
 AAB1: 7D 54 A0    TST    $54A0		; work RAM (shared with CPU2)
 AAB4: 27 2E       BEQ    $AAE4
-AAB6: 96 01       LDA    $01
+AAB6: 96 01       LDA    player_number_01
 AAB8: 88 01       EORA   #$01
-AABA: 97 01       STA    $01
+AABA: 97 01       STA    player_number_01
 AABC: CE AB 02    LDU    #$AB02		; ROM
 AABF: B6 42 51    LDA    in_level_4251		; input level [10] dip SWB:3 (timer)
 AAC2: 48          ASLA
@@ -5626,7 +5629,7 @@ AADC: 0F 07       CLR    dp_sem_cpu2_07
 AADE: 39          RTS
 AADF: 7D 54 80    TST    $5480
 AAE2: 26 D2       BNE    $AAB6
-AAE4: 0F 01       CLR    $01
+AAE4: 0F 01       CLR    player_number_01
 AAE6: 0D DB       TST    $DB
 AAE8: 27 0F       BEQ    $AAF9
 AAEA: 0D D8       TST    $D8
@@ -5885,7 +5888,7 @@ ACEA: A6 E0       LDA    ,S+		; [local]
 ACEC: 0F 0E       CLR    dp_irqcount1_0e		; CPU1 IRQ/frame counter
 ACEE: 0C 06       INC    dp_sem_cpu1_06
 ACF0: 0C 07       INC    dp_sem_cpu2_07
-ACF2: 0D 01       TST    $01
+ACF2: 0D 01       TST    player_number_01
 ACF4: 26 31       BNE    $AD27
 ACF6: CE B0 BE    LDU    #$B0BE
 ACF9: 10 8E 37 22 LDY    #$3722
@@ -5974,7 +5977,7 @@ ADA5: DD CA       STD    $CA
 ADA7: DD CC       STD    $CC
 ADA9: 97 C0       STA    $C0
 ADAB: BD 92 F7    JSR    function_92f7
-ADAE: 0D 01       TST    $01
+ADAE: 0D 01       TST    player_number_01
 ADB0: 26 0D       BNE    $ADBF
 ADB2: 0C 06       INC    dp_sem_cpu1_06
 ADB4: 0C 07       INC    dp_sem_cpu2_07
@@ -6016,7 +6019,7 @@ AE04: 26 FB       BNE    $AE01
 AE06: 10 8E 3F BE LDY    #$3FBE
 AE0A: 86 FF       LDA    #$FF
 AE0C: F6 B1 5C    LDB    $B15C
-AE0F: A7 A1       STA    ,Y++
+AE0F: A7 A1       STA    ,Y++		; [video_address_word]
 AE11: 5A          DECB
 AE12: 26 FB       BNE    $AE0F
 AE14: 0C 06       INC    dp_sem_cpu1_06
@@ -6088,14 +6091,14 @@ AE90: 86 FF       LDA    #$FF
 AE92: 97 D8       STA    $D8
 AE94: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
 AE97: 27 3D       BEQ    $AED6
-AE99: 0D 01       TST    $01
+AE99: 0D 01       TST    player_number_01
 AE9B: 26 31       BNE    $AECE
 AE9D: 7F 54 80    CLR    $5480		; work RAM (shared with CPU2)
 AEA0: 7D 54 A0    TST    $54A0
 AEA3: 27 31       BEQ    $AED6
-AEA5: 96 01       LDA    $01
+AEA5: 96 01       LDA    player_number_01
 AEA7: 88 01       EORA   #$01
-AEA9: 97 01       STA    $01
+AEA9: 97 01       STA    player_number_01
 AEAB: CE AE E3    LDU    #$AEE3		; ROM
 AEAE: B6 42 51    LDA    in_level_4251		; input level [10] dip SWB:3 (timer)
 AEB1: 48          ASLA
@@ -6115,15 +6118,14 @@ AECD: 39          RTS
 AECE: 7F 54 A0    CLR    $54A0
 AED1: 7D 54 80    TST    $5480
 AED4: 26 CF       BNE    $AEA5
-AED6: 0F 01       CLR    $01
+AED6: 0F 01       CLR    player_number_01
 AED8: 0F DB       CLR    $DB
 AEDA: 0F D8       CLR    $D8
 AEDC: 0F D9       CLR    $D9
 AEDE: 0C 06       INC    dp_sem_cpu1_06
 AEE0: 0C 07       INC    dp_sem_cpu2_07
 AEE2: 39          RTS
-AEE3: 01 20       NEG    $20
-AEE5: 01 50       NEG    $50
+
 
 ; 1 jump-table ref
 function_aee7:

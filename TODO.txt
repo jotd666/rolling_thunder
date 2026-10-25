@@ -2,17 +2,31 @@
 - level 6 ok
 - level 7 ok
 - level 8 ok
-- level 9 todo
-- level 10 wrong colors wtf
+- level 9 ok
+- level 10 ok
 - level 4 suspicious tile size 1.8MB!!! rip again?
 
+- transparency issue for layer 1 tiles (black is transparent!)
+- level 10: when boss killed the game locks up: same issue as game over
+
+site	waits for	tune requested by
+$9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
+$A958	sub-state 10 step 1 (GAME OVER)	$0C, CPU1 $A8E6 step 0
+$AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
+asm =>
+
+
+
+- trainer infinite lives
 - use 50Hz scroll
 - hoodies partially drawn when climbing up/down railings: pause+render
 - joystick not very responsive (keys work great)
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen
+- could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
+  which would allow shorter (and faster) sprite overlay: less chip, faster blits
 - force tile 0 clut 0 if missing
-- level 3 & 5 (maybe 10) are fully horizontal: optimize: don't do tile vertical duplication
+- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
 - start skips the "select area" part doesn't work
 
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW

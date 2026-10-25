@@ -83,7 +83,7 @@ BG_TILE_FILE_MAX_SIZE = 1810000
 SPRITE_FILE_BITMAP_MAX_SIZE = 970000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 10000
+BIGGEST_MUSIC_SIZE = 410000
 OPT_SPRITE_MIRRORING = 0
 	.else
 	* we can't afford the music (unless CD) or mirroring
@@ -4704,11 +4704,19 @@ copy_tile_layer_1_inactive:
 	move.l	d0,a0
 	move.l	(a6)+,d1		| next plane for layer 2
 	jne		40f
-* tile 2 has no data: optimize, direct copy layer 0 in temp buffer
-	move.l	(a0)+,(a3)+	| layer #0
-	move.l	(a0)+,(a3)+	| save in temp buffer
+* tile 2 has no data: speed this up
+	moveq	#BG_TILE_HEIGHT-1,d7
+46:
+	move.b	(a0)+,d0	| layer #0
+	move.b	(a2)+,d2	| layer #2 mask
+	jeq		47f			| zero mask: don't do anything with layer 1
+	not.b	d2
+	and.b	d2,d0		| cut out layer 0 with mask from layer 1
+47:
+	move.b	d0,(a3)+	| save in temp buffer
+	dbf		d7,46b
 	jra		41f
-
+	
 40:	
 	move.l	d1,a1		| layer 2
 	moveq	#BG_TILE_HEIGHT-1,d7
@@ -6887,9 +6895,9 @@ sprite_level_9_bitmap:
 tile_level_5:
 	.asciz	"level5_tiles"
 sprite_level_5_header:
-	.asciz	"level1_sprites_header"
+	.asciz	"level5_sprites_header"
 sprite_level_5_bitmap:
-	.asciz	"level1_sprites_bitmap"
+	.asciz	"level5_sprites_bitmap"
 
 	.align	2
 

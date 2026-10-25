@@ -419,11 +419,13 @@ def apply_color_replacement(sprite_set_list,quantized,subset=slice(None)):
     """ change colors for list of tilesets (tiles, sprites)
     quantized: RGB => RGB color replacement dictionary
     """
-
+    used_colors = set()
     for sset in sprite_set_list:
         for tile in sset[subset]:
             if tile:
                 bitplanelib.replace_color_from_dict(tile,quantized)
+                used_colors.update(bitplanelib.palette_extract(tile))
+    return used_colors
 
 def quantize_palette(rgb_tuples,img_type,nb_quantize,transparent=None,dump_it=False):
     rgb_configs = set(rgb_tuples)
@@ -636,11 +638,15 @@ for context in context_list:
         else:
             raise Exception("quantize error")  # not really possible since we try 32 as last chance!
 
-        apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
-        apply_color_replacement(bg1_tile_set_list,sprite_replacement_dict)
-        apply_color_replacement(bg2_tile_set_list,sprite_replacement_dict)
-        apply_color_replacement(sprite_set_list,sprite_replacement_dict)
+        used_bg0_cols = apply_color_replacement(bg0_tile_set_list,sprite_replacement_dict)
+        used_bg1_cols = apply_color_replacement(bg1_tile_set_list,sprite_replacement_dict)
+        used_bg2_cols = apply_color_replacement(bg2_tile_set_list,sprite_replacement_dict)
+        used_sprite_cols = apply_color_replacement(sprite_set_list,sprite_replacement_dict)
 
+        print(f"{context} : bg0 colors: {len(used_bg0_cols)}")
+        print(f"{context} : bg1 colors: {len(used_bg1_cols)}")
+        print(f"{context} : bg2 colors: {len(used_bg2_cols)}")
+        print(f"{context} : sprite colors: {len(used_sprite_cols)}")
     # pad if needed
     bg_tile_palette.remove(magenta)
     bg_tile_palette = sorted(bg_tile_palette)
