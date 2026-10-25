@@ -4683,8 +4683,10 @@ copy_tile_layer_1_inactive:
 	* just copy
 
 	tst.b	layer_2_active
-	jra		copy_tile_layer_0
+	jeq		copy_tile_layer_0
 
+	move.l	d0,a6
+	exg		a5,a6
 	
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
 	move.l	(NB_PLAYFIELD_PLANES*4,a6),a2		| mask plane (layer 2)
@@ -4694,15 +4696,14 @@ copy_tile_layer_1_inactive:
 	move.l	#empty_row,d0	
 45:
 	move.l	d0,a0
-
 	move.l	(a6)+,d1		| next plane for layer 2
-	jne		46f
+	**jne		40f
 * tile 2 has no mask: optimize, direct copy layer 0 in temp buffer
 	move.l	(a0)+,(a3)+	| layer #0
 	move.l	(a0)+,(a3)+	| save in temp buffer
 	jra		41f
 
-46:	
+40:	
 	move.l	d1,a1		| layer 2
 	moveq	#7,d7
 	move.l	a2,d3		| save mask
