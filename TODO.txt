@@ -1,10 +1,26 @@
+Stopped at watchpoint 1 writing 06 to 4380 (PC=AFD0)
+>wpclear 1
+Watchpoint 1 cleared
+
+shoot:
+Stopped at watchpoint 2 writing 05 to 6200 (PC=AFC1)
+Stopped at watchpoint 2 writing 0B to 6000 (PC=AFC4)
+
+aah:
+Stopped at watchpoint 2 writing 0E to 6600 (PC=AFB9)
+Stopped at watchpoint 2 writing 0C to 6400 (PC=AFBC)
+
+User-initiated break
+
+
+
 - context switch end of level/game? 0xA62F not suitable reloads all the time
-- level 6 ok
+- level 6/2: missing some floors/stairs
 - level 7 ok
 - level 8 ok
 - level 9 ok
 - level 10 ok
-- level 4 suspicious tile size 1.8MB!!! rip again?
+
 
 - transparency issue for layer 1 tiles (black is transparent!)
 - level 10: when boss killed the game locks up

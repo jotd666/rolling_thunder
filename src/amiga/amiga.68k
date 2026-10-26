@@ -79,7 +79,7 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
-BG_TILE_FILE_MAX_SIZE = 1810000
+BG_TILE_FILE_MAX_SIZE = 1500000
 SPRITE_FILE_BITMAP_MAX_SIZE = 970000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
@@ -6854,7 +6854,8 @@ main_bgm_06:
 	.asciz	"tune_06.mod"
 main_bgm_06_continued:
 	.asciz	"tune_06_cont.mod"
-	
+round_clear_05:
+	.asciz	"round_clear_05.mod"
 	.align	2
 
 tunes_table:
@@ -6863,12 +6864,12 @@ tunes_table:
 	.long 	-1
 	.long 	-1
 	.long 	-1
-	.long	-1      | level complete
+	.long	round_clear_05      | level complete
 	.long	main_bgm_06      | level 1 tune
 	.long	-1      | 7: boss killed jingle
 	.long	-1      | 8
 	.long	mission_complete_09      | 9
-	.long	alt_bgm_0a      | a
+	.long	-1  |alt_bgm_0a      | a
 	.long	high_score_0b      | b
 	.long	game_over_0c      | c
 	.long 	-1
