@@ -30,7 +30,7 @@ def convert():
 
     low_memory = False
 
-    hq_sample_rate = 10000 if low_memory else 20000  #{"aga":18004,"ecs":12000,"ocs":11025}[mode]
+    hq_sample_rate = 11050  # if low_memory else 20000  #{"aga":18004,"ecs":12000,"ocs":11025}[mode]
     lq_sample_rate = hq_sample_rate//2 # if aga_mode else 8000
 
 
@@ -39,8 +39,8 @@ def convert():
     EMPTY_SND = "EMPTY_SND"
 
     dummy_sounds = {
-3,
-0xC, # no sound!
+    3,   # a very faint step sound, would either not be heard or would cut an important sound
+    12,  # ??, plays in intermission
     }
 
 
@@ -56,9 +56,10 @@ def convert():
             if len(parts)>1:
                 try:
                     index = int(parts[1],16)
+                    index += offset
                     if index not in dummy_sounds:
 
-                        index += offset
+
 
                         sfx_list.add(index)
                         # auto-declare according to name suffix
@@ -259,7 +260,7 @@ def convert():
     music_list = {v["index"] for v in music_dict.values()}
 
 
-    unused_indexes = set(range(0,0x3E))-sfx_list-dummy_sounds-music_list
+    unused_indexes = set(range(0,0x3E))-sfx_list-music_list
     print("Unmapped sound indexes: ")
     print(sorted(hex(x) for x in unused_indexes))
 

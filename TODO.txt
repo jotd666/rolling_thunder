@@ -1,30 +1,13 @@
-Stopped at watchpoint 1 writing 06 to 4380 (PC=AFD0)
->wpclear 1
-Watchpoint 1 cleared
-
-shoot:
-Stopped at watchpoint 2 writing 05 to 6200 (PC=AFC1)
-Stopped at watchpoint 2 writing 0B to 6000 (PC=AFC4)
-
-aah:
-Stopped at watchpoint 2 writing 0E to 6600 (PC=AFB9)
-Stopped at watchpoint 2 writing 0C to 6400 (PC=AFBC)
-
-User-initiated break
-
-
-
-- context switch end of level/game? 0xA62F not suitable reloads all the time
-- level 6/2: missing some floors/stairs
-- level 7 ok
-- level 8 ok
-- level 9 ok
-- level 10 ok
-
-
-- transparency issue for layer 1 tiles (black is transparent!)
-- level 10: when boss killed the game locks up
-
+- context switch end of game missing?? 0xA62F not suitable reloads all the time
+- level 6/2: missing some floors/stairs: maybe invert layer 1/layer 2 select
+  as layer 2 supercedes layer 1 in level 2
+- joystick not very responsive (keys work great)
+- extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
+  is done in-screen
+- transparency issue for layer 1 tiles (black is transparent! ex tires)
+- level 10: when boss killed the game locks up: missing sound ack
+- boss killed sfx 
+- timer 150 seconds not 120
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
@@ -37,9 +20,6 @@ asm =>
 - trainer infinite lives
 - use 50Hz scroll
 - hoodies partially drawn when climbing up/down railings: pause+render
-- joystick not very responsive (keys work great)
-- extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
-  is done in-screen
 - could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
   which would allow shorter (and faster) sprite overlay: less chip, faster blits
 - force tile 0 clut 0 if missing
@@ -48,12 +28,8 @@ asm =>
 
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
 - sprites 128 colors, bg in 64 to avoid washed down
-- snd_music_req_4380: write: start music (and write $FF when done ? )  
-- 4385-95 (included): sounds, rip in service mode
 
-  
-could save some memory if layer 1 tiles had less colors (maybe 16 colors is enough, 64 is too much)
-order the palette with those 16 first (also: would draw faster)
+
 optim: do not write HUD tiles (score, etc.) all the time
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
@@ -69,21 +45,17 @@ when character is killed, it sometimes reaches
 8DCF: 84 7C       ANDA   #$7C
 8DD1: 44          LSRA
 8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
+same problem when shooting hoodie into the fire
+
+=> afterwards, no big deal
 
 placement of the 5th sprite isn't correct (1 pixel off!)
 optim: write same char (HUD): avoid, game does that all the time
 
-lockup after game over (is that wait for music end?)
-  => cpu 1 D650 cpu 2 B0C1
 
 
 optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
 
-
-
-
-0x1000 tiles for layers 1,2,3
-0x800 tiles for HUD layer 4 (first 0x400 unreachable?)
 
 tunes: https://vgmrips.net/packs/pack/rolling-thunder-namco-system-86
 to rip sounds/voices: select service mode!
