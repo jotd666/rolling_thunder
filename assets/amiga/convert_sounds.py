@@ -47,30 +47,34 @@ def convert():
     sound_dict = {}
     sfx_list = set()
     snd_chan = 0
-    # scan directory for speech
-    for f in sound_dir.glob("*.wav"):
-        sound_name = f.stem
-        parts = sound_name.rsplit("_",maxsplit=1)
+    for sd,offset in ((sound_dir,0),(sample_dir,0x20)):
+        # scan directory for speech
+        for f in sd.glob("*.wav"):
+            sound_name = f.stem
+            parts = sound_name.rsplit("_",maxsplit=1)
 
-        if len(parts)>1:
-            try:
-                index = int(parts[1],16)
-                if index not in dummy_sounds:
-                    sfx_list.add(index)
-                    # auto-declare according to name suffix
-                    entry = f"{sound_name}_SND"
-                    # fix channel to avoid overlap
-                    extra_info = sound_settings_dict.get(index) or dict()
+            if len(parts)>1:
+                try:
+                    index = int(parts[1],16)
+                    if index not in dummy_sounds:
 
-                    sfx_sample_rate = extra_info.get("sample_rate",lq_sample_rate)
+                        index += offset
+
+                        sfx_list.add(index)
+                        # auto-declare according to name suffix
+                        entry = f"{sound_name}_SND"
+                        # fix channel to avoid overlap
+                        extra_info = sound_settings_dict.get(index) or dict()
+
+                        sfx_sample_rate = extra_info.get("sample_rate",lq_sample_rate)
 
 
-                    sound_dict[entry] = {"channel":extra_info.get("channel",snd_chan+2),  # default: not auto!
-                    "priority":extra_info.get("priority",40),"index":index,"sample_rate":sfx_sample_rate,
-                    "loops":extra_info.get("loops",False)}
-                    snd_chan  = (snd_chan + 1) % 2
-            except ValueError:
-                pass
+                        sound_dict[entry] = {"directory":sd,"channel":extra_info.get("channel",snd_chan+2),  # default: not auto!
+                        "priority":extra_info.get("priority",40),"index":index,"sample_rate":sfx_sample_rate,
+                        "loops":extra_info.get("loops",False)}
+                        snd_chan  = (snd_chan + 1) % 2
+                except ValueError:
+                    pass
 
 
 
@@ -141,7 +145,6 @@ def convert():
             n += 1
         fw.write("\n")
 
-    music_module_label = f"{gamename}_tunes"
 
     raw_file = os.path.join(tempfile.gettempdir(),"out.raw")
     with open(sndfile,"w") as fst,open(outfile,"w") as fw:
@@ -149,8 +152,6 @@ def convert():
 
         fw.write("\t.section\t.datachip\n")
 
-        fw.write("\t.global\tmodule_table\n")
-        fw.write(f"\t.global\t{music_module_label}\n")
 
 
         for wav_file,details in sound_dict.items():
@@ -177,12 +178,12 @@ def convert():
                     # aliased sound: reuse sample for a different sound index
                     wav_entry = same_as
                     details = sound_dict[same_as]
-                    wav_name = os.path.basename(wav_entry).lower()[:-4]
+                    wav_name = wav_entry.lower()[:-4]
                     wav = os.path.splitext(wav_name)[0]
                     sound_table_set_1[sound_index] = f"\t.word\t1,{int(details.get('loops',0))}\n\t.long\t{wav}_sound"
             else:
-                wav_name = os.path.basename(wav_entry).lower()[:-4]
-                wav_file = os.path.join(sound_dir,wav_name+".wav")
+                wav_name = wav_entry.lower()[:-4]
+                wav_file = details["directory"] / f"{wav_name}.wav"
 
                 def get_sox_cmd(sr,output):
                     return [sox,"--volume","3.3",wav_file,"--channels","1","-D","--bits","8","-r",str(sr),"--encoding","signed-integer",output]
