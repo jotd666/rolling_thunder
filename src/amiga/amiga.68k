@@ -80,10 +80,10 @@ BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
 BG_TILE_FILE_MAX_SIZE = 1500000
-SPRITE_FILE_BITMAP_MAX_SIZE = 970000
+SPRITE_FILE_BITMAP_MAX_SIZE = 990000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 300000
+BIGGEST_MUSIC_SIZE = 298000
 OPT_SPRITE_MIRRORING = 0
 	.else
 	* we can't afford the music (unless CD) or mirroring
@@ -379,6 +379,7 @@ BIT_FIRE_2 = 5
 	.global osd_write_high_scores
 	.global	load_highscores
 	.global	save_highscores
+	.global osd_set_dsw_settings
 	.global osd_play_voice_0
 	.global osd_play_voice_1
 	.global osd_select_voice_0
@@ -618,7 +619,7 @@ apply_settings:
 	lsl.b	#4,d1
 	or.b	d1,d0
 	not.b	d0
-	move.b	d0,dip_switches_2
+
 	rts
 
 display_text:
@@ -1010,12 +1011,20 @@ demo_game:
 	
 	CPU1_GET_MEMORY_START_AND_DP
 
+
 	move.l	a6,cpu1_m6809_direct_page_pointer		| DP=0 at start
 	move.l	a6,a5
 	clr.b	currently_running_cpu+1
 	jmp		cpu1_boot_8000								| pass control to the cpu 1 core
 	
 
+* called from cpu 2, each time shared memory is cleared
+* (MCU writes the settings back but here it does not as MCU
+* is not emulated)
+osd_set_dsw_settings:
+	move.b	#1,(in_level_4251-0x4000,a6)    | 150 seconds, not 120
+	rts
+	
 	
 	.ifne	OPT_SPRITE_MIRRORING
 mirror_common_sprites:
@@ -6900,10 +6909,10 @@ tunes_table:
 	.long	main_bgm_06      | level 1 tune
 	.long	-1      | 7: boss killed jingle
 	.long	-1      | 8
-	.long	mission_complete_09      | 9
+	.long	-1  | mission_complete_09      | 9
 	.long	-1  |alt_bgm_0a      | a
-	.long	high_score_0b      | b
-	.long	game_over_0c      | c
+	.long	-1  | high_score_0b      | b
+	.long	-1  |game_over_0c      | c
 	.long 	-1
 	.long 	main_bgm_06_continued   | fake e
 	.long 	alt_bgm_0a_cont        | fake f

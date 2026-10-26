@@ -3193,7 +3193,7 @@ function_96e8:
 976F: 84 1F       ANDA   #$1F
 9771: 8B 0A       ADDA   #$0A
 9773: C6 E4       LDB    #$E4
-9775: ED C4       STD    ,U
+9775: ED C4       STD    ,U		; [video_address_word]
 9777: 7F 54 30    CLR    $5430
 977A: 39          RTS
 977B: CE 35 BC    LDU    #$35BC
@@ -3206,7 +3206,7 @@ function_96e8:
 978D: 3D          MUL
 978E: 31 AB       LEAY   D,Y
 9790: C6 03       LDB    #$03
-9792: A6 C1       LDA    ,U++
+9792: A6 C1       LDA    ,U++		; [video_address_word]
 9794: A7 A0       STA    ,Y+
 9796: 5A          DECB
 9797: 26 F9       BNE    $9792
