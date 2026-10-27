@@ -63,7 +63,12 @@ COPPER_NOP = 0x1FE
 START_X = 0x20
 START_Y = 0
 CORKSCREW_NB_SCREENS = 20
+	.ifdef	RELEASE
 BORDERBLANK = 1
+	.else
+	* debug mode we see color flashes
+BORDERBLANK = 0
+	.endif
 START_HOST_SCROLL_X = (CORKSCREW_NB_SCREENS/2)*256
 
 * one tile map size is 0x1000: 0x20*0x40*2 bytes per tile 
@@ -1927,6 +1932,10 @@ level3_interrupt:
 level1_interrupt:
  	.ifndef	RELEASE
 	move.l	(2,a7),interrupted_code_pc
+	tst.b	osd_debug_active
+	jeq		0f
+	move.b	0xdff006,start_vpos+1
+0:
 	.endif
 	* disable osd context switch
 	* we MUST NOT change d5 or change stack from an osd call from an interrupt
@@ -2042,14 +2051,23 @@ level1_interrupt:
 	.ifndef	RELEASE
 	tst.b	osd_debug_active
 	jeq		0f
-	.set	row,2
+
+	moveq	#0,d0
+	move.b	0xdff006,d0
+	sub.w	start_vpos,d0
+	jpl		10f
+	add.w	#0x100,d0
+10:
+	move.w	d0,start_vpos
+	
+	.set	row,5
 	CPU1_GET_MEMORY_START_IN_A6
 	WRITE_TEXT	scrollx_text,2
 	WRITE_TEXT	scrolly_text,2
 	WRITE_TEXT	hscrollx_text,2
 	WRITE_TEXT	max_scrollx_text,2
 	WRITE_TEXT	min_scrollx_text,2
-	WRITE_TEXT	x_offset_text,2
+	WRITE_TEXT	vbltime_text,2
 
 	.set		row,5
 	WRITE_HEX	game_scroll_x,3
@@ -2057,7 +2075,9 @@ level1_interrupt:
 	WRITE_HEX	host_scroll_x,3
 	WRITE_HEX	max_scroll_x,3
 	WRITE_HEX	min_scroll_x,3
-	WRITE_HEX	x_offset,3
+	
+
+	WRITE_HEX	start_vpos,3
 
 	
 0:
@@ -2078,7 +2098,8 @@ level1_interrupt:
     movem.l (a7)+,d0-d7/a0-a6
 	* enable osd context switch
     subq.b	#1,osd_entry_count
- 	.ifndef	RELEASE
+
+	.ifndef	RELEASE
 	move.l	d0,-(a7)
 	move.l	(6,a7),d0
 	cmp.l	interrupted_code_pc,d0
@@ -6601,12 +6622,10 @@ max_scrollx_text:
 min_scrollx_text:
 	.ascii	"MIN SCROLLX "
 	.byte	0xff
-x_offset_text:
-	.ascii	"X OFFSET "
+vbltime_text:
+	.ascii	"VBL TIME "
 	.byte	0xff
-xl_offset_text:
-	.ascii	"XL OFFSET "
-	.byte	0xff
+
 	.align 2
 
 
@@ -6925,9 +6944,9 @@ tunes_table:
 	.long	boss_killed_07      | 7: boss killed jingle
 	.long	-2      | 8
 	.long	-1  | mission_complete_09      | 9
-	.long	-1  |alt_bgm_0a      | a
-	.long	-1  | high_score_0b      | b
-	.long	-1  |game_over_0c      | c
+	.long	main_bgm_06  |alt_bgm_0a      | a
+	.long	high_score_0b      | b
+	.long	game_over_0c      | c
 	.long 	-2
 	.long 	main_bgm_06_continued   | fake e
 	.long 	alt_bgm_0a_cont        | fake f
@@ -7262,7 +7281,8 @@ bobs_host_scroll_x = host_scroll_x
 	
 x_offset:
 	.word	0
-
+start_vpos:
+	.word	0
 
 
 
