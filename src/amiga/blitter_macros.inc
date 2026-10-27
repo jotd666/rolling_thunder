@@ -67,11 +67,12 @@ s0\@:
 	.if		OPT_BLIT_CHAIN_MODE==0
 	.macro	REALLY_WAIT_BLIT
 	CHECK_A5_IS_CUSTOM
-	move.w	#0x8400,(dmacon,a5)		| blitter high priority
+	* game uses fastmem, we can run with blthog set
+	*move.w	#0x8400,(dmacon,a5)		| blitter high priority
 wait\@:
 	BTST	#6,(dmaconr,a5)
 	BNE.S	wait\@
-	move.w	#0x0400,(dmacon,a5)		| blitter normal priority
+	*move.w	#0x0400,(dmacon,a5)		| blitter normal priority
 	.endm
 	
 	.macro	WAIT_BLIT

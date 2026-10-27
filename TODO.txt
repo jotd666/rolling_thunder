@@ -1,10 +1,21 @@
-- optimize cpus
+- fans clipped too early on the left
+- optimize draw
+
+start_process_1_plane rewrites bltcon0 every plane
+asm
+60:	WRITE_BLITTER_REG_LONG	d6,bltcon0	| $0BCA + shift
+61:	WRITE_BLITTER_REG_LONG	d7,bltcon0	| $0FCA + shift
+
+5. The mirror ping-pongs on shared source data
+
+move.w	#0x8400,(dmacon,a5)	| BLTPRI on set at start!
+
 - mission complete music not there, boss kill played instead??
 - play alt music: start is the same, depending on the level, fire either level 1 cont or level 3/4/8 cont
 - game over: lockup at cpu 2 8ADA
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
   as layer 2 supercedes layer 1 in level 2
-  if layer 2, ignore layer 1 would that work?
+  if layer 2, ignore layer 1 would that work? => amiga copie ok for title, but not for level 10 end
 - joystick not very responsive (keys work great): disable update_hud_layer & retry ???
 - extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
   is done in-screen

@@ -1963,6 +1963,7 @@ level1_interrupt:
 	jeq		0f
 	move.b	0xdff006,start_vpos+1
 	jbsr	clock_start
+	clr.w	nb_mirror_operations
 0:
 	
 	lea		_custom,a5
@@ -2121,6 +2122,7 @@ level1_interrupt:
 	WRITE_TEXT	min_scrollx_text,2
 	WRITE_TEXT	game_time_text,2
 	WRITE_TEXT	gfx_time_text,2
+	WRITE_TEXT	nb_mirror_ops_text,2
 
 	.set		row,5
 	WRITE_HEX	game_scroll_x,3
@@ -2132,6 +2134,7 @@ level1_interrupt:
 
 	WRITE_HEX	game_logic_elapsed,3
 	WRITE_HEX	gfx_logic_elapsed,3
+	WRITE_HEX	max_nb_mirror_operations,3
 
 	
 0:
@@ -2507,7 +2510,17 @@ osd_wait:
 	tst.w	delay_timer
 	bne.b	2b
 	rts
+lose_all_lives:
+	movem.l	a6/d0-d3,-(a7)
+	CPU1_GET_MEMORY_START_IN_A6
+	* zero time
+	move.b	#0,(0x5611,a6)
+	move.b	#1,(0x5612,a6)
 
+	move.b	#0,(0x5480,a6)
+	move.b	#0,(0x54A0,a6)
+	movem.l	(a7)+,a6/d0-d3
+	rts
 add_to_score:
 	movem.l	a6/d0-d3,-(a7)
 	CPU1_GET_MEMORY_START_IN_A6
@@ -2531,13 +2544,6 @@ add_to_score:
 	movem.l	(a7)+,a6/d0-d3
 	rts
 
-lose_all_lives:
-	movem.l	a6/d0-d3,-(a7)
-	CPU1_GET_MEMORY_START_IN_A6
-	*move.b	#1,(nb_lives_0060,a6)
-	*move.w	#1,(time_00aa,a6)
-	movem.l	(a7)+,a6/d0-d3
-	rts
 
 	
 * Z: set if playing
@@ -3053,16 +3059,7 @@ update_one_bob:
 	move.b	d3,(TARGET_SPRITE_ATTRIBUTES_1,a0)
 	.endif
 	
-	*cmp.w	#0x300,d2
-	*jcc		33f
 
-	*cmp.w	#0x1b3,d2
-	*jeq		33f
-	*cmp.w	#0x1B9,d2
-	*jeq		33f
-	* skpi others
-	*move.l	(a7)+,a0
-	*rts
 33:
 * < a0: pointer on sprite structure
 * > d0: size X  (0=16, 1=8, 2=32, 3=4)
@@ -3356,6 +3353,17 @@ mirror_sprite_planes_32x32:
 	cmp.b	(-2,a2),d3		| 2 bytes before: mirror flag
 	jeq		1f
 	* not the proper orientation: change it
+	.ifndef	RELEASE
+	addq	#1,nb_mirror_operations
+	move.w	d0,-(a7)
+	move.w	nb_mirror_operations,d0
+	cmp.w	max_nb_mirror_operations,d0
+	jcs		10f
+	move.w	d0,max_nb_mirror_operations
+10:
+	move.w	(a7)+,d0
+	
+	.endif
 	move.b	d3,(-2,a2)
 	* perform or queue the mirroring
 	WRITE_BLITTER_VIRTUAL_MIRROR	d4,a3,a2
@@ -4045,6 +4053,8 @@ platform_init:
 	move.w	#0x7FFF,intena(a5)
 	* set blitter parameters
 	move.l	#-1,bltafwm(a5)
+	* using fastmem means that we can set bltpri/blthog now
+	move.w	#0x8400,(dmacon,a5)
 	
 	move.l	monitor,d0
 	cmp.l	#NTSC_MONITOR_ID,D0
@@ -4251,36 +4261,7 @@ load_palette:
 2:
 	rts
 
-* < D0: row, if 0: do nothing
-wrap_bitplanes:
-	movem.l	a0-a2/d0-d3,-(a7)
-	* first restore previous wrap if wasn't 0 TODO
-	
-	* if zero, we stop here, row 0 wraps naturally
-	subq	#1,d0
-	jmi		2f
-	add.w	d0,d0
-	add.w	d0,d0
- 	lea	rows_table,a2
-	add.w	d0,a2
-	move.l	(a2),a1
-	move.w	#COPPER_NOP,(0x8,a1)	| remove copjmp2, enable what's below
-	add		#0x12,a1	| skip preamble
-	move.w	#BG_SCREEN_PLANE_SIZE,d2
-	move.w	#NB_PLAYFIELD_PLANES,d1
-    move.l	playfield_displayed_screen_ptr(pc),d3
-	* we should store A1 (double buffering)
-1:
-    swap d3
-    move.w d3,(a1)
-    swap d3
-    move.w d3,(4,a1)    
-    addq.w  #8,a1
-    add.l d2,d3
-    dbf d1,1b
-2:
-	movem.l	(a7)+,a0-a2/d0-d3
-	rts
+
 
 
 * enable/disable interrupts for target irqs	
@@ -6682,6 +6663,9 @@ game_time_text:
 gfx_time_text:
 	.ascii	"DRAW TIME "
 	.byte	0xff
+nb_mirror_ops_text:
+	.ascii	"MAX FLIP "
+	.byte	0xff
 
 	.align 2
 
@@ -7058,7 +7042,11 @@ sprite_context_name_table:
 	.long	sprite_level_5_header
 	.long	sprite_level_5_bitmap
 
-	
+	.ifndef	RELEASE
+max_nb_mirror_operations:
+	.word	0
+nb_mirror_operations:
+	.word	0
 game_logic_start_time:
 	.word	0
 gfx_logic_start_time:
@@ -7067,6 +7055,8 @@ game_logic_elapsed:
 	.word 	0
 gfx_logic_elapsed:
 	.word 	0
+	.endif
+	
 bg0_character_table:
 	.long	0
 bg1_character_table:
@@ -7371,17 +7361,14 @@ p2_joystick_slot:
 	
 * this table indicates the tile engine if Y mirror is needed
 mirror_y_tile_table:
-	.byte	0       | level 1 graveyard
-	.byte	1       | level 2 town 
-	.byte	1       | level 3 cave
-	.byte	0       | level 4 bridge
-	.byte	1       | level 5 castle 1
-	.byte	1       | level 6 castle 2
-	.byte	0       | map
+	.byte	1       | level 1 
+	.byte	1       | level 2 
+	.byte	0       | level 3 
+	.byte	1       | level 4 
+	.byte	0       | level 5 
 	.align	2
 
-rows_table:
-	.skip	0x120*4
+
 
 keyboard_table:
 	.skip	0x100

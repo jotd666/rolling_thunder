@@ -3920,7 +3920,7 @@ function_917b:
 	OP_1_ON_DP_ADDRESS	clr,dp_sem_cpu1_06   | [$917b: clr    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
 	move.b	#0x00,d0                        	| [$917d: ldd    #$0000]
-	move.w	#0x0000,d1                      	| [$917d: ldd    #$0000]
+	moveq	#0x0000,d1                      	| [$917d: ldd    #$0000]
 	GET_DP_ADDRESS	0x88                    	| [$9180: std    $88]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	GET_DP_ADDRESS	0x8a                    	| [$9182: std    $8a]
@@ -9161,8 +9161,9 @@ game_over_a958:
 	GET_ADDRESS	snd_music_req_4380         	| [$a958: tst    snd_music_req_4380] -> MCU: music/BGM request code
 	tst.b	(a0)                             	| [...]
 	jeq	l_a95e                             	| [$a95b: beq    $a95e]
-*A95D: 39          RTS
+	rts                                     | [$a95d: rts]
 l_a95e:
+	* game over music has completed playing
 	move.w	#0x3722,d3                      	| [$a95e: ldy    #$3722] layer 3 tilemap / HUD
 	move.b	#0xff,d0                        	| [$a962: lda    #$ff]
 	GET_ADDRESS	0xb0c9                     	| [$a964: ldb    $b0c9] ROM

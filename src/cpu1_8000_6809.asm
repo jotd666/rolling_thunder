@@ -5465,7 +5465,7 @@ A957: 39          RTS
 game_over_a958:
 A958: 7D 43 80    TST    snd_music_req_4380		; -> MCU: music/BGM request code
 A95B: 27 01       BEQ    $A95E
-;A95D: 39          RTS
+A95D: 39          RTS
 A95E: 10 8E 37 22 LDY    #$3722		; layer 3 tilemap / HUD
 A962: 86 FF       LDA    #$FF
 A964: F6 B0 C9    LDB    $B0C9		; ROM

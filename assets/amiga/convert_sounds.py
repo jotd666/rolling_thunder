@@ -91,7 +91,7 @@ def convert():
 "ALT_BGM_SND" : {"index":0xFA,"pattern":0,"volume":music_vol},
 "ALT_BGM_CONT_SND" : {"index":0xFF,"pattern":0,"volume":music_vol},
 "HIGH_SCORE_SND" : {"index":0xFB,"pattern":0,"volume":music_vol},
-"GAME_OVER_SND" : {"index":0xFB,"pattern":0,"volume":music_vol},
+"GAME_OVER_SND" : {"index":0xFC,"pattern":0,"volume":music_vol},
 }
 
 
