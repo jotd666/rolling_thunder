@@ -1929,18 +1929,42 @@ level3_interrupt:
     rte
 
 
+CIAATALO = 0xBFE401
+CIAATAHI = 0xBFE501
+CIAACRA  = 0xBFEE01
+
+clock_start:
+    move.b  #0,CIAACRA
+    move.b  #0xFF,CIAATALO
+    move.b  #0xFF,CIAATAHI
+    move.b  #0x01,CIAACRA      | start, continuous mode
+    rts
+
+clock_read:
+    moveq   #0,d0
+    move.b  CIAATALO,d0
+    moveq   #0,d1
+    move.b  CIAATAHI,d1
+    lsl.w   #8,d1
+    or.w    d1,d0
+    rts
+
 level1_interrupt:
  	.ifndef	RELEASE
 	move.l	(2,a7),interrupted_code_pc
-	tst.b	osd_debug_active
-	jeq		0f
-	move.b	0xdff006,start_vpos+1
-0:
+
 	.endif
 	* disable osd context switch
 	* we MUST NOT change d5 or change stack from an osd call from an interrupt
 	addq.b	#1,osd_entry_count
     movem.l d0-d7/a0-a6,-(a7)
+	
+	tst.b	osd_debug_active
+	jeq		0f
+	move.b	0xdff006,start_vpos+1
+	jbsr	clock_start
+0:
+	
 	lea		_custom,a5
 	move.w	(intreqr,a5),d0		| leave this, we need it for later on
 	* we're going to ack copper & software level 1 interrupt now
@@ -1952,7 +1976,14 @@ level1_interrupt:
 	tst.b	pause_flag
 	jne	23f
 
-
+	.ifndef	RELEASE
+	jbsr	clock_start
+	move.w	d0,-(a7)
+	jbsr	clock_read
+	move.w	d0,game_logic_start_time
+	move.w	(a7)+,d0
+	.endif
+	
 	* declare that we're in interrupt mode so osd_disable_interrupts/osd_enable_interrupts
 	* is level 1 interrupt set? that would mean that mid-screen interrupt
 	* is the source of the interrupt
@@ -1972,6 +2003,14 @@ level1_interrupt:
 2:
 
 	jbsr	call_irqs
+
+	.ifndef	RELEASE
+	jbsr	clock_read
+	move.w	game_logic_start_time,d1
+	sub.w	d0,d1
+	move.w	d1,game_logic_elapsed
+	.endif
+	
 
 	jbsr	handle_sounds_in_irq
 
@@ -2004,7 +2043,7 @@ level1_interrupt:
 	* the ball crosses the screen, this is because we're now displaying what's been drawn
 	* at the previous frame. 
 
-	
+
 	.if		OPT_BLIT_CHAIN_MODE==1
 	jbsr	set_scroll_values
 	jbsr	set_bobs_bitplanes
@@ -2037,6 +2076,14 @@ level1_interrupt:
 	COMMIT_BLITLIST
 
 	.if		OPT_BLIT_CHAIN_MODE==0
+	.ifndef	RELEASE
+	jbsr	clock_start
+	move.w	d0,-(a7)
+	jbsr	clock_read
+	move.w	d0,gfx_logic_start_time
+	move.w	(a7)+,d0
+	.endif
+	
 	jbsr	set_scroll_values
 	jbsr	update_other_layers
 	jbsr		really_update_sprites
@@ -2049,6 +2096,11 @@ level1_interrupt:
 	.endif
 	
 	.ifndef	RELEASE
+	jbsr	clock_read
+	move.w	gfx_logic_start_time,d1
+	sub.w	d0,d1
+	move.w	d1,gfx_logic_elapsed
+
 	tst.b	osd_debug_active
 	jeq		0f
 
@@ -2067,7 +2119,8 @@ level1_interrupt:
 	WRITE_TEXT	hscrollx_text,2
 	WRITE_TEXT	max_scrollx_text,2
 	WRITE_TEXT	min_scrollx_text,2
-	WRITE_TEXT	vbltime_text,2
+	WRITE_TEXT	game_time_text,2
+	WRITE_TEXT	gfx_time_text,2
 
 	.set		row,5
 	WRITE_HEX	game_scroll_x,3
@@ -2077,7 +2130,8 @@ level1_interrupt:
 	WRITE_HEX	min_scroll_x,3
 	
 
-	WRITE_HEX	start_vpos,3
+	WRITE_HEX	game_logic_elapsed,3
+	WRITE_HEX	gfx_logic_elapsed,3
 
 	
 0:
@@ -6622,8 +6676,11 @@ max_scrollx_text:
 min_scrollx_text:
 	.ascii	"MIN SCROLLX "
 	.byte	0xff
-vbltime_text:
-	.ascii	"VBL TIME "
+game_time_text:
+	.ascii	"GAME TIME "
+	.byte	0xff
+gfx_time_text:
+	.ascii	"DRAW TIME "
 	.byte	0xff
 
 	.align 2
@@ -7002,7 +7059,14 @@ sprite_context_name_table:
 	.long	sprite_level_5_bitmap
 
 	
-	
+game_logic_start_time:
+	.word	0
+gfx_logic_start_time:
+	.word	0
+game_logic_elapsed:
+	.word 	0
+gfx_logic_elapsed:
+	.word 	0
 bg0_character_table:
 	.long	0
 bg1_character_table:

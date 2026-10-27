@@ -42,7 +42,8 @@
 	lea	(a6,a0.l),a0
 	.endm
 
-	.ifdef	RELEASE
+	.ifeq	OPT_CHECK_MEMORY_RANGES
+
 	* release mode: don't check
 	.macro	GET_ADDRESS_FUNC
 	GET_UNCHECKED_ADDRESS_FUNC
@@ -565,7 +566,7 @@ multiply_ab:
 	rts
 	
 	
-	.ifndef	RELEASE
+	.ifne	OPT_CHECK_MEMORY_RANGES
 get_address:
 	cmp.w	#0x4000,a0
 	jcc		1f		| above 0x4000
@@ -596,7 +597,9 @@ get_bank_address:
 1:
 	GET_UNCHECKED_BANK_ADDRESS_FUNC
 	rts
+	.endif
 	
+	.ifndef	RELEASE
 	.macro	ENABLE_LOG_REGS
 	moveq	#1,d6		| enable
 	moveq	#0,d7		| cpu 1
