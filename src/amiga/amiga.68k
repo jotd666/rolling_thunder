@@ -2123,6 +2123,7 @@ level1_interrupt:
 	WRITE_TEXT	game_time_text,2
 	WRITE_TEXT	gfx_time_text,2
 	WRITE_TEXT	nb_mirror_ops_text,2
+	WRITE_TEXT	max_nb_mirror_ops_text,2
 
 	.set		row,5
 	WRITE_HEX	game_scroll_x,3
@@ -2134,6 +2135,7 @@ level1_interrupt:
 
 	WRITE_HEX	game_logic_elapsed,3
 	WRITE_HEX	gfx_logic_elapsed,3
+	WRITE_HEX	nb_mirror_operations,3
 	WRITE_HEX	max_nb_mirror_operations,3
 
 	
@@ -2866,7 +2868,6 @@ really_update_sprites:
 	move.w	d0,sprite_xoffs	
 	move.b	(0x07f7,a0),sprite_yoffs+1  | no sign extension
 	
- 	
 	move.l	a0,after_last_sprite_ptr
     lea _custom,A5
 	move.l	bob_previous_drawed_sprites(pc),a6
@@ -2876,18 +2877,29 @@ really_update_sprites:
 	jeq			200f
 	move.l	d0,a4
 	* first pass: draw low-priority sprites
-	moveq	#NB_TARGET_SPRITES-1,d7
+ 	clr.b	d6		| direction pass
 1:
+	move.l	after_last_sprite_ptr,a0
+	moveq	#NB_TARGET_SPRITES-1,d7
+2:
 	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d0
 	and.b	#0xE0,d0
-	and.b	#0xE0,d0
-	jeq		0f			| priority 0: don't draw!
+	jeq		0f
 	cmp.b	#3<<5,d0
 	jcc		0f
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d1
+	btst	#MIRROR_BIT,d1
+	sne		d1
+	cmp.b	d6,d1			| does this BOB belong to the current pass?
+	jne		0f
+	move.w	d6,-(a7)
 	jbsr	update_one_bob
+	move.w	(a7)+,d6
 0:
 	add.w	#CURRENT_SPRITE_SIZE,a0
-	dbf		d7,1b
+	dbf		d7,2b
+	not.b	d6			| pass 2: mirrored
+	jne		1b
 	
 	* now we use the bob_previous_drawed_sprites table, let's load it again
 	move.l	bob_previous_drawed_sprites(pc),a3
@@ -2908,22 +2920,33 @@ really_update_sprites:
 	move.l	playfield_drawn_screen_ptr(pc),a1
 
 	lea		layer_1_restore_buffer,a0
-	jbsr blit_background_cookie_cut	
-	
+	jbsr	blit_background_cookie_cut	
 	
 	jra		10b
 11:
 	* now draw the higher priority sprites, reload sprite pointer
+ 	clr.b	d6		| direction pass
+1:
 	move.l	after_last_sprite_ptr,a0
 	moveq	#NB_TARGET_SPRITES-1,d7
-1:
+2:
 	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),d0
 	cmp.b	#3<<5,d0
 	jcs		0f
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d1
+	btst	#MIRROR_BIT,d1
+	sne		d1
+	cmp.b	d6,d1			| does this BOB belong to the current pass?
+	jne		0f
+	
+	move.w	d6,-(a7)
 	jbsr	update_one_bob
+	move.w	(a7)+,d6
 0:
 	add.w	#CURRENT_SPRITE_SIZE,a0
-	dbf		d7,1b
+	dbf		d7,2b
+	not.b	d6			| pass 2: mirrored
+	jne		1b
 200:
 	rts
 	
@@ -6663,8 +6686,12 @@ game_time_text:
 gfx_time_text:
 	.ascii	"DRAW TIME "
 	.byte	0xff
-nb_mirror_ops_text:
+max_nb_mirror_ops_text:
 	.ascii	"MAX FLIP "
+	.byte	0xff
+
+nb_mirror_ops_text:
+	.ascii	"FLIPS "
 	.byte	0xff
 
 	.align 2

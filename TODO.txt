@@ -1,10 +1,5 @@
 - fans clipped too early on the left
-- optimize draw
 
-start_process_1_plane rewrites bltcon0 every plane
-asm
-60:	WRITE_BLITTER_REG_LONG	d6,bltcon0	| $0BCA + shift
-61:	WRITE_BLITTER_REG_LONG	d7,bltcon0	| $0FCA + shift
 
 5. The mirror ping-pongs on shared source data
 
