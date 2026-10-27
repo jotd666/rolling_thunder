@@ -2104,7 +2104,7 @@ handle_sounds_in_irq:
 	st.b	(snd_music_req_4380,a6)		| set as playing
 	add.b	#0xF0,d0		| match our sound indexes
 	clr.b	last_e8_trigger
-	jbsr	osd_sound_start
+	jbra	osd_sound_start
 playing_out:
 
 	* check for music trigger
@@ -2115,15 +2115,15 @@ playing_out:
 	jeq		0f
 	move.b	d0,last_e8_trigger
 	
+	clr.b	(snd_music_req_4380,a6)		| set as not playing
 	jbsr	osd_music_stop
 	clr.b	_mt_E8Trigger
 	cmp.b	#2,d0
 	jne		1f
 	* continues music
 	move.w	#MAIN_BGM_CONT_SND,d0
-	jbsr	osd_sound_start
-	
-	rts
+	jbra	osd_sound_start
+
 1:
 	* track ended: ack
 	clr.b	(snd_music_req_4380,a6)
@@ -6680,22 +6680,23 @@ osd_log_cpu:
 	move.w	(6,a7),last_known_m6809_pc
 	move.w	(4,a7),0x104   | last active cpu
 
-	
-	movem.l	a6/d7,-(a7)
-	move.w 	(12,a7),d7		| active cpu
+	* saving a0 is not really needed unless manual patches
+	* leave a0 unprotected in the game code
+	movem.l	a0/a6/d7,-(a7)
+	move.w 	(16,a7),d7		| active cpu
 	add.w	d7,d7
 	lea		0x100.W,A0		
 	move.w	last_known_m6809_pc,(a0,d7.w) | cpu0 in 100, cpu1 in 102
 	lea		cpu_log_enable,a0
-	add.w 	(12,a7),a0		| cpu #
+	add.w 	(16,a7),a0		| cpu #
 	* check if cpu log is enabled
 	tst.b	(a0)
 	jeq		445f
 	COLOR0_FLASH	0x0F0
 
 	move.l	log_ptr,a6
-	move.w	(14,a7),(a6)+	| the PC
-	move.w 	(12,a7),(a6)+	| cpu #
+	move.w	(18,a7),(a6)+	| the PC
+	move.w 	(16,a7),(a6)+	| cpu #
 	move.l	d1,-(a7)
 	rol.w	#8,d1
 	move.b	d0,d1
@@ -6716,7 +6717,7 @@ osd_log_cpu:
 444:
 	move.l	(a7)+,d1
 445:
-	movem.l	(a7)+,a6/d7
+	movem.l	(a7)+,a0/a6/d7
 	OSD_EXIT
 	rts
 
@@ -6897,23 +6898,25 @@ main_bgm_06_continued:
 	.asciz	"tune_06_cont.mod"
 round_clear_05:
 	.asciz	"round_clear_05.mod"
+boss_killed_07:
+	.asciz	"boss_killed_07.mod"
 	.align	2
 
 tunes_table:
 	.long 	0		| stop
-	.long 	-1
-	.long 	-1
-	.long 	-1
-	.long 	-1
+	.long 	-2
+	.long 	-2
+	.long 	-2
+	.long 	-2
 	.long	round_clear_05      | level complete
 	.long	main_bgm_06      | level 1 tune
-	.long	-1      | 7: boss killed jingle
-	.long	-1      | 8
+	.long	boss_killed_07      | 7: boss killed jingle
+	.long	-2      | 8
 	.long	-1  | mission_complete_09      | 9
 	.long	-1  |alt_bgm_0a      | a
 	.long	-1  | high_score_0b      | b
 	.long	-1  |game_over_0c      | c
-	.long 	-1
+	.long 	-2
 	.long 	main_bgm_06_continued   | fake e
 	.long 	alt_bgm_0a_cont        | fake f
 

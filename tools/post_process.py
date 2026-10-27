@@ -40,7 +40,7 @@ def game_specific_cpu1(address,lines,i):
     if address in [0x9728,0x974e]:
         lines[i+1]=""
     elif address in [0x972b,0x9751]:
-        line = change_instruction("add.b\t#0x20,(a0)",lines,i)
+        line = change_instruction("add.b\t#0x20,(a0)",lines,i)  # make write atomic
     elif address in [0x972D,0x9753]:
         line = remove_instruction(lines,i)
     elif address == 0xC663:

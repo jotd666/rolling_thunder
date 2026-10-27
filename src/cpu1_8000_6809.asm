@@ -3216,6 +3216,7 @@ function_96e8:
 97A1: 39          RTS
 
 ; 1 jump-table ref
+; high score enter timeout
 function_97a2:
 97A2: 7A 54 2E    DEC    $542E		; work RAM (shared with CPU2)
 97A5: 27 25       BEQ    $97CC
@@ -3233,7 +3234,7 @@ function_97a2:
 97BF: C4 04       ANDB   #$04
 97C1: 27 02       BEQ    $97C5
 97C3: 86 FC       LDA    #$FC
-97C5: A7 C1       STA    ,U++
+97C5: A7 C1       STA    ,U++		; [video_address_word]
 97C7: 31 3F       LEAY   -$1,Y
 97C9: 26 FA       BNE    $97C5
 97CB: 39          RTS
@@ -3984,7 +3985,7 @@ function_9d0d:
 ; game completed: wait for sfx to complete to show credits
 9DE8: 7D 43 80    TST    snd_music_req_4380		; -> MCU: music/BGM request code
 9DEB: 27 01       BEQ    $9DEE
-;9DED: 39          RTS
+9DED: 39          RTS
 9DEE: CE AF D6    LDU    #$AFD6
 9DF1: 10 8E 32 10 LDY    #$3210
 9DF5: C6 FC       LDB    #$FC

@@ -1,5 +1,6 @@
 - remove player step sound
-- entering initials enables cpu logging!!
+- start game: context not loading ... again!!
+- mission complete music not there, boss kill played instead??
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
   as layer 2 supercedes layer 1 in level 2
   if layer 2, ignore layer 1 would that work?
@@ -9,7 +10,6 @@
 - transparency issue for layer 1 tiles (black is transparent! ex tires, level 5 fences)
 
 
-- level 10: when boss killed the game locks up: missing sound ack: make mod
 - mission complete music ack
 - game over music ack
 
@@ -21,7 +21,7 @@ asm =>
 
 
 - write hud tiles optimize?
-
+- load/save highscores
 - trainer infinite lives
 - use 50Hz scroll
 - hoodies partially drawn when climbing up/down railings: pause+render
