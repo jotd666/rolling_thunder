@@ -5462,10 +5462,10 @@ A955: 0C 07       INC    dp_sem_cpu2_07
 A957: 39          RTS
 
 ; 1 jump-table ref
-function_a958:
+game_over_a958:
 A958: 7D 43 80    TST    snd_music_req_4380		; -> MCU: music/BGM request code
 A95B: 27 01       BEQ    $A95E
-A95D: 39          RTS
+;A95D: 39          RTS
 A95E: 10 8E 37 22 LDY    #$3722		; layer 3 tilemap / HUD
 A962: 86 FF       LDA    #$FF
 A964: F6 B0 C9    LDB    $B0C9		; ROM
@@ -5475,7 +5475,7 @@ A96A: 26 FB       BNE    $A967
 A96C: 10 8E 38 22 LDY    #$3822
 A970: 86 FF       LDA    #$FF
 A972: F6 B0 EA    LDB    $B0EA
-A975: A7 A1       STA    ,Y++
+A975: A7 A1       STA    ,Y++		; [video_address]
 A977: 5A          DECB
 A978: 26 FB       BNE    $A975
 A97A: 10 8E 33 0A LDY    #$330A
@@ -5505,7 +5505,7 @@ A9B0: 26 FB       BNE    $A9AD
 A9B2: 10 8E 3F A2 LDY    #$3FA2
 A9B6: 86 FF       LDA    #$FF
 A9B8: F6 B1 1E    LDB    $B11E
-A9BB: A7 A1       STA    ,Y++
+A9BB: A7 A1       STA    ,Y++		; [video_address]
 A9BD: 5A          DECB
 A9BE: 26 FB       BNE    $A9BB
 A9C0: 10 8E 3F BE LDY    #$3FBE
@@ -12652,7 +12652,7 @@ jump_table_a6e2:
 	dc.w	function_a870	; $a6e4
 jump_table_a8d2:
 	dc.w	function_a8e6	; $a8d2
-	dc.w	function_a958	; $a8d4
+	dc.w	game_over_a958	; $a8d4
 	dc.w	function_a9fe	; $a8d6
 	dc.w	function_aa1e	; $a8d8
 	dc.w	function_aa4b	; $a8da

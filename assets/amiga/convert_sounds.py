@@ -39,7 +39,8 @@ def convert():
     EMPTY_SND = "EMPTY_SND"
 
     dummy_sounds = {
-    3,   # a very faint step sound, would either not be heard or would cut an important sound
+    3,   # a very faint step synth sound, would either not be heard or would cut an important sound
+    0x20+8,  # other step sampled sounds, disabled for the same reason
     12,  # ??, plays in intermission
     }
 
@@ -79,18 +80,18 @@ def convert():
 
 
 
-
+    music_vol = 40
 
     music_dict = {
-"LEVEL_COMPLETE_SND" : {"index":0xF5,"pattern":0,"volume":32},
-"MAIN_BGM_SND" : {"index":0xF6,"pattern":0,"volume":32},
-"MAIN_BGM_CONT_SND" : {"index":0xFE,"pattern":0,"volume":32},
-"BOSS_KILLED_SND" : {"index":0xF7,"pattern":0,"volume":32},
-"MISSION_COMPLETE_SND" : {"index":0xF9,"pattern":0,"volume":32},
-"ALT_BGM_SND" : {"index":0xFA,"pattern":0,"volume":32},
-"ALT_BGM_CONT_SND" : {"index":0xFF,"pattern":0,"volume":32},
-"HIGH_SCORE_SND" : {"index":0xFB,"pattern":0,"volume":32},
-"GAME_OVER_SND" : {"index":0xFB,"pattern":0,"volume":32},
+"LEVEL_COMPLETE_SND" : {"index":0xF5,"pattern":0,"volume":music_vol},
+"MAIN_BGM_SND" : {"index":0xF6,"pattern":0,"volume":music_vol},
+"MAIN_BGM_CONT_SND" : {"index":0xFE,"pattern":0,"volume":music_vol},
+"BOSS_KILLED_SND" : {"index":0xF7,"pattern":0,"volume":56},
+"MISSION_COMPLETE_SND" : {"index":0xF9,"pattern":0,"volume":music_vol},
+"ALT_BGM_SND" : {"index":0xFA,"pattern":0,"volume":music_vol},
+"ALT_BGM_CONT_SND" : {"index":0xFF,"pattern":0,"volume":music_vol},
+"HIGH_SCORE_SND" : {"index":0xFB,"pattern":0,"volume":music_vol},
+"GAME_OVER_SND" : {"index":0xFB,"pattern":0,"volume":music_vol},
 }
 
 

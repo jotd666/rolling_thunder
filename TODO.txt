@@ -1,6 +1,5 @@
-- remove player step sound
-- start game: context not loading ... again!!
 - mission complete music not there, boss kill played instead??
+- game over: lockup at cpu 2 8ADA
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
   as layer 2 supercedes layer 1 in level 2
   if layer 2, ignore layer 1 would that work?

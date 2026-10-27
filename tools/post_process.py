@@ -79,8 +79,10 @@ def game_specific_cpu1(address,lines,i):
         line = "\tjbsr\tset_level_context   | next level: set new context\n"+line
     elif address == 0x903d:
         line = "\tjbsr\tset_level1_context   | attract mode level 1\n"+line
-    elif address in [0x9DDD,0x9210,0xA633]:
+    elif address in [0x9DDD,0x9210]: #,0xA633
         line = "\tjbsr\tset_intermission_context\n"+line
+    elif address == 0xA633:
+        line = "\tjbsr\tset_end_context\n"+line
     return line
 
 sc_cpu2 = SourceChanger()
@@ -465,6 +467,16 @@ set_intermission_context:
     move.l  d0,-(a7)
     moveq   #0,d0
     jbsr    osd_set_context
+    move.l  (a7)+,d0
+    rts
+set_end_context:
+    move.l  d0,-(a7)
+    OP_R_ON_DP_ADDRESS    move,starting_area_c5,d0
+    cmp.b   #0x10,d0    | only loads if end of game (level 10 BCD)
+    jne     0f
+    moveq   #0,d0
+    jbsr    osd_set_context
+0:
     move.l  (a7)+,d0
     rts
 set_level1_context:

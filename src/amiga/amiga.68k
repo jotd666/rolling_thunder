@@ -1708,7 +1708,15 @@ osd_event_loop_cpu2:
 	move.b	#0x99,(0x56CD,a6)
 	move.b	#0x1,(0x56CE,a6)  | machine gun
 0:
-
+	tst.b	infinite_lives_flag
+	jeq		0f
+	move.b	#3,(0x5480,a6)
+	move.b	#3,(0x54A0,a6)
+0:
+*	tst.b	infinite_time_flag
+*	jeq		0f
+*	move.b	#0x99,(0x5612,a6)
+*0:
 	* maybe it would be necessary to protect against
 	* irq from cpu2 or from both cpus
 	movem.l	d0-a6,-(a7)
@@ -2099,8 +2107,8 @@ handle_sounds_in_irq:
 	* scan music play
 	moveq	#0,d0
 	move.b	(snd_music_req_4380,a6),d0
-	jeq		osd_music_stop
-	jmi		playing_out
+	jeq		osd_music_stop			| game wrote 0: stop music
+	jmi		playing_out				| still playing
 	st.b	(snd_music_req_4380,a6)		| set as playing
 	add.b	#0xF0,d0		| match our sound indexes
 	clr.b	last_e8_trigger
@@ -2121,6 +2129,7 @@ playing_out:
 	cmp.b	#2,d0
 	jne		1f
 	* continues music
+	st.b	(snd_music_req_4380,a6)		| set as playing
 	move.w	#MAIN_BGM_CONT_SND,d0
 	jbra	osd_sound_start
 
@@ -2128,6 +2137,9 @@ playing_out:
 	* track ended: ack
 	clr.b	(snd_music_req_4380,a6)
 0:
+	rts
+2:
+	clr.b	_mt_E8Trigger
 	rts
 	
 select_sprite_color:	
