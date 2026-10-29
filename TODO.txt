@@ -1,7 +1,5 @@
 - fans clipped too early on the left
-
-
-5. The mirror ping-pongs on shared source data
+- enable blitter interrupt driven!!
 
 move.w	#0x8400,(dmacon,a5)	| BLTPRI on set at start!
 
