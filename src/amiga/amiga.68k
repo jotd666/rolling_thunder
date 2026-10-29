@@ -57,7 +57,13 @@ NB_PLAYFIELD_PLANES = 6
 
 
 * proportional to the number of bitplanes
-BLITTER_LIST_SIZE = 10000*NB_PLAYFIELD_PLANES
+* Worst case per BOB, in bytes of command list:
+*   blit_background (erase)             ~140
+*   blit_planes_any_internal_cookie_cut  ~236   (20 setup + 6 planes * 36)
+*   blit_background_cookie_cut (layer 1) ~236
+* = ~612 bytes, and NB_TARGET_SPRITES is 127, so a full frame can reach
+* ~78000 bytes.  10000*6 = 60000 was not enough and the list overflowed.
+BLITTER_LIST_SIZE = 20000*NB_PLAYFIELD_PLANES
 COPPER_NOP = 0x1FE
 
 START_X = 0x20
@@ -2057,11 +2063,22 @@ level1_interrupt:
 	* forward as commands are appended, and the kick needs the start.
 	move.l	filled_blitter_list_ptr,chain_list_start
 
-	jbsr	set_scroll_values
-	jbsr	set_bobs_bitplanes
+	* Show the buffer the previous chain just finished - and do it BEFORE
+	* set_scroll_values advances the scroll, because switch_screen_buffers
+	* falls through to set_bobs_bitplanes, which derives the copper's
+	* corkscrew pointers from host_scroll_x.  The BOBs in that buffer were
+	* placed at sprite_x + host_scroll_x one frame ago, so the pointers have
+	* to be built from that same value or the BOBs sit one scroll delta out
+	* of position - and since the delta flips sign with the player, they
+	* shake left and right.
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
-	jbsr		switch_screen_buffers
+	jbsr		switch_screen_buffers	| falls through to set_bobs_bitplanes
+	.else
+	jbsr	set_bobs_bitplanes
 	.endif
+
+	* Only now advance the scroll, for the frame we are about to draw.
+	jbsr	set_scroll_values
 
 	* The tile renderer is pure CPU: it writes every tile byte straight into
 	* both screen buffers and background_restore_buffer and never touches the
@@ -7490,6 +7507,7 @@ palette_ptr:
 
 tiles_ptr:
 	.long	0
+
 
 
 
