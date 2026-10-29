@@ -6,6 +6,7 @@
 OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
+OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
 
 
 	.ifne	OPT_CD32_VERSION
@@ -81,7 +82,9 @@ START_HOST_SCROLL_X = (CORKSCREW_NB_SCREENS/2)*256
 NB_TILE_ROWS = 0x20
 NB_TILES_PER_ROW = 0x40
 
-PREVIOUS_SPRITE_SIZE = 10
+* 0 x, 2 y, 4 height, 6 width, 8 object code, then the identity key:
+* 10 xsum (raw 9 bit X + host scroll), 12 raw Y, 13 attr1, 14 attr2, 15 color
+PREVIOUS_SPRITE_SIZE = 16
 CURRENT_SPRITE_SIZE = 0x10
 COLUMN_SIZE = 0x20
 ROW_SIZE = 0x10
@@ -2840,6 +2843,37 @@ osd_latch_sprites:
 	
 	
 really_update_sprites:
+
+	.ifne	OPT_SKIP_UNCHANGED_ERASE
+	* A stored key only means "nothing changed" if the globals every BOB is
+	* drawn through are also unchanged.  If any of them moved, no key can be
+	* trusted this frame and every BOB gets its normal restore.
+	clr.b	bob_key_valid
+	CPU1_GET_MEMORY_START_IN_A6
+	lea		(SPRITE_ADDRESS,a6),a0
+	move.l	a0,sprite_ram_base
+	moveq	#0,d0
+	move.b	(0x07f4,a0),d0
+	and.b	#1,d0
+	lsl.w	#8,d0
+	move.b	(0x07f5,a0),d0
+	cmp.w	sprite_xoffs,d0		| still last frame's value at this point
+	jne		99f
+	moveq	#0,d0
+	move.b	(0x07f7,a0),d0
+	cmp.w	sprite_yoffs,d0
+	jne		99f
+	move.w	game_scroll_y,d0
+	cmp.w	previous_key_scroll_y,d0
+	jne		99f
+	move.l	sprite_table,d0
+	cmp.l	previous_key_sprite_table,d0
+	jne		99f
+	st.b	bob_key_valid
+99:
+	move.w	game_scroll_y,previous_key_scroll_y
+	move.l	sprite_table,previous_key_sprite_table
+	.endif
 	
 	***********************
 	* erase previous BOBs *
@@ -2862,11 +2896,56 @@ really_update_sprites:
 	WRITE_BLITTER_REG_WORD	#-1,bltalwm		| needed for blit_background
 1:
 	move.w	(a4),d0
-	bmi.b	11f		| x=0: inactive
+	jmi		11f		| x=0: inactive (was bmi.b: the key test
+					| below pushes 11f out of short range)
 	move.w	(2,a4),d1
 	cmp.w	#BG_NB_LINES,d1
 	jcc		11f				| too low: discard
 	and.w	#0xFFF0,d0		| align on 16 lower bound
+
+	.ifne	OPT_SKIP_UNCHANGED_ERASE
+	* Nothing this BOB is drawn from has changed?  Then update_one_bob is a
+	* pure function of those inputs, it will put the identical sprite at the
+	* identical place, and the old pixels are never visible.  Leave the slot
+	* alone - the draw pass rewrites it with the same values - and skip the
+	* restore.  No background is painted anywhere, so unlike a redraw from
+	* the restore buffer this cannot damage a BOB drawn before it and needs
+	* no overlap test.
+	tst.b	bob_key_valid
+	jeq		5f
+	movem.l	d0-d1/a3,-(a7)
+	moveq	#NB_TARGET_SPRITES-1,d0
+	sub.w	d7,d0			| slot index
+	lsl.w	#4,d0			| * CURRENT_SPRITE_SIZE
+	move.l	sprite_ram_base,a3
+	add.w	d0,a3
+	moveq	#0,d0
+	move.b	(TARGET_SPRITE_COLOR,a3),d0
+	and.w	#1,d0
+	lsl.w	#8,d0
+	move.b	(TARGET_SPRITE_X,a3),d0
+	add.w	bobs_host_scroll_x,d0
+	cmp.w	(10,a4),d0
+	jne		6f
+	move.b	(TARGET_SPRITE_Y,a3),d0
+	cmp.b	(12,a4),d0
+	jne		6f
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a3),d0
+	cmp.b	(13,a4),d0
+	jne		6f
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a3),d0
+	cmp.b	(14,a4),d0
+	jne		6f
+	move.b	(TARGET_SPRITE_COLOR,a3),d0
+	cmp.b	(15,a4),d0
+	jne		6f
+	movem.l	(a7)+,d0-d1/a3
+	jra		11f			| unchanged: no restore, slot left as it is
+6:
+	movem.l	(a7)+,d0-d1/a3
+5:
+	.endif
+
 	* clear area where the sprite was
 	move.l	#-1,(a4)+			| ack deletion by setting -1 in X & Y
 	move.w	(a4)+,d4			| height
@@ -2882,8 +2961,10 @@ really_update_sprites:
 10:
 	jbsr		blit_background
 101:
+	* the reads above walked 10 bytes of the entry, step over the key too
+	add.w	#PREVIOUS_SPRITE_SIZE-10,a4
 	dbf		d7,1b	
-	bra.b	12f
+	jra		12f
 11:
 	add.w	#PREVIOUS_SPRITE_SIZE,a4
 	dbf		d7,1b
@@ -3134,6 +3215,26 @@ compute_sprite_xy:
 update_one_bob:
 
 	move.l	A0,-(a7)
+
+	.ifne	OPT_SKIP_UNCHANGED_ERASE
+	* Record what this BOB is drawn from, at offsets 10..15 of its slot, so
+	* next frame's erase pass can ask whether any of it moved.  a6 is still
+	* the slot base here - the rect itself is written through (a6)+ later.
+	* The host scroll is folded into the X sum on purpose: a world-static
+	* object has a falling raw X and a rising scroll, so its sum is constant
+	* and it keeps its key while the screen scrolls under it.
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_COLOR,a0),d1
+	and.w	#1,d1			| bit 0 is the X msb
+	lsl.w	#8,d1
+	move.b	(TARGET_SPRITE_X,a0),d1
+	add.w	bobs_host_scroll_x,d1
+	move.w	d1,(10,a6)
+	move.b	(TARGET_SPRITE_Y,a0),(12,a6)
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),(13,a6)
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a0),(14,a6)
+	move.b	(TARGET_SPRITE_COLOR,a0),(15,a6)
+	.endif
 	moveq	#0,d1
 	moveq	#0,d2
 	move.b	(TARGET_SPRITE_CODE,a0),d2
@@ -3950,6 +4051,16 @@ start_process_1_plane_nocc:
 
 	
 	
+bob_key_valid:
+	.byte	0
+	.align	2
+previous_key_scroll_y:
+	.word	0
+sprite_ram_base:
+	.long	0
+previous_key_sprite_table:
+	.long	0
+
 bob_previous_positions_1:
 	.fill NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE+4 , 1 , -1
 	
@@ -4600,7 +4711,11 @@ compute_x_offset:
 0:
 	cmp.w	d0,d2
 	jcs		10f
-	add.w	#BG_NB_BYTES_PER_ROW-1,d0			| visible tile span (including invisible scroll column)
+	add.w	#BG_NB_BYTES_PER_ROW-1,d0		| visible tile span (including invisible
+						| scroll column).  The -1 matters: with the
+						| full span the tile at the very right edge
+						| was accepted and composited one map width
+						| to the left - the corrupt strip.
 	cmp.b	d0,d2
 	jcc		10f	| tile x+screen width < scroll x
 
