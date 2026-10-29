@@ -2911,7 +2911,9 @@ really_update_sprites:
 	move.l	a0,after_last_sprite_ptr
     lea _custom,A5
 	move.l	bob_previous_drawed_sprites(pc),a6
-	move.l	game_scroll_x,(a6)+	| note down scrolling values at the current time
+	move.l	game_scroll_x,(a6)	| scroll stamp lives at offset 0; a6 is no
+					| longer a running cursor, each call below
+					| points it at its own slot
 	
 	move.l		sprite_table,d0
 	jeq			200f
@@ -2932,6 +2934,16 @@ really_update_sprites:
 	sne		d1
 	cmp.b	d6,d1			| does this BOB belong to the current pass?
 	jne		0f
+	* a6 = THIS sprite slot's entry.  The table is indexed by slot now, so a
+	* BOB that is not drawn simply leaves its entry at -1 instead of the
+	* cursor not advancing - which is what makes entry i comparable with
+	* entry i of the previous frame.
+	moveq	#NB_TARGET_SPRITES-1,d1
+	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
+	mulu	#PREVIOUS_SPRITE_SIZE,d1
+	move.l	bob_previous_drawed_sprites(pc),a6
+	lea		(4,a6),a6		| skip the stored scroll long
+	add.l	d1,a6
 	move.w	d6,-(a7)
 	jbsr	update_one_bob
 	move.w	(a7)+,d6
@@ -2941,28 +2953,36 @@ really_update_sprites:
 	not.b	d6			| pass 2: mirrored
 	jne		1b
 	
-	* now we use the bob_previous_drawed_sprites table, let's load it again
+	* Re-stamp layer 1 over the low priority BOBs just drawn.  The table is
+	* indexed by slot now, so rather than walking from the start up to a6 we
+	* walk every slot alongside sprite RAM and take the ones that belong to
+	* the low priority pass.  A slot still holding -1 was not drawn.
 	move.l	bob_previous_drawed_sprites(pc),a3
 	addq	#4,a3		| skip scroll
-	* A6 points after the last drawn sprite rect
+	move.l	after_last_sprite_ptr,a2
 
 	WAIT_BLIT
 	WRITE_BLITTER_REG_WORD	#-1,bltalwm		| needed for blit_background
 
+	moveq	#NB_TARGET_SPRITES-1,d7
 10:
-	cmp.l	a3,a6
-	jeq		11f
-	move.w	(a3)+,d0		| X
-	move.w	(a3)+,d1		| Y
-	move.w	(a3)+,d4		| height
-	move.w	(a3)+,d2		| width in bytes
-	add.w	#2,a3			| object code, ignored
+	move.w	(a3),d0			| X
+	jmi		101f			| -1: slot not drawn this frame
+	move.b	(TARGET_SPRITE_ATTRIBUTES_2,a2),d3
+	and.b	#0xE0,d3
+	jeq		101f
+	cmp.b	#3<<5,d3
+	jcc		101f			| high priority: it sits above layer 1
+	move.w	(2,a3),d1		| Y
+	move.w	(4,a3),d4		| height
+	move.w	(6,a3),d2		| width in bytes
 	move.l	playfield_drawn_screen_ptr(pc),a1
-
 	lea		layer_1_restore_buffer,a0
-	jbsr	blit_background_cookie_cut	
-	
-	jra		10b
+	jbsr	blit_background_cookie_cut
+101:
+	lea		(PREVIOUS_SPRITE_SIZE,a3),a3
+	add.w	#CURRENT_SPRITE_SIZE,a2
+	dbf		d7,10b
 11:
 	* now draw the higher priority sprites, reload sprite pointer
  	clr.b	d6		| direction pass
@@ -2979,6 +2999,16 @@ really_update_sprites:
 	cmp.b	d6,d1			| does this BOB belong to the current pass?
 	jne		0f
 	
+	* a6 = THIS sprite slot's entry.  The table is indexed by slot now, so a
+	* BOB that is not drawn simply leaves its entry at -1 instead of the
+	* cursor not advancing - which is what makes entry i comparable with
+	* entry i of the previous frame.
+	moveq	#NB_TARGET_SPRITES-1,d1
+	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
+	mulu	#PREVIOUS_SPRITE_SIZE,d1
+	move.l	bob_previous_drawed_sprites(pc),a6
+	lea		(4,a6),a6		| skip the stored scroll long
+	add.l	d1,a6
 	move.w	d6,-(a7)
 	jbsr	update_one_bob
 	move.w	(a7)+,d6
@@ -4519,10 +4549,20 @@ osd_w_videoram_out:
 update_bg_tile:
 	move.w	d0,-(a7)
 	jbsr	compute_x_offset
-	movem.w	(a7)+,d0
-	jmi		osd_w_videoram_out
-	ACK_TILE_DIRTY		| ack write
+	movem.w	(a7)+,d0	| movem leaves the CCR alone: the N flag below is
+	jmi		1f		| still compute_x_offset's -1 answer, not this d0
+	ACK_TILE_DIRTY		| ack write: clears the TILE flag and the ROW flag
 	jra		update_bg0_tile
+1:
+	* Tile is outside the visible span, so it keeps its dirty flag and is
+	* retried when it scrolls in.  But ACK_TILE_DIRTY above also clears the
+	* ROW flag, so a visible tile earlier in this same row has very likely
+	* cleared it already - and then update_the_layer never walks this row
+	* again and we are stranded until something else dirties it, by which
+	* time compute_x_offset answers a different x_offset and the tile is
+	* composited one map width from where it belonged.  Put the row back.
+	st.b	(-1,a0)
+	jra		osd_w_videoram_out
 	
 
 * compute X offset (0,0x40,0x80 ...) that makes up for
@@ -4560,7 +4600,7 @@ compute_x_offset:
 0:
 	cmp.w	d0,d2
 	jcs		10f
-	add.w	#BG_NB_BYTES_PER_ROW,d0			| visible tile span (including invisible scroll column)
+	add.w	#BG_NB_BYTES_PER_ROW-1,d0			| visible tile span (including invisible scroll column)
 	cmp.b	d0,d2
 	jcc		10f	| tile x+screen width < scroll x
 
