@@ -1877,11 +1877,18 @@ _nmi:
 	rts
 	
 level3_interrupt:
-	movem.l d0-d7/a0-a6,-(a7)
+	* The blitter branch runs once per blit - several hundred times a frame -
+	* and needs exactly five registers: a5 for _custom, and d0/d1/d2/a0 for
+	* PROCESS_ONE_BLIT's decode loop.  So it saves five.  The vblank branch
+	* runs once, calls into half the game, and saves the rest - but only
+	* after the test, so the blitter path never pays for it.
+	movem.l	d0-d2/a0/a5,-(a7)
 	lea		_custom,a5
 	move.w	(intreqr,a5),d0
 	btst	#5,d0
 	jeq		1f
+
+	movem.l	d3-d7/a1-a4/a6,-(a7)
 
 	tst.b	detect_controllers
 	jeq	0f
@@ -1933,8 +1940,12 @@ level3_interrupt:
 	
 	PROCESS_ONE_BLIT
 
+	* straight out: the wide movem belongs to the vblank path only
+	movem.l	(a7)+,d0-d2/a0/a5
+	rte
 3:
-    movem.l (a7)+,d0-d7/a0-a6
+	movem.l	(a7)+,d3-d7/a1-a4/a6
+    movem.l (a7)+,d0-d2/a0/a5
     rte
 
 
@@ -1968,12 +1979,13 @@ level1_interrupt:
 	addq.b	#1,osd_entry_count
     movem.l d0-d7/a0-a6,-(a7)
 	
+	.ifndef	RELEASE
 	tst.b	osd_debug_active
 	jeq		0f
-	move.b	0xdff006,start_vpos+1
 	jbsr	clock_start
 	clr.w	nb_mirror_operations
 0:
+	.endif
 	
 	lea		_custom,a5
 	move.w	(intreqr,a5),d0		| leave this, we need it for later on
@@ -2148,13 +2160,6 @@ level1_interrupt:
 	tst.b	osd_debug_active
 	jeq		0f
 
-	moveq	#0,d0
-	move.b	0xdff006,d0
-	sub.w	start_vpos,d0
-	jpl		10f
-	add.w	#0x100,d0
-10:
-	move.w	d0,start_vpos
 	
 	.set	row,5
 	CPU1_GET_MEMORY_START_IN_A6
@@ -2619,7 +2624,7 @@ is_game_playing:
 
 blit_background:
 	movem.l	d2-d6/a0-a5,-(a7)
-	lea		_custom,a5
+	BLIT_LIST_BEGIN
 	* adjust offset X: X//8
 	lsr.w	#3,d0
 	lea		mulBG_NB_BYTES_PER_ROW_table(pc),a4
@@ -2689,6 +2694,7 @@ blit_background:
 1:
 	.endr
 	
+	BLIT_LIST_END
 	movem.l	(a7)+,d2-d6/a0-a5
 	rts
 
@@ -2705,7 +2711,7 @@ blit_background:
 
 blit_background_cookie_cut:
 	movem.l	d2-d7/a0-a5,-(a7)
-	lea		_custom,a5
+	BLIT_LIST_BEGIN
 	* adjust offset X: X//8
 	lsr.w	#3,d0
 	lea		mulBG_NB_BYTES_PER_ROW_table(pc),a4
@@ -2771,6 +2777,7 @@ blit_background_cookie_cut:
 	dbf		d7,10b
 1:
 	
+	BLIT_LIST_END
 	movem.l	(a7)+,d2-d7/a0-a5
 	rts
 
@@ -2893,7 +2900,9 @@ really_update_sprites:
 	move.w	#NB_TARGET_SPRITES-1,d7
 
 	WAIT_BLIT
+	BLIT_LIST_BEGIN
 	WRITE_BLITTER_REG_WORD	#-1,bltalwm		| needed for blit_background
+	BLIT_LIST_END
 1:
 	move.w	(a4),d0
 	jmi		11f		| x=0: inactive (was bmi.b: the key test
@@ -3021,7 +3030,7 @@ really_update_sprites:
 	* entry i of the previous frame.
 	moveq	#NB_TARGET_SPRITES-1,d1
 	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
-	mulu	#PREVIOUS_SPRITE_SIZE,d1
+	lsl.w	#4,d1			| * PREVIOUS_SPRITE_SIZE, which is 16 now
 	move.l	bob_previous_drawed_sprites(pc),a6
 	lea		(4,a6),a6		| skip the stored scroll long
 	add.l	d1,a6
@@ -3043,7 +3052,9 @@ really_update_sprites:
 	move.l	after_last_sprite_ptr,a2
 
 	WAIT_BLIT
+	BLIT_LIST_BEGIN
 	WRITE_BLITTER_REG_WORD	#-1,bltalwm		| needed for blit_background
+	BLIT_LIST_END
 
 	moveq	#NB_TARGET_SPRITES-1,d7
 10:
@@ -3086,7 +3097,7 @@ really_update_sprites:
 	* entry i of the previous frame.
 	moveq	#NB_TARGET_SPRITES-1,d1
 	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
-	mulu	#PREVIOUS_SPRITE_SIZE,d1
+	lsl.w	#4,d1			| * PREVIOUS_SPRITE_SIZE, which is 16 now
 	move.l	bob_previous_drawed_sprites(pc),a6
 	lea		(4,a6),a6		| skip the stored scroll long
 	add.l	d1,a6
@@ -3810,6 +3821,9 @@ clear_planes_any_blitter_internal:
 * trashes: a1
 blit_planes_any_internal_cookie_cut:
     movem.l d0-d7/a4,-(a7)
+	* a5 is not saved here - in chain mode the caller does not need _custom
+	* any more, and in mode 0 BLIT_LIST_BEGIN just reloads it.
+	BLIT_LIST_BEGIN
     * pre-compute the maximum of shit here
 	tst.w	d4
 	bpl.b	1f
@@ -3904,6 +3918,7 @@ blit_planes_any_internal_cookie_cut:
 	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
 	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
 10:
+	BLIT_LIST_END
     movem.l (a7)+,d0-d7/a4
     rts
 	

@@ -94,6 +94,12 @@ wait\@:
 	.macro	COMMIT_BLITLIST
 	.endm
 	
+	.macro	BLIT_LIST_BEGIN
+	lea		_custom,a5
+	.endm
+	.macro	BLIT_LIST_END
+	.endm
+	
 	.macro	WRITE_BLITTER_REG_LONG	value,offset
 	CHECK_A5_IS_CUSTOM
 	move.l	\value,\offset(a5)
@@ -371,43 +377,43 @@ c0\@:
 	.endm
 	.endif
 
+	* a5 holds the command list cursor for the whole of an emitting routine,
+	* bracketed by BLIT_LIST_BEGIN / BLIT_LIST_END, so appending a field is
+	* two instructions instead of ten.  Nothing else needs a5 in this mode:
+	* WAIT_BLIT is a no-op and CHECK_A5_IS_CUSTOM only exists in mode 0.
+	*
+	* Note the +0x4000 rather than |0x4000 for the long-command bit: the
+	* pipe is this assembler's comment character and would eat the line.
+	* Every custom register offset has bit 14 clear, so adding is the same.
+	.macro	BLIT_LIST_BEGIN
+	move.l	filled_blitter_list_ptr,a5
+	.endm
+	
+	.macro	BLIT_LIST_END
+	move.l	a5,filled_blitter_list_ptr
+	.ifndef	RELEASE
+	cmp.w	#0xdead,(a5)
+	jne		ble\@
+	BREAKPOINT	"Blitter list overflow"
+ble\@:
+	.endif
+	.endm
+	
 	.macro	WRITE_BLITTER_REG_LONG	value,offset
-	move.l	a5,-(a7)
-	move.w	d6,-(a7)
-	LOAD_FILLED_LIST
-	move.w	#\offset,d6
-	bset	#14,d6		| bit set to tell it's a long command
-	move.w 	d6,(a5)+
+	move.w	#(\offset)+0x4000,(a5)+	| bit 14: long command
 	move.l	\value,(a5)+
-	STORE_FILLED_LIST
-	move.w	(a7)+,d6
-	move.l	(a7)+,a5
 	.endm
 	
 	.macro	WRITE_BLITTER_REG_WORD	value,offset
-	move.l	a5,-(a7)
-	move.w	d6,-(a7)
-	LOAD_FILLED_LIST
-	move.w	#\offset,d6
-	move.w 	d6,(a5)+
+	move.w	#\offset,(a5)+
 	move.w	\value,(a5)+
-	STORE_FILLED_LIST
-	move.w	(a7)+,d6
-	move.l	(a7)+,a5
 	.endm
 	
 	.macro	WRITE_BLITTER_REG_SIZE	value
-	move.l	a5,-(a7)
-	move.w	d6,-(a7)
-	LOAD_FILLED_LIST
-	move.w	#bltsize,d6
-	move.w 	d6,(a5)+
+	move.w	#bltsize,(a5)+
 	move.w	\value,(a5)+
-	st.b	size_command_issued
 	move.w	#-1,(a5)+		| end of command
-	STORE_FILLED_LIST
-	move.w	(a7)+,d6
-	move.l	(a7)+,a5
+	st.b	size_command_issued
 	.endm
 	.endif
 	
