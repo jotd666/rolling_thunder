@@ -1877,18 +1877,11 @@ _nmi:
 	rts
 	
 level3_interrupt:
-	* The blitter branch runs once per blit - several hundred times a frame -
-	* and needs exactly five registers: a5 for _custom, and d0/d1/d2/a0 for
-	* PROCESS_ONE_BLIT's decode loop.  So it saves five.  The vblank branch
-	* runs once, calls into half the game, and saves the rest - but only
-	* after the test, so the blitter path never pays for it.
-	movem.l	d0-d2/a0/a5,-(a7)
+	movem.l d0-d7/a0-a6,-(a7)
 	lea		_custom,a5
 	move.w	(intreqr,a5),d0
 	btst	#5,d0
 	jeq		1f
-
-	movem.l	d3-d7/a1-a4/a6,-(a7)
 
 	tst.b	detect_controllers
 	jeq	0f
@@ -1940,12 +1933,8 @@ level3_interrupt:
 	
 	PROCESS_ONE_BLIT
 
-	* straight out: the wide movem belongs to the vblank path only
-	movem.l	(a7)+,d0-d2/a0/a5
-	rte
 3:
-	movem.l	(a7)+,d3-d7/a1-a4/a6
-    movem.l (a7)+,d0-d2/a0/a5
+    movem.l (a7)+,d0-d7/a0-a6
     rte
 
 
@@ -2160,6 +2149,13 @@ level1_interrupt:
 	tst.b	osd_debug_active
 	jeq		0f
 
+	moveq	#0,d0
+	move.b	0xdff006,d0
+	sub.w	start_vpos,d0
+	jpl		10f
+	add.w	#0x100,d0
+10:
+	move.w	d0,start_vpos
 	
 	.set	row,5
 	CPU1_GET_MEMORY_START_IN_A6
