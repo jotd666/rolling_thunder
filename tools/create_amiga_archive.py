@@ -2,7 +2,7 @@ import subprocess,os,glob,shutil,pathlib
 
 progdir = pathlib.Path(os.path.abspath(os.path.join(os.path.dirname(__file__),os.pardir)))
 
-gamename = "double_dragon"
+gamename = "rolling_thunder"
 
 for s in ["convert_sounds.py","convert_graphics.py"]:
     subprocess.check_call(["cmd","/c",s],cwd=os.path.join(progdir,"assets","amiga"))
@@ -30,7 +30,10 @@ outdir.mkdir(exist_ok=True,parents=True)
 for file in ["readme.md",f"RollingThunder_AGA.slave"]:
     shutil.copy(progdir / file,outdir)
 
+# directory where everything is built
 datadir = progdir / "data"
+datadir.mkdir(exist_ok=True,parents=True)
+
 shutil.copy(progdir / "assets" / "amiga" / "RollingThunderAGA.info",outdir)
 
 
