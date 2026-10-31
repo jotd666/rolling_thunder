@@ -155,6 +155,14 @@ sw\@:
 	jra		sw\@
 snw\@:
 	.else
+	.ifndef	RELEASE
+	* did last frame's chain fail to finish inside its frame?  if this climbs
+	* every frame the blitter is over budget and no scheduling change can help
+	tst.b	blitter_chain_running
+	jeq		sn\@
+	addq.w	#1,nb_chain_overruns
+sn\@:
+	.endif
 sw\@:
 	* if blitter isn't finished, then we wait
 	* this is called from level 1 interrupt so
@@ -334,6 +342,16 @@ b1\@:
 	jeq		b3\@		| -1: end of command
 	* -2: end of list: nothing to do, we're done for that frame
 	clr.b	blitter_chain_running
+	.ifndef	RELEASE
+	* how many scanlines the whole chain took.  312 is a PAL frame.
+	moveq	#0,d0
+	move.b	0xdff006,d0
+	sub.w	blit_start_vpos,d0
+	jpl		bv\@
+	add.w	#0x100,d0		| vpos is 8 bit, it wrapped
+bv\@:
+	move.w	d0,blit_busy_lines
+	.endif
 b3\@:
 	move.l	a0,drawn_blitter_list_ptr
 	.endm

@@ -7,6 +7,15 @@ OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
 OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
+OPT_MEASURE_ISOLATED = 0		| O(n^2) overlap sweep: costs real time, turn on to read it
+* Raster colour bars: whichever colour fills the screen owns the frame.
+*   red    level 1 entry, before call_irqs and the sound handler
+*   yellow update_other_layers (the tile renderer)
+*   green  really_update_sprites (erase + BOB list building)
+*   blue   after it: commit and kick the chain
+*   black  level 1 has returned - this band is the MAIN LOOP, the one
+*          thing no timer has ever covered
+OPT_COLOR_BARS = 1
 
 
 	.ifne	OPT_CD32_VERSION
@@ -28,8 +37,9 @@ _cdreplay:
 	.endif
 start:
 	move.l	a7,old_stack
-	jra		_user
 
+	jra		_user
+screw:
 	.include "../src/cpu1_options.inc"
 	.include "../src/cpu2_options.inc"
 	
@@ -64,7 +74,7 @@ NB_PLAYFIELD_PLANES = 6
 *   blit_background_cookie_cut (layer 1) ~236
 * = ~612 bytes, and NB_TARGET_SPRITES is 127, so a full frame can reach
 * ~78000 bytes.  10000*6 = 60000 was not enough and the list overflowed.
-BLITTER_LIST_SIZE = 20000*NB_PLAYFIELD_PLANES
+BLITTER_LIST_SIZE = 10000*NB_PLAYFIELD_PLANES
 COPPER_NOP = 0x1FE
 
 START_X = 0x20
@@ -171,12 +181,9 @@ FLIT_BIT = 0
 
 
 	.ifdef	RELEASE
-
-OPT_ENABLE_LOGGING = 0           | DO NOT CHANGE THIS
 OPT_DEBUG_BANKSWITCH = 0          | DO NOT CHANGE THIS
 OPT_MIRROR_TEST = 0
 	.else
-OPT_ENABLE_LOGGING = 1
 OPT_DEBUG_BANKSWITCH = 0
 OPT_MIRROR_TEST = 0				| all sprites are mirrored
 	.endif
@@ -431,7 +438,6 @@ next\@:
 _user:
     * if D0 contains "WHDL"
     * A0 contains resload
-        
     cmp.l   #0x05748444c,D0	| WHDL
     bne.b   .standard
 	move.b	d1,_keyexit
@@ -938,22 +944,22 @@ demo_game:
 	move.l	#0x4AFC4EF9,(a0)+
 	move.l	(a7)+,(a0)+
 	
-	CPU1_GET_MEMORY_START_AND_DP
-	* protect CPU1 & CPU2 ROMs from writing if whdload on
-	* keep the top of ROM (not used, full of FFs, for each cpu
-	* target stack during IRQs)
-	move.l	#0x7FE0,d0
-	move.l	a6,a0
-	add.l	#0x8000,a0
-	move.l  (_resload,pc),a2
-	jsr     (resload_ProtectWrite,a2)
-	
-	CPU2_GET_MEMORY_START_AND_DP
-	* protect CPU2 ROM from writing if whdload on
-	move.l	#0x7FE0,d0
-	move.l	a3,a0
-	move.l  (_resload,pc),a2
-	jsr     (resload_ProtectWrite,a2)
+*	CPU1_GET_MEMORY_START_AND_DP
+*	* protect CPU1 & CPU2 ROMs from writing if whdload on
+*	* keep the top of ROM (not used, full of FFs, for each cpu
+*	* target stack during IRQs)
+*	move.l	#0x7FE0,d0
+*	move.l	a6,a0
+*	add.l	#0x8000,a0
+*	move.l  (_resload,pc),a2
+*	jsr     (resload_ProtectWrite,a2)
+*	
+*	CPU2_GET_MEMORY_START_AND_DP
+*	* protect CPU2 ROM from writing if whdload on
+*	move.l	#0x7FE0,d0
+*	move.l	a3,a0
+*	move.l  (_resload,pc),a2
+*	jsr     (resload_ProtectWrite,a2)
 	.endif
 
 
@@ -1176,8 +1182,10 @@ prepare_custom_registers:
 
 	.ifndef	RELEASE
 
-dump_and_quit:	
+dump_and_quit:
+	.ifne	OPT_ENABLE_LOGGING
 	jbsr	osd_dump_logs
+	.endif
 	illegal
 	.endif
 
@@ -1877,11 +1885,18 @@ _nmi:
 	rts
 	
 level3_interrupt:
-	movem.l d0-d7/a0-a6,-(a7)
+	* The blitter branch runs once per blit - several hundred times a frame -
+	* and needs exactly five registers: a5 for _custom, and d0/d1/d2/a0 for
+	* PROCESS_ONE_BLIT's decode loop.  So it saves five.  The vblank branch
+	* runs once, calls into half the game, and saves the rest - but only
+	* after the test, so the blitter path never pays for it.
+	movem.l	d0-d2/a0/a5,-(a7)
 	lea		_custom,a5
 	move.w	(intreqr,a5),d0
 	btst	#5,d0
 	jeq		1f
+
+	movem.l	d3-d7/a1-a4/a6,-(a7)
 
 	tst.b	detect_controllers
 	jeq	0f
@@ -1933,8 +1948,12 @@ level3_interrupt:
 	
 	PROCESS_ONE_BLIT
 
+	* straight out: the wide movem belongs to the vblank path only
+	movem.l	(a7)+,d0-d2/a0/a5
+	rte
 3:
-    movem.l (a7)+,d0-d7/a0-a6
+	movem.l	(a7)+,d3-d7/a1-a4/a6
+    movem.l (a7)+,d0-d2/a0/a5
     rte
 
 
@@ -1967,6 +1986,9 @@ level1_interrupt:
 	* we MUST NOT change d5 or change stack from an osd call from an interrupt
 	addq.b	#1,osd_entry_count
     movem.l d0-d7/a0-a6,-(a7)
+	.ifne	OPT_COLOR_BARS
+	COLOR0_FLASH	0xF00
+	.endif
 	
 	.ifndef	RELEASE
 	tst.b	osd_debug_active
@@ -2088,7 +2110,23 @@ level1_interrupt:
 	* both screen buffers and background_restore_buffer and never touches the
 	* blitter, so it has no business in the command list.  Run it here, while
 	* the chain is still drained, so those writes cannot race any blit.
+	.ifndef	RELEASE
+	jbsr	clock_start
+	move.w	d0,-(a7)
+	jbsr	clock_read
+	move.w	d0,tile_logic_start_time
+	move.w	(a7)+,d0
+	.endif
+	.ifne	OPT_COLOR_BARS
+	COLOR0_FLASH	0xFF0
+	.endif
 	jbsr	update_other_layers
+	.ifndef	RELEASE
+	jbsr	clock_read
+	move.w	tile_logic_start_time,d1
+	sub.w	d0,d1
+	move.w	d1,tile_logic_elapsed
+	.endif
 
 	.ifndef	RELEASE
 	jbsr	clock_start
@@ -2107,7 +2145,13 @@ level1_interrupt:
 	* Nothing in here touches the blitter directly any more - every
 	* WRITE_BLITTER_REG_xxx appends a command, and WAIT_BLIT expands to
 	* nothing.  This is the only thing that belongs in the list.
+	.ifne	OPT_COLOR_BARS
+	COLOR0_FLASH	0x0F0
+	.endif
 	jbsr	really_update_sprites
+	.ifne	OPT_COLOR_BARS
+	COLOR0_FLASH	0x00F
+	.endif
 	.endif
 	* terminate the blitter command list
 	COMMIT_BLITLIST
@@ -2117,6 +2161,10 @@ level1_interrupt:
 	* a frame with no BOBs at all simply leaves the chain stopped.
 	lea		_custom,a5
 	move.l	chain_list_start,drawn_blitter_list_ptr
+	.ifndef	RELEASE
+	clr.w	blit_start_vpos
+	move.b	0xdff006,blit_start_vpos+1
+	.endif
 	PROCESS_BLITS
 	.endif
 
@@ -2149,14 +2197,17 @@ level1_interrupt:
 	tst.b	osd_debug_active
 	jeq		0f
 
-	moveq	#0,d0
-	move.b	0xdff006,d0
-	sub.w	start_vpos,d0
-	jpl		10f
-	add.w	#0x100,d0
-10:
-	move.w	d0,start_vpos
 	
+	* Redrawing the overlay marks a HUD tile dirty PER CHARACTER, and
+	* update_hud_layer then recomposites every one of them in level 3 - which
+	* preempts level 1, so the cost lands inside whichever timing window the
+	* vblank falls in, and its chip RAM writes starve the blitter as well.
+	* At ~240 characters that was tens of ms a frame.  Refresh every 16th
+	* frame instead: still perfectly readable, 16x cheaper.
+	addq.b	#1,debug_refresh_count
+	move.b	debug_refresh_count,d0
+	and.b	#0x0F,d0
+	jne		20f
 	.set	row,5
 	CPU1_GET_MEMORY_START_IN_A6
 	WRITE_TEXT	scrollx_text,2
@@ -2168,6 +2219,14 @@ level1_interrupt:
 	WRITE_TEXT	gfx_time_text,2
 	WRITE_TEXT	nb_mirror_ops_text,2
 	WRITE_TEXT	max_nb_mirror_ops_text,2
+	WRITE_TEXT	nb_bobs_text,2
+	WRITE_TEXT	nb_l1_bobs_text,2
+	WRITE_TEXT	nb_iso_bobs_text,2
+	WRITE_TEXT	blit_lines_text,2
+	WRITE_TEXT	overruns_text,2
+	WRITE_TEXT	tile_time_text,2
+	WRITE_TEXT	erase_time_text,2
+	WRITE_TEXT	bob_time_text,2
 
 	.set		row,5
 	WRITE_HEX	game_scroll_x,3
@@ -2181,6 +2240,15 @@ level1_interrupt:
 	WRITE_HEX	gfx_logic_elapsed,3
 	WRITE_HEX	nb_mirror_operations,3
 	WRITE_HEX	max_nb_mirror_operations,3
+	WRITE_HEX	nb_drawn_bobs,3
+	WRITE_HEX	nb_layer1_bobs,3
+	WRITE_HEX	nb_isolated_bobs,3
+	WRITE_HEX	blit_busy_lines,3
+	WRITE_HEX	nb_chain_overruns,3
+	WRITE_HEX	tile_logic_elapsed,3
+	WRITE_HEX	erase_elapsed,3
+	WRITE_HEX	bob_elapsed,3
+20:
 
 	
 0:
@@ -2198,6 +2266,9 @@ level1_interrupt:
 23:
 
 3:
+	.ifne	OPT_COLOR_BARS
+	COLOR0_FLASH	0x000
+	.endif
     movem.l (a7)+,d0-d7/a0-a6
 	* enable osd context switch
     subq.b	#1,osd_entry_count
@@ -2846,6 +2917,18 @@ osd_latch_sprites:
 	
 	
 really_update_sprites:
+	.ifndef	RELEASE
+	clr.w	nb_drawn_bobs
+	clr.w	nb_layer1_bobs
+	move.l	#bob_draw_seq,bob_draw_seq_ptr
+	.endif
+	.ifndef	RELEASE
+	jbsr	clock_start
+	move.w	d0,-(a7)
+	jbsr	clock_read
+	move.w	d0,erase_start_time
+	move.w	(a7)+,d0
+	.endif
 
 	.ifne	OPT_SKIP_UNCHANGED_ERASE
 	* A stored key only means "nothing changed" if the globals every BOB is
@@ -2973,6 +3056,19 @@ really_update_sprites:
 11:
 	add.w	#PREVIOUS_SPRITE_SIZE,a4
 	dbf		d7,1b
+	.ifndef	RELEASE
+	jbsr	clock_read
+	move.w	erase_start_time,d1
+	sub.w	d0,d1
+	move.w	d1,erase_elapsed
+	.endif
+	.ifndef	RELEASE
+	jbsr	clock_start
+	move.w	d0,-(a7)
+	jbsr	clock_read
+	move.w	d0,bob_start_time
+	move.w	(a7)+,d0
+	.endif
 12:	
 
 
@@ -3066,6 +3162,9 @@ really_update_sprites:
 	move.w	(6,a3),d2		| width in bytes
 	move.l	playfield_drawn_screen_ptr(pc),a1
 	lea		layer_1_restore_buffer,a0
+	.ifndef	RELEASE
+	addq.w	#1,nb_layer1_bobs
+	.endif
 	jbsr	blit_background_cookie_cut
 101:
 	lea		(PREVIOUS_SPRITE_SIZE,a3),a3
@@ -3105,6 +3204,69 @@ really_update_sprites:
 	dbf		d7,2b
 	not.b	d6			| pass 2: mirrored
 	jne		1b
+	.ifne	OPT_MEASURE_ISOLATED
+	* How many BOBs have NO earlier-drawn BOB overlapping them?  Those are
+	* the ones that could take their background straight from
+	* background_restore_buffer in the cookie cut and drop their erase
+	* entirely.  The test is one-sided on purpose: a BOB drawn later simply
+	* draws on top, only what is already on the screen can be damaged.
+	* Measurement only - nothing acts on it yet.
+	* entry layout: 0 x(pixels) 2 y 4 height 6 width(bytes)
+	movem.l	d0-d5/a0-a5,-(a7)
+	clr.w	nb_isolated_bobs
+	lea		bob_draw_seq,a0
+	move.l	bob_draw_seq_ptr,a1
+	move.l	a0,a2
+	cmp.l	a1,a2
+	jcc		209f
+208:
+	move.l	(a2),a3
+	move.w	(a3),d0			| x
+	move.w	(2,a3),d1		| y
+	move.w	(6,a3),d2
+	lsl.w	#3,d2
+	add.w	d0,d2			| x2
+	move.w	(4,a3),d3
+	add.w	d1,d3			| y2
+	lea		bob_draw_seq,a4
+207:
+	cmp.l	a2,a4
+	jcc		206f			| reached ourselves: nothing earlier overlaps
+	move.l	(a4),a5
+	move.w	(a5),d4
+	move.w	(6,a5),d5
+	lsl.w	#3,d5
+	add.w	d4,d5
+	cmp.w	d2,d4
+	jge		205f
+	cmp.w	d0,d5
+	jle		205f
+	move.w	(2,a5),d4
+	move.w	(4,a5),d5
+	add.w	d4,d5
+	cmp.w	d3,d4
+	jge		205f
+	cmp.w	d1,d5
+	jle		205f
+	jra		204f			| overlapped
+205:
+	lea		(4,a4),a4
+	jra		207b
+206:
+	addq.w	#1,nb_isolated_bobs
+204:
+	lea		(4,a2),a2
+	cmp.l	a1,a2
+	jcs		208b
+209:
+	movem.l	(a7)+,d0-d5/a0-a5
+	.endif
+	.ifndef	RELEASE
+	jbsr	clock_read
+	move.w	bob_start_time,d1
+	sub.w	d0,d1
+	move.w	d1,bob_elapsed
+	.endif
 200:
 	rts
 	
@@ -3464,6 +3626,20 @@ size_and_translation_done:
 	neg.w	d4
 10:
 	moveq	#NB_PLAYFIELD_PLANES,d3
+	.ifndef	RELEASE
+	addq.w	#1,nb_drawn_bobs
+	* note this BOB's rect entry in draw order.  a6 sits 10 bytes past the
+	* entry base here, the five words update_one_bob has just written.
+	move.l	a1,-(a7)
+	move.l	d0,-(a7)
+	move.l	bob_draw_seq_ptr,a1
+	move.l	a6,d0
+	sub.l	#10,d0
+	move.l	d0,(a1)+
+	move.l	a1,bob_draw_seq_ptr
+	move.l	(a7)+,d0
+	move.l	(a7)+,a1
+	.endif
 	jbsr	blit_planes_any_internal_cookie_cut
 2:
 	move.l	(a7)+,a0
@@ -6373,11 +6549,14 @@ handle_keyboard:
 
 10:
 	.ifndef	RELEASE
+
+	.ifne	OPT_ENABLE_LOGGING
 	cmp.b	#34,d0
 	bne		0f
 	* 'D': dump all logging buffers to data dir
 	jbsr	osd_dump_logs
 0:
+	.endif
 
 	
 	cmp.b	#0x55,d0	| F6 key: debug params
@@ -6900,6 +7079,38 @@ nb_mirror_ops_text:
 	.ascii	"FLIPS "
 	.byte	0xff
 
+nb_bobs_text:
+	.ascii	"BOBS "
+	.byte	0xff
+
+nb_l1_bobs_text:
+	.ascii	"L1 BOBS "
+	.byte	0xff
+
+nb_iso_bobs_text:
+	.ascii	"ISOLATED "
+	.byte	0xff
+
+blit_lines_text:
+	.ascii	"BLIT LINES "
+	.byte	0xff
+
+overruns_text:
+	.ascii	"OVERRUNS "
+	.byte	0xff
+
+tile_time_text:
+	.ascii	"TILE TIME "
+	.byte	0xff
+
+erase_time_text:
+	.ascii	"ERASE TIME "
+	.byte	0xff
+
+bob_time_text:
+	.ascii	"BOB TIME "
+	.byte	0xff
+
 	.align 2
 
 
@@ -7280,6 +7491,40 @@ max_nb_mirror_operations:
 	.word	0
 nb_mirror_operations:
 	.word	0
+* how many BOBs were drawn this frame, and how many of those were low
+* priority enough to need the layer 1 re-stamp.  The second over the first
+* is the ceiling on what skipping layer 1 can ever be worth.
+nb_drawn_bobs:
+	.word	0
+nb_layer1_bobs:
+	.word	0
+nb_isolated_bobs:
+	.word	0
+blit_start_vpos:
+	.word	0
+blit_busy_lines:
+	.word	0
+nb_chain_overruns:
+	.word	0
+tile_logic_start_time:
+	.word	0
+tile_logic_elapsed:
+	.word	0
+erase_start_time:
+	.word	0
+erase_elapsed:
+	.word	0
+bob_start_time:
+	.word	0
+bob_elapsed:
+	.word	0
+debug_refresh_count:
+	.byte	0
+	.align	2
+bob_draw_seq_ptr:
+	.long	0
+bob_draw_seq:
+	.fill	NB_TARGET_SPRITES*4,1,0
 game_logic_start_time:
 	.word	0
 gfx_logic_start_time:
@@ -7711,8 +7956,10 @@ mirror_table:
 	.ifndef	RELEASE
 interrupted_code_pc:
 	.long	0
+	.ifne	OPT_ENABLE_LOGGING
 log_ptr:
 	.long	log_buffer
+	.endif
 cpu_log_enable:
 	.word	0
 cpu_log_prev_state:

@@ -111,6 +111,10 @@ start:
     lea progstart(pc),a0
     move.l  _expmem(pc),(a0)
 
+	move.l	_expmem(pc),a0
+	add.l	#EXPMEM-4,a0
+	move.l	a0,a7
+	
 	lea	exe(pc),a0
 	move.l  progstart(pc),a1
 	jsr	(resload_LoadFileDecrunch,a2)
@@ -130,7 +134,7 @@ start:
     lea  _custom,a1
     move.w  #$1200,bplcon0(a1)
     move.w  #$0024,bplcon2(a1)
-    rts
+   rts
 	
 _Relocate	movem.l	d0-d1/a0-a2,-(sp)
         clr.l   -(a7)                   ;TAG_DONE
@@ -144,7 +148,7 @@ _Relocate	movem.l	d0-d1/a0-a2,-(sp)
 		ENDC
         move.l  a7,a1                   ;tags	
 		move.l	_resload(pc),a2
-		jsr	resload_Relocate(a2)
+ 		jsr	resload_Relocate(a2)
 		IFNE		EXPMEM
         add.w   #5*4,a7
 		ELSE

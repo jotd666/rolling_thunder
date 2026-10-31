@@ -1,15 +1,7 @@
 	.ifndef	CPU1_OPTIONS_INC
 CPU1_OPTIONS_INC = 1
 	
-	.ifdef	RELEASE
-OPT_ENABLE_LOGGING = 0           | DO NOT CHANGE THIS
-OPT_ALIGNED_MEMORY = 0
-OPT_CHECK_MEMORY_RANGES = 0
-	.else
-OPT_ENABLE_LOGGING = 1
-OPT_ALIGNED_MEMORY = 1
-OPT_CHECK_MEMORY_RANGES = 0
-	.endif
+	.include	"cpu_shared_options.inc"
 	
 * makes random routines return 0. Can lock up the game
 *OPT_FIX_RANDOM = 1
