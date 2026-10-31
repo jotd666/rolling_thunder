@@ -224,17 +224,17 @@ drawn_blitter_list_ptr:
 filled_blitter_list_ptr:
 	.long	0
 blitter_list_1:
-	.word	-2
+	.word	0
 	.skip	\size
-	.long	0xdeaddead
-	.long	0xdeaddead
-	.long	0xdeaddead
+	.long	0
+	.long	0
+	.long	0
 blitter_list_2:
-	.word	-2
+	.word	0
 	.skip	\size
-	.long	0xdeaddead
-	.long	0xdeaddead
-	.long	0xdeaddead
+	.long	0
+	.long	0
+	.long	0
 blitter_chain_running:
 	.byte	0
 size_command_issued:

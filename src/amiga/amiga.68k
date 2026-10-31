@@ -7,7 +7,7 @@ OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
 OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
-OPT_MEASURE_ISOLATED = 0		| O(n^2) overlap sweep: costs real time, turn on to read it
+OPT_MEASURE_ISOLATED = 1		| overlap sweep: walks drawn BOBs only, so n is ~10-20
 * Raster colour bars: whichever colour fills the screen owns the frame.
 *   red    level 1 entry, before call_irqs and the sound handler
 *   yellow update_other_layers (the tile renderer)
@@ -15,7 +15,8 @@ OPT_MEASURE_ISOLATED = 0		| O(n^2) overlap sweep: costs real time, turn on to re
 *   blue   after it: commit and kick the chain
 *   black  level 1 has returned - this band is the MAIN LOOP, the one
 *          thing no timer has ever covered
-OPT_COLOR_BARS = 1
+OPT_ERASE_ELIM = 0		| marked BOBs repaint their own background
+OPT_COLOR_BARS = 0		| colour bars off
 
 
 	.ifne	OPT_CD32_VERSION
@@ -74,7 +75,7 @@ NB_PLAYFIELD_PLANES = 6
 *   blit_background_cookie_cut (layer 1) ~236
 * = ~612 bytes, and NB_TARGET_SPRITES is 127, so a full frame can reach
 * ~78000 bytes.  10000*6 = 60000 was not enough and the list overflowed.
-BLITTER_LIST_SIZE = 10000*NB_PLAYFIELD_PLANES
+BLITTER_LIST_SIZE = 12000*NB_PLAYFIELD_PLANES
 COPPER_NOP = 0x1FE
 
 START_X = 0x20
@@ -103,7 +104,7 @@ GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
-BG_TILE_FILE_MAX_SIZE = 1500000
+BG_TILE_FILE_MAX_SIZE = 1550000
 SPRITE_FILE_BITMAP_MAX_SIZE = 990000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
@@ -557,6 +558,20 @@ _user:
 	lea		_custom,a5
 	lea		debug_copperlist,a0
 	move.l	a0,cop1lc(a5)
+
+	* init blitter lists (in bss)
+	move.l  #0xdeaddead,d0
+	lea		blitter_list_1,a0
+	move.w	#-2,(a0)
+	lea		blitter_list_2,a0
+	move.w	#-2,(a0)
+	move.l	d0,(-12,a0)
+	move.l	d0,(-8,a0)
+	move.l	d0,(-4,a0)
+	lea		blitter_chain_running,a0
+	move.l	d0,(-12,a0)
+	move.l	d0,(-8,a0)
+	move.l	d0,(-4,a0)
 	
 	jbsr	apply_settings
 
@@ -2286,7 +2301,7 @@ level1_interrupt:
 	
 handle_sounds_in_irq:
 	* scan sound commands (synthetic)
-	CPU1_GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_AND_DP
 	lea		(sound_table_4285+1,a6),a0  | skip credit direct MCU control
 	moveq	#1,d0
 0:
@@ -2326,6 +2341,13 @@ playing_out:
 	* continues music
 	st.b	(snd_music_req_4380,a6)		| set as playing
 	move.w	#MAIN_BGM_CONT_SND,d0
+	moveq	#0,d1
+	move.b	(starting_area_c5,a5),d1
+	lea		follow_up_tunes_table,a5
+	tst.b	(a5,d1.w)
+	jeq		0f
+	move.w	#ALT_BGM_CONT_SND,d0	
+0:
 	jbra	osd_sound_start
 
 1:
@@ -2962,6 +2984,59 @@ really_update_sprites:
 	.endif
 	
 	***********************
+	*********************
+	* draw current BOBs *
+	*********************
+	
+	CPU1_GET_MEMORY_START_IN_A6
+	lea		(SPRITE_ADDRESS,a6),a0
+
+*	int sprite_xoffs = m_spriteram[0x07f5] + ((m_spriteram[0x07f4] & 1) << 8);
+*	int sprite_yoffs = m_spriteram[0x07f7];
+
+*	lea		sprites_mock,a0
+	move.b	(0x07f4,a0),d0
+	and.b	#1,d0
+	lsl.w	#8,d0
+	move.b	(0x07f5,a0),d0
+	move.w	d0,sprite_xoffs	
+	move.b	(0x07f7,a0),sprite_yoffs+1  | no sign extension
+	
+	move.l	a0,after_last_sprite_ptr
+    lea _custom,A5
+	move.l	bob_previous_drawed_sprites(pc),a6
+	move.l	game_scroll_x,(a6)	| scroll stamp lives at offset 0; a6 is no
+					| longer a running cursor, each call below
+					| points it at its own slot
+	
+	* The rects must exist before the erase pass can decide anything, so run
+	* the draw passes once with bob_plan_only set: same geometry, same order,
+	* but no mirror command and no blit - only the rect, into
+	* bob_current_positions.  Then resolve which BOBs have no earlier-drawn
+	* BOB overlapping them, and only then erase and draw for real.
+	.ifne	OPT_ERASE_ELIM
+	* distance from the buffer being drawn to the pristine copy; the screen
+	* pointer alternates, so this has to be recomputed every frame
+	move.l	#background_restore_buffer,d0
+	sub.l	playfield_drawn_screen_ptr,d0
+	move.l	d0,restore_bias
+	.endif
+	st.b	bob_plan_only
+	jbsr	draw_low_pri_bobs
+	jbsr	draw_high_pri_bobs
+	clr.b	bob_plan_only
+
+	jbsr	erase_bobs
+	jbsr	draw_low_pri_bobs
+	jbsr	layer1_restamp
+	jbsr	draw_high_pri_bobs
+200:
+	rts
+
+	*------------------------------------------------------------
+	* erase_bobs
+	*------------------------------------------------------------
+erase_bobs:
 	* erase previous BOBs *
 	***********************
 	
@@ -3027,6 +3102,20 @@ really_update_sprites:
 	move.b	(TARGET_SPRITE_COLOR,a3),d0
 	cmp.b	(15,a4),d0
 	jne		6f
+	* And the sprite code, which the key had no room for but which the entry
+	* already carries at offset 8 as the extended code.  Without this, an
+	* object animating in a fixed place - the ceiling fans - keeps the same
+	* key while its frame changes, the restore is skipped, and the frames
+	* stamp on top of each other.
+	moveq	#0,d0
+	move.b	(TARGET_SPRITE_CODE,a3),d0
+	moveq	#0,d1
+	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a3),d1
+	and.w	#7,d1			| sprite bank
+	lsl.w	#7,d1
+	add.w	d1,d0			| extended code, as update_one_bob stores it
+	cmp.w	(8,a4),d0
+	jne		6f
 	movem.l	(a7)+,d0-d1/a3
 	jra		11f			| unchanged: no restore, slot left as it is
 6:
@@ -3039,6 +3128,57 @@ really_update_sprites:
 	move.w	(a4)+,d4			| height
 	move.w	(a4)+,d2		| width
 	move.w	(a4)+,d3		| object code
+	.ifne	OPT_ERASE_ELIM
+	* This BOB repaints its own background out of background_restore_buffer,
+	* so the only part of its old rectangle still needing a restore is the
+	* part the new rectangle will not cover.  Same height, same Y: that is a
+	* vertical strip of |dx| pixels, and dx is a multiple of 16 because X was
+	* aligned.  Anything else falls back to the full restore.
+	movem.l	d3/d5/a3,-(a7)
+	moveq	#NB_TARGET_SPRITES-1,d5
+	sub.w	d7,d5			| slot
+	lea		bob_self_erase,a3
+	tst.b	(a3,d5.w)
+	jeq		59f
+	lsl.w	#4,d5
+	lea		bob_current_positions,a3
+	add.w	d5,a3
+	move.w	(a3),d5			| new X
+	jmi		59f			| not drawn now: full restore
+	and.w	#0xFFF0,d5		| the stored X is raw; the old one above was
+					| aligned, so align this one or dx is not a
+					| multiple of 16 and the strip lands wrong
+	cmp.w	(2,a3),d1
+	jne		59f			| moved vertically: full restore
+	cmp.w	(4,a3),d4
+	jne		59f			| height changed: full restore
+	sub.w	d0,d5			| dx in pixels
+	jeq		58f			| did not move: nothing to restore at all
+	jpl		57f
+	* moved left: the exposed strip is at the right end of the old rect
+	neg.w	d5
+	lsr.w	#3,d5			| pixels -> bytes
+	cmp.w	d2,d5
+	jcc		59f			| moved further than its own width
+	move.w	d2,d3
+	sub.w	d5,d3
+	lsl.w	#3,d3
+	add.w	d3,d0
+	jra		56f
+57:
+	lsr.w	#3,d5
+	cmp.w	d2,d5
+	jcc		59f
+56:
+	move.w	d5,d2			| restore only the strip
+59:
+	movem.l	(a7)+,d3/d5/a3
+	jra		54f
+58:
+	movem.l	(a7)+,d3/d5/a3
+	jra		101f
+54:
+	.endif
 	tst.b	d6
 	jeq		10f				| scrolling active, don't try anything stupid
 	* same scroll values now and when the object was drawn. If the object is static
@@ -3069,37 +3209,16 @@ really_update_sprites:
 	move.w	d0,bob_start_time
 	move.w	(a7)+,d0
 	.endif
-12:	
+	rts
 
-
-	*********************
-	* draw current BOBs *
-	*********************
-	
-	CPU1_GET_MEMORY_START_IN_A6
-	lea		(SPRITE_ADDRESS,a6),a0
-
-*	int sprite_xoffs = m_spriteram[0x07f5] + ((m_spriteram[0x07f4] & 1) << 8);
-*	int sprite_yoffs = m_spriteram[0x07f7];
-
-*	lea		sprites_mock,a0
-	move.b	(0x07f4,a0),d0
-	and.b	#1,d0
-	lsl.w	#8,d0
-	move.b	(0x07f5,a0),d0
-	move.w	d0,sprite_xoffs	
-	move.b	(0x07f7,a0),sprite_yoffs+1  | no sign extension
-	
-	move.l	a0,after_last_sprite_ptr
-    lea _custom,A5
-	move.l	bob_previous_drawed_sprites(pc),a6
-	move.l	game_scroll_x,(a6)	| scroll stamp lives at offset 0; a6 is no
-					| longer a running cursor, each call below
-					| points it at its own slot
-	
-	move.l		sprite_table,d0
-	jeq			200f
+	*------------------------------------------------------------
+	* draw_low_pri_bobs
+	*------------------------------------------------------------
+draw_low_pri_bobs:
+	move.l	sprite_table,d0
+	jeq		9f
 	move.l	d0,a4
+	lea		_custom,a5
 	* first pass: draw low-priority sprites
  	clr.b	d6		| direction pass
 1:
@@ -3122,10 +3241,23 @@ really_update_sprites:
 	* entry i of the previous frame.
 	moveq	#NB_TARGET_SPRITES-1,d1
 	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
+	.ifne	OPT_ERASE_ELIM
+	move.l	a2,-(a7)
+	lea		bob_self_erase,a2
+	move.b	(a2,d1.w),bob_use_restore
+	move.l	(a7)+,a2
+	.endif
 	lsl.w	#4,d1			| * PREVIOUS_SPRITE_SIZE, which is 16 now
+	tst.b	bob_plan_only
+	jeq		97f
+	lea		bob_current_positions,a6	| plan pass: this frame's rects
+	add.l	d1,a6
+	jra		96f
+97:
 	move.l	bob_previous_drawed_sprites(pc),a6
 	lea		(4,a6),a6		| skip the stored scroll long
 	add.l	d1,a6
+96:
 	move.w	d6,-(a7)
 	jbsr	update_one_bob
 	move.w	(a7)+,d6
@@ -3135,6 +3267,13 @@ really_update_sprites:
 	not.b	d6			| pass 2: mirrored
 	jne		1b
 	
+9:
+	rts
+
+	*------------------------------------------------------------
+	* layer1_restamp
+	*------------------------------------------------------------
+layer1_restamp:
 	* Re-stamp layer 1 over the low priority BOBs just drawn.  The table is
 	* indexed by slot now, so rather than walking from the start up to a6 we
 	* walk every slot alongside sprite RAM and take the ones that belong to
@@ -3170,7 +3309,16 @@ really_update_sprites:
 	lea		(PREVIOUS_SPRITE_SIZE,a3),a3
 	add.w	#CURRENT_SPRITE_SIZE,a2
 	dbf		d7,10b
-11:
+	rts
+
+	*------------------------------------------------------------
+	* draw_high_pri_bobs
+	*------------------------------------------------------------
+draw_high_pri_bobs:
+	move.l	sprite_table,d0
+	jeq		9f
+	move.l	d0,a4
+	lea		_custom,a5
 	* now draw the higher priority sprites, reload sprite pointer
  	clr.b	d6		| direction pass
 1:
@@ -3192,10 +3340,23 @@ really_update_sprites:
 	* entry i of the previous frame.
 	moveq	#NB_TARGET_SPRITES-1,d1
 	sub.w	d7,d1			| slot 0..NB_TARGET_SPRITES-1
+	.ifne	OPT_ERASE_ELIM
+	move.l	a2,-(a7)
+	lea		bob_self_erase,a2
+	move.b	(a2,d1.w),bob_use_restore
+	move.l	(a7)+,a2
+	.endif
 	lsl.w	#4,d1			| * PREVIOUS_SPRITE_SIZE, which is 16 now
+	tst.b	bob_plan_only
+	jeq		97f
+	lea		bob_current_positions,a6	| plan pass: this frame's rects
+	add.l	d1,a6
+	jra		96f
+97:
 	move.l	bob_previous_drawed_sprites(pc),a6
 	lea		(4,a6),a6		| skip the stored scroll long
 	add.l	d1,a6
+96:
 	move.w	d6,-(a7)
 	jbsr	update_one_bob
 	move.w	(a7)+,d6
@@ -3204,71 +3365,10 @@ really_update_sprites:
 	dbf		d7,2b
 	not.b	d6			| pass 2: mirrored
 	jne		1b
-	.ifne	OPT_MEASURE_ISOLATED
-	* How many BOBs have NO earlier-drawn BOB overlapping them?  Those are
-	* the ones that could take their background straight from
-	* background_restore_buffer in the cookie cut and drop their erase
-	* entirely.  The test is one-sided on purpose: a BOB drawn later simply
-	* draws on top, only what is already on the screen can be damaged.
-	* Measurement only - nothing acts on it yet.
-	* entry layout: 0 x(pixels) 2 y 4 height 6 width(bytes)
-	movem.l	d0-d5/a0-a5,-(a7)
-	clr.w	nb_isolated_bobs
-	lea		bob_draw_seq,a0
-	move.l	bob_draw_seq_ptr,a1
-	move.l	a0,a2
-	cmp.l	a1,a2
-	jcc		209f
-208:
-	move.l	(a2),a3
-	move.w	(a3),d0			| x
-	move.w	(2,a3),d1		| y
-	move.w	(6,a3),d2
-	lsl.w	#3,d2
-	add.w	d0,d2			| x2
-	move.w	(4,a3),d3
-	add.w	d1,d3			| y2
-	lea		bob_draw_seq,a4
-207:
-	cmp.l	a2,a4
-	jcc		206f			| reached ourselves: nothing earlier overlaps
-	move.l	(a4),a5
-	move.w	(a5),d4
-	move.w	(6,a5),d5
-	lsl.w	#3,d5
-	add.w	d4,d5
-	cmp.w	d2,d4
-	jge		205f
-	cmp.w	d0,d5
-	jle		205f
-	move.w	(2,a5),d4
-	move.w	(4,a5),d5
-	add.w	d4,d5
-	cmp.w	d3,d4
-	jge		205f
-	cmp.w	d1,d5
-	jle		205f
-	jra		204f			| overlapped
-205:
-	lea		(4,a4),a4
-	jra		207b
-206:
-	addq.w	#1,nb_isolated_bobs
-204:
-	lea		(4,a2),a2
-	cmp.l	a1,a2
-	jcs		208b
-209:
-	movem.l	(a7)+,d0-d5/a0-a5
-	.endif
-	.ifndef	RELEASE
-	jbsr	clock_read
-	move.w	bob_start_time,d1
-	sub.w	d0,d1
-	move.w	d1,bob_elapsed
-	.endif
-200:
+9:
 	rts
+
+
 	
 *void namcos86_state::draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 *{
@@ -3558,6 +3658,11 @@ size_and_translation_done:
 	btst	#MIRROR_BIT,d3
 102:
 	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
+	* the plan pass must NOT queue a mirror: every queued command runs before
+	* any draw, so two BOBs sharing a sheet cell in opposite orientations
+	* would both end up reading whichever flip landed last.
+	tst.b	bob_plan_only
+	jne		103f
 	jbsr	mirror_sprite_planes_32x32
 103:	
 	* BOBs must follow screen scroll
@@ -3566,7 +3671,7 @@ size_and_translation_done:
 	
 	* D0 and D1 are already set
 	move.l	(NB_PLAYFIELD_PLANES*4,a0),d2
-	beq.b	2f		| mask is zero: blank tile => skip
+	jeq	2f		| mask is zero: blank tile => skip
 	
 	move.l		playfield_drawn_screen_ptr(pc),a1
 	
@@ -3630,6 +3735,8 @@ size_and_translation_done:
 	addq.w	#1,nb_drawn_bobs
 	* note this BOB's rect entry in draw order.  a6 sits 10 bytes past the
 	* entry base here, the five words update_one_bob has just written.
+	tst.b	bob_plan_only
+	jeq		95f		| only the plan pass records order
 	move.l	a1,-(a7)
 	move.l	d0,-(a7)
 	move.l	bob_draw_seq_ptr,a1
@@ -3639,7 +3746,10 @@ size_and_translation_done:
 	move.l	a1,bob_draw_seq_ptr
 	move.l	(a7)+,d0
 	move.l	(a7)+,a1
+95:
 	.endif
+	tst.b	bob_plan_only
+	jne		2f			| plan pass: the rect is all we wanted
 	jbsr	blit_planes_any_internal_cookie_cut
 2:
 	move.l	(a7)+,a0
@@ -3992,7 +4102,7 @@ clear_planes_any_blitter_internal:
 * returns: start of destination in A1 (computed from old A1+X,Y)
 * trashes: a1
 blit_planes_any_internal_cookie_cut:
-    movem.l d0-d7/a4,-(a7)
+    movem.l d0-d7/a4/a6,-(a7)
 	* a5 is not saved here - in chain mode the caller does not need _custom
 	* any more, and in mode 0 BLIT_LIST_BEGIN just reloads it.
 	BLIT_LIST_BEGIN
@@ -4070,10 +4180,21 @@ blit_planes_any_internal_cookie_cut:
 	jeq	7f
 	subq	#1,d3
 6:
+	* a6 is the C source: the screen as before, or background_restore_buffer
+	* at the same offset when this BOB owns its rectangle, in which case the
+	* cookie cut paints pristine background wherever the mask is clear and the
+	* separate restore is no longer needed.
+	move.l	a1,a6
+	.ifne	OPT_ERASE_ELIM
+	tst.b	bob_use_restore
+	jeq		55f
+	add.l	restore_bias,a6
+55:
+	.endif
 	WRITE_BLITTER_REG_LONG	a3,bltapt	|source graphic top left corner (mask)
 	jbsr	start_process_1_plane
 	
-	WRITE_BLITTER_REG_LONG	a1,bltcpt	|pristine background top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a6,bltcpt	|pristine background or screen
 	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
 	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
 	.if	BG_SCREEN_PLANE_SIZE > 0x7FFF
@@ -4084,14 +4205,21 @@ blit_planes_any_internal_cookie_cut:
 	WAIT_BLIT
 	dbf		d3,6b
 7:
+	move.l	a1,a6			| a1 has advanced since the loop set a6
+	.ifne	OPT_ERASE_ELIM
+	tst.b	bob_use_restore
+	jeq		56f
+	add.l	restore_bias,a6
+56:
+	.endif
 	WRITE_BLITTER_REG_LONG	a3,bltapt	|source graphic top left corner (mask)
 	jbsr	start_process_1_plane
-	WRITE_BLITTER_REG_LONG	a1,bltcpt	|pristine background top (bottom) left corner
+	WRITE_BLITTER_REG_LONG	a6,bltcpt	|pristine background or screen
 	WRITE_BLITTER_REG_LONG	a1,bltdpt	|destination top (bottom) left corner
 	WRITE_BLITTER_REG_SIZE	d4	|rectangle size, starts blit
 10:
 	BLIT_LIST_END
-    movem.l (a7)+,d0-d7/a4
+    movem.l (a7)+,d0-d7/a4/a6
     rts
 	
 start_process_1_plane:
@@ -7355,6 +7483,26 @@ level_context_table:
 	.byte	5		| 10 in BCD
 	* variable block
 
+follow_up_tunes_table:
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	1   | lev 3
+	.byte	1   | lev 4
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	1   | lev 8
+	.byte	1   | lev 9
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0
+	.byte	0   | lev 10 (BCD)
+
+	
 tile_intermission:
 	.asciz	"intermission_tiles"
 sprite_intermission_header:
@@ -7500,6 +7648,11 @@ nb_layer1_bobs:
 	.word	0
 nb_isolated_bobs:
 	.word	0
+bob_use_restore:
+	.byte	0
+	.align	2
+restore_bias:
+	.long	0
 blit_start_vpos:
 	.word	0
 blit_busy_lines:
@@ -7521,10 +7674,6 @@ bob_elapsed:
 debug_refresh_count:
 	.byte	0
 	.align	2
-bob_draw_seq_ptr:
-	.long	0
-bob_draw_seq:
-	.fill	NB_TARGET_SPRITES*4,1,0
 game_logic_start_time:
 	.word	0
 gfx_logic_start_time:
@@ -7534,6 +7683,21 @@ game_logic_elapsed:
 gfx_logic_elapsed:
 	.word 	0
 	.endif
+
+* one byte per sprite slot, set when no earlier-drawn BOB overlaps it.
+* Nothing reads it yet - this build only counts.
+bob_self_erase:
+	.fill	NB_TARGET_SPRITES,1,0
+bob_draw_seq:
+	.fill	NB_TARGET_SPRITES*4,1,0
+bob_draw_seq_ptr:
+	.long	0
+bob_plan_only:
+	.byte	0
+	.align	2
+* this frame's rects, slot indexed, written by the plan pass
+bob_current_positions:
+	.fill	NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE,1,-1
 	
 bg0_character_table:
 	.long	0
@@ -7946,7 +8110,6 @@ temp_filename_buffer:
 mirror_table:
 	.include 	"mirror_table.68k"
 
-	DECL_BLITLISTS	BLITTER_LIST_SIZE
 		
   
 
@@ -7974,6 +8137,7 @@ save_state_requested:
 load_state_requested:
 	.byte	0
 	.align 2
+	DECL_BLITLISTS	BLITTER_LIST_SIZE
 
 mirror_buffer_ptr:
 	.long	0

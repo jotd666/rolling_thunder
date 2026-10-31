@@ -1,18 +1,13 @@
 - fans clipped too early on the left
-- enable blitter interrupt driven!!
-
-move.w	#0x8400,(dmacon,a5)	| BLTPRI on set at start!
 
 - mission complete music not there, boss kill played instead??
-- play alt music: start is the same, depending on the level, fire either level 1 cont or level 3/4/8 cont
 - game over: lockup at cpu 2 8ADA
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
   as layer 2 supercedes layer 1 in level 2
   if layer 2, ignore layer 1 would that work? => amiga copie ok for title, but not for level 10 end
-- joystick not very responsive (keys work great): disable update_hud_layer & retry ???
-- extra scroll row on left always firing when scrolling right: update of the corkscrewed tile
-  is done in-screen
 - transparency issue for layer 1 tiles (black is transparent! ex tires, level 5 fences)
+- sfx seem to play all the time
+- end of level: "credit" sound plays
 
 
 - mission complete music ack
