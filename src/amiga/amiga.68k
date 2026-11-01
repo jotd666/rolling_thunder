@@ -105,7 +105,7 @@ BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
 BG_TILE_FILE_MAX_SIZE = 1550000
-SPRITE_FILE_BITMAP_MAX_SIZE = 990000
+SPRITE_FILE_BITMAP_MAX_SIZE = 1000000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 298000
@@ -2345,9 +2345,9 @@ playing_out:
 	move.b	(starting_area_c5,a5),d1
 	lea		follow_up_tunes_table,a5
 	tst.b	(a5,d1.w)
-	jeq		0f
+	jeq		10f
 	move.w	#ALT_BGM_CONT_SND,d0	
-0:
+10:
 	jbra	osd_sound_start
 
 1:
@@ -6962,7 +6962,7 @@ osd_sound_start:
 
 	* special case if game starts cut the music that could remain from attract
 
-
+	
 	and.w	#0xFF,d0
 	
 

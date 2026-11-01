@@ -41,6 +41,7 @@ def convert():
     dummy_sounds = {
     3,   # a very faint step synth sound, would either not be heard or would cut an important sound
     0x20+8,  # other step sampled sounds, disabled for the same reason
+    0x2C,    # step, again
     12,  # ??, plays in intermission
     }
 

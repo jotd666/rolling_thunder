@@ -562,7 +562,6 @@ bg_tile_sheet_layer2_dict = {i:img for i,img in enumerate(generate_tiles.doit_ti
 
 context_list = ["intermission","level1","level2","level3","level4","level5","level9"]
 
-
 for context in context_list:
     context = pathlib.Path(context)
 
@@ -675,9 +674,9 @@ for context in context_list:
     bg_tile_plane_cache = {}
 
     bg0_tile_table,next_bg_id = read_tileset(bg0_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
-    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black)
+    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=magenta)
     bg1_tile_table,next_bg_id = read_tileset(bg1_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
-    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=black, generate_mask=True, next_cache_id=next_bg_id)
+    is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=magenta, generate_mask=True, next_cache_id=next_bg_id)
     bg2_tile_table,next_bg_id = read_tileset(bg2_tile_set_list,bg_tile_palette,[True,False,False,False],cache=bg_tile_plane_cache,
     is_bob=False, nb_cluts=BG_NB_CLUTS, mask_color=magenta, generate_mask=True, next_cache_id=next_bg_id)
 

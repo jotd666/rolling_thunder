@@ -78,7 +78,7 @@ $(HWT): $(HWT_OBJS)
 #$(MAIN_OCS): $(OCS_OBJS)
 #	$(GCC_BIN)/m68k-amigaos-ld $(OPT_RELEASE_LINK) -o $(MAIN_OCS) $(OCS_OBJS)
 
-cpu_ram.o: cpu_ram.68k cpu1_options.inc cpu2_options.inc
+cpu_ram.o: cpu_ram.68k cpu1_options.inc cpu2_options.inc cpu_shared_options.inc
 	$(ASM) cpu_ram.68k -o cpu_ram.o
 
 cpu1_rom.o: roms/cpu1_rom.68k
