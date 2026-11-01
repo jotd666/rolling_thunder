@@ -1,5 +1,5 @@
 - fans clipped too early on the left
-
+- level 3: missing hoodie frame looking down
 - mission complete music not there, boss kill played instead??
 - game over: lockup at cpu 2 8ADA
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select

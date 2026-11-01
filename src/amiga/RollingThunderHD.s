@@ -86,7 +86,9 @@ _name	dc.b	"Rolling Thunder (arcade)"
 _copy	dc.b	'2026 JOTD',0
 _info
     ;dc.b    "Music by no9",10
-    dc.b    "Original 1986 Namco",0
+    dc.b    "Original 1986 Namco",10,10
+	dc.b	"Version "
+	DECL_VERSION
 	dc.b	0
 _kickname   dc.b    0
 ;--- version id
@@ -110,7 +112,9 @@ start:
     ENDC
     lea progstart(pc),a0
     move.l  _expmem(pc),(a0)
-
+	
+	* stack in fast memory, super important especially
+	* with interrupt-driven blits
 	move.l	_expmem(pc),a0
 	add.l	#EXPMEM-4,a0
 	move.l	a0,a7
