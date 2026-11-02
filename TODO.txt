@@ -1,11 +1,11 @@
 - fans clipped too early on the left
 - mission complete music not there, boss kill played instead??
-- game over: lockup at cpu 2 8ADA
+- game over: lockup at cpu 2 8ADA? lockup while reading DP=$d2 on cpu2
+  boss laughs but no picture, and then lockup
 - level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
   as layer 2 supercedes layer 1 in level 2
   if layer 2, ignore layer 1 would that work? => amiga copie ok for title, but not for level 10 end
 - mission complete music ack
-- game over music ack
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying

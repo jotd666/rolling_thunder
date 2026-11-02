@@ -105,7 +105,7 @@ BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
 BG_TILE_FILE_MAX_SIZE = 1550000
-SPRITE_FILE_BITMAP_MAX_SIZE = 1000000
+SPRITE_FILE_BITMAP_MAX_SIZE = 1020000
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 	.if		OPT_CD32_VERSION==0
 BIGGEST_MUSIC_SIZE = 298000
@@ -2656,6 +2656,7 @@ lose_all_lives:
 	move.b	#0,(0x5611,a6)
 	move.b	#1,(0x5612,a6)
 
+	move.b	#0,(0x56C0,a6)		| current player lives
 	move.b	#0,(0x5480,a6)
 	move.b	#0,(0x54A0,a6)
 	movem.l	(a7)+,a6/d0-d3
