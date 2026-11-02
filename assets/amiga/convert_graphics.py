@@ -215,27 +215,32 @@ dump=False,name_dict=None,cluts=None,tile_number=0,is_bob=False):
 
             if cluts is not None and (tile_number not in cluts or palette_index not in cluts[tile_number]):
                 # no clut declared for that tile
-                tileset_1.append(None)
+                img = None
             else:
 
                 img = Image.new("RGB",(width,height))
                 img.paste(tiles_1,(-i*width,-j*height))
+                tile_palette = set(bitplanelib.palette_extract(img))
+
+                tp1 = list(tile_palette)
+                if len(tp1)==1 and tp1[0]==magenta:
+                    img = None
+                else:
+                    # only consider colors of used tiles
+                    palette.update(tile_palette)
 
 
-                # only consider colors of used tiles
-                palette.update(set(bitplanelib.palette_extract(img)))
 
+                    # dump tiles
+                    if dump:
+                        imgsc = ImageOps.scale(img,5,resample=Image.Resampling.NEAREST)
+                        if name_dict:
+                            name = name_dict.get(tile_number,"unknown")
+                        else:
+                            name = "unknown"
 
-                tileset_1.append(img)
-                # dump tiles
-                if dump:
-                    img = ImageOps.scale(img,5,resample=Image.Resampling.NEAREST)
-                    if name_dict:
-                        name = name_dict.get(tile_number,"unknown")
-                    else:
-                        name = "unknown"
-
-                    img.save(os.path.join(dump_subdir,f"{name}_{tile_number:02x}_{palette_index:02x}.png"))
+                        imgsc.save(os.path.join(dump_subdir,f"{name}_{tile_number:02x}_{palette_index:02x}.png"))
+            tileset_1.append(img)
             tile_number += 1
 
 

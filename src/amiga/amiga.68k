@@ -6,7 +6,7 @@
 OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
-OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
+OPT_SKIP_UNCHANGED_ERASE = 0	| no background restore for a BOB that redraws over itself
 OPT_MEASURE_ISOLATED = 1		| overlap sweep: walks drawn BOBs only, so n is ~10-20
 * Raster colour bars: whichever colour fills the screen owns the frame.
 *   red    level 1 entry, before call_irqs and the sound handler

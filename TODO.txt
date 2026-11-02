@@ -1,3 +1,5 @@
+- some sprite garbling
+- empty tile on HUD or layer 0 should still delete tile
 - fans clipped too early on the left
 - mission complete music not there, boss kill played instead??
 - game over: lockup at cpu 2 8ADA? lockup while reading DP=$d2 on cpu2
