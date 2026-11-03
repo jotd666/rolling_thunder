@@ -1,12 +1,12 @@
-- some sprite garbling
-- empty tile on HUD or layer 0 should still delete tile
+- some sprite garbling, only for main character
+- empty tile on layer 0 should still delete tile
+- empty tile on layer 1 should clear mask planes 
+- title screen: there are some uniform tiles on layer 2
+  that have been removed?  
 - fans clipped too early on the left
 - mission complete music not there, boss kill played instead??
 - game over: lockup at cpu 2 8ADA? lockup while reading DP=$d2 on cpu2
   boss laughs but no picture, and then lockup
-- level 6/2: missing some floors/stairs: maybe layer 1/layer 2 select
-  as layer 2 supercedes layer 1 in level 2
-  if layer 2, ignore layer 1 would that work? => amiga copie ok for title, but not for level 10 end
 - mission complete music ack
 
 site	waits for	tune requested by

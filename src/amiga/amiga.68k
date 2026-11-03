@@ -5634,7 +5634,7 @@ update_fg_tile:
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
 	lea		fg_tile_address_table,a1
 	move.w	(a1,d7.w),d0
-	jmi		11f         | not visible: skip
+	jmi		111f         | not visible: skip
 	moveq	#0,d1
 	move.b	d0,d1
 	lsr.w	#8,d0		| X
@@ -5694,29 +5694,30 @@ update_fg_tile:
 	add.w	d3,d3	
 	move.l	(a4,d3.w),d0	| get proper clut
 	.endif
-	jeq		11f
+	jeq		111f
 	
 	
 	move.l	d0,a4		| directly pointer on tile bitplanes
 	
 	
-*standard_tile:
+
 	* first plane: first sprite
 	NEXT_SOURCE_PLANE
-	.set	offset,0
-	.rept	8
+	moveq	#7,d1
+0:
 	move.b	(a0)+,d0
-	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
+	move.b	d0,(a1)
+	add.w	#16,a1
+	dbf		d1,0b
 	* second plane: first sprite, with a 8 offset
 	NEXT_SOURCE_PLANE
-	.set	offset,8
-	.rept	8
+	moveq	#7,d1
+	sub.w	#16*8-8,a1
+0:
 	move.b	(a0)+,d0
-	move.b	d0,(offset,a1)
-	.set	offset,offset+16
-	.endr
+	move.b	d0,(a1)
+	add.w	#16,a1
+	dbf		d1,0b
 
 11:
 	rts
@@ -5724,6 +5725,23 @@ update_fg_tile:
 	move.w	(a7)+,d1
 	move.w	(a7)+,d0
 	rts
+
+111:
+	moveq	#7,d1
+0:
+	clr.b	(a1)
+	add.w	#16,a1
+	dbf		d1,0b
+	moveq	#7,d1
+	sub.w	#16*8-8,a1
+0:
+	clr.b	(a1)
+	add.w	#16,a1
+	dbf		d1,0b
+
+11:
+	rts
+
 
 empty_row:
 	.skip	8
