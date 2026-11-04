@@ -9717,13 +9717,15 @@ l_abbf:
 	move.b	#0xff,d0                        	| [$abd7: lda    #$ff]
 l_abd9:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$abd9: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$abd9: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$abdb: lda    $da]
 	and.b	#0x0f,d0                         	| [$abdd: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$abdf: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$abdf: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	move.b	#0xe4,d1                        	| [$abe1: ldb    #$e4]
 	jbsr	function_9052                     	| [$abe3: jsr    function_9052]
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$abe6: inc    dp_sem_cpu1_06]
@@ -9828,13 +9830,15 @@ l_ac63:
 	move.b	#0xff,d0                        	| [$ac71: lda    #$ff]
 l_ac73:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$ac73: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$ac73: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$ac75: lda    $da]
 	and.b	#0x0f,d0                         	| [$ac77: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$ac79: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$ac79: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$ac7b: lda    $da]
 	rts                                    	| [$ac7d: rts]
 
