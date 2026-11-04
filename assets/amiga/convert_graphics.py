@@ -189,7 +189,7 @@ bob_plane_{v:02d}:""")
             dump_asm_bytes(k,f)
 
 def load_tileset(image_name,palette_index,width,height,tileset_name,dumpdir,
-dump=False,name_dict=None,cluts=None,tile_number=0,is_bob=False):
+dump=False,name_dict=None,cluts=None,tile_number=0,is_bob=False,is_layer_0=False):
 
 ##    if isinstance(image_name,str):
 ##        full_image_path = os.path.join(this_dir,os.path.pardir,"sheets",
@@ -223,7 +223,8 @@ dump=False,name_dict=None,cluts=None,tile_number=0,is_bob=False):
                 tile_palette = set(bitplanelib.palette_extract(img))
 
                 tp1 = list(tile_palette)
-                if len(tp1)==1 and tp1[0]==magenta:
+                # for layer 0, don't make tile transparent
+                if not is_layer_0 and len(tp1)==1 and tp1[0]==magenta:
                     img = None
                 else:
                     # only consider colors of used tiles
@@ -590,14 +591,13 @@ for context in context_list:
     # layer 0: pure copy, layer 1 & 2: masked copies
     # so we need to generate the graphics separately, but the palette is shared
     # (also shared with the sprites)
-    #
-    # ATM we drop layer 2, too many problems, we'll workaround this
-    # (layer 2 is only used in the big computer frame at start)
+
 
     for i,tsd in bg_tile_sheet_dict.items():
         tp,tile_set = load_tileset(tsd,i,8,8,"bg_tiles_0",ctx_dump_dir,dump=dump_it,
         cluts=bg0_tile_cluts,
-        name_dict=None)
+        name_dict=None,
+        is_layer_0=True)
         bg0_tile_set_list.append(tile_set)
         bg_tile_palette.update(tp)
 

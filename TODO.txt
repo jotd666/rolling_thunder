@@ -1,8 +1,5 @@
 - some sprite garbling, only for main character
-- empty tile on layer 0 should still delete tile
-- empty tile on layer 1 should clear mask planes 
-- title screen: there are some uniform tiles on layer 2
-  that have been removed?  
+- empty tile on layer 1 should clear mask planes: visible remainder of ramps shifted Y (corkscrew)
 - fans clipped too early on the left
 - mission complete music not there, boss kill played instead??
 - game over: lockup at cpu 2 8ADA? lockup while reading DP=$d2 on cpu2
@@ -20,10 +17,9 @@ asm =>
 - load/save highscores
 - trainer infinite lives
 - use 50Hz scroll
-- hoodies partially drawn when climbing up/down railings: pause+render
+
 - could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
   which would allow shorter (and faster) sprite overlay: less chip, faster blits
-- force tile 0 clut 0 if missing
 - level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
 - start skips the "select area" part doesn't work
 

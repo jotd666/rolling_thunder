@@ -3436,7 +3436,6 @@ sprite_size:
 	.byte	16, 8, 32, 4
 	
 compute_sprite_xy:
-	moveq	#0,d1
 	* attributes = buffered_spriteram[offs + 1]
 	* sx = buffered_spriteram[offs + 3] - 0x100 * (attributes & 0x01)
 
@@ -3444,8 +3443,13 @@ compute_sprite_xy:
 	and.b	#1,d0
 	lsl.w	#8,d0
 	move.b	(TARGET_SPRITE_X,a0),d0
+	* bit 8 is the sign: MAME's sx = byte - 0x100*(bit) is a 9-bit sign extend
+	move.w	#0x100,d1
+	eor.w	d1,d0
+	sub.w	d1,d0	
 	add.w	sprite_xoffs,d0
 	* sy = -source[15] - sizey
+	moveq	#0,d1
 	move.b	(TARGET_SPRITE_Y,a0),d1
 	neg.w	d1
 	* sy -= sizey        sizey = sprite_size[(attr2 & 0x06) >> 1]
@@ -3516,7 +3520,9 @@ update_one_bob:
 
 	jbsr	compute_sprite_xy
 	cmp.w	#288,d0
-	jcc		2f			| some valid sprites on the right but not displayed
+	jge		2f			| origin off to the right
+	cmp.w	#-32,d0
+	jle		2f			| fully off to the left
 	move.b	(TARGET_SPRITE_ATTRIBUTES_1,a0),d3	
 	.if		OPT_MIRROR_TEST==1
 	bset	#MIRROR_BIT,d3
@@ -5164,7 +5170,7 @@ update_bg0_tile:
 	move.l	d6,a0
 	jbsr	load_tile_bitmap
 	tst.l	d0
-	jeq		11f		    | no bitmap: exit (don't even try to look for layer 1)
+	jeq		clear_the_tile		| no bitmap: clear (don't even try to look for layer 1)
 	move.l	d0,a5		| pointer on proper clut of tile for layer 0
 
 
@@ -5320,6 +5326,45 @@ copy_the_tile:
 	add.w	d6,a3
 	move.b	d0,(a4)
 	move.b	d0,(a4,d2.w)
+	add.w	d6,a4
+	dbf		d7,51b
+	add.w	d5,a1
+	add.w	d5,a3
+	add.w	d5,a4
+	dbf		d4,50b
+100:
+	rts
+
+	* now copy the tile at the proper locations. There are 3 locations to copy on
+	* (we processed the layer 1 overlay above)
+clear_the_tile:
+	move.w	plane_offset,d6
+	jbsr	clear_layer_1
+	move.w	#NB_BG_PLANES-1,d4
+	lea		layer_1_restore_buffer,a4
+	add.w	d6,a4
+	move.l		playfield_drawn_screen_ptr,a1
+	add.w	d6,a1
+	* double buffering
+	move.l		playfield_displayed_screen_ptr,a4
+	add.w	d6,a4
+	lea		background_restore_buffer,a3
+	add.w	d6,a3
+	move.w	#NB_BG_PLANES-1,d4
+	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
+	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
+	move.w	#BG_NB_BYTES_PER_ROW,d6
+50:
+	moveq	#7,d7
+51:
+	clr.b	(a1)
+	clr.b	(a1,d2.w)
+	add.w	d6,a1	| next row
+	clr.b	(a3)
+	clr.b	(a3,d2.w)
+	add.w	d6,a3
+	clr.b	(a4)
+	clr.b	(a4,d2.w)
 	add.w	d6,a4
 	dbf		d7,51b
 	add.w	d5,a1
@@ -8413,13 +8458,13 @@ layer_1_restore_buffer:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
 	.skip	BG_SCREEN_PLANE_SIZE		| plus mask!
-	.skip	BG_SCREEN_PLANE_SIZE		| plus WTF???
-
+	.skip	4*BG_NB_LINES*NB_PLAYFIELD_PLANES		| margin for left clipping
 bobs_screen_buffer_1:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
 	.skip	BG_NB_BYTES_PER_ROW*48		| margin to avoid sprite blit wrap when game scrolls up
 	.ifne	OPT_ENABLE_DOUBLE_BUFFERING
+	.skip	4*BG_NB_LINES*NB_PLAYFIELD_PLANES		| margin for left clipping
 bobs_screen_buffer_2:
 	.skip	BG_NB_BYTES_PER_ROW*CORKSCREW_NB_SCREENS		| margin for corkscrew
 	.skip	BG_SCREEN_SIZE
