@@ -5338,40 +5338,40 @@ copy_the_tile:
 	* now copy the tile at the proper locations. There are 3 locations to copy on
 	* (we processed the layer 1 overlay above)
 clear_the_tile:
-	move.w	plane_offset,d6
-	jbsr	clear_layer_1
-	move.w	#NB_BG_PLANES-1,d4
-	lea		layer_1_restore_buffer,a4
-	add.w	d6,a4
-	move.l		playfield_drawn_screen_ptr,a1
-	add.w	d6,a1
-	* double buffering
-	move.l		playfield_displayed_screen_ptr,a4
-	add.w	d6,a4
-	lea		background_restore_buffer,a3
-	add.w	d6,a3
-	move.w	#NB_BG_PLANES-1,d4
-	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
-	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
-	move.w	#BG_NB_BYTES_PER_ROW,d6
-50:
-	moveq	#7,d7
-51:
-	clr.b	(a1)
-	clr.b	(a1,d2.w)
-	add.w	d6,a1	| next row
-	clr.b	(a3)
-	clr.b	(a3,d2.w)
-	add.w	d6,a3
-	clr.b	(a4)
-	clr.b	(a4,d2.w)
-	add.w	d6,a4
-	dbf		d7,51b
-	add.w	d5,a1
-	add.w	d5,a3
-	add.w	d5,a4
-	dbf		d4,50b
-100:
+*	move.w	plane_offset,d6
+*	jbsr	clear_layer_1
+*	move.w	#NB_BG_PLANES-1,d4
+*	lea		layer_1_restore_buffer,a4
+*	add.w	d6,a4
+*	move.l		playfield_drawn_screen_ptr,a1
+*	add.w	d6,a1
+*	* double buffering
+*	move.l		playfield_displayed_screen_ptr,a4
+*	add.w	d6,a4
+*	lea		background_restore_buffer,a3
+*	add.w	d6,a3
+*	move.w	#NB_BG_PLANES-1,d4
+*	move.w	#BG_SCREEN_PLANE_SIZE-8*BG_NB_BYTES_PER_ROW,d5
+*	move.w	#BG_HALF_SCREEN_PLANE_SIZE,d2
+*	move.w	#BG_NB_BYTES_PER_ROW,d6
+*50:
+*	moveq	#7,d7
+*51:
+*	clr.b	(a1)
+*	clr.b	(a1,d2.w)
+*	add.w	d6,a1	| next row
+*	clr.b	(a3)
+*	clr.b	(a3,d2.w)
+*	add.w	d6,a3
+*	clr.b	(a4)
+*	clr.b	(a4,d2.w)
+*	add.w	d6,a4
+*	dbf		d7,51b
+*	add.w	d5,a1
+*	add.w	d5,a3
+*	add.w	d5,a4
+*	dbf		d4,50b
+*100:
 	rts
 
 
@@ -5382,10 +5382,12 @@ copy_tile_layer_1_inactive:
 	jeq		copy_tile_layer_0
 
 	move.l	d0,a6
+	
+	move.w	plane_offset,d6
+	jbsr	clear_layer_1
 	move.l	(NB_PLAYFIELD_PLANES*4,a6),d0
 	jeq		copy_tile_layer_0		| no mask on tile: empty: screw it
 	
-	jbsr	clear_layer_1
 	
 	* now compose tile to temp buffer using layer 0 and 2
 	lea		temp_buffer,a3		| output buffer with both layers merged, all planes in a row
@@ -5438,9 +5440,9 @@ copy_tile_layer_1_inactive:
 * the simplest way: only layer 0 is active
 
 copy_tile_layer_0:
-	jbsr	clear_layer_1
 	
 	move.w	plane_offset,d6
+	jbsr	clear_layer_1
 	move.w	#NB_BG_PLANES-1,d4
 
 	move.l		playfield_drawn_screen_ptr,a1

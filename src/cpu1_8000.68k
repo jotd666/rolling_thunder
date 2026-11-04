@@ -376,6 +376,8 @@ difficulty_3c = 0x3c
 emitted_sprite_count_24 = 0x24
 tile_related_counter_ae = 0xae
 player_number_01 = 0x01
+music_request_e8 = 0xe8
+prev_music_request_e9 = 0xe9
 
 *CPU #1 4380 write controls MCU tune play:
 *
@@ -3984,7 +3986,7 @@ l_91d3:
 
 * 1 jump-table ref
 function_91dc:
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$91dc: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$91dc: clr    $e8]
 	jbsr	function_84e0                     	| [$91de: jsr    function_84e0]
 	jbsr	function_84f9                     	| [$91e1: jsr    function_84f9]
 	OP_W_ON_DP_ADDRESS	addq,dp_sub_cpu1_04,#1| [$91e4: inc    dp_sub_cpu1_04] CPU1 sub-state
@@ -4978,7 +4980,7 @@ l_96a5:
 	jbsr	clear_hud_rect_b4b8               	| [$96c3: jsr    clear_hud_rect_b4b8]
 	jbsr	function_97d4                     	| [$96c6: jsr    function_97d4]
 	move.b	#0x0b,d0                        	| [$96c9: lda    #$0b]
-	OP_W_ON_DP_ADDRESS	move,0xe8,d0         | [$96cb: sta    $e8]
+	OP_W_ON_DP_ADDRESS	move,music_request_e8,d0         | [$96cb: sta    $e8]
 	move.w	#0x3595,d4                      	| [$96cd: ldu    #$3595] layer 3 tilemap / HUD
 	GET_ADDRESS	0x542a                     	| [$96d0: lda    $542a]
 	move.b	(a0),d0                         	| [...]
@@ -5934,12 +5936,12 @@ l_9aca:
 	move.b	#0xff,d0                        	| [$9ae2: lda    #$ff]
 l_9ae4:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$9ae4: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$9ae4: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$9ae6: lda    $da]
 	and.b	#0x0f,d0                         	| [$9ae8: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$9aea: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$9aea: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.b	#0xe4,d1                        	| [$9aec: ldb    #$e4]
 	jbsr	function_9052                     	| [$9aee: jsr    function_9052]
@@ -6427,7 +6429,7 @@ l_9d58:
 	jbsr	function_d385                     	| [$9d64: jsr    function_d385] [freq=low, count=20%]
 	jra	function_d2cd                      	| [$9d67: jmp    function_d2cd] [freq=low, count=20%]
 l_9d6a:
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$9d6a: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$9d6a: clr    $e8]
 	move.w	#0xafd6,d4                      	| [$9d6c: ldu    #$afd6] ROM
 	move.w	#0x3210,d3                      	| [$9d6f: ldy    #$3210] layer 3 tilemap / HUD
 	move.b	#0xfc,d1                        	| [$9d73: ldb    #$fc]
@@ -7397,7 +7399,7 @@ l_a177:
 function_a185:
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$a185: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$a187: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$a187: clr    $e8]
 	jbsr	function_84e0                     	| [$a189: jsr    function_84e0]
 	jra	function_84f9                      	| [$a18c: jmp    function_84f9]
 
@@ -7746,7 +7748,7 @@ l_a310:
 function_a32a:
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$a32a: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$a32c: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$a32c: clr    $e8]
 	jbsr	function_84e0                     	| [$a32e: jsr    function_84e0]
 	jra	function_84f9                      	| [$a331: jmp    function_84f9]
 
@@ -8053,7 +8055,7 @@ l_a492:
 	and.b	#0x1f,d0                         	| [$a49d: anda   #$1f]
 	OP_W_ON_DP_ADDRESS	move,0xe0,d0         | [$a49f: sta    $e0]
 	move.b	#0x05,d0                        	| [$a4a1: lda    #$05]
-	OP_W_ON_DP_ADDRESS	move,0xe8,d0         | [$a4a3: sta    $e8]
+	OP_W_ON_DP_ADDRESS	move,music_request_e8,d0         | [$a4a3: sta    $e8]
 	move.w	#0x5380,d3                      	| [$a4a5: ldy    #$5380]
 	OP_R_ON_DP_ADDRESS	move,0xe2,d0         | [$a4a9: lda    $e2]
 	move.b	#0x4c,d1                        	| [$a4ab: ldb    #$4c]
@@ -8104,7 +8106,7 @@ function_a4d1:
 	addq.b	#1,d0                           	| [$a4db: inca]
 	and.b	#0x1f,d0                         	| [$a4dc: anda   #$1f]
 	OP_W_ON_DP_ADDRESS	move,0xe0,d0         | [$a4de: sta    $e0]
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$a4e0: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$a4e0: clr    $e8]
 	move.w	#0x5380,d3                      	| [$a4e2: ldy    #$5380]
 	OP_R_ON_DP_ADDRESS	move,0xe2,d0         | [$a4e6: lda    $e2]
 	move.b	#0x2b,d1                        	| [$a4e8: ldb    #$2b]
@@ -8578,7 +8580,7 @@ function_a6e6:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$a6f1: lda    a,u]
 	move.b	(a0),d0                         	| [...]
-	OP_W_ON_DP_ADDRESS	move,0xe8,d0         | [$a6f3: sta    $e8]
+	OP_W_ON_DP_ADDRESS	move,music_request_e8,d0         | [$a6f3: sta    $e8]
 	move.w	#0xafd6,d4                      	| [$a6f5: ldu    #$afd6]
 	move.w	#0x3210,d3                      	| [$a6f8: ldy    #$3210] layer 3 tilemap / HUD
 	move.b	#0xfc,d1                        	| [$a6fc: ldb    #$fc]
@@ -9041,9 +9043,10 @@ l_a8cc:
 
 
 * 1 jump-table ref
-function_a8e6:
+game_over_a8e6:
+	jbsr 	set_intermission_context
 	move.b	#0x0c,d0                        	| [$a8e6: lda    #$0c]
-	OP_W_ON_DP_ADDRESS	move,0xe8,d0         | [$a8e8: sta    $e8]
+	OP_W_ON_DP_ADDRESS	move,music_request_e8,d0         | [$a8e8: sta    $e8]
 	OP_1_ON_DP_ADDRESS	tst,player_number_01 | [$a8ea: tst    player_number_01]
 	jne	l_a923                             	| [$a8ec: bne    $a923]
 	move.w	#0xb0be,d4                      	| [$a8ee: ldu    #$b0be] ROM
@@ -9419,7 +9422,7 @@ l_aa7b:
 	GET_VIDEO_ADDRESS	0x3f98                     	| [$aa81: std    $3f98] [video_address]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$aa84: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$aa84: clr    $e8]
 	jbsr	function_8423                     	| [$aa86: jsr    function_8423]
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$aa89: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
@@ -9855,7 +9858,7 @@ l_ac85:
 function_aca3:
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$aca3: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$aca5: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$aca5: clr    $e8]
 	jbsr	function_84e0                     	| [$aca7: jsr    function_84e0]
 	jra	function_84f9                      	| [$acaa: jmp    function_84f9]
 
@@ -9889,7 +9892,7 @@ l_acc3:
 * 1 jump-table ref
 function_acd1:
 	move.b	#0x09,d0                        	| [$acd1: lda    #$09]
-	OP_W_ON_DP_ADDRESS	move,0xe8,d0         | [$acd3: sta    $e8]
+	OP_W_ON_DP_ADDRESS	move,music_request_e8,d0         | [$acd3: sta    $e8]
 	move.w	#0xb12c,d4                      	| [$acd5: ldu    #$b12c] ROM
 	move.w	#0x351c,d3                      	| [$acd8: ldy    #$351c] layer 3 tilemap / HUD
 	move.b	#0xfc,d1                        	| [$acdc: ldb    #$fc]
@@ -10270,7 +10273,7 @@ l_ae6f:
 	jeq	l_ae81                             	| [$ae7e: beq    $ae81]
 	rts                                    	| [$ae80: rts]
 l_ae81:
-	OP_1_ON_DP_ADDRESS	clr,0xe8             | [$ae81: clr    $e8]
+	OP_1_ON_DP_ADDRESS	clr,music_request_e8             | [$ae81: clr    $e8]
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$ae83: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu2_07,#1| [$ae85: inc    dp_sem_cpu2_07]
@@ -10543,14 +10546,14 @@ l_afc1:
 * snd_music_req_4380 and remember it.
 *--------------------------------------------------------------------------
 snd_send_music_req_afc9:
-	OP_R_ON_DP_ADDRESS	move,0xe8,d0         | [$afc9: lda    $e8] [freq=low, count=20%]
-	OP_R_ON_DP_ADDRESS	cmp,0xe9,d0          | [$afcb: cmpa   $e9] [freq=low, count=20%]
+	OP_R_ON_DP_ADDRESS	move,music_request_e8,d0         | [$afc9: lda    $e8] [freq=low, count=20%]
+	OP_R_ON_DP_ADDRESS	cmp,prev_music_request_e9,d0          | [$afcb: cmpa   $e9] [freq=low, count=20%]
 	jne	l_afd0                             	| [$afcd: bne    $afd0] [freq=low, count=20%]
 	rts                                    	| [$afcf: rts] [freq=low, count=20%]
 l_afd0:
 	GET_ADDRESS	snd_music_req_4380         	| [$afd0: sta    snd_music_req_4380] -> MCU: music/BGM request code
 	move.b	d0,(a0)                         	| [...]
-	OP_W_ON_DP_ADDRESS	move,0xe9,d0         | [$afd3: sta    $e9]
+	OP_W_ON_DP_ADDRESS	move,prev_music_request_e9,d0         | [$afd3: sta    $e9]
 	rts                                    	| [$afd5: rts]
 
 
@@ -20086,7 +20089,7 @@ jump_table_a6e2:
 	.long	function_a6e6                    	|  $a6e2
 	.long	function_a870                    	|  $a6e4
 jump_table_a8d2:
-	.long	function_a8e6                    	|  $a8d2
+	.long	game_over_a8e6                    	|  $a8d2
 	.long	game_over_a958                   	|  $a8d4
 	.long	function_a9fe                    	|  $a8d6
 	.long	function_aa1e                    	|  $a8d8

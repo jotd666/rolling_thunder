@@ -1,33 +1,13 @@
+for first release
 - some sprite garbling, only for main character
-- empty tile on layer 1 should clear mask planes: visible remainder of ramps shifted Y (corkscrew)
-- fans clipped too early on the left
 - mission complete music not there, boss kill played instead??
-- game over: lockup at cpu 2 8ADA? lockup while reading DP=$d2 on cpu2
-  boss laughs but no picture, and then lockup
 - mission complete music ack
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
 $A958	sub-state 10 step 1 (GAME OVER)	$0C, CPU1 $A8E6 step 0
 $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
-asm =>
 
-
-- write hud tiles optimize?
-- load/save highscores
-- trainer infinite lives
-- use 50Hz scroll
-
-- could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
-  which would allow shorter (and faster) sprite overlay: less chip, faster blits
-- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
-- start skips the "select area" part doesn't work
-
-- try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
-- sprites 128 colors, bg in 64 to avoid washed down
-
-
-optim: do not write HUD tiles (score, etc.) all the time
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
 
@@ -45,6 +25,26 @@ when character is killed, it sometimes reaches
 same problem when shooting hoodie into the fire
 
 => afterwards, no big deal
+
+
+------------
+
+- write hud tiles optimize?
+- load/save highscores
+- trainer infinite lives
+- use 50Hz scroll
+
+- could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
+  which would allow shorter (and faster) sprite overlay: less chip, faster blits
+- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
+- start skips the "select area" part doesn't work
+
+- try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
+- sprites 128 colors, bg in 64 to avoid washed down
+
+
+optim: do not write HUD tiles (score, etc.) all the time
+
 
 placement of the 5th sprite isn't correct (1 pixel off!)
 optim: write same char (HUD): avoid, game does that all the time

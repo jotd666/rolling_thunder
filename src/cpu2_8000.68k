@@ -2209,7 +2209,7 @@ function_8ab9:
 function_8ada:
 	OP_R_ON_DP_ADDRESS	move,dp_sem_cpu_d2,d0| [$8ada: lda    dp_sem_cpu_d2]
 	cmp.b	#0x01,d0                         	| [$8adc: cmpa   #$01]
-	jne	function_8ada                      	| [$8ade: bne    function_8ada]
+	jeq	wait_function_8ada                      	| [$8ade: bne    function_8ada]
 	jbsr	function_85da                     	| [$8ae0: jsr    function_85da]
 	jbsr	build_sprite_list_81bb            	| [$8ae3: jsr    build_sprite_list_81bb]
 	jbsr	function_830d                     	| [$8ae6: jsr    function_830d]
@@ -19493,4 +19493,8 @@ wait_function_8a2e:
 wait_function_8b88:
 	jbsr	osd_yield
 	jra	function_8b88
+
+wait_function_8ada:
+	jbsr	osd_yield
+	jra	function_8ada
 

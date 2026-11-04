@@ -369,6 +369,8 @@ difficulty_3c                = $3c
 emitted_sprite_count_24 = $24
 tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs it
 player_number_01 = $01
+music_request_e8 = $e8
+prev_music_request_e9 = $e9
 
 ;CPU #1 4380 write controls MCU tune play: 
 ;
@@ -2488,7 +2490,7 @@ function_917b:
 
 ; 1 jump-table ref
 function_91dc:
-91DC: 0F E8       CLR    $E8
+91DC: 0F E8       CLR    music_request_e8
 91DE: BD 84 E0    JSR    function_84e0
 91E1: BD 84 F9    JSR    function_84f9
 91E4: 0C 04       INC    dp_sub_cpu1_04		; CPU1 sub-state
@@ -3114,7 +3116,7 @@ function_9642:
 96C3: BD B4 B8    JSR    clear_hud_rect_b4b8
 96C6: BD 97 D4    JSR    function_97d4
 96C9: 86 0B       LDA    #$0B
-96CB: 97 E8       STA    $E8
+96CB: 97 E8       STA    music_request_e8
 96CD: CE 35 95    LDU    #$3595		; layer 3 tilemap / HUD
 96D0: B6 54 2A    LDA    $542A
 96D3: 5F          CLRB
@@ -3924,7 +3926,7 @@ function_9d0d:
 9D61: BD 92 F7    JSR    function_92f7
 9D64: BD D3 85    JSR    function_d385
 9D67: 7E D2 CD    JMP    function_d2cd
-9D6A: 0F E8       CLR    $E8
+9D6A: 0F E8       CLR    music_request_e8
 9D6C: CE AF D6    LDU    #$AFD6		; ROM
 9D6F: 10 8E 32 10 LDY    #$3210		; layer 3 tilemap / HUD
 9D73: C6 FC       LDB    #$FC
@@ -4448,7 +4450,7 @@ A17B: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=4]
 ; 1 jump-table ref
 function_a185:
 A185: 0C 06       INC    dp_sem_cpu1_06
-A187: 0F E8       CLR    $E8
+A187: 0F E8       CLR    music_request_e8
 A189: BD 84 E0    JSR    function_84e0
 A18C: 7E 84 F9    JMP    function_84f9
 
@@ -4661,7 +4663,7 @@ A314: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=10]
 ; 1 jump-table ref
 function_a32a:
 A32A: 0C 06       INC    dp_sem_cpu1_06
-A32C: 0F E8       CLR    $E8
+A32C: 0F E8       CLR    music_request_e8
 A32E: BD 84 E0    JSR    function_84e0
 A331: 7E 84 F9    JMP    function_84f9
 
@@ -4853,7 +4855,7 @@ A49C: 4C          INCA
 A49D: 84 1F       ANDA   #$1F
 A49F: 97 E0       STA    $E0
 A4A1: 86 05       LDA    #$05
-A4A3: 97 E8       STA    $E8
+A4A3: 97 E8       STA    music_request_e8
 A4A5: 10 8E 53 80 LDY    #$5380
 A4A9: 96 E2       LDA    $E2
 A4AB: C6 4C       LDB    #$4C
@@ -4887,7 +4889,7 @@ A4D9: E7 A6       STB    A,Y
 A4DB: 4C          INCA
 A4DC: 84 1F       ANDA   #$1F
 A4DE: 97 E0       STA    $E0
-A4E0: 0F E8       CLR    $E8
+A4E0: 0F E8       CLR    music_request_e8
 A4E2: 10 8E 53 80 LDY    #$5380
 A4E6: 96 E2       LDA    $E2
 A4E8: C6 2B       LDB    #$2B
@@ -5180,7 +5182,7 @@ A6EC: 48          ASLA
 A6ED: 9B C2       ADDA   $C2
 A6EF: 9B C4       ADDA   $C4
 A6F1: A6 C6       LDA    A,U
-A6F3: 97 E8       STA    $E8
+A6F3: 97 E8       STA    music_request_e8
 A6F5: CE AF D6    LDU    #$AFD6
 A6F8: 10 8E 32 10 LDY    #$3210		; layer 3 tilemap / HUD
 A6FC: C6 FC       LDB    #$FC
@@ -5409,7 +5411,7 @@ A8D0: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=10]
 ; 1 jump-table ref
 function_a8e6:
 A8E6: 86 0C       LDA    #$0C
-A8E8: 97 E8       STA    $E8
+A8E8: 97 E8       STA    music_request_e8
 A8EA: 0D 01       TST    player_number_01
 A8EC: 26 35       BNE    $A923
 A8EE: CE B0 BE    LDU    #$B0BE		; ROM
@@ -5603,7 +5605,7 @@ AA79: 86 FF       LDA    #$FF
 AA7B: FD 3F 96    STD    $3F96		; layer 3 tilemap / HUD
 AA7E: B6 41 8A    LDA    nb_credits_418a
 AA81: FD 3F 98    STD    $3F98
-AA84: 0F E8       CLR    $E8
+AA84: 0F E8       CLR    music_request_e8
 AA86: BD 84 23    JSR    function_8423
 AA89: 0C 06       INC    dp_sem_cpu1_06
 AA8B: 0C 07       INC    dp_sem_cpu2_07
@@ -5862,7 +5864,7 @@ AC89: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=12]
 ; 1 jump-table ref
 function_aca3:
 ACA3: 0C 06       INC    dp_sem_cpu1_06
-ACA5: 0F E8       CLR    $E8
+ACA5: 0F E8       CLR    music_request_e8
 ACA7: BD 84 E0    JSR    function_84e0
 ACAA: 7E 84 F9    JMP    function_84f9
 
@@ -5892,7 +5894,7 @@ ACCE: 7E 84 8C    JMP    function_848c
 ; 1 jump-table ref
 function_acd1:
 ACD1: 86 09       LDA    #$09
-ACD3: 97 E8       STA    $E8
+ACD3: 97 E8       STA    music_request_e8
 ACD5: CE B1 2C    LDU    #$B12C		; ROM
 ACD8: 10 8E 35 1C LDY    #$351C		; layer 3 tilemap / HUD
 ACDC: C6 FC       LDB    #$FC
@@ -6095,7 +6097,7 @@ AE78: BD 96 30    JSR    function_9630
 AE7B: B6 54 31    LDA    $5431		; work RAM (shared with CPU2)
 AE7E: 27 01       BEQ    $AE81
 AE80: 39          RTS
-AE81: 0F E8       CLR    $E8
+AE81: 0F E8       CLR    music_request_e8
 AE83: 0C 06       INC    dp_sem_cpu1_06
 AE85: 0C 07       INC    dp_sem_cpu2_07
 AE87: 39          RTS
@@ -6274,16 +6276,16 @@ AFC7: 20 DE       BRA    $AFA7
 
 ; called 1x  from $8576
 ;--------------------------------------------------------------------------
-; If DP $E8 changed since DP $E9, publish it as the music request in
+; If DP music_request_e8 changed since DP prev_music_request_e9, publish it as the music request in
 ; snd_music_req_4380 and remember it.
 ;--------------------------------------------------------------------------
 snd_send_music_req_afc9:
-AFC9: 96 E8       LDA    $E8
-AFCB: 91 E9       CMPA   $E9
+AFC9: 96 E8       LDA    music_request_e8
+AFCB: 91 E9       CMPA   prev_music_request_e9
 AFCD: 26 01       BNE    $AFD0
 AFCF: 39          RTS
 AFD0: B7 43 80    STA    snd_music_req_4380		; -> MCU: music/BGM request code
-AFD3: 97 E9       STA    $E9
+AFD3: 97 E9       STA    prev_music_request_e9
 AFD5: 39          RTS
 
 
