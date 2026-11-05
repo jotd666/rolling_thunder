@@ -2462,16 +2462,37 @@ function_8dc8:
 	moveq	#0,d6                            	| [...]
 	move.b	d1,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
+	* sometimes when character is killed, A=0xff in 8DCD (also on real game)
+	* then in 8DD2 U is loaded as a screen pointer. Is that a bug? doesn't matter
+	* as it seems that the code does nothing important
+	cmp.w	#0x7FFF,d4
+	jcc		0f
+	GET_REG_ADDRESS_FROM_REG   d6,d4
+	jra		1f
+0:
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$8ddb: ldu    b,u] [rom_address] [freq=low, count=02%]
+1:
 	MOVE_W_TO_REG	a0,d4                         	| [...]
+	cmp.w	#0x7FFF,d4
+	jcc		0f
+	GET_REG_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
+	jra		1f
+0:
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
+1:
 	addq.w	#2,d4                           	| [...]
 	LOAD_D                                 	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
 	GET_REG_ADDRESS	0xa,d2                 	| [$8ddf: sta    $a,x] [freq=low, count=02%]
-	move.b	d0,(a0)                         	| [...]
-	GET_REG_ADDRESS	0xb,d2                 	| [$8de1: stb    $b,x] [freq=low, count=02%]
+	move.b	d0,(a0)+                         	| [...]
+								| [$8de1: stb    $b,x] [freq=low, count=02%]
 	move.b	d1,(a0)                         	| [...]
+	cmp.w	#0x7FFF,d4
+	jcc		0f
+	GET_REG_ADDRESS	0,d4                  
+	jra		1f
+0:
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8de3: ldd    ,u] [rom_address] [freq=low, count=02%]
+1:
 	LOAD_D                                 	| [$8de3: ldd    ,u] [rom_address] [freq=low, count=02%]
 	GET_REG_ADDRESS	-0x2,d2                	| [$8de5: std    -$2,x] [freq=low, count=02%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -3474,26 +3495,6 @@ l_921a:
 	GET_REG_ADDRESS	0x7,d2                 	| [$9220: stb    $7,x]
 	move.b	d1,(a0)                         	| [...]
 	addq.w	#4,sp |  [$9222: puls   u,pc] [address_pop_rts] we don't need U
-	rts                                    	| [...]
-
-* seems not called!
-	move.w	#0x1360,d3                      	| [$9224: ldy    #$1360]
-	OP_R_ON_DP_ADDRESS	move,0xe4,d0         | [$9228: lda    $e4]
-	move.b	#0x0b,d1                        	| [$922a: ldb    #$0b]
-	moveq	#0,d6                            	| [...]
-	move.b	d0,d6                           	| [...] as byte
-	DO_EXTB	d6                             	| [...] with sign extension
-	GET_REG_ADDRESS_FROM_REG	d6,d3         	| [$922c: stb    a,y]
-	move.b	d1,(a0)                         	| [...]
-	addq.b	#1,d0                           	| [$922e: inca]
-	and.b	#0x1f,d0                         	| [$922f: anda   #$1f]
-	OP_W_ON_DP_ADDRESS	move,0xe4,d0         | [$9231: sta    $e4]
-	move.b	#0xff,d1                        	| [$9233: ldb    #$ff]
-	GET_REG_ADDRESS	0,d2                   	| [$9235: stb    ,x]
-	move.b	d1,(a0)                         	| [...]
-	OP_W_ON_DP_ADDRESS	subq,0x31,#1         | [$9237: dec    $31]
-	OP_W_ON_DP_ADDRESS	subq,0x33,#1         | [$9239: dec    $33]
-	movem.l	(sp)+,d4                       	| [$923b: puls   u,pc]
 	rts                                    	| [...]
 
 l_923d:
@@ -8829,12 +8830,10 @@ l_abda:
 	subq.b	#1,d1                           	| [$abdc: decb]
 	jne	l_abda                             	| [$abdd: bne    $abda]
 	OP_1_ON_DP_ADDRESS	clr,0xce             | [$abdf: clr    $ce]
-	move.b	#0x00,d0                        	| [$abe1: ldd    #$0000]
 	move.w	#0x0000,d1                      	| [$abe1: ldd    #$0000]
-	MAKE_D                                 	| [...]
 	GET_DP_ADDRESS	0xcc                    	| [$abe4: std    $cc]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	move.b	#0xff,d0                        	| [$abe6: lda    #$ff]
+	st.b	d0                        	| [$abe6: lda    #$ff]
 	GET_REG_ADDRESS	0,d2                   	| [$abe8: sta    ,x]
 	move.b	d0,(a0)                         	| [...]
 	OP_W_ON_DP_ADDRESS	subq,0x31,#1         | [$abea: dec    $31]

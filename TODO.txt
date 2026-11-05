@@ -1,5 +1,7 @@
 for first release
-- some sprite garbling, only for main character
+- level 3 check if music is chaining
+- some sprite garbling, only for main character, sometimes mirror triggers
+  wrongly
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
 
@@ -11,20 +13,7 @@ $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
 => note down the value of loop counter
 
-when character is killed, it sometimes reaches
-8DDB: when killed (shot, not punched), tries to read from RAM on cpu2. debug this
-  X is in input of the routine, and seems to select a wrong table?
-  anyway no big deal, seems to resume after 3 times
- function_8dc8:
-8DC8: 6F 09       CLR    $9,X   X = $410
-8DCA: CE 8D FB    LDU    #$8DFB		; ROM
-8DCD: A6 84       LDA    ,X  <= $FF read, this isn't good
-8DCF: 84 7C       ANDA   #$7C
-8DD1: 44          LSRA
-8DD2: EE C6       LDU    A,U		; [rom_address] => RAM address!! BOOM
-same problem when shooting hoodie into the fire
 
-=> afterwards, no big deal
 
 
 ------------

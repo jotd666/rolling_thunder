@@ -2321,7 +2321,7 @@ handle_sounds_in_irq:
 	jmi		playing_out				| still playing
 	st.b	(snd_music_req_4380,a6)		| set as playing
 	add.b	#0xF0,d0		| match our sound indexes
-	clr.b	last_e8_trigger
+	clr.b	_mt_E8Trigger
 	jbra	osd_sound_start
 playing_out:
 
