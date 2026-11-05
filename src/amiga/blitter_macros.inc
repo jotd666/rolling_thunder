@@ -178,6 +178,25 @@ sw\@:
 	lea		blitter_list_2,a1
 	REALLY_WAIT_BLIT
 	
+	.ifndef	RELEASE
+	* REALLY_WAIT_BLIT has just guaranteed the chain is drained, so every
+	* mirror queued during the previous frame must have been executed by now.
+	* A difference means those flips went missing while their flags were
+	* already written - the only way a plane can end up permanently out of
+	* step with its orientation word.  a0/a1 are already loaded above, so
+	* only d0 is borrowed.
+	move.w	d0,-(a7)
+	move.w	nb_mirrors_queued,d0
+	sub.w	nb_mirrors_executed,d0
+	jeq		sm\@
+	add.w	d0,nb_lost_mirrors
+	BREAKPOINT	"mirror flips lost (D0 = lost this frame)"
+sm\@:
+	move.w	(a7)+,d0
+	clr.w	nb_mirrors_queued
+	clr.w	nb_mirrors_executed
+	.endif
+	
 	* blitter chain has completed: we can switch lists
 	eor.b	#1,blitter_list_toggle
 	jne		s0\@
@@ -245,6 +264,22 @@ size_command_issued:
 blitter_list_toggle:	
 	.byte	0
 	.align	2
+	.ifndef	RELEASE
+* Mirror accounting.  A plane's orientation flag is written on the CPU when
+* the mirror is QUEUED, but the flip only happens when the list is walked.
+* If the list is ever lost - skipped, overflowed, terminated early, or simply
+* not the one that gets kicked - the flip is discarded while the flag has
+* already been updated, and that plane's orientation word lies about its
+* pixels for the rest of the level.  These two counters make that visible.
+nb_mirrors_queued:
+	.word	0
+nb_mirrors_executed:
+	.word	0
+* Sticky total of flips lost since reset.  Never cleared, so it can be read
+* off the overlay during play instead of having to catch the breakpoint.
+nb_lost_mirrors:
+	.word	0
+	.endif
 	.endm
 	
 	.macro	COMMIT_BLITLIST
@@ -288,6 +323,10 @@ pos\@:
 	jsr		([a0])
 	.endif
 	movem.l	(a7)+,d0-d2/a0-a2
+	.ifndef	RELEASE
+	* memory operand: no register to save, we are past the movem restore
+	addq.w	#1,nb_mirrors_executed
+	.endif
 	add.w	#10,a0		| advance to next command
 	jra		b0\@		| not size: continue parsing list
 nv0\@:
@@ -375,6 +414,11 @@ c0\@:
 	
 	.if		OPT_VBLIT_MIRROR_MODE==1
 	.macro	WRITE_BLITTER_VIRTUAL_MIRROR	height,mirror_function,bitplane
+	.ifndef	RELEASE
+	* counted here rather than in mirror_sprite_planes_32x32 so the counter
+	* cannot drift from the number of commands actually written
+	addq.w	#1,nb_mirrors_queued
+	.endif
 	move.l	a5,-(a7)
 	LOAD_FILLED_LIST
 	move.w	#deniseid,(a5)+		| fake custom reg,(a5)+

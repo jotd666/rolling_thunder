@@ -6,7 +6,7 @@
 OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
-OPT_SKIP_UNCHANGED_ERASE = 0	| no background restore for a BOB that redraws over itself
+OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
 OPT_MEASURE_ISOLATED = 1		| overlap sweep: walks drawn BOBs only, so n is ~10-20
 * Raster colour bars: whichever colour fills the screen owns the frame.
 *   red    level 1 entry, before call_irqs and the sound handler
@@ -2234,6 +2234,7 @@ level1_interrupt:
 	WRITE_TEXT	gfx_time_text,2
 	WRITE_TEXT	nb_mirror_ops_text,2
 	WRITE_TEXT	max_nb_mirror_ops_text,2
+	WRITE_TEXT	nb_lost_mirrors_text,2
 	WRITE_TEXT	nb_bobs_text,2
 	WRITE_TEXT	nb_l1_bobs_text,2
 	WRITE_TEXT	nb_iso_bobs_text,2
@@ -2255,6 +2256,11 @@ level1_interrupt:
 	WRITE_HEX	gfx_logic_elapsed,3
 	WRITE_HEX	nb_mirror_operations,3
 	WRITE_HEX	max_nb_mirror_operations,3
+	.if		OPT_BLIT_CHAIN_MODE==1
+	* non-zero means at least one queued flip was never performed, so some
+	* plane's orientation flag no longer matches its pixels
+	WRITE_HEX	nb_lost_mirrors,3
+	.endif
 	WRITE_HEX	nb_drawn_bobs,3
 	WRITE_HEX	nb_layer1_bobs,3
 	WRITE_HEX	nb_isolated_bobs,3
@@ -3776,6 +3782,7 @@ compose_32xsy_dynamic_bob:
 	movem.l	d0-d3,-(a7)
 	lea		dynamic_bob,a1
 	moveq	#NB_PLAYFIELD_PLANES,d3
+	moveq	#0,d1
 	move.w	translation_y,d1
 	add.w	d1,d1
 	add.w	d1,d1		| times 4
@@ -3783,7 +3790,7 @@ compose_32xsy_dynamic_bob:
 	move.l	(a0)+,d0
 	jeq		1f
 	* non-null: add an offset
-	add.w	d1,d0
+	add.l	d1,d0
 1:
 	* and store
 	move.l	d0,(a1)+
@@ -3799,6 +3806,7 @@ compose_16xw_dynamic_bob:
 	lea		dynamic_bob,a1
 	moveq	#NB_PLAYFIELD_PLANES,d3
 	* pre compute offset
+	moveq	#0,d1
 	move.w	translation_x,d1
 	lsr.w	#3,d1		| 0 or 2
 	* Y offset
@@ -3811,7 +3819,7 @@ compose_16xw_dynamic_bob:
 	move.l	(a0)+,d0
 	jeq		1f
 	* non-null: add an offset
-	add.w	d1,d0
+	add.l	d1,d0
 1:
 	* and store
 	move.l	d0,(a1)+
@@ -7239,6 +7247,9 @@ gfx_time_text:
 	.byte	0xff
 max_nb_mirror_ops_text:
 	.ascii	"MAX FLIP "
+	.byte	0xff
+nb_lost_mirrors_text:
+	.ascii	"LOST FLIP "
 	.byte	0xff
 
 nb_mirror_ops_text:
