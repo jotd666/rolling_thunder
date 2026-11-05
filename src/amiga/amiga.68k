@@ -3576,7 +3576,7 @@ update_one_bob:
 	move.w	d2,d6				| save in d6 for later
 	moveq	#0,d3
 	move.b	(TARGET_SPRITE_COLOR,a0),d3
-	bclr.b	#0,d3
+	lsr.b	#1,d3
 
 	COLOR0_FLASH	0xF00
 	*BREAKPOINT	"unregistered sprite clut (D0=sizex, D1=sizey, D2=code, D3=clut)"

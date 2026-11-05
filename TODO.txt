@@ -1,5 +1,4 @@
 for first release
-- level 3 red flashes but nothing logged
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
 

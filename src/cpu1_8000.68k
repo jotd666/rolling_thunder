@@ -9768,9 +9768,10 @@ l_ac12:
 	GET_ADDRESS	0xb057                     	| [$ac1e: ldb    $b057] ROM
 	move.b	(a0),d1                         	| [...]
 l_ac21:
-	GET_REG_ADDRESS	0,d3                   	| [$ac21: sta    ,y++]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$ac21: sta    ,y++]
 	addq.w	#2,d3                           	| [...]
 	move.b	d0,(a0)                         	| [...]
+	VIDEO_BYTE_DIRTY
 	subq.b	#1,d1                           	| [$ac23: decb]
 	jne	l_ac21                             	| [$ac24: bne    $ac21]
 	move.w	#0x389a,d3                      	| [$ac26: ldy    #$389a]
@@ -9778,9 +9779,10 @@ l_ac21:
 	GET_ADDRESS	0xb060                     	| [$ac2c: ldb    $b060]
 	move.b	(a0),d1                         	| [...]
 l_ac2f:
-	GET_REG_ADDRESS	0,d3                   	| [$ac2f: sta    ,y++]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$ac2f: sta    ,y++]
 	addq.w	#2,d3                           	| [...]
 	move.b	d0,(a0)                         	| [...]
+	VIDEO_BYTE_DIRTY
 	subq.b	#1,d1                           	| [$ac31: decb]
 	jne	l_ac2f                             	| [$ac32: bne    $ac2f]
 	move.w	#0x39a0,d3                      	| [$ac34: ldy    #$39a0]
@@ -9788,9 +9790,10 @@ l_ac2f:
 	GET_ADDRESS	0xb071                     	| [$ac3a: ldb    $b071]
 	move.b	(a0),d1                         	| [...]
 l_ac3d:
-	GET_REG_ADDRESS	0,d3                   	| [$ac3d: sta    ,y++]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$ac3d: sta    ,y++]
 	addq.w	#2,d3                           	| [...]
 	move.b	d0,(a0)                         	| [...]
+	VIDEO_BYTE_DIRTY
 	subq.b	#1,d1                           	| [$ac3f: decb]
 	jne	l_ac3d                             	| [$ac40: bne    $ac3d]
 l_ac42:
