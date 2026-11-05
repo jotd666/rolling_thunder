@@ -191,14 +191,17 @@ s1\@:
 	.endm
 	
 	.macro	PROCESS_BLITS
-	tst.b	size_command_issued
-	jeq		s\@		| empty list or no bltsize command in the current command list: skip
+	* The list can hold virtual commands with no bltsize behind them - a frame
+	* where every BOB was rejected on Y still queues its mirrors, and the flags
+	* were already updated when they were queued.  Walk it regardless: with no
+	* bltsize, PROCESS_ONE_BLIT runs the mirrors and falls out on the -2.
+	* so we still need to do something even if no size command is issued
+	
 	* signal that the blitter chain is now running
 	st.b	blitter_chain_running
 	* start first blit from outside the blitter interrupt to
 	* start the chain reaction reading from drawn_blitter_list_ptr
 	PROCESS_ONE_BLIT
-s\@:
 	* clear size command issued for next blitlist creation
 	clr.b	size_command_issued
 	.endm

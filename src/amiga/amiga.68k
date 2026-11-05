@@ -3443,11 +3443,15 @@ compute_sprite_xy:
 	and.b	#1,d0
 	lsl.w	#8,d0
 	move.b	(TARGET_SPRITE_X,a0),d0
-	* bit 8 is the sign: MAME's sx = byte - 0x100*(bit) is a 9-bit sign extend
-	move.w	#0x100,d1
-	eor.w	d1,d0
-	sub.w	d1,d0	
 	add.w	sprite_xoffs,d0
+	and.w	#0x1FF,d0		| hardware X is 9 bits and wraps
+	* fold the top of the range to negative, so a BOB straddling the left edge
+	* has a small negative X instead of a value near 512.  The threshold has to
+	* sit above the rightmost on-screen position or the right edge folds too.
+	cmp.w	#288+64,d0
+	jcs		1f
+	sub.w	#0x200,d0
+1:
 	* sy = -source[15] - sizey
 	moveq	#0,d1
 	move.b	(TARGET_SPRITE_Y,a0),d1
@@ -3650,28 +3654,6 @@ size_and_translation_done:
 
 *		int flipx = (attr1 & 0x20) >> 5;
 
-* now we have to check if mirror must be performed, either by doing this in-place
-* or by selecting already mirrored data
-* here we never pre-mirror stuff, not enough chip!
-*	tst.w		((NB_PLAYFIELD_PLANES+1)*4,a0)		| load mirrored data pointers
-*	jmi		101f		| invalid pointers: we must do in-place
-*	btst	#MIRROR_BIT,d3
-*	jeq		102f
-*	* to mirror, just change pointer list
-*	lea	((NB_PLAYFIELD_PLANES+1)*4,a0),a0
-*	* and skip mirroring bit
-*	jra		103f
-101:
-	btst	#MIRROR_BIT,d3
-102:
-	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
-	* the plan pass must NOT queue a mirror: every queued command runs before
-	* any draw, so two BOBs sharing a sheet cell in opposite orientations
-	* would both end up reading whichever flip landed last.
-	tst.b	bob_plan_only
-	jne		103f
-	jbsr	mirror_sprite_planes_32x32
-103:	
 	* BOBs must follow screen scroll
 	add.w	bobs_game_scroll_y,d1
 	add.w 	bobs_host_scroll_x,d0
@@ -3737,6 +3719,29 @@ size_and_translation_done:
 	jeq		10f
 	neg.w	d4
 10:
+* now we have to check if mirror must be performed, either by doing this in-place
+* or by selecting already mirrored data
+* here we never pre-mirror stuff, not enough chip!
+*	tst.w		((NB_PLAYFIELD_PLANES+1)*4,a0)		| load mirrored data pointers
+*	jmi		101f		| invalid pointers: we must do in-place
+*	btst	#MIRROR_BIT,d3
+*	jeq		102f
+*	* to mirror, just change pointer list
+*	lea	((NB_PLAYFIELD_PLANES+1)*4,a0),a0
+*	* and skip mirroring bit
+*	jra		103f
+101:
+	btst	#MIRROR_BIT,d3
+102:
+	sne		d3		| convert attribute to boolean 0/ff for mirror_sprite_planes
+	* the plan pass must NOT queue a mirror: every queued command runs before
+	* any draw, so two BOBs sharing a sheet cell in opposite orientations
+	* would both end up reading whichever flip landed last.
+	tst.b	bob_plan_only
+	jne		103f
+	jbsr	mirror_sprite_planes_32x32
+103:	
+
 	moveq	#NB_PLAYFIELD_PLANES,d3
 	.ifndef	RELEASE
 	addq.w	#1,nb_drawn_bobs
@@ -3826,10 +3831,10 @@ compose_16xw_dynamic_bob:
 
 * < A0: plane list <= fixed on internal variable
 * < D3: required orientation
-* trashes: only unused registers :) A3
+* trashes: only unused registers
 
 mirror_sprite_planes_32x32:
-	movem.l	d0-d2/d4-d6/a0,-(a7)
+	movem.l	d0-d2/d4-d6/a0/a3,-(a7)
 	move.l	raw_32x32_sprite_data,a0
 	move.w	#0x20,d4		| 32 pixels high
 	
@@ -3865,7 +3870,7 @@ mirror_sprite_planes_32x32:
 	* next bitplane
 1:
 	dbf		d6,0b
-	movem.l	(a7)+,d0-d2/d4-d6/a0
+	movem.l	(a7)+,d0-d2/d4-d6/a0/a3
 	rts
 	
 
