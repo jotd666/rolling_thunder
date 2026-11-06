@@ -1,6 +1,13 @@
 for first release
+- mirror flips lost happens!
+- blinking sprites
+
+First, read d0 at the breakpoint before fixing anything — the sign tells you which problem you have. The check is queued - executed, and the jeq only skips on exact equality, so it fires in both directions. Negative means flips ran more times than they were queued, which is a completely different bug from losing them.
+
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
+- still issues when player killed, proper address is not always selected
+- fire check edge (maybe previous compare else multiple shots)
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying

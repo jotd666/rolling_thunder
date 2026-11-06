@@ -15,7 +15,7 @@ tunes_dir = sound_dir_master / "tunes"
 sound_settings_dict = {
 ##0x20 : {"channel":3,"priority":50,"loops":True},   # bomb
 ##6: {"channel":2,"priority":50},  # power
-##2: {"channel":3,"priority":100}  # explosion
+0xB: {"channel":2,"priority":100}  # dead sound
 }
 
 def convert():
@@ -72,7 +72,7 @@ def convert():
                         sfx_sample_rate = extra_info.get("sample_rate",lq_sample_rate)
 
 
-                        sound_dict[entry] = {"directory":sd,"channel":extra_info.get("channel",snd_chan+2),  # default: not auto!
+                        sound_dict[entry] = {"directory":sd,"channel":extra_info.get("channel",3),  # default: not auto!
                         "priority":extra_info.get("priority",40),"index":index,"sample_rate":sfx_sample_rate,
                         "loops":extra_info.get("loops",False)}
                         snd_chan  = (snd_chan + 1) % 2

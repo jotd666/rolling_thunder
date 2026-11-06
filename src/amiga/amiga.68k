@@ -7,7 +7,6 @@ OPT_BLIT_CHAIN_MODE = 1		| enable blitter chaining
 OPT_VBLIT_MIRROR_MODE = 1		| we need to mirror sprites on the fly, just before blitting them if needed
 OPT_VBLIT_SCROLL_MODE = 0		| not needed: blits run in the frame they are recorded
 OPT_SKIP_UNCHANGED_ERASE = 1	| no background restore for a BOB that redraws over itself
-OPT_MEASURE_ISOLATED = 1		| overlap sweep: walks drawn BOBs only, so n is ~10-20
 * Raster colour bars: whichever colour fills the screen owns the frame.
 *   red    level 1 entry, before call_irqs and the sound handler
 *   yellow update_other_layers (the tile renderer)
@@ -15,7 +14,7 @@ OPT_MEASURE_ISOLATED = 1		| overlap sweep: walks drawn BOBs only, so n is ~10-20
 *   blue   after it: commit and kick the chain
 *   black  level 1 has returned - this band is the MAIN LOOP, the one
 *          thing no timer has ever covered
-OPT_ERASE_ELIM = 0		| marked BOBs repaint their own background
+OPT_ERASE_ELIM = 1		| marked BOBs repaint their own background
 OPT_COLOR_BARS = 0		| colour bars off
 
 
@@ -560,18 +559,10 @@ _user:
 	move.l	a0,cop1lc(a5)
 
 	* init blitter lists (in bss)
-	move.l  #0xdeaddead,d0
 	lea		blitter_list_1,a0
 	move.w	#-2,(a0)
 	lea		blitter_list_2,a0
 	move.w	#-2,(a0)
-	move.l	d0,(-12,a0)
-	move.l	d0,(-8,a0)
-	move.l	d0,(-4,a0)
-	lea		blitter_chain_running,a0
-	move.l	d0,(-12,a0)
-	move.l	d0,(-8,a0)
-	move.l	d0,(-4,a0)
 	
 	jbsr	apply_settings
 
@@ -7010,7 +7001,11 @@ osd_sound_start:
 
 	
 	and.w	#0xFF,d0
-	
+	cmp.w	#MAIN_BGM_SND,d0
+	jne		0f
+	* else when player dies, music doesn't continue
+	clr.b	last_e8_trigger
+0:
 
 	moveq	#0,d2
 	lsl.w	#3,d0

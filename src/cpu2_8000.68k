@@ -2475,7 +2475,7 @@ function_8dc8:
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	cmp.w	#0x7FFF,d4
 	jcc		0f
-	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
+	GET_REG_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
 	jra		1f
 0:
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
@@ -2488,7 +2488,7 @@ function_8dc8:
 	move.b	d1,(a0)                         	| [...]
 	cmp.w	#0x7FFF,d4
 	jcc		0f
-	GET_REG_VIDEO_ADDRESS	0,d4                  
+	GET_REG_ADDRESS	0,d4                  
 	jra		1f
 0:
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8de3: ldd    ,u] [rom_address] [freq=low, count=02%]

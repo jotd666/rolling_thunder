@@ -202,10 +202,16 @@ sm\@:
 	jne		s0\@
 	move.l	a0,drawn_blitter_list_ptr
 	move.l	a1,filled_blitter_list_ptr
+	.ifndef	RELEASE
+	move.l	#blitter_list_2_end,filled_blitter_list_end
+	.endif	
 	jra		s1\@
 s0\@:
 	move.l	a1,drawn_blitter_list_ptr
 	move.l	a0,filled_blitter_list_ptr
+	.ifndef	RELEASE
+	move.l	#blitter_list_1_end,filled_blitter_list_end
+	.endif	
 s1\@:
 	.endm
 	
@@ -245,18 +251,19 @@ drawn_blitter_list_ptr:
 	.long	0
 filled_blitter_list_ptr:
 	.long	0
+	.ifndef 	RELEASE
+filled_blitter_list_end:
+	.long	0
+	.endif
 blitter_list_1:
 	.word	0
 	.skip	\size
-	.long	0
-	.long	0
-	.long	0
+blitter_list_1_end:
 blitter_list_2:
 	.word	0
 	.skip	\size
-	.long	0
-	.long	0
-	.long	0
+blitter_list_2_end:
+	.skip	16		| small safety
 blitter_chain_running:
 	.byte	0
 size_command_issued:
@@ -401,10 +408,13 @@ b3\@:
 	.macro	LOAD_FILLED_LIST
 	move.l	filled_blitter_list_ptr,a5
 	.ifndef	RELEASE
-	cmp.w	#0xdead,(a5)
-	jne		c0\@
+	* compare against the end, not the guard pattern: one routine can write a
+	* couple of hundred bytes between checks and clear the whole guard band
+
+	cmp.l	filled_blitter_list_end,a5
+	jcs		ble\@
 	BREAKPOINT	"Blitter list overflow"
-c0\@:
+ble\@:
 	.endif
 	.endm
 	
@@ -457,8 +467,11 @@ c0\@:
 	.macro	BLIT_LIST_END
 	move.l	a5,filled_blitter_list_ptr
 	.ifndef	RELEASE
-	cmp.w	#0xdead,(a5)
-	jne		ble\@
+	* compare against the end, not the guard pattern: one routine can write a
+	* couple of hundred bytes between checks and clear the whole guard band
+
+	cmp.l	filled_blitter_list_end,a5
+	jcs		ble\@
 	BREAKPOINT	"Blitter list overflow"
 ble\@:
 	.endif
