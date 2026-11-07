@@ -104,16 +104,11 @@ BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
 
 BG_TILE_FILE_MAX_SIZE = 1550000
-SPRITE_FILE_BITMAP_MAX_SIZE = 1020000
+SPRITE_FILE_BITMAP_MAX_SIZE = 0x102000   | in chipmem!
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
-	.if		OPT_CD32_VERSION==0
-BIGGEST_MUSIC_SIZE = 298000
+BIGGEST_MUSIC_SIZE = 298000      | in chipmem!
 OPT_SPRITE_MIRRORING = 0
-	.else
-	* we can't afford the music (unless CD) or mirroring
-BIGGEST_MUSIC_SIZE = 96000
-OPT_SPRITE_MIRRORING = 0
-	.endif
+
 	
 	.ifne		OPT_SPRITE_MIRRORING
 MIRROR_BUFFER_SIZE = 0x15000
@@ -1290,6 +1285,13 @@ load_context:
 	lea		sprite_bitmap_buffer,a1
 	move.l	#SPRITE_FILE_BITMAP_MAX_SIZE,d0
 	jbsr	load_file
+	
+	* now compute music module buffer. worst case isn't reached
+	* (big sprite file + big module to load) so we're good
+	lea		sprite_bitmap_buffer,a1
+	add.l	d0,a1			| room for music
+	move.l	a1,module_buffer
+	
 	move.l	a3,a0
 	* load header data
 	lea		sprite_table_header,a1
@@ -2061,6 +2063,24 @@ level1_interrupt:
 	eor.b	#1,flip_flop
 	jeq		23f
 0:
+	.if		OPT_BLIT_CHAIN_MODE==1
+	* Adaptive skip.  If the previous frame's chain has not finished, do not
+	* start this frame's graphics at all.  NEW_BLITLIST would spin inside
+	* REALLY_WAIT_BLIT, and the switch_screen_buffers that follows would then
+	* land partway down the display, so the copper picks up new bitplane
+	* pointers mid-screen.  One frame late, one frame on time, repeating -
+	* which is the flicker.  Leaving the current buffer up for another frame
+	* turns that tear into a dropped frame and lets the chain finish
+	* undisturbed.  call_irqs has already run above, so the game keeps its
+	* own pace and only the rendering is skipped.
+	tst.b	blitter_chain_running
+	jeq		24f
+	.ifndef	RELEASE
+	addq.w	#1,nb_adaptive_skips
+	.endif
+	jra		23f
+24:
+	.endif
 	* wait for blits to complete (via soft flag that last blitter command
 	* sets when reaching the end of the list) and reset list pointers
 	NEW_BLITLIST
@@ -2224,6 +2244,7 @@ level1_interrupt:
 	WRITE_TEXT	nb_iso_bobs_text,2
 	WRITE_TEXT	blit_lines_text,2
 	WRITE_TEXT	overruns_text,2
+	WRITE_TEXT	skips_text,2
 	WRITE_TEXT	tile_time_text,2
 	WRITE_TEXT	erase_time_text,2
 	WRITE_TEXT	bob_time_text,2
@@ -2250,6 +2271,9 @@ level1_interrupt:
 	WRITE_HEX	nb_isolated_bobs,3
 	WRITE_HEX	blit_busy_lines,3
 	WRITE_HEX	nb_chain_overruns,3
+	.if		OPT_BLIT_CHAIN_MODE==1
+	WRITE_HEX	nb_adaptive_skips,3
+	.endif
 	WRITE_HEX	tile_logic_elapsed,3
 	WRITE_HEX	erase_elapsed,3
 	WRITE_HEX	bob_elapsed,3
@@ -4568,7 +4592,7 @@ set_screen_params:
 	
 	
 platform_init:
-	bsr		store_system
+	jbsr		store_system
 	
 
 	lea		_custom,a5
@@ -7085,7 +7109,7 @@ osd_sound_start:
 	
 	
 	move.w	(2,a0,d0.w),d1	| pattern number in .mod file
-	lea		module_buffer,a0
+	move.l	module_buffer,a0
 	moveq	#0,d0
 	move.w	d1,d0
     sub.l   a1,a1		| samples are in the module
@@ -7123,7 +7147,7 @@ load_music_if_needed:
 	jbsr	osd_music_stop
 	
 	move.l	a0,current_music_name
-	lea		module_buffer,a1
+	move.l	module_buffer,a1
 	move.l	#BIGGEST_MUSIC_SIZE,d0
 	jbsr	load_file
 75:
@@ -7260,6 +7284,10 @@ blit_lines_text:
 
 overruns_text:
 	.ascii	"OVERRUNS "
+	.byte	0xff
+
+skips_text:
+	.ascii	"SKIPS "
 	.byte	0xff
 
 tile_time_text:
@@ -7683,16 +7711,19 @@ nb_layer1_bobs:
 	.word	0
 nb_isolated_bobs:
 	.word	0
-bob_use_restore:
-	.byte	0
-	.align	2
-restore_bias:
-	.long	0
+
 blit_start_vpos:
 	.word	0
 blit_busy_lines:
 	.word	0
 nb_chain_overruns:
+	.word	0
+* Frames whose rendering was skipped because the previous chain had not
+* finished.  With the adaptive skip in place nb_chain_overruns can no
+* longer climb - REALLY_WAIT_BLIT is now only reached with the chain
+* already drained - so this is the number to watch instead.  Steady at 0
+* means every frame fits; alternating means the scene costs ~2 frames.
+nb_adaptive_skips:
 	.word	0
 tile_logic_start_time:
 	.word	0
@@ -7729,11 +7760,15 @@ bob_draw_seq_ptr:
 	.long	0
 bob_plan_only:
 	.byte	0
+bob_use_restore:
+	.byte	0
 	.align	2
+restore_bias:
+	.long	0
 * this frame's rects, slot indexed, written by the plan pass
 bob_current_positions:
 	.fill	NB_TARGET_SPRITES*PREVIOUS_SPRITE_SIZE,1,-1
-	
+
 bg0_character_table:
 	.long	0
 bg1_character_table:
@@ -8167,6 +8202,8 @@ osd_debug_active:
 	.endif
 
 	.section	.bsspublic
+module_buffer:
+	.long	0
 save_state_requested:
 	.byte	0
 load_state_requested:
@@ -8407,17 +8444,11 @@ pal_wait:
 	
 		.section .bsschip
 		
-		.ifne		OPT_SPRITE_MIRRORING
-mirror_buffer:
-	.skip	MIRROR_BUFFER_SIZE
-mirror_buffer_end:
-	.endif
 	
-sprite_bitmap_buffer:
-	.skip	SPRITE_FILE_BITMAP_MAX_SIZE    | biggest contextual sprite file
-	
-module_buffer:
-	.skip	BIGGEST_MUSIC_SIZE		| biggest tune
+sprite_bitmap_buffer: 
+	* biggest contextual sprite file followed by biggest music size
+	* fortunately, when the sprite file is big (levels 3,4) the biggest music is small
+	.skip	SPRITE_FILE_BITMAP_MAX_SIZE+BIGGEST_MUSIC_SIZE-40000
 	
 hw_sprite_ram_buffer:
 	.skip	HW_SPRITE_BUFFER_SIZE*8	| 8 64-bit wide sprites + control words + align
