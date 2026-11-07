@@ -814,10 +814,10 @@ compute_flip_screen_81e8:
 	move.w	#0x81fb,d4                      	| [$81e8: ldu    #$81fb] ROM [freq=low, count=20%]
 	GET_ADDRESS	in_level_4257              	| [$81eb: lda    in_level_4257] input level [13] dip SWB:6 (cabinet) [freq=low, count=20%]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$81ee: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$81ee: asla] [freq=low, count=20%]
 	GET_ADDRESS	in_level_4259              	| [$81ef: ora    in_level_4259] input level [14] dip SWB:7 (cabinet) [freq=low, count=20%]
 	or.b	(a0),d0                           	| [...]
-	asl.b	#1,d0                            	| [$81f2: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$81f2: asla] [freq=low, count=20%]
 	GET_DP_ADDRESS	0x01                    	| [$81f3: ora    $01] [freq=low, count=20%]
 	or.b	(a0),d0                           	| [...]
 	moveq	#0,d6                            	| [...]
@@ -839,10 +839,10 @@ compute_active_player_side_8203:
 	move.w	#0x8215,d4                      	| [$8203: ldu    #$8215] ROM [freq=low, count=20%]
 	GET_ADDRESS	in_level_4257              	| [$8206: lda    in_level_4257] input level [13] dip SWB:6 (cabinet) [freq=low, count=20%]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$8209: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$8209: asla] [freq=low, count=20%]
 	GET_ADDRESS	in_level_4259              	| [$820a: ora    in_level_4259] input level [14] dip SWB:7 (cabinet) [freq=low, count=20%]
 	or.b	(a0),d0                           	| [...]
-	asl.b	#1,d0                            	| [$820d: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$820d: asla] [freq=low, count=20%]
 	GET_DP_ADDRESS	0x01                    	| [$820e: ora    $01] [freq=low, count=20%]
 	or.b	(a0),d0                           	| [...]
 	moveq	#0,d6                            	| [...]
@@ -1026,13 +1026,13 @@ l_82c1:
 l_82ca:
 	GET_REG_ADDRESS	0x7,d2                 	| [$82ca: lda    $7,x] [freq=low, count=20%]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$82cc: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$82cc: asla] [freq=low, count=20%]
 	GET_REG_ADDRESS	0x5,d2                 	| [$82cd: adda   $5,x] [freq=low, count=20%]
 	add.b	(a0),d0                          	| [...]
-	asl.b	#1,d0                            	| [$82cf: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$82cf: asla] [freq=low, count=20%]
 	GET_REG_ADDRESS	0xb,d2                 	| [$82d0: adda   $b,x] [freq=low, count=20%]
 	add.b	(a0),d0                          	| [...]
-	asl.b	#1,d0                            	| [$82d2: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$82d2: asla] [freq=low, count=20%]
 	GET_REG_ADDRESS	0x9,d2                 	| [$82d3: adda   $9,x] [freq=low, count=20%]
 	add.b	(a0),d0                          	| [...]
 	move.w	#0x834a,d4                      	| [$82d5: ldu    #$834a] ROM [freq=low, count=20%]
@@ -1041,7 +1041,7 @@ l_82ca:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$82d8: lda    a,u] [freq=low, count=20%]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$82da: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$82da: asla] [freq=low, count=20%]
 	GET_REG_ADDRESS	0,d2                   	| [$82db: tst    ,x] 4276 == 1? [freq=low, count=20%]
 	tst.b	(a0)                             	| [...]
 	jeq	l_82e4                             	| [$82dd: beq    $82e4] [freq=low, count=20%]
@@ -1054,7 +1054,7 @@ l_82e4:
 	jeq	l_82e9                             	| [$82e6: beq    $82e9] [freq=low, count=20%]
 	addq.b	#1,d0                           	| [$82e8: inca] [freq=low, count=02%]
 l_82e9:
-	asl.b	#1,d0                            	| [$82e9: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$82e9: asla] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,0xce,d1         | [$82ea: ldb    $ce] [freq=low, count=20%]
 	cmp.b	#0x01,d1                         	| [$82ec: cmpb   #$01] [freq=low, count=20%]
 	jeq	l_82fa                             	| [$82ee: beq    $82fa] [freq=low, count=20%]
@@ -1111,7 +1111,7 @@ state_init_8355:
 	OP_1_ON_DP_ADDRESS	clr,0x01             | [$8370: clr    $01]
 	move.w	#0x53c0,d2                      	| [$8372: ldx    #$53c0] work RAM (shared with CPU2)
 	move.b	#0x01,d0                        	| [$8375: lda    #$01]
-	asl.b	#1,d0                            	| [$8377: asla]
+	add.b	d0,d0                            	| [$8377: asla]
 	and.b	#0x0e,d0                         	| [$8378: anda   #$0e]
 	GET_REG_ADDRESS	0x4,d2                 	| [$837a: sta    $4,x]
 	move.b	d0,(a0)                         	| [...]
@@ -1123,7 +1123,7 @@ state_init_8355:
 	jbsr	osd_set_scroll_0 |  [$8382: sta    scroll0_xhi_9000]
 	move.w	#0x53d0,d2                      	| [$8385: ldx    #$53d0]
 	move.b	#0x03,d0                        	| [$8388: lda    #$03]
-	asl.b	#1,d0                            	| [$838a: asla]
+	add.b	d0,d0                            	| [$838a: asla]
 	and.b	#0x0e,d0                         	| [$838b: anda   #$0e]
 	GET_REG_ADDRESS	0x4,d2                 	| [$838d: sta    $4,x]
 	move.b	d0,(a0)                         	| [...]
@@ -1135,7 +1135,7 @@ state_init_8355:
 	jbsr	osd_set_scroll_1 |  [$8395: sta    scroll1_xhi_9004]
 	move.w	#0x53e0,d2                      	| [$8398: ldx    #$53e0]
 	move.b	#0x05,d0                        	| [$839b: lda    #$05]
-	asl.b	#1,d0                            	| [$839d: asla]
+	add.b	d0,d0                            	| [$839d: asla]
 	and.b	#0x0e,d0                         	| [$839e: anda   #$0e]
 	GET_REG_ADDRESS	0x4,d2                 	| [$83a0: sta    $4,x]
 	move.b	d0,(a0)                         	| [...]
@@ -1147,7 +1147,7 @@ state_init_8355:
 	jbsr	osd_set_scroll_2 |  [$83a8: sta    scroll2_xhi_9400]
 	move.w	#0x53f0,d2                      	| [$83ab: ldx    #$53f0]
 	move.b	#0x07,d0                        	| [$83ae: lda    #$07]
-	asl.b	#1,d0                            	| [$83b0: asla]
+	add.b	d0,d0                            	| [$83b0: asla]
 	and.b	#0x0e,d0                         	| [$83b1: anda   #$0e]
 	GET_REG_ADDRESS	0x4,d2                 	| [$83b3: sta    $4,x]
 	move.b	d0,(a0)                         	| [...]
@@ -1464,7 +1464,7 @@ dispatch_mcu_selftest_result_851f:
 	GET_ADDRESS	mcu_result_4185            	| [$851f: lda    mcu_result_4185] <- MCU: self-test result, 0 = pass
 	move.b	(a0),d0                         	| [...]
 * only RTS!!
-	asl.b	#1,d0                            	| [$8522: asla]
+	add.b	d0,d0                            	| [$8522: asla]
 	.ifndef	RELEASE
 	move.w	#0x8529,d4             	| [$8523: ldu    #0x8529]
 	.endif
@@ -1574,7 +1574,7 @@ cpu1_irq_8565:
 	.endif
 	lea	jump_table_85a2,a2             	| [$857f: ldu    #jump_table_85a2] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,dp_state_cpu1_02,d0| [$8582: lda    dp_state_cpu1_02] global state [freq=low, count=20%]
-	asl.b	#1,d0                            	| [$8584: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$8584: asla] [freq=low, count=20%]
 	JSR_A_INDEXED	a2,7  | [$8585: jsr    [a,u]] [indirect_jump] [nb_entries=7] [freq=low, count=20%]
 
 l_8587:
@@ -1618,7 +1618,7 @@ l_85bc:
 	move.w	#0x85d4,d4             	| [$85bc: ldu    #0x85d4]
 	.endif
 	lea	jump_table_85d4,a2             	| [$85bc: ldu    #jump_table_85d4]
-	asl.b	#1,d0                            	| [$85bf: asla]
+	add.b	d0,d0                            	| [$85bf: asla]
 	JMP_A_INDEXED	a2,2  | [$85c0: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 
@@ -1696,7 +1696,7 @@ l_85f2:
 function_8614:
 	GET_ADDRESS	0x542b                     	| [$8614: lda    $542b] work RAM (shared with CPU2)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$8617: asla]
+	add.b	d0,d0                            	| [$8617: asla]
 	.ifndef	RELEASE
 	move.w	#0x861d,d4             	| [$8618: ldu    #0x861d]
 	.endif
@@ -2498,7 +2498,7 @@ l_892c:
 function_8937:
 	GET_ADDRESS	in_level_423f              	| [$8937: lda    in_level_423f] input level [ 1] dip SWA:2 (coin A)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$893a: asla]
+	add.b	d0,d0                            	| [$893a: asla]
 	GET_ADDRESS	in_level_4241              	| [$893b: adda   in_level_4241] input level [ 2] dip SWA:3 (coin A)
 	add.b	(a0),d0                          	| [...]
 	and.b	#0x03,d0                         	| [$893e: anda   #$03]
@@ -2506,12 +2506,12 @@ function_8937:
 	move.w	#0x8867,d4             	| [$8940: ldu    #0x8867]
 	.endif
 	lea	jump_table_8867,a2             	| [$8940: ldu    #jump_table_8867]
-	asl.b	#1,d0                            	| [$8943: asla]
+	add.b	d0,d0                            	| [$8943: asla]
 	JSR_A_INDEXED	a2,8  | [$8944: jsr    [a,u]] [indirect_jump] [nb_entries=8]
 
 	GET_ADDRESS	in_level_4249              	| [$8946: lda    in_level_4249] input level [ 6] dip SWA:7 (coin B)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$8949: asla]
+	add.b	d0,d0                            	| [$8949: asla]
 	GET_ADDRESS	in_level_424b              	| [$894a: adda   in_level_424b] input level [ 7] dip SWA:8 (coin B)
 	add.b	(a0),d0                          	| [...]
 	and.b	#0x03,d0                         	| [$894d: anda   #$03]
@@ -2519,17 +2519,17 @@ function_8937:
 	move.w	#0x886f,d4             	| [$894f: ldu    #0x886f]
 	.endif
 	lea	jump_table_886f,a2             	| [$894f: ldu    #jump_table_886f]
-	asl.b	#1,d0                            	| [$8952: asla]
+	add.b	d0,d0                            	| [$8952: asla]
 	JSR_A_INDEXED	a2,5  | [$8953: jsr    [a,u]] [indirect_jump] [nb_entries=5]
 
 	move.b	#0xfc,d1                        	| [$8955: ldb    #$fc]
 	GET_ADDRESS	in_level_423f              	| [$8957: lda    in_level_423f]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$895a: asla]
+	add.b	d0,d0                            	| [$895a: asla]
 	GET_ADDRESS	in_level_4241              	| [$895b: adda   in_level_4241]
 	add.b	(a0),d0                          	| [...]
 	move.w	#0x8857,d4                      	| [$895e: ldu    #$8857] ROM
-	asl.b	#1,d0                            	| [$8961: asla]
+	add.b	d0,d0                            	| [$8961: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -2549,10 +2549,10 @@ function_8937:
 	VIDEO_WORD_DIRTY | [...]
 	GET_ADDRESS	in_level_4249              	| [$896e: lda    in_level_4249]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$8971: asla]
+	add.b	d0,d0                            	| [$8971: asla]
 	GET_ADDRESS	in_level_424b              	| [$8972: adda   in_level_424b]
 	add.b	(a0),d0                          	| [...]
-	asl.b	#1,d0                            	| [$8975: asla]
+	add.b	d0,d0                            	| [$8975: asla]
 	move.w	#0x885f,d4                      	| [$8976: ldu    #$885f]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -2803,7 +2803,7 @@ l_8a5e:
 l_8a68:
 	GET_ADDRESS	in_level_4257              	| [$8a68: lda    in_level_4257] input level [13] dip SWB:6 (cabinet)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$8a6b: asla]
+	add.b	d0,d0                            	| [$8a6b: asla]
 	GET_ADDRESS	in_level_4259              	| [$8a6c: adda   in_level_4259] input level [14] dip SWB:7 (cabinet)
 	add.b	(a0),d0                          	| [...]
 	and.b	#0x03,d0                         	| [$8a6f: anda   #$03]
@@ -3191,7 +3191,7 @@ l_8c27:
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8c45: lda    cpu2_ready_5ff3]
 	move.b	(a0),d0                         	| [...]
 	move.w	#0x8ced,d2                      	| [$8c48: ldx    #$8ced]
-	asl.b	#1,d0                            	| [$8c4b: asla]
+	add.b	d0,d0                            	| [$8c4b: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -3356,7 +3356,7 @@ l_8f1c:
 	move.w	#0x8f49,d4             	| [$8f1c: ldu    #0x8f49]
 	.endif
 	lea	jump_table_8f49,a2             	| [$8f1c: ldu    #jump_table_8f49]
-	asl.b	#1,d0                            	| [$8f1f: asla]
+	add.b	d0,d0                            	| [$8f1f: asla]
 	JSR_A_INDEXED	a2,3  | [$8f20: jsr    [a,u]] [indirect_jump] [nb_entries=3]
 
 	GET_ADDRESS	mcu_flag_41a5              	| [$8f22: tst    mcu_flag_41a5] <- MCU: coin inserted flag
@@ -3843,7 +3843,7 @@ l_910e:
 	move.w	#0x9124,d4             	| [$910e: ldu    #0x9124]
 	.endif
 	lea	jump_table_9124,a2             	| [$910e: ldu    #jump_table_9124]
-	asl.b	#1,d0                            	| [$9111: asla]
+	add.b	d0,d0                            	| [$9111: asla]
 	JMP_A_INDEXED	a2,10  | [$9112: jmp    [a,u]] [indirect_jump] [nb_entries=10]
 
 service_mode_9114:
@@ -4076,7 +4076,7 @@ l_924c:
 	move.w	#0x927b,d4             	| [$924c: ldu    #0x927b]
 	.endif
 	lea	jump_table_927b,a2             	| [$924c: ldu    #jump_table_927b]
-	asl.b	#1,d0                            	| [$924f: asla]
+	add.b	d0,d0                            	| [$924f: asla]
 	JSR_A_INDEXED	a2,7  | [$9250: jsr    [a,u]] [indirect_jump] [nb_entries=7]
 
 	GET_ADDRESS	mcu_flag_41a5              	| [$9252: tst    mcu_flag_41a5] <- MCU: coin inserted flag
@@ -4522,6 +4522,9 @@ write_to_screen_9477:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$9483: std    ,u++] [video_address_word] [freq=medium, count=60%]
 	addq.w	#2,d4                           	| [...]
+	* this is done several times per frame, avoid if possible
+	cmp.w	(a0),d1
+	jeq		l_948b
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 	jra	l_948b                             	| [$9485: bra    $948b] [freq=medium, count=60%]
@@ -4531,6 +4534,8 @@ l_9487:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$9489: std    ,u++] [video_address_word]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_948b
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 l_948b:
@@ -4546,6 +4551,8 @@ l_948b:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$9497: std    ,u++] [video_address_word] [freq=medium, count=60%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_949f
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 	jra	l_949f                             	| [$9499: bra    $949f] [freq=medium, count=60%]
@@ -4555,6 +4562,8 @@ l_949b:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$949d: std    ,u++] [video_address_word]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_949f
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 l_949f:
@@ -4572,6 +4581,8 @@ l_949f:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94ad: std    ,u++] [video_address_word] [freq=low, count=32%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_94b5
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 	jra	l_94b5                             	| [$94af: bra    $94b5] [freq=low, count=32%]
@@ -4581,6 +4592,8 @@ l_94b1:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94b3: std    ,u++] [video_address_word] [freq=low, count=28%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_94b5
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 l_94b5:
@@ -4596,6 +4609,8 @@ l_94b5:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94c1: std    ,u++] [video_address_word] [freq=low, count=21%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_94c9
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 	jra	l_94c9                             	| [$94c3: bra    $94c9] [freq=low, count=21%]
@@ -4605,6 +4620,8 @@ l_94c5:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94c7: std    ,u++] [video_address_word] [freq=medium, count=39%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		l_94c9
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 l_94c9:
@@ -4623,21 +4640,30 @@ l_94d7:
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94d7: std    ,u++] [video_address_word] [freq=medium, count=60%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		0f
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
+0:
 	GET_REG_ADDRESS	0,d2                   	| [$94d9: lda    ,x] [freq=medium, count=60%]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x0f,d0                         	| [$94db: anda   #$0f] [freq=medium, count=60%]
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94dd: std    ,u++] [video_address_word] [freq=medium, count=60%]
 	addq.w	#2,d4                           	| [...]
+	cmp.w	(a0),d1
+	jeq		0f
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
+0:
 	moveq	#0,d0                            	| [$94df: clra] [freq=medium, count=60%]
 	MAKE_D                                 	| [...]
 	GET_REG_VIDEO_ADDRESS	0,d4                   	| [$94e0: std    ,u] [video_address] [freq=medium, count=60%]
+	cmp.w	(a0),d1
+	jeq		0f
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
+0:
 	GET_REG_ADDRESS	0,d5 |  [$94e2: puls   a,pc] [manual_stack_pull] [freq=medium, count=60%]
 	addq.w	#1,d5
 	move.b	(a0),d0
@@ -4826,7 +4852,6 @@ l_95ab:
 	move.b	(a0),d0
 	POP_SR
 	rts
-	rts                                    	| [...]
 
 
 * called 1x  from $836D
@@ -4870,7 +4895,7 @@ function_9630:
 	lea	jump_table_9639,a2             	| [$9630: ldu    #jump_table_9639]
 	GET_ADDRESS	0x542d                     	| [$9633: lda    $542d] work RAM (shared with CPU2)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$9636: asla]
+	add.b	d0,d0                            	| [$9636: asla]
 	JMP_A_INDEXED	a2,4  | [$9637: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 
@@ -5091,7 +5116,7 @@ l_975c:
 	add.w	d1,d4                            	| [$9763: leau   d,u]
 	GET_ADDRESS	0x542b                     	| [$9765: ldb    $542b]
 	move.b	(a0),d1                         	| [...]
-	asl.b	#1,d1                            	| [$9768: aslb]
+	add.b	d1,d1                            	| [$9768: aslb]
 	moveq	#0,d0                            	| [$9769: clra]
 	MAKE_D                                 	| [...]
 	add.w	d1,d4                            	| [$976a: leau   d,u]
@@ -5513,7 +5538,7 @@ l_990d:
 	move.w	#0x992d,d4             	| [$9911: ldu    #0x992d]
 	.endif
 	lea	jump_table_992d,a2             	| [$9911: ldu    #jump_table_992d]
-	asl.b	#1,d0                            	| [$9914: asla]
+	add.b	d0,d0                            	| [$9914: asla]
 	JMP_A_INDEXED	a2,4  | [$9915: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 l_9917:
@@ -5521,7 +5546,7 @@ l_9917:
 	move.w	#0x9931,d4             	| [$9917: ldu    #0x9931]
 	.endif
 	lea	jump_table_9931,a2             	| [$9917: ldu    #jump_table_9931]
-	asl.b	#1,d0                            	| [$991a: asla]
+	add.b	d0,d0                            	| [$991a: asla]
 	JMP_A_INDEXED	a2,2  | [$991b: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 service_mode_991d:
@@ -6162,7 +6187,7 @@ l_9bfb:
 	move.w	#0x9c11,d4             	| [$9bfb: ldu    #0x9c11] [freq=low, count=20%]
 	.endif
 	lea	jump_table_9c11,a2             	| [$9bfb: ldu    #jump_table_9c11] [freq=low, count=20%]
-	asl.b	#1,d0                            	| [$9bfe: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$9bfe: asla] [freq=low, count=20%]
 	JMP_A_INDEXED	a2,13  | [$9bff: jmp    [a,u]] [indirect_jump] [nb_entries=13] [freq=low, count=20%]
 
 l_9c01:
@@ -6184,7 +6209,7 @@ function_9c2b:
 	move.w	#0x9cb2,d4                      	| [$9c2b: ldu    #$9cb2] ROM
 	GET_ADDRESS	in_level_4251              	| [$9c2e: lda    in_level_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$9c31: asla]
+	add.b	d0,d0                            	| [$9c31: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -6624,7 +6649,7 @@ function_9e27:
 	jne	l_9e46                             	| [$9e2e: bne    $9e46]
 	move.w	#0x9e4f,d4                      	| [$9e30: ldu    #$9e4f] ROM
 	OP_R_ON_DP_ADDRESS	move,0x01,d0         | [$9e33: lda    $01]
-	asl.b	#1,d0                            	| [$9e35: asla]
+	add.b	d0,d0                            	| [$9e35: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -6640,7 +6665,7 @@ function_9e27:
 	.endif
 	lea	jump_table_9e53,a2             	| [$9e3e: ldu    #jump_table_9e53]
 	OP_R_ON_DP_ADDRESS	move,dp_sem_cpu1_06,d0| [$9e41: lda    dp_sem_cpu1_06]
-	asl.b	#1,d0                            	| [$9e43: asla]
+	add.b	d0,d0                            	| [$9e43: asla]
 	JMP_A_INDEXED	a2,4  | [$9e44: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 l_9e46:
@@ -7390,7 +7415,7 @@ l_a177:
 	move.w	#0xa17d,d4             	| [$a177: ldu    #0xa17d]
 	.endif
 	lea	jump_table_a17d,a2             	| [$a177: ldu    #jump_table_a17d]
-	asl.b	#1,d0                            	| [$a17a: asla]
+	add.b	d0,d0                            	| [$a17a: asla]
 	JMP_A_INDEXED	a2,4  | [$a17b: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 
@@ -7481,7 +7506,7 @@ l_a1fe:
 	move.w	#0xa221,d4                      	| [$a1fe: ldu    #$a221] ROM
 	GET_ADDRESS	in_level_4251              	| [$a201: lda    in_level_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$a204: asla]
+	add.b	d0,d0                            	| [$a204: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -7575,7 +7600,7 @@ function_a24b:
 	OP_W_ON_DP_ADDRESS	subq,0xc2,#1         | [$a25b: dec    $c2]
 l_a25d:
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$a25d: lda    $c2]
-	asl.b	#1,d0                            	| [$a25f: asla]
+	add.b	d0,d0                            	| [$a25f: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -7653,7 +7678,7 @@ function_a2ab:
 l_a2bc:
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a2bc: lda    $c4]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a2be: lda    $c4]
-	asl.b	#1,d0                            	| [$a2c0: asla]
+	add.b	d0,d0                            	| [$a2c0: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -7705,8 +7730,8 @@ l_a2d3:
 	LOAD_D                                 	| [$a2ef: ldd    ,u++] [bank_address]
 	GET_REG_ADDRESS	0x8,d2                 	| [$a2f1: std    $8,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d0                            	| [$a2f3: asla]
-	asl.b	#1,d1                            	| [$a2f4: aslb]
+	add.b	d0,d0                            	| [$a2f3: asla]
+	add.b	d1,d1                            	| [$a2f4: aslb]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xa,d2                 	| [$a2f5: std    $a,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -7716,8 +7741,8 @@ l_a2d3:
 	LOAD_D                                 	| [$a2fa: ldd    ,u++] [bank_address]
 	GET_REG_ADDRESS	0x8,d2                 	| [$a2fc: std    $8,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d0                            	| [$a2fe: asla]
-	asl.b	#1,d1                            	| [$a2ff: aslb]
+	add.b	d0,d0                            	| [$a2fe: asla]
+	add.b	d1,d1                            	| [$a2ff: aslb]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xa,d2                 	| [$a300: std    $a,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -7739,7 +7764,7 @@ l_a310:
 	move.w	#0xa316,d4             	| [$a310: ldu    #0xa316]
 	.endif
 	lea	jump_table_a316,a2             	| [$a310: ldu    #jump_table_a316]
-	asl.b	#1,d0                            	| [$a313: asla]
+	add.b	d0,d0                            	| [$a313: asla]
 	JMP_A_INDEXED	a2,10  | [$a314: jmp    [a,u]] [indirect_jump] [nb_entries=10]
 
 
@@ -8141,7 +8166,7 @@ function_a4fd:
 	move.w	#0xa537,d4                      	| [$a50a: ldu    #$a537] ROM
 	GET_ADDRESS	in_level_4251              	| [$a50d: lda    in_level_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$a510: asla]
+	add.b	d0,d0                            	| [$a510: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -8210,7 +8235,7 @@ l_a560:
 	move.w	#0xa566,d4             	| [$a560: ldu    #0xa566]
 	.endif
 	lea	jump_table_a566,a2             	| [$a560: ldu    #jump_table_a566]
-	asl.b	#1,d0                            	| [$a563: asla]
+	add.b	d0,d0                            	| [$a563: asla]
 	JMP_A_INDEXED	a2,2  | [$a564: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 
@@ -8305,7 +8330,7 @@ function_a5c7:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0x2,d3                 	| [$a5ce: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$a5d0: aslb]
+	add.b	d1,d1                            	| [$a5d0: aslb]
 	roxl.b	#1,d0                           	| [$a5d1: rola]
 	sub.b	#0x02,d0                         	| [$a5d2: suba   #$02]
 	jpl	l_a5da                             	| [$a5d4: bpl    $a5da]
@@ -8361,7 +8386,7 @@ l_a5f9:
 	move.w	#0xb2e4,d4                      	| [$a602: ldu    #$b2e4] ROM
 	GET_REG_ADDRESS	0,d2                   	| [$a605: lda    ,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$a607: asla]
+	add.b	d0,d0                            	| [$a607: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -8384,7 +8409,7 @@ l_a5f9:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d3                   	| [$a615: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$a617: aslb]
+	add.b	d1,d1                            	| [$a617: aslb]
 	roxl.b	#1,d0                           	| [$a618: rola]
 	sub.b	#0x04,d0                         	| [$a619: suba   #$04]
 	jpl	l_a621                             	| [$a61b: bpl    $a621]
@@ -8562,7 +8587,7 @@ function_a6da:
 	.endif
 	lea	jump_table_a6e2,a2             	| [$a6da: ldu    #jump_table_a6e2]
 	OP_R_ON_DP_ADDRESS	move,dp_sem_cpu1_06,d0| [$a6dd: lda    dp_sem_cpu1_06]
-	asl.b	#1,d0                            	| [$a6df: asla]
+	add.b	d0,d0                            	| [$a6df: asla]
 	JMP_A_INDEXED	a2,2  | [$a6e0: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 
@@ -9037,7 +9062,7 @@ l_a8cc:
 	move.w	#0xa8d2,d4             	| [$a8cc: ldu    #0xa8d2]
 	.endif
 	lea	jump_table_a8d2,a2             	| [$a8cc: ldu    #jump_table_a8d2]
-	asl.b	#1,d0                            	| [$a8cf: asla]
+	add.b	d0,d0                            	| [$a8cf: asla]
 	JMP_A_INDEXED	a2,10  | [$a8d0: jmp    [a,u]] [indirect_jump] [nb_entries=10]
 
 
@@ -9465,7 +9490,7 @@ l_aab6:
 	move.w	#0xab02,d4                      	| [$aabc: ldu    #$ab02] ROM
 	GET_ADDRESS	in_level_4251              	| [$aabf: lda    in_level_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$aac2: asla]
+	add.b	d0,d0                            	| [$aac2: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -9856,7 +9881,7 @@ l_ac85:
 	move.w	#0xac8b,d4             	| [$ac85: ldu    #0xac8b]
 	.endif
 	lea	jump_table_ac8b,a2             	| [$ac85: ldu    #jump_table_ac8b]
-	asl.b	#1,d0                            	| [$ac88: asla]
+	add.b	d0,d0                            	| [$ac88: asla]
 	JMP_A_INDEXED	a2,12  | [$ac89: jmp    [a,u]] [indirect_jump] [nb_entries=12]
 
 
@@ -10311,7 +10336,7 @@ l_aea5:
 	move.w	#0xaee3,d4                      	| [$aeab: ldu    #$aee3] ROM
 	GET_ADDRESS	in_level_4251              	| [$aeae: lda    in_level_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$aeb1: asla]
+	add.b	d0,d0                            	| [$aeb1: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -10571,7 +10596,7 @@ function_b1b9:
 	GET_REG_ADDRESS	0,d2                   	| [$b1c0: lda    ,x] [freq=low, count=05%]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x03,d0                         	| [$b1c2: anda   #$03] [freq=low, count=05%]
-	asl.b	#1,d0                            	| [$b1c4: asla] [freq=low, count=05%]
+	add.b	d0,d0                            	| [$b1c4: asla] [freq=low, count=05%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -10593,7 +10618,7 @@ function_b1b9:
 	GET_REG_ADDRESS	0x8,d3                 	| [$b1d2: lda    $8,y] [freq=low, count=05%]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b1d4: mul] [freq=low, count=05%]
-	asl.b	#1,d1                            	| [$b1d5: aslb] [freq=low, count=05%]
+	add.b	d1,d1                            	| [$b1d5: aslb] [freq=low, count=05%]
 	roxl.b	#1,d0                           	| [$b1d6: rola] [freq=low, count=05%]
 	add.b	#0x20,d0                         	| [$b1d7: adda   #$20] [freq=low, count=05%]
 	GET_REG_ADDRESS	0xa,d3                 	| [$b1d9: cmpa   $a,y] [freq=low, count=05%]
@@ -10633,7 +10658,7 @@ function_b1fe:
 	GET_REG_ADDRESS	0,d2                   	| [$b205: lda    ,x] [freq=low, count=00%]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x03,d0                         	| [$b207: anda   #$03] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$b209: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$b209: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -10655,7 +10680,7 @@ function_b1fe:
 	GET_REG_ADDRESS	0x8,d3                 	| [$b217: lda    $8,y] [freq=low, count=00%]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b219: mul] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b21a: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$b21a: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$b21b: rola] [freq=low, count=00%]
 	sub.b	#0x04,d0                         	| [$b21c: suba   #$04] [freq=low, count=00%]
 	jpl	l_b224                             	| [$b21e: bpl    $b224] [freq=low, count=00%]
@@ -10692,7 +10717,7 @@ function_b237:
 	GET_REG_ADDRESS	0x9,d3                 	| [$b23f: lda    $9,y] [freq=low, count=05%]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b241: mul] [freq=low, count=05%]
-	asl.b	#1,d1                            	| [$b242: aslb] [freq=low, count=05%]
+	add.b	d1,d1                            	| [$b242: aslb] [freq=low, count=05%]
 	roxl.b	#1,d0                           	| [$b243: rola] [freq=low, count=05%]
 	sub.b	#0x02,d0                         	| [$b244: suba   #$02] [freq=low, count=05%]
 	jpl	l_b24c                             	| [$b246: bpl    $b24c] [freq=low, count=05%]
@@ -10739,9 +10764,7 @@ l_b26c:
 	GET_REG_ADDRESS	0x6,d2                 	| [$b276: ldd    $6,x] [freq=high, count=99%]
 	LOAD_D                                 	| [$b276: ldd    $6,x] [freq=high, count=99%]
 	sub.w	#0x0080,d1                       	| [$b278: subd   #$0080] [freq=high, count=99%]
-	MAKE_A                                 	| [...]
-	and.b	#0x0f,d0                         	| [$b27b: anda   #$0f] [freq=high, count=99%]
-	MAKE_D                                 	| [...]
+	and.w	#0x0fff,d1                         	| [$b27b: anda   #$0f] [freq=high, count=99%]
 	GET_REG_ADDRESS	0x6,d2                 	| [$b27d: std    $6,x] [freq=high, count=99%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	add.w	d1,d4                            	| [$b27f: leau   d,u] [freq=high, count=99%]
@@ -10835,7 +10858,7 @@ function_b2ec:
 	GET_REG_ADDRESS	0,d2                   	| [$b2f3: lda    ,x]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x03,d0                         	| [$b2f5: anda   #$03]
-	asl.b	#1,d0                            	| [$b2f7: asla]
+	add.b	d0,d0                            	| [$b2f7: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -10860,7 +10883,7 @@ function_b2ec:
 	GET_REG_ADDRESS	0x9,d3                 	| [$b305: lda    $9,y]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b307: mul]
-	asl.b	#1,d1                            	| [$b308: aslb]
+	add.b	d1,d1                            	| [$b308: aslb]
 	roxl.b	#1,d0                           	| [$b309: rola]
 	add.b	#0x1d,d0                         	| [$b30a: adda   #$1d]
 	GET_REG_ADDRESS	0xb,d3                 	| [$b30c: cmpa   $b,y]
@@ -10901,7 +10924,7 @@ function_b32e:
 	GET_REG_ADDRESS	0,d2                   	| [$b335: lda    ,x] [freq=low, count=00%]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x03,d0                         	| [$b337: anda   #$03] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$b339: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$b339: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -10926,7 +10949,7 @@ function_b32e:
 	GET_REG_ADDRESS	0x9,d3                 	| [$b347: lda    $9,y] [freq=low, count=00%]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b349: mul] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b34a: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$b34a: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$b34b: rola] [freq=low, count=00%]
 	sub.b	#0x02,d0                         	| [$b34c: suba   #$02] [freq=low, count=00%]
 	jpl	l_b354                             	| [$b34e: bpl    $b354] [freq=low, count=00%]
@@ -10972,7 +10995,7 @@ vertical_tile_feed_b36e:
 	GET_REG_ADDRESS	0x8,d3                 	| [$b376: lda    $8,y] [freq=low, count=00%]
 	move.b	(a0),d0                         	| [...]
 	jbsr	multiply_ab                       	| [$b378: mul] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b379: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$b379: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$b37a: rola] [freq=low, count=00%]
 	sub.b	#0x04,d0                         	| [$b37b: suba   #$04] [freq=low, count=00%]
 	jpl	l_b383                             	| [$b37d: bpl    $b383] [freq=low, count=00%]
@@ -11183,8 +11206,8 @@ l_b44c:
 	LOAD_D                                 	| [$b468: ldd    ,u++] [bank_address]
 	GET_REG_ADDRESS	0x8,d2                 	| [$b46a: std    $8,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d0                            	| [$b46c: asla]
-	asl.b	#1,d1                            	| [$b46d: aslb]
+	add.b	d0,d0                            	| [$b46c: asla]
+	add.b	d1,d1                            	| [$b46d: aslb]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xa,d2                 	| [$b46e: std    $a,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -11194,8 +11217,8 @@ l_b44c:
 	LOAD_D                                 	| [$b473: ldd    ,u++] [bank_address]
 	GET_REG_ADDRESS	0x8,d2                 	| [$b475: std    $8,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d0                            	| [$b477: asla]
-	asl.b	#1,d1                            	| [$b478: aslb]
+	add.b	d0,d0                            	| [$b477: asla]
+	add.b	d1,d1                            	| [$b478: aslb]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xa,d2                 	| [$b479: std    $a,x]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -11312,7 +11335,7 @@ function_returns_z_b4ec:                	| [cc_handled]
 	OP_W_ON_DP_ADDRESS	move,dp_bank1_shadow_19,d0| [$b4f0: sta    dp_bank1_shadow_19] [freq=low, count=11%]
 	jbsr	osd_set_cpu1_bank |  [$b4f2: sta    cus115_rombank_6800] [freq=low, count=11%]
 	OP_R_ON_DP_ADDRESS	move,0xab,d0         | [$b4f5: lda    $ab] [freq=low, count=11%]
-	asl.b	#1,d0                            	| [$b4f7: asla] [freq=low, count=11%]
+	add.b	d0,d0                            	| [$b4f7: asla] [freq=low, count=11%]
 	subq.w	#1,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$b4f8: sta    ,-s] [local] [freq=low, count=11%]
 	move.b	d0,(a0)                         	| [...]
@@ -11320,7 +11343,7 @@ function_returns_z_b4ec:                	| [cc_handled]
 	LOAD_D                                 	| [$b4fa: ldd    $78] [freq=low, count=11%]
 	subq.b	#1,d1                           	| [$b4fc: decb] [freq=low, count=11%]
 	OP_R_ON_DP_ADDRESS	sub,0xac,d1          | [$b4fd: subb   $ac] [freq=low, count=11%]
-	asl.b	#1,d0                            	| [$b4ff: asla] [freq=low, count=11%]
+	add.b	d0,d0                            	| [$b4ff: asla] [freq=low, count=11%]
 	jbsr	multiply_ab                       	| [$b500: mul] [freq=low, count=11%]
 	GET_REG_ADDRESS	0,d5                   	| [$b501: addb   ,s+] [local] [freq=low, count=11%]
 	addq.w	#1,d5                           	| [...]
@@ -11342,7 +11365,7 @@ function_returns_z_b4ec:                	| [cc_handled]
 	addq.w	#1,d5                           	| [...]
 	cmp.b	(a0),d0                          	| [...]
 	jcc	l_b51a                             	| [$b511: bcc    $b51a] [freq=low, count=11%]
-	asl.b	#1,d0                            	| [$b513: asla] [freq=low, count=11%]
+	add.b	d0,d0                            	| [$b513: asla] [freq=low, count=11%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -11445,7 +11468,7 @@ function_b531:
 function_b56d:
 	OP_R_ON_DP_ADDRESS	move,0xad,d1         | [$b56d: ldb    $ad] [freq=medium, count=56%]
 	and.b	#0x03,d1                         	| [$b56f: andb   #$03] [freq=medium, count=56%]
-	asl.b	#1,d1                            	| [$b571: aslb] [freq=medium, count=56%]
+	add.b	d1,d1                            	| [$b571: aslb] [freq=medium, count=56%]
 	subq.w	#1,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$b572: stb    ,-s] [local] [freq=medium, count=56%]
 	move.b	d1,(a0)                         	| [...]
@@ -12769,16 +12792,14 @@ function_bb90:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	-0x6,d2                	| [$bb97: addd   -$6,x]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$bb99: aslb]
+	add.b	d1,d1                            	| [$bb99: aslb]
 	roxl.b	#1,d0                           	| [$bb9a: rola]
 	GET_REG_ADDRESS	0,d5                   	| [$bb9b: adda   ,s+] [local]
 	addq.w	#1,d5                           	| [...]
 	add.b	(a0),d0                          	| [...]
 	add.b	#0x04,d0                         	| [$bb9d: adda   #$04]
-	asl.b	#1,d0                            	| [$bb9f: asla]
+	add.b	d0,d0                            	| [$bb9f: asla]
 	GET_REG_ADDRESS	0x5,d4                 	| [$bba0: adda   $5,u]
 	add.b	(a0),d0                          	| [...]
 	and.b	#0x7e,d0                         	| [$bba2: anda   #$7e]
@@ -12792,10 +12813,8 @@ function_bb90:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	-0x4,d2                	| [$bbab: addd   -$4,x]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$bbad: aslb]
+	add.b	d1,d1                            	| [$bbad: aslb]
 	roxl.b	#1,d0                           	| [$bbae: rola]
 	GET_REG_ADDRESS	0x1,d5                 	| [$bbaf: adda   $1,s] [local]
 	add.b	(a0),d0                          	| [...]
@@ -12811,9 +12830,7 @@ function_bb90:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0x6,d4                 	| [$bbba: addd   $6,u]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
 	and.b	#0x0f,d0                         	| [$bbbc: anda   #$0f]
 	GET_REG_ADDRESS	0,d5                   	| [$bbbe: addb   ,s++] [local]
 	addq.w	#2,d5                           	| [...]
@@ -12829,10 +12846,7 @@ function_bbd1:                          	| [cc_handled]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	-0x4,d2                	| [$bbd5: addd   -$4,x]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	MAKE_D
 	cmp.w	#0x0f80,d1                       	| [$bbd7: cmpd   #$0f80]
 	jge	l_bc29                             	| [$bbdb: bge    $bc29]
 	subq.w	#0x3,d5                         	| [$bbdd: leas   -$3,s] [alloc_locals]
@@ -13059,7 +13073,7 @@ l_bcc7:
 function_bcda:
 	GET_REG_ADDRESS	0xd,d2                 	| [$bcda: ldb    $d,x]
 	move.b	(a0),d1                         	| [...]
-	asl.b	#1,d1                            	| [$bcdc: aslb]
+	add.b	d1,d1                            	| [$bcdc: aslb]
 	GET_REG_ADDRESS	0xd,d2                 	| [$bcdd: orb    $d,x]
 	or.b	(a0),d1                           	| [...]
 	and.b	#0x02,d1                         	| [$bcdf: andb   #$02]
@@ -13070,15 +13084,15 @@ function_bcda:
 	move.b	(a0),d1                         	| [...]
 	and.b	#0x7f,d1                         	| [$bcea: andb   #$7f]
 	moveq	#0,d0                            	| [$bcec: clra]
-	asl.b	#1,d1                            	| [$bced: aslb]
+	add.b	d1,d1                            	| [$bced: aslb]
 	roxl.b	#1,d0                           	| [$bcee: rola]
 	MAKE_D                                 	| [...]
 	subq.w	#2,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$bcef: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$bcf1: aslb]
+	add.b	d1,d1                            	| [$bcf1: aslb]
 	roxl.b	#1,d0                           	| [$bcf2: rola]
-	asl.b	#1,d1                            	| [$bcf3: aslb]
+	add.b	d1,d1                            	| [$bcf3: aslb]
 	roxl.b	#1,d0                           	| [$bcf4: rola]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$bcf5: addd   ,s++] [local]
@@ -13094,15 +13108,15 @@ function_bcda:
 	move.b	(a0),d1                         	| [...]
 	and.b	#0x7f,d1                         	| [$bcfe: andb   #$7f]
 	moveq	#0,d0                            	| [$bd00: clra]
-	asl.b	#1,d1                            	| [$bd01: aslb]
+	add.b	d1,d1                            	| [$bd01: aslb]
 	roxl.b	#1,d0                           	| [$bd02: rola]
 	MAKE_D                                 	| [...]
 	subq.w	#2,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$bd03: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$bd05: aslb]
+	add.b	d1,d1                            	| [$bd05: aslb]
 	roxl.b	#1,d0                           	| [$bd06: rola]
-	asl.b	#1,d1                            	| [$bd07: aslb]
+	add.b	d1,d1                            	| [$bd07: aslb]
 	roxl.b	#1,d0                           	| [$bd08: rola]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$bd09: addd   ,s++] [local]
@@ -13639,7 +13653,7 @@ l_bf3c:
 	lea	jump_table_bf44,a2             	| [$bf3c: ldu    #jump_table_bf44]
 	GET_REG_ADDRESS	0x9,d2                 	| [$bf3f: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$bf41: asla]
+	add.b	d0,d0                            	| [$bf41: asla]
 	JMP_A_INDEXED	a2,3  | [$bf42: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -13734,7 +13748,7 @@ function_bfa9:
 	lea	jump_table_bfb1,a2             	| [$bfa9: ldu    #jump_table_bfb1]
 	GET_REG_ADDRESS	0x9,d2                 	| [$bfac: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$bfae: asla]
+	add.b	d0,d0                            	| [$bfae: asla]
 	JMP_A_INDEXED	a2,5  | [$bfaf: jmp    [a,u]] [indirect_jump] [nb_entries=5]
 
 
@@ -13858,7 +13872,7 @@ function_c050:
 	lea	jump_table_c058,a2             	| [$c050: ldu    #jump_table_c058]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c053: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c055: asla]
+	add.b	d0,d0                            	| [$c055: asla]
 	JMP_A_INDEXED	a2,3  | [$c056: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 	sub.b	#0x5e,d1                         	| [$c058: subb   #$5e]
@@ -13955,7 +13969,7 @@ function_c0c8:
 	lea	jump_table_c0d0,a2             	| [$c0c8: ldu    #jump_table_c0d0]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c0cb: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c0cd: asla]
+	add.b	d0,d0                            	| [$c0cd: asla]
 	JMP_A_INDEXED	a2,5  | [$c0ce: jmp    [a,u]] [indirect_jump] [nb_entries=5]
 
 
@@ -14067,7 +14081,7 @@ function_c159:
 	lea	jump_table_c161,a2             	| [$c159: ldu    #jump_table_c161]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c15c: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c15e: asla]
+	add.b	d0,d0                            	| [$c15e: asla]
 	JMP_A_INDEXED	a2,3  | [$c15f: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -14167,7 +14181,7 @@ function_c1d6:
 	lea	jump_table_c1de,a2             	| [$c1d6: ldu    #jump_table_c1de]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c1d9: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c1db: asla]
+	add.b	d0,d0                            	| [$c1db: asla]
 	JMP_A_INDEXED	a2,3  | [$c1dc: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -14239,7 +14253,7 @@ l_c22d:
 	lea	jump_table_c235,a2             	| [$c22d: ldu    #jump_table_c235]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c230: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c232: asla]
+	add.b	d0,d0                            	| [$c232: asla]
 	JMP_A_INDEXED	a2,3  | [$c233: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -14322,7 +14336,7 @@ l_c297:
 	lea	jump_table_c29f,a2             	| [$c297: ldu    #jump_table_c29f]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c29a: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c29c: asla]
+	add.b	d0,d0                            	| [$c29c: asla]
 	JMP_A_INDEXED	a2,8  | [$c29d: jmp    [a,u]] [indirect_jump] [nb_entries=8]
 
 
@@ -14429,7 +14443,7 @@ l_c313:
 	lea	jump_table_c38f,a2             	| [$c318: ldu    #jump_table_c38f]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c31b: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c31d: asla]
+	add.b	d0,d0                            	| [$c31d: asla]
 	JMP_A_INDEXED	a2,6  | [$c31e: jmp    [a,u]] [indirect_jump] [nb_entries=6]
 
 
@@ -14543,7 +14557,7 @@ function_c3a6:
 	lea	jump_table_c3ae,a2             	| [$c3a6: ldu    #jump_table_c3ae]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c3a9: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c3ab: asla]
+	add.b	d0,d0                            	| [$c3ab: asla]
 	JMP_A_INDEXED	a2,4  | [$c3ac: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 
@@ -14617,7 +14631,7 @@ function_c3f6:
 	lea	jump_table_c3fe,a2             	| [$c3f6: ldu    #jump_table_c3fe]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c3f9: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c3fb: asla]
+	add.b	d0,d0                            	| [$c3fb: asla]
 	JMP_A_INDEXED	a2,3  | [$c3fc: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -14982,7 +14996,7 @@ function_c5b2:
 	lea	jump_table_c5ba,a2             	| [$c5b2: ldu    #jump_table_c5ba]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c5b5: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c5b7: asla]
+	add.b	d0,d0                            	| [$c5b7: asla]
 	JMP_A_INDEXED	a2,5  | [$c5b8: jmp    [a,u]] [indirect_jump] [nb_entries=5]
 
 	BIT	#0xc4,d1                           	| [$c5ba: bitb   #$c4]
@@ -15262,7 +15276,7 @@ l_c73d:
 	lea	jump_table_c745,a2             	| [$c73d: ldu    #jump_table_c745]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c740: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c742: asla]
+	add.b	d0,d0                            	| [$c742: asla]
 	JMP_A_INDEXED	a2,4  | [$c743: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 
@@ -15300,7 +15314,7 @@ function_c768:
 	lea	jump_table_c770,a2             	| [$c768: ldu    #jump_table_c770]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c76b: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c76d: asla]
+	add.b	d0,d0                            	| [$c76d: asla]
 	JMP_A_INDEXED	a2,12  | [$c76e: jmp    [a,u]] [indirect_jump] [nb_entries=12]
 
 
@@ -15397,7 +15411,7 @@ l_c7e6:
 	lea	jump_table_c7ee,a2             	| [$c7e6: ldu    #jump_table_c7ee]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c7e9: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c7eb: asla]
+	add.b	d0,d0                            	| [$c7eb: asla]
 	JMP_A_INDEXED	a2,4  | [$c7ec: jmp    [a,u]] [indirect_jump] [nb_entries=4]
 
 
@@ -15540,7 +15554,7 @@ function_c8a0:
 	lea	jump_table_c8a8,a2             	| [$c8a0: ldu    #jump_table_c8a8]
 	GET_REG_ADDRESS	0x9,d2                 	| [$c8a3: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$c8a5: asla]
+	add.b	d0,d0                            	| [$c8a5: asla]
 	JMP_A_INDEXED	a2,6  | [$c8a6: jmp    [a,u]] [indirect_jump] [nb_entries=6]
 
 
@@ -15844,7 +15858,7 @@ l_ca3f:
 	lea	jump_table_ca47,a2             	| [$ca3f: ldu    #jump_table_ca47]
 	GET_REG_ADDRESS	0x9,d2                 	| [$ca42: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$ca44: asla]
+	add.b	d0,d0                            	| [$ca44: asla]
 	JMP_A_INDEXED	a2,6  | [$ca45: jmp    [a,u]] [indirect_jump] [nb_entries=6]
 
 
@@ -16592,7 +16606,7 @@ function_cd73:
 	lea	jump_table_cde7,a2             	| [$cd73: ldu    #jump_table_cde7]
 	GET_REG_ADDRESS	0x9,d2                 	| [$cd76: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$cd78: asla]
+	add.b	d0,d0                            	| [$cd78: asla]
 	JMP_A_INDEXED	a2,9  | [$cd79: jmp    [a,u]] [indirect_jump] [nb_entries=9]
 
 
@@ -16734,7 +16748,7 @@ function_ce39:
 	lea	jump_table_ce41,a2             	| [$ce39: ldu    #jump_table_ce41]
 	GET_REG_ADDRESS	0x9,d2                 	| [$ce3c: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$ce3e: asla]
+	add.b	d0,d0                            	| [$ce3e: asla]
 	JMP_A_INDEXED	a2,24  | [$ce3f: jmp    [a,u]] [indirect_jump] [nb_entries=24]
 
 
@@ -16848,7 +16862,7 @@ function_ceec:
 	lea	jump_table_cf2e,a2             	| [$ceec: ldu    #jump_table_cf2e]
 	GET_REG_ADDRESS	0x9,d2                 	| [$ceef: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$cef1: asla]
+	add.b	d0,d0                            	| [$cef1: asla]
 	JMP_A_INDEXED	a2,14  | [$cef2: jmp    [a,u]] [indirect_jump] [nb_entries=14]
 
 
@@ -16936,7 +16950,7 @@ function_cf6d:
 	lea	jump_table_cf75,a2             	| [$cf6d: ldu    #jump_table_cf75]
 	GET_REG_ADDRESS	0x9,d2                 	| [$cf70: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$cf72: asla]
+	add.b	d0,d0                            	| [$cf72: asla]
 	JMP_A_INDEXED	a2,18  | [$cf73: jmp    [a,u]] [indirect_jump] [nb_entries=18]
 
 
@@ -17077,7 +17091,7 @@ l_d035:
 	lea	jump_table_d03d,a2             	| [$d035: ldu    #jump_table_d03d]
 	GET_REG_ADDRESS	0x9,d2                 	| [$d038: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d03a: asla]
+	add.b	d0,d0                            	| [$d03a: asla]
 	JMP_A_INDEXED	a2,7  | [$d03b: jmp    [a,u]] [indirect_jump] [nb_entries=7]
 
 
@@ -17146,7 +17160,7 @@ l_d092:
 	lea	jump_table_d09a,a2             	| [$d092: ldu    #jump_table_d09a]
 	GET_REG_ADDRESS	0x9,d2                 	| [$d095: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d097: asla]
+	add.b	d0,d0                            	| [$d097: asla]
 	JMP_A_INDEXED	a2,9  | [$d098: jmp    [a,u]] [indirect_jump] [nb_entries=9]
 
 
@@ -17237,7 +17251,7 @@ l_d10a:
 	lea	jump_table_d112,a2             	| [$d10a: ldu    #jump_table_d112]
 	GET_REG_ADDRESS	0x9,d2                 	| [$d10d: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d10f: asla]
+	add.b	d0,d0                            	| [$d10f: asla]
 	JMP_A_INDEXED	a2,7  | [$d110: jmp    [a,u]] [indirect_jump] [nb_entries=7]
 
 
@@ -17269,7 +17283,7 @@ function_d133:
 	lea	jump_table_d13b,a2             	| [$d133: ldu    #jump_table_d13b]
 	GET_REG_ADDRESS	0x9,d2                 	| [$d136: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d138: asla]
+	add.b	d0,d0                            	| [$d138: asla]
 	JMP_A_INDEXED	a2,17  | [$d139: jmp    [a,u]] [indirect_jump] [nb_entries=17]
 
 
@@ -17406,7 +17420,7 @@ function_d208:
 	lea	jump_table_d210,a2             	| [$d208: ldu    #jump_table_d210]
 	GET_REG_ADDRESS	0x9,d2                 	| [$d20b: lda    $9,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d20d: asla]
+	add.b	d0,d0                            	| [$d20d: asla]
 	JMP_A_INDEXED	a2,7  | [$d20e: jmp    [a,u]] [indirect_jump] [nb_entries=7]
 
 
@@ -17563,7 +17577,7 @@ function_d2cd:
 	.endif
 	lea	jump_table_d2d5,a2             	| [$d2cd: ldu    #jump_table_d2d5] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,0x60,d0         | [$d2d0: lda    $60] [freq=low, count=20%]
-	asl.b	#1,d0                            	| [$d2d2: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$d2d2: asla] [freq=low, count=20%]
 	JMP_A_INDEXED	a2,16  | [$d2d3: jmp    [a,u]] [indirect_jump] [nb_entries=16] [freq=low, count=20%]
 
 
@@ -17696,7 +17710,7 @@ l_d38c:
 	.endif
 	lea	jump_table_d396,a2             	| [$d38e: ldu    #jump_table_d396] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,0x60,d0         | [$d391: lda    $60] [freq=low, count=20%]
-	asl.b	#1,d0                            	| [$d393: asla] [freq=low, count=20%]
+	add.b	d0,d0                            	| [$d393: asla] [freq=low, count=20%]
 	JMP_A_INDEXED	a2,16  | [$d394: jmp    [a,u]] [indirect_jump] [nb_entries=16] [freq=low, count=20%]
 
 
@@ -18111,14 +18125,14 @@ l_d600:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d613: ldu    #$e9fa] ROM
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d616: lda    $c2]
-	asl.b	#1,d0                            	| [$d618: asla]
+	add.b	d0,d0                            	| [$d618: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d619: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d61b: lda    $c4]
-	asl.b	#1,d0                            	| [$d61d: asla]
+	add.b	d0,d0                            	| [$d61d: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18134,7 +18148,7 @@ l_d600:
 	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
 	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$d627: aslb]
+	add.b	d1,d1                            	| [$d627: aslb]
 	roxl.b	#1,d0                           	| [$d628: rola]
 	MAKE_D
 	GET_REG_ADDRESS_FROM_REG	d1,d4         	| [$d629: ldy    d,u]
@@ -18154,7 +18168,7 @@ l_d63b:
 	OP_1_ON_DP_ADDRESS	clr,0x6c             | [$d63b: clr    $6c]
 	OP_1_ON_DP_ADDRESS	clr,0x6d             | [$d63d: clr    $6d]
 	move.w	#0xf381,d3                      	| [$d63f: ldy    #$f381]
-	asl.b	#1,d0                            	| [$d643: asla]
+	add.b	d0,d0                            	| [$d643: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18205,14 +18219,14 @@ function_d672:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d67d: ldu    #$e9fa] ROM [freq=low, count=00%]
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d680: lda    $c2] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$d682: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$d682: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d683: ldu    a,u] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d685: lda    $c4] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$d687: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$d687: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18240,14 +18254,14 @@ function_d697:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6a1: ldu    #$e9fa] ROM [freq=low, count=00%]
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6a4: lda    $c2] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$d6a6: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$d6a6: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6a7: ldu    a,u] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6a9: lda    $c4] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$d6ab: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$d6ab: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18276,14 +18290,14 @@ function_d6bb:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6c6: ldu    #$e9fa] ROM
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6c9: lda    $c2]
-	asl.b	#1,d0                            	| [$d6cb: asla]
+	add.b	d0,d0                            	| [$d6cb: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6cc: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6ce: lda    $c4]
-	asl.b	#1,d0                            	| [$d6d0: asla]
+	add.b	d0,d0                            	| [$d6d0: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18311,14 +18325,14 @@ function_d6e0:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6ea: ldu    #$e9fa] ROM
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6ed: lda    $c2]
-	asl.b	#1,d0                            	| [$d6ef: asla]
+	add.b	d0,d0                            	| [$d6ef: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6f0: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6f2: lda    $c4]
-	asl.b	#1,d0                            	| [$d6f4: asla]
+	add.b	d0,d0                            	| [$d6f4: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18359,7 +18373,7 @@ function_d704:
 	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
 	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$d71e: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d71e: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d71f: rola] [freq=low, count=00%]
 	MAKE_D
 	GET_REG_ADDRESS_FROM_REG	d1,d4         	| [$d720: ldy    d,u] [freq=low, count=00%]
@@ -18399,7 +18413,7 @@ function_d72e:
 	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
 	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$d748: aslb]
+	add.b	d1,d1                            	| [$d748: aslb]
 	roxl.b	#1,d0                           	| [$d749: rola]
 	MAKE_D
 	GET_REG_ADDRESS_FROM_REG	d1,d4         	| [$d74a: ldy    d,u]
@@ -18483,7 +18497,7 @@ l_d7a2:
 	GET_REG_ADDRESS	0x5,d2                 	| [$d7a9: stb    $5,x] [freq=low, count=00%]
 	move.b	d1,(a0)                         	| [...]
 	move.w	#0xd7d6,d4                      	| [$d7ab: ldu    #$d7d6] [freq=low, count=00%]
-	asl.b	#1,d0                            	| [$d7ae: asla] [freq=low, count=00%]
+	add.b	d0,d0                            	| [$d7ae: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18503,13 +18517,13 @@ l_d7a2:
 	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
 	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$d7bb: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7bb: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7bc: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7bd: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7bd: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7be: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7bf: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7bf: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7c0: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7c1: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7c1: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7c2: rola] [freq=low, count=00%]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xa,d2                 	| [$d7c3: std    $a,x] [freq=low, count=00%]
@@ -18524,13 +18538,13 @@ l_d7a2:
 	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
 	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$d7cb: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7cb: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7cc: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7cd: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7cd: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7ce: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7cf: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7cf: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7d0: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$d7d1: aslb] [freq=low, count=00%]
+	add.b	d1,d1                            	| [$d7d1: aslb] [freq=low, count=00%]
 	roxl.b	#1,d0                           	| [$d7d2: rola] [freq=low, count=00%]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0xc,d2                 	| [$d7d3: std    $c,x] [freq=low, count=00%]
@@ -18571,7 +18585,7 @@ l_d85a:
 	GET_REG_ADDRESS	0,d2                   	| [$d85d: lda    ,x] [freq=low, count=32%]
 	move.b	(a0),d0                         	| [...]
 	sub.b	#0x48,d0                         	| [$d85f: suba   #$48] [freq=low, count=32%]
-	asl.b	#1,d0                            	| [$d861: asla] [freq=low, count=32%]
+	add.b	d0,d0                            	| [$d861: asla] [freq=low, count=32%]
 	JSR_A_INDEXED	a2,24  | [$d862: jsr    [a,u]] [indirect_jump] [nb_entries=24] [freq=low, count=32%]
 
 l_d864:
@@ -18647,7 +18661,7 @@ l_d8df:
 	and.b	#0x03,d0                         	| [$d8e5: anda   #$03] [freq=low, count=02%]
 	GET_REG_ADDRESS	0x2,d2                 	| [$d8e7: sta    $2,x] [freq=low, count=02%]
 	move.b	d0,(a0)                         	| [...]
-	asl.b	#1,d0                            	| [$d8e9: asla] [freq=low, count=02%]
+	add.b	d0,d0                            	| [$d8e9: asla] [freq=low, count=02%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18666,7 +18680,7 @@ function_d8f7:
 	lea	jump_table_d8ff,a2             	| [$d8f7: ldu    #jump_table_d8ff]
 	GET_REG_ADDRESS	0x2,d2                 	| [$d8fa: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d8fc: asla]
+	add.b	d0,d0                            	| [$d8fc: asla]
 	JMP_A_INDEXED	a2,13  | [$d8fd: jmp    [a,u]] [indirect_jump] [nb_entries=13]
 
 
@@ -18703,7 +18717,7 @@ l_d923:
 	addq.b	#1,(a0)                         	| [...]
 	GET_REG_ADDRESS	0x2,d2                 	| [$d928: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d92a: asla]
+	add.b	d0,d0                            	| [$d92a: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18730,7 +18744,7 @@ l_d93a:
 	addq.b	#1,(a0)                         	| [...]
 	GET_REG_ADDRESS	0x2,d2                 	| [$d93f: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d941: asla]
+	add.b	d0,d0                            	| [$d941: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18756,7 +18770,7 @@ l_d951:
 	move.w	#0xd9f9,d4                      	| [$d953: ldu    #$d9f9] ROM
 	GET_REG_ADDRESS	0x2,d2                 	| [$d956: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d958: asla]
+	add.b	d0,d0                            	| [$d958: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -18812,7 +18826,7 @@ l_d998:
 	move.w	#0xd9f9,d4                      	| [$d99c: ldu    #$d9f9] ROM
 	GET_REG_ADDRESS	0x2,d2                 	| [$d99f: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$d9a1: asla]
+	add.b	d0,d0                            	| [$d9a1: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -19080,7 +19094,7 @@ l_daa6:
 	GET_REG_ADDRESS	0,d2                   	| [$dacb: lda    ,x]
 	move.b	(a0),d0                         	| [...]
 	sub.b	#0x70,d0                         	| [$dacd: suba   #$70]
-	asl.b	#1,d0                            	| [$dacf: asla]
+	add.b	d0,d0                            	| [$dacf: asla]
 	JSR_A_INDEXED	a2,8  | [$dad0: jsr    [a,u]] [indirect_jump] [nb_entries=8]
 
 l_dad2:
@@ -19125,7 +19139,7 @@ function_dafd:
 	lea	jump_table_db08,a2             	| [$db00: ldu    #jump_table_db08]
 	GET_REG_ADDRESS	0x2,d2                 	| [$db03: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$db05: asla]
+	add.b	d0,d0                            	| [$db05: asla]
 	JMP_A_INDEXED	a2,3  | [$db06: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -19139,7 +19153,7 @@ function_db0e:
 	lea	jump_table_db19,a2             	| [$db11: ldu    #jump_table_db19]
 	GET_REG_ADDRESS	0x2,d2                 	| [$db14: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$db16: asla]
+	add.b	d0,d0                            	| [$db16: asla]
 	JMP_A_INDEXED	a2,3  | [$db17: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -19334,7 +19348,7 @@ function_dbee:
 	lea	jump_table_dbf9,a2             	| [$dbf1: ldu    #jump_table_dbf9]
 	GET_REG_ADDRESS	0x2,d2                 	| [$dbf4: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$dbf6: asla]
+	add.b	d0,d0                            	| [$dbf6: asla]
 	JMP_A_INDEXED	a2,2  | [$dbf7: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 
@@ -19348,7 +19362,7 @@ function_dbfd:
 	lea	jump_table_dc08,a2             	| [$dc00: ldu    #jump_table_dc08]
 	GET_REG_ADDRESS	0x2,d2                 	| [$dc03: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$dc05: asla]
+	add.b	d0,d0                            	| [$dc05: asla]
 	JMP_A_INDEXED	a2,2  | [$dc06: jmp    [a,u]] [indirect_jump] [nb_entries=2]
 
 
@@ -19531,7 +19545,7 @@ l_dcd3:
 	lea	jump_table_dcdb,a2             	| [$dcd3: ldu    #jump_table_dcdb]
 	GET_REG_ADDRESS	0x2,d2                 	| [$dcd6: lda    $2,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$dcd8: asla]
+	add.b	d0,d0                            	| [$dcd8: asla]
 	JMP_A_INDEXED	a2,3  | [$dcd9: jmp    [a,u]] [indirect_jump] [nb_entries=3]
 
 
@@ -19608,7 +19622,7 @@ l_dd1e:
 	move.w	#0xdd70,d4                      	| [$dd1e: ldu    #$dd70] ROM
 	GET_REG_ADDRESS	0x6,d2                 	| [$dd21: lda    $6,x]
 	move.b	(a0),d0                         	| [...]
-	asl.b	#1,d0                            	| [$dd23: asla]
+	add.b	d0,d0                            	| [$dd23: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -19698,15 +19712,15 @@ l_dd9b:
 	rts                                    	| [$dda1: rts]
 l_dda2:
 	moveq	#0,d0                            	| [$dda2: clra]
-	asl.b	#1,d1                            	| [$dda3: aslb]
+	add.b	d1,d1                            	| [$dda3: aslb]
 	roxl.b	#1,d0                           	| [$dda4: rola]
 	MAKE_D                                 	| [...]
 	subq.w	#2,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$dda5: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$dda7: aslb]
+	add.b	d1,d1                            	| [$dda7: aslb]
 	roxl.b	#1,d0                           	| [$dda8: rola]
-	asl.b	#1,d1                            	| [$dda9: aslb]
+	add.b	d1,d1                            	| [$dda9: aslb]
 	roxl.b	#1,d0                           	| [$ddaa: rola]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$ddab: addd   ,s++] [local]
@@ -19852,15 +19866,15 @@ l_de17:
 	rts                                    	| [$de1d: rts]
 l_de1e:
 	moveq	#0,d0                            	| [$de1e: clra]
-	asl.b	#1,d1                            	| [$de1f: aslb]
+	add.b	d1,d1                            	| [$de1f: aslb]
 	roxl.b	#1,d0                           	| [$de20: rola]
 	MAKE_D                                 	| [...]
 	subq.w	#2,d5                           	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$de21: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	asl.b	#1,d1                            	| [$de23: aslb]
+	add.b	d1,d1                            	| [$de23: aslb]
 	roxl.b	#1,d0                           	| [$de24: rola]
-	asl.b	#1,d1                            	| [$de25: aslb]
+	add.b	d1,d1                            	| [$de25: aslb]
 	roxl.b	#1,d0                           	| [$de26: rola]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d5                   	| [$de27: addd   ,s++] [local]

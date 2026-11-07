@@ -363,9 +363,33 @@ f1\@:
 	* bit not set: word command
 	move.w	(a0)+,d1		| word value
 	
+	cmp.w	#bltsize,d0
+	jeq		bs\@		| size command: it starts the blit, handle apart
 	
 	move.w	d1,(a5,d0.w)
 	jra		b0\@		| not size: continue parsing list
+bs\@:
+	* The bltsize write below STARTS the blit, and the blitter interrupt is
+	* level 3 against our level 1, so a short blit can complete and re-enter
+	* this macro before the next instruction retires.  Publish the cursor
+	* first: a re-entry then continues from the right command instead of
+	* re-walking the span behind us.  Re-running a blit would be harmless
+	* (same source, same destination, same minterm), but re-running the
+	* mirror commands that precede it flips those planes back while their
+	* orientation flags still claim the new direction.
+	*
+	* a0 points at the -1 that WRITE_BLITTER_REG_SIZE appends, so step over
+	* it here - nothing comes back to read it.
+	.ifndef	RELEASE
+	cmp.w	(a0),d2			| d2 is -1
+	jeq		bt\@
+	BREAKPOINT	"size command not terminated by -1"
+bt\@:
+	.endif
+	addq.l	#2,a0
+	move.l	a0,drawn_blitter_list_ptr
+	move.w	d1,(a5,d0.w)	| starts the blit; we may be re-entered right here
+	jra		b4\@		| cursor already published, do not touch it again
 	* long write command
 b2\@:
 	.ifndef	RELEASE
@@ -403,6 +427,7 @@ bv\@:
 	.endif
 b3\@:
 	move.l	a0,drawn_blitter_list_ptr
+b4\@:
 	.endm
 	
 	.macro	LOAD_FILLED_LIST

@@ -1911,18 +1911,11 @@ level3_interrupt:
 
 0:
 
-	move.l	joypad_1_state(pc),_previous_joypad_1_state
 	moveq	#1,d0
 	jbsr	_read_joystick
 	move.l	d0,joypad_1_state
 
 
-	btst	#JPB_BTN_PLAY,d0
-	beq.b	0f
-	btst	#JPB_BTN_PLAY,d2
-	bne.b	0f
-	jbsr		toggle_pause
-0:
 	jbsr	update_hud_layer
 	
 	.ifne	OPT_ENABLE_LOGGING
@@ -6032,7 +6025,13 @@ decode_mcu_inputs:
 	jeq		0f
 	move.b	#1,(in_level_4281,a6)
 0:
-
+	btst	#JPB_BTN_PLAY,d1
+	beq.b	0f
+	btst	#JPB_BTN_PLAY,d2
+	bne.b	0f
+	jbsr		toggle_pause
+0:
+	move.l	d1,_previous_joypad_1_state
 	* keyboard controls
 	lea		keyboard_table(pc),a0
 

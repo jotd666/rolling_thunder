@@ -1,28 +1,17 @@
 for first release
-- mirror flips lost happens!
-- blinking sprites
-
-First, read d0 at the breakpoint before fixing anything — the sign tells you which problem you have. The check is queued - executed, and the jeq only skips on exact equality, so it fires in both directions. Negative means flips ran more times than they were queued, which is a completely different bug from losing them.
+- level 1 => level 2: music doesn't start, then full silence until game over
+  then lockup (trigger???)
 
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
-- still issues when player killed, proper address is not always selected
-- fire check edge (maybe previous compare else multiple shots)
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
 $A958	sub-state 10 step 1 (GAME OVER)	$0C, CPU1 $A8E6 step 0
 $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 
-D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME doesn't seem to happen
-=> note down the value of loop counter
-
-
-
-
 ------------
 
-- write hud tiles optimize?
 - load/save highscores
 - trainer infinite lives
 - use 50Hz scroll
@@ -36,15 +25,9 @@ D13E cpu 2 programming error reads from 8000 while looping? confirm with MAME do
 - sprites 128 colors, bg in 64 to avoid washed down
 
 
-optim: do not write HUD tiles (score, etc.) all the time
-
-
 placement of the 5th sprite isn't correct (1 pixel off!)
-optim: write same char (HUD): avoid, game does that all the time
 
 
-
-optimize in cpu_coroutine to use bytes not words for cpu2_done & cur_task
 
 
 tunes: https://vgmrips.net/packs/pack/rolling-thunder-namco-system-86

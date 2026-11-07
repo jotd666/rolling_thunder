@@ -35,7 +35,7 @@ for file in ["readme.md",f"RollingThunder_AGA.slave"]:
     shutil.copy(progdir / file,outdir)
 
 
-shutil.copy(progdir / "assets" / "amiga" / "RollingThunderAGA.info",outdir)
+shutil.copy(progdir / "assets" / "amiga" / "RollingThunder_AGA.info",outdir)
 
 
 

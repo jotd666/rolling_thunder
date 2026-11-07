@@ -52,9 +52,9 @@ cpu2_stack_top:
 run_frame:
 	movem.l d0-d7/a0-a6,-(sp)
 	st.b	in_irq
-	clr.w   cpu2_done
+	clr.b   cpu2_done
 	move.w  #MAX_YIELDS,yield_budget
-	clr.w   cur_task
+	clr.b   cur_task
 
 	| Build CPU2 a fresh context: an RTS off this frame lands
 	| in cpu2_entry with NREGS longs of (ignored) register fill.
@@ -68,7 +68,7 @@ run_frame:
 	| CPU1 is finished.  If CPU2 has not finished yet, hand it
 	| the CPU until it does.  Bounded: cpu2_done ends it.
 .drain:
-	tst.w   cpu2_done
+	tst.b   cpu2_done
 	jne   .both_done
 	jbsr     osd_yield
 	tst.w  yield_budget
@@ -83,7 +83,7 @@ run_frame:
 |-----------------------------------------------------------------------------
 cpu2_entry:
 	jbsr     cpu2_irq_body
-	move.w  #1,cpu2_done
+	move.b  #1,cpu2_done
 	| fall through: leave for good, do NOT save our context.
 	| CPU2's stack is simply abandoned and rebuilt next frame.
 
@@ -91,7 +91,7 @@ cpu2_entry:
 | task_exit - switch to CPU1 permanently.  Never returns to the caller.
 |-----------------------------------------------------------------------------
 task_exit:
-	clr.w   cur_task
+	clr.b   cur_task
 	move.l  task_sp+0,sp        | adopt CPU1's stack
 	movem.l (sp)+,d0-d7/a0-a6   | unwind CPU1's yield frame
 	rts                         | ...back into CPU1's yield call site
@@ -113,21 +113,21 @@ osd_yield:
 	jbne   .alive
 	jbsr     sync_deadlock       | debug hook / breakpoint
 .alive:
-	tst.w   cur_task
+	tst.b   cur_task
 	bne.s   .from_cpu2
 
 	| --- CPU1 wants to yield to CPU2 ---
-	tst.w   cpu2_done
+	tst.b   cpu2_done
 	jne	   .stay               | CPU2 gone: nothing to switch to
 	move.l  sp,task_sp+0
-	move.w  #1,cur_task
+	move.b  #1,cur_task
 	move.l  task_sp+4,sp
 	jra   .stay
 
 	| --- CPU2 wants to yield to CPU1 ---
 .from_cpu2:
 	move.l  sp,task_sp+4
-	clr.w   cur_task
+	clr.b   cur_task
 	move.l  task_sp+0,sp
 .stay:
 	movem.l (sp)+,d0-d7/a0-a6
