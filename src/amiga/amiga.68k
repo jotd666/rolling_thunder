@@ -7000,11 +7000,6 @@ osd_sound_start:
 
 	
 	and.w	#0xFF,d0
-	cmp.w	#MAIN_BGM_SND,d0
-	jne		0f
-	* else when player dies, music doesn't continue
-	clr.b	last_e8_trigger
-0:
 
 	moveq	#0,d2
 	lsl.w	#3,d0
@@ -7080,10 +7075,6 @@ osd_sound_start:
 	* (music_tick value is not important for looped tunes
 	* as long as it's not zero)
 
-
-	* here we allow music to override another looping music
-	*tst.w	music_tick
-	*bne.b	10b
 	* play the proper module pattern
 	* load up the countdown if loop
 		
@@ -7100,6 +7091,7 @@ osd_sound_start:
     sub.l   a1,a1		| samples are in the module
 
     jsr _mt_init
+	clr.b _mt_E8Trigger
 	movem.l	(a7)+,d0/a0
 
     * set master volume a little less loud if needed

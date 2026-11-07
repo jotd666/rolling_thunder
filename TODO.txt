@@ -1,6 +1,5 @@
 for first release
-- level 1 => level 2: music doesn't start, then full silence until game over
-  then lockup (trigger???)
+
 
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
@@ -13,6 +12,7 @@ $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 ------------
 
 - load/save highscores
+- fire insert coins, up/down start game
 - trainer infinite lives
 - use 50Hz scroll
 
