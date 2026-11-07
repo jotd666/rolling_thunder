@@ -2446,6 +2446,14 @@ function_8dc8:
 	move.w	#0x8dfb,d4                      	| [$8dca: ldu    #$8dfb] ROM [freq=low, count=02%]
 	GET_REG_ADDRESS	0,d2                   	| [$8dcd: lda    ,x] [freq=low, count=02%]
 	move.b	(a0),d0                         	| [...]
+	* sometimes when character is killed, A=0xff in 8DCD (also on real game)
+	* then in 8DD2 U is loaded as a screen pointer. Is that a bug? probably
+	* I think that if A=0xFF it shouldn't do anything. Instead it tries to read
+	* not from ROM but either from video memory or from memory. It makes no sense
+	cmp.b	#0xFF,d0
+	jne		0f
+	rts
+0:
 	and.b	#0x7c,d0                         	| [$8dcf: anda   #$7c] [freq=low, count=02%]
 	lsr.b	#1,d0                            	| [$8dd1: lsra] [freq=low, count=02%]
 	moveq	#0,d6                            	| [...]
@@ -2462,37 +2470,15 @@ function_8dc8:
 	moveq	#0,d6                            	| [...]
 	move.b	d1,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
-	* sometimes when character is killed, A=0xff in 8DCD (also on real game)
-	* then in 8DD2 U is loaded as a screen pointer. Is that a bug? doesn't matter
-	* as it seems that the code does nothing important
-	cmp.w	#0x7FFF,d4
-	jcc		0f
-	GET_REG_VIDEO_ADDRESS_FROM_REG   d6,d4
-	jra		1f
-0:
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$8ddb: ldu    b,u] [rom_address] [freq=low, count=02%]
-1:
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	cmp.w	#0x7FFF,d4
-	jcc		0f
-	GET_REG_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
-	jra		1f
-0:
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
-1:
 	addq.w	#2,d4                           	| [...]
 	LOAD_D                                 	| [$8ddd: ldd    ,u++] [rom_address] [freq=low, count=02%]
 	GET_REG_ADDRESS	0xa,d2                 	| [$8ddf: sta    $a,x] [freq=low, count=02%]
 	move.b	d0,(a0)+                         	| [...]
-								| [$8de1: stb    $b,x] [freq=low, count=02%]
-	move.b	d1,(a0)                         	| [...]
-	cmp.w	#0x7FFF,d4
-	jcc		0f
-	GET_REG_ADDRESS	0,d4                  
-	jra		1f
-0:
+	move.b	d1,(a0)							| [$8de1: stb    $b,x] [freq=low, count=02%]
 	GET_REG_ROM_ADDRESS	0,d4                   	| [$8de3: ldd    ,u] [rom_address] [freq=low, count=02%]
-1:
 	LOAD_D                                 	| [$8de3: ldd    ,u] [rom_address] [freq=low, count=02%]
 	GET_REG_ADDRESS	-0x2,d2                	| [$8de5: std    -$2,x] [freq=low, count=02%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
@@ -10061,18 +10047,14 @@ function_b205:
 	MAKE_D                                 	| [...]
 	GET_DP_ADDRESS	0x80                    	| [$b243: subd   $80] [freq=low, count=00%]
 	SUB_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
-	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	asl.b	#1,d1                            	| [$b245: aslb] [freq=low, count=00%]
-	roxl.b	#1,d0                           	| [$b246: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b247: aslb] [freq=low, count=00%]
-	roxl.b	#1,d0                           	| [$b248: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b249: aslb] [freq=low, count=00%]
-	roxl.b	#1,d0                           	| [$b24a: rola] [freq=low, count=00%]
-	asl.b	#1,d1                            	| [$b24b: aslb] [freq=low, count=00%]
-	roxl.b	#1,d0                           	| [$b24c: rola] [freq=low, count=00%]
-	MAKE_D                                 	| [...]
+	asl.w	#4,d1                            	| [$b245: aslb] [freq=low, count=00%]
+	                           	| [$b246: rola] [freq=low, count=00%]
+	                            	| [$b247: aslb] [freq=low, count=00%]
+	                           	| [$b248: rola] [freq=low, count=00%]
+	                            	| [$b249: aslb] [freq=low, count=00%]
+	                           	| [$b24a: rola] [freq=low, count=00%]
+	                            	| [$b24b: aslb] [freq=low, count=00%]
+	                           	| [$b24c: rola] [freq=low, count=00%]
 	GET_REG_ADDRESS	-0x6,d2                	| [$b24d: std    -$6,x] [freq=low, count=00%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	OP_R_ON_DP_ADDRESS	move,0x63,d0         | [$b24f: lda    $63] [freq=low, count=00%]
