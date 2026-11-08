@@ -1,10 +1,8 @@
 for first release
 
-- level 2 purple hood missing frames
-- level 4 some brown hood missing frames
-- don't pack .mod files (freezes level)
+
 - die, level restarts: follow up music doesn't play???
-- big sprite flickering on real hardware
+- maybe block force refresh on intermission (double refresh)
 - level 2: scroll up, trashed stuff appears in tiled screen on the top
 - mission complete music not there, boss kill played instead??
 - mission complete music ack

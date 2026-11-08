@@ -54,6 +54,7 @@ pack_data = True  # set to false to create unpacked distros (much faster)
 for sourcefile in datadir.glob("*"):
     if sourcefile.is_file():
         destfile = dataout / sourcefile.name
+        pack_data = not sourcefile.name.endswith(".mod")
         # -= RNC ProPackED v1.8 [by Lab 313] (01/26/2021) =-
         with open(sourcefile,"rb") as f:
             header = f.read(3).decode(errors="ignore")
