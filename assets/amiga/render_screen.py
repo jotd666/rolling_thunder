@@ -361,7 +361,8 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
         print(f"sprite offsets x={sprite_xoffs} y={sprite_yoffs}, "
               f"bank_sprites={bank_sprites}")
     drawn = 0
-
+    FIRST_VISIBLE_LINE = 16
+    NB_VISIBLE_LINES  = 224
 
     # back to front, exactly like MAME: last entry is not a sprite
     for o in range(0x800 - 0x20, -1, -0x10):
@@ -392,7 +393,7 @@ def draw_sprites(dump, sheets, screen_np, prio_np, verbose=False,
 
         sx &= 0x1FF
         sy = ((sy + 16) & 0xFF) - 16
-        if sy:
+        if sy + sizey > FIRST_VISIBLE_LINE and sy < FIRST_VISIBLE_LINE + NB_VISIBLE_LINES:
             cell = sheets.cell(sprite, color)
             code = spr[o+11]
             if dump_list and (cell is not None or spr[o + 11] or spr[o + 13]):

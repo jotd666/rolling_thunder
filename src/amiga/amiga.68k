@@ -102,6 +102,9 @@ GAME_MAX_SCROLL_X = 0x200
 GAME_MAX_SCROLL_Y = 0x100	| geniune thanks Namco that saves a lot of memory!!
 BG_TILE_WIDTH = 8
 BG_TILE_HEIGHT = 8
+* 256 wrapping vertical scroll, only showing 224 lines, which means that 32 pixels
+* should not be drawn or repainted
+ALWAYS_HIDDEN_HEIGHT = 32
 
 BG_TILE_FILE_MAX_SIZE = 1550000
 SPRITE_FILE_BITMAP_MAX_SIZE = 0x102000   | in chipmem!
@@ -225,6 +228,15 @@ FMODE_WIDTH_POWER=5
 
 VISIBLE_SCROLL_WIDTH = BG_NB_BYTES_PER_ROW*8-(1<<FMODE_WIDTH_POWER)
 
+* The arcade never scans the first 16 lines - the visible area for this
+* hardware is y 16..239 - and the game uses that gutter as a parking lot for
+* unused and dead sprites.  A sprite RAM dump shows every parked entry lying
+* entirely inside rows -16..15, whatever its height, while real sprites are
+* well below.  The display clips them on the arcade; here they have to be
+* clipped by hand or they are written into the buffer just outside the window
+* and slide into view the moment it scrolls vertically.
+FIRST_VISIBLE_LINE = 16
+NB_VISIBLE_LINES = 224
 BG_SCREEN_PLANE_SIZE = BG_NB_BYTES_PER_ROW*(BG_NB_LINES+16)
 BG_HALF_SCREEN_PLANE_SIZE = BG_NB_BYTES_PER_ROW*BG_NB_LINES/2
 
@@ -3077,7 +3089,7 @@ erase_bobs:
 	jmi		11f		| x=0: inactive (was bmi.b: the key test
 					| below pushes 11f out of short range)
 	move.w	(2,a4),d1
-	cmp.w	#BG_NB_LINES,d1
+	cmp.w	#BG_NB_LINES-ALWAYS_HIDDEN_HEIGHT,d1
 	jcc		11f				| too low: discard
 	and.w	#0xFFF0,d0		| align on 16 lower bound
 
@@ -3668,6 +3680,24 @@ size_and_translation_done:
 
 *		int flipx = (attr1 & 0x20) >> 5;
 
+	* Clip to the visible band while d1 is still the arcade's screen Y, before
+	* the scroll is folded in.  This is what keeps the parked sprites out: they
+	* sit entirely in the gutter above FIRST_VISIBLE_LINE, so the display never
+	* scans them on the arcade, but written into the buffer they are only just
+	* outside the window and come into view as soon as it moves - which is why
+	* they only ever showed on the levels that scroll vertically.
+	*
+	* Same test as the converter's python filter, and it has to stay the same:
+	* if the two disagree about what is visible you get sprites with no clut.
+	*
+	* d4 is the height and is still positive here - sprite_flip_y negates it
+	* further down - and d1 is put back, so no spare register is needed.
+	cmp.w	#FIRST_VISIBLE_LINE+NB_VISIBLE_LINES,d1
+	jge		2f			| starts below the visible band
+	add.w	d4,d1
+	cmp.w	#FIRST_VISIBLE_LINE,d1
+	jle		2f			| ends at or above its first line
+	sub.w	d4,d1
 	* BOBs must follow screen scroll
 	add.w	bobs_game_scroll_y,d1
 	add.w 	bobs_host_scroll_x,d0
@@ -3710,7 +3740,7 @@ size_and_translation_done:
 	jra		9f
 
 8:
-	cmp.w	#BG_NB_LINES,d1
+	cmp.w	#BG_NB_LINES-ALWAYS_HIDDEN_HEIGHT,d1
 	jcc		2f		| avoid out of screen
 
 	* note down that this bob will have to be erased
