@@ -371,6 +371,7 @@ tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs
 player_number_01 = $01
 music_request_e8 = $e8
 prev_music_request_e9 = $e9
+story_c2 = $c2
 
 ;CPU #1 4380 write controls MCU tune play: 
 ;
@@ -2405,7 +2406,7 @@ service_mode_9114:
 function_9138:
 9138: 86 40       LDA    #$40
 913A: 97 C1       STA    energy_c1
-913C: 0F C2       CLR    $C2
+913C: 0F C2       CLR    story_c2
 913E: 0F C4       CLR    $C4
 9140: 86 01       LDA    #$01
 9142: 97 C3       STA    story_number_c3
@@ -4561,10 +4562,10 @@ A24D: B7 68 00    STA    cus115_rombank_6800
 A250: CE 60 00    LDU    #cus115_63701x_0_6000		; expansion: 63701X sample player reg 0
 A253: A6 C0       LDA    ,U+		; [bank_address]
 A255: 97 70       STA    $70
-A257: 91 C2       CMPA   $C2
+A257: 91 C2       CMPA   story_c2
 A259: 22 02       BHI    $A25D
-A25B: 0A C2       DEC    $C2
-A25D: 96 C2       LDA    $C2
+A25B: 0A C2       DEC    story_c2
+A25D: 96 C2       LDA    story_c2
 A25F: 48          ASLA
 A260: EC C6       LDD    A,U		; [bank_address]
 A262: DD 72       STD    $72
@@ -4739,8 +4740,8 @@ A3B1: 0F 0E       CLR    dp_irqcount1_0e		; CPU1 IRQ/frame counter
 A3B3: 0C 06       INC    dp_sem_cpu1_06
 A3B5: 0C 07       INC    dp_sem_cpu2_07
 A3B7: 7E B4 34    JMP    function_b434
-A3BA: 0C C2       INC    $C2
-A3BC: 96 C2       LDA    $C2
+A3BA: 0C C2       INC    story_c2
+A3BC: 96 C2       LDA    story_c2
 A3BE: 91 70       CMPA   $70
 A3C0: 24 5A       BCC    $A41C
 A3C2: CE B1 2C    LDU    #$B12C
@@ -5176,10 +5177,10 @@ A6E0: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=2]
 ; 1 jump-table ref
 function_a6e6:
 A6E6: CE A8 66    LDU    #$A866		; ROM
-A6E9: 96 C2       LDA    $C2
+A6E9: 96 C2       LDA    story_c2
 A6EB: 48          ASLA
 A6EC: 48          ASLA
-A6ED: 9B C2       ADDA   $C2
+A6ED: 9B C2       ADDA   story_c2
 A6EF: 9B C4       ADDA   $C4
 A6F1: A6 C6       LDA    A,U
 A6F3: 97 E8       STA    music_request_e8
@@ -11403,7 +11404,7 @@ D60E: 24 25       BCC    $D635
 D610: 1D          SEX
 D611: ED E3       STD    ,--S		; [local]
 D613: CE E9 FA    LDU    #$E9FA		; ROM
-D616: 96 C2       LDA    $C2
+D616: 96 C2       LDA    story_c2
 D618: 48          ASLA
 D619: EE C6       LDU    A,U
 D61B: 96 C4       LDA    $C4
@@ -11464,7 +11465,7 @@ D677: 2C 14       BGE    $D68D
 D679: C0 02       SUBB   #$02
 D67B: DD 6C       STD    $6C
 D67D: CE E9 FA    LDU    #$E9FA		; ROM
-D680: 96 C2       LDA    $C2
+D680: 96 C2       LDA    story_c2
 D682: 48          ASLA
 D683: EE C6       LDU    A,U
 D685: 96 C4       LDA    $C4
@@ -11486,7 +11487,7 @@ D69B: 2B 14       BMI    $D6B1
 D69D: C0 03       SUBB   #$03
 D69F: DD 6C       STD    $6C
 D6A1: CE E9 FA    LDU    #$E9FA		; ROM
-D6A4: 96 C2       LDA    $C2
+D6A4: 96 C2       LDA    story_c2
 D6A6: 48          ASLA
 D6A7: EE C6       LDU    A,U
 D6A9: 96 C4       LDA    $C4
@@ -11509,7 +11510,7 @@ D6C0: D1 79       CMPB   $79
 D6C2: 2C 12       BGE    $D6D6
 D6C4: DD 6C       STD    $6C
 D6C6: CE E9 FA    LDU    #$E9FA		; ROM
-D6C9: 96 C2       LDA    $C2
+D6C9: 96 C2       LDA    story_c2
 D6CB: 48          ASLA
 D6CC: EE C6       LDU    A,U
 D6CE: 96 C4       LDA    $C4
@@ -11531,7 +11532,7 @@ D6E4: C0 03       SUBB   #$03
 D6E6: 2B 12       BMI    $D6FA
 D6E8: DD 6C       STD    $6C
 D6EA: CE E9 FA    LDU    #$E9FA		; ROM
-D6ED: 96 C2       LDA    $C2
+D6ED: 96 C2       LDA    story_c2
 D6EF: 48          ASLA
 D6F0: EE C6       LDU    A,U
 D6F2: 96 C4       LDA    $C4

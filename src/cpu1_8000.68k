@@ -3865,7 +3865,7 @@ service_mode_9114:
 function_9138:
 	move.b	#0x40,d0                        	| [$9138: lda    #$40]
 	OP_W_ON_DP_ADDRESS	move,energy_c1,d0    | [$913a: sta    energy_c1]
-	OP_1_ON_DP_ADDRESS	clr,0xc2             | [$913c: clr    $c2]
+	OP_1_ON_DP_ADDRESS	clr,story_c2             | [$913c: clr    $c2]
 	OP_1_ON_DP_ADDRESS	clr,0xc4             | [$913e: clr    $c4]
 	move.b	#0x01,d0                        	| [$9140: lda    #$01]
 	OP_W_ON_DP_ADDRESS	move,story_number_c3,d0| [$9142: sta    story_number_c3]
@@ -7103,18 +7103,27 @@ l_a017:
 	jne	increase_starting_area_a049        	| [$a019: bne    increase_starting_area_a049]
 	GET_REG_ADDRESS	0xa,d4                 	| [$a01b: tst    $a,u]
 	tst.b	(a0)                             	| [...]
-	jne	l_a020                             	| [$a01d: bne    $a020] 4280: 1 if left pressed
+	jne	decrease_starting_area_a020                             	| [$a01d: bne    $a020] 4280: 1 if left pressed
 	rts                                    	| [$a01f: rts]
-l_a020:
+	
+decrease_starting_area_a020:
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a020: lda    $c4]
-	jne	l_a025                             	| [$a022: bne    $a025]
-	rts                                    	| [$a024: rts]
+	jne		l_a025                             	| [$a022: bne    $a025]
+	* first area of this story: borrow from the story below if there is one
+	OP_R_ON_DP_ADDRESS	move,0xc2,d0
+	jeq		9f			| already area 1
+	OP_W_ON_DP_ADDRESS	subq,0xc2,#1
+	move.b	#0x05,d0
+	OP_W_ON_DP_ADDRESS	move,0xc4,d0	| the dec at l_a025 makes it 4
+	jra		l_a025
+9:
+	rts
 l_a025:
 	OP_W_ON_DP_ADDRESS	subq,0xc4,#1         | [$a025: dec    $c4]
 	OP_W_ON_DP_ADDRESS	subq,0xd1,#1         | [$a027: dec    $d1]
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$a029: lda    starting_area_c5]
 	CLR_XC_FLAGS
-	move.b	#0x99,d6	| [...]
+	move.b	#0x99,d6	| [...] decrease
 	abcd	d6,d0	| [...]
 	OP_W_ON_DP_ADDRESS	move,starting_area_c5,d0| [$a02e: sta    starting_area_c5]
 	move.w	#0x3dae,d3                      	| [$a030: ldy    #$3dae]
@@ -7142,10 +7151,18 @@ l_a040:
 increase_starting_area_a049:
 	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a049: lda    $c4]
 	addq.b	#1,d0                           	| [$a04b: inca]
-	cmp.b	#0x05,d0                         	| [$a04c: cmpa   #$05] max selectable area: 4 (area 5)
-	jcs	l_a051                             	| [$a04e: bcs    $a051]
-* too high: we cannot select higher areas
-	rts                                    	| [$a050: rts]
+	cmp.b	#0x05,d0                         	| [$a04c: cmpa   #$05]
+	jcs		l_a051                          	| still inside this story
+	* area rolled over: carry into the story, which is what $a6ef multiplies
+	* by 5.  $c4 must stay under $71 or the clamp at $a2ba pulls it back.
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0
+	cmp.b	#0x01,d0
+	jcc		9f			| already story 2: area 10 is the maximum
+	OP_W_ON_DP_ADDRESS	addq,story_c2,#1
+	moveq	#0,d0			| first area of the new story
+	jra		l_a051
+9:
+	rts                                	| [$a050: rts]
 l_a051:
 	OP_W_ON_DP_ADDRESS	move,0xc4,d0         | [$a051: sta    $c4]
 	OP_W_ON_DP_ADDRESS	addq,0xd1,#1         | [$a053: inc    $d1]
@@ -7595,11 +7612,11 @@ function_a24b:
 	addq.w	#1,d4                           	| [...]
 	move.b	(a0),d0                         	| [...]
 	OP_W_ON_DP_ADDRESS	move,0x70,d0         | [$a255: sta    $70]
-	OP_R_ON_DP_ADDRESS	cmp,0xc2,d0          | [$a257: cmpa   $c2]
+	OP_R_ON_DP_ADDRESS	cmp,story_c2,d0          | [$a257: cmpa   $c2]
 	jhi	l_a25d                             	| [$a259: bhi    $a25d]
-	OP_W_ON_DP_ADDRESS	subq,0xc2,#1         | [$a25b: dec    $c2]
+	OP_W_ON_DP_ADDRESS	subq,story_c2,#1         | [$a25b: dec    $c2]
 l_a25d:
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$a25d: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a25d: lda    $c2]
 	add.b	d0,d0                            	| [$a25f: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -7892,8 +7909,8 @@ l_a39e:
 	jbsr	osd_yield   | sync after semaphore write
 	jra	function_b434                      	| [$a3b7: jmp    function_b434]
 l_a3ba:
-	OP_W_ON_DP_ADDRESS	addq,0xc2,#1         | [$a3ba: inc    $c2]
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$a3bc: lda    $c2]
+	OP_W_ON_DP_ADDRESS	addq,story_c2,#1         | [$a3ba: inc    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a3bc: lda    $c2]
 	OP_R_ON_DP_ADDRESS	cmp,0x70,d0          | [$a3be: cmpa   $70]
 	jcc	l_a41c                             	| [$a3c0: bcc    $a41c]
 	move.w	#0xb12c,d4                      	| [$a3c2: ldu    #$b12c]
@@ -8595,10 +8612,10 @@ function_a6da:
 * 1 jump-table ref
 function_a6e6:
 	move.w	#0xa866,d4                      	| [$a6e6: ldu    #$a866] ROM
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$a6e9: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a6e9: lda    $c2]
                                          | [$a6eb: asla]
 	asl.b	#2,d0                            	| [$a6ec: asla]
-	OP_R_ON_DP_ADDRESS	add,0xc2,d0          | [$a6ed: adda   $c2]
+	OP_R_ON_DP_ADDRESS	add,story_c2,d0          | [$a6ed: adda   $c2]
 	OP_R_ON_DP_ADDRESS	add,0xc4,d0          | [$a6ef: adda   $c4]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18124,7 +18141,7 @@ l_d600:
 	GET_REG_ADDRESS	0,d5                   	| [$d611: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d613: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d616: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d616: lda    $c2]
 	add.b	d0,d0                            	| [$d618: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18218,7 +18235,7 @@ function_d672:
 	GET_DP_ADDRESS	0x6c                    	| [$d67b: std    $6c] [freq=low, count=00%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d67d: ldu    #$e9fa] ROM [freq=low, count=00%]
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d680: lda    $c2] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d680: lda    $c2] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d682: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18253,7 +18270,7 @@ function_d697:
 	GET_DP_ADDRESS	0x6c                    	| [$d69f: std    $6c] [freq=low, count=00%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6a1: ldu    #$e9fa] ROM [freq=low, count=00%]
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6a4: lda    $c2] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6a4: lda    $c2] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d6a6: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18289,7 +18306,7 @@ function_d6bb:
 	GET_DP_ADDRESS	0x6c                    	| [$d6c4: std    $6c]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6c6: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6c9: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6c9: lda    $c2]
 	add.b	d0,d0                            	| [$d6cb: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18324,7 +18341,7 @@ function_d6e0:
 	GET_DP_ADDRESS	0x6c                    	| [$d6e8: std    $6c]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6ea: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$d6ed: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6ed: lda    $c2]
 	add.b	d0,d0                            	| [$d6ef: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte

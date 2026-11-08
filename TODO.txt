@@ -1,11 +1,16 @@
-for first release
+for next release
 
-
+- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
+- start skips the "select area" part doesn't work
 - die, level restarts: follow up music doesn't play???
 - maybe block force refresh on intermission (double refresh)
 - level 2: scroll up, trashed stuff appears in tiled screen on the top
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
+- defaults to 50Hz
+- load/save highscores
+- fire insert coins, up/down start game
+- trainer infinite lives
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
@@ -14,16 +19,12 @@ $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 
 ------------
 
-- load/save highscores
-- fire insert coins, up/down start game
-- trainer infinite lives
-- use 50Hz scroll
+
+
+
 
 - could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
   which would allow shorter (and faster) sprite overlay: less chip, faster blits
-- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
-- start skips the "select area" part doesn't work
-
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
 - sprites 128 colors, bg in 64 to avoid washed down
 
@@ -37,18 +38,3 @@ tunes: https://vgmrips.net/packs/pack/rolling-thunder-namco-system-86
 to rip sounds/voices: select service mode!
 
 
-Story 1 (First Half)
-
-• Area 1: Underground base entrance; maneuvering between floor levels and collecting initial pistol/machine gun ammo from doors.
-• Area 2: Storage facility with multi-level shelving, crate-jumping, and grenade-dropping enemies.
-• Area 3: Dark subterranean passages featuring panthers and armed Maskers.
-• Area 4: Deep cavernous routes with flying Gelzos and bouncing Fire-Men.
-• Area 5: Complex underground maze introducing fenced foreground and background plane transitions.
-
-Story 2 (Second Half / Hard Mode)
-
-• Area 6: Fenced-off facility corridors with tighter timing and ceiling laser traps.
-• Area 7: Advanced industrial warehouse guarded by ninjas and aggressive patrols.
-• Area 8: High-pressure enemy squads and hazardous narrow platform jumps.
-• Area 9: Heavy laser corridors paired with frequent ninja and Fire-Men ambushes.
-• Area 10: Final showdown against the GELDRA leader, Maboo, to rescue agent 

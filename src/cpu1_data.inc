@@ -141,3 +141,4 @@ watchdog_8000 = 0x8000
 nb_credits_418a = 0x418a
 tilebank_select_8800 = 0x8800
 tilebank_select_8c00 = 0x8c00
+story_c2 = 0xc2
