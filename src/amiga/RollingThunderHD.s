@@ -53,7 +53,7 @@ _config
 	dc.b	"C1:X:infinite bullets:3;"
 	dc.b	"C1:X:area select:4;"
 	dc.b	"C1:X:cheat keys:5;"
-	dc.b	"C2:X:50 Hz update:0;"
+	dc.b	"C2:X:25 Hz update:0;"
 
 	*dc.b	"C2:X:startup menu:5;"
 

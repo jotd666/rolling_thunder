@@ -1,12 +1,14 @@
 for next release
 
+- "LOADING..." like in DD
+- clut 3B/3F doesn't seem to register (area select)
+- area select > 5 doesn't work properly (story 1 area 7)
+- analyse with engine9000 https://github.com/alpine9000/engine9000-public
 - level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
-- start skips the "select area" part doesn't work
 - die, level restarts: follow up music doesn't play???
 - maybe block force refresh on intermission (double refresh)
 - mission complete music not there, boss kill played instead??
 - mission complete music ack
-- defaults to 50Hz
 - load/save highscores
 - fire insert coins, up/down start game
 - trainer infinite lives

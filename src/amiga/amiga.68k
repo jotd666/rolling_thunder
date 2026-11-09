@@ -579,7 +579,7 @@ _user:
 	jra		demo_game
 
 apply_settings:
-	move.b	start_level+3,start_level_flag
+
 	
 	move.l	cheat_flags,d0
 	jeq		1f
@@ -591,7 +591,6 @@ apply_settings:
 	sne		infinite_time_flag
 	btst	#3,d0
 	sne		infinite_bullets_flag
-	move.b	d0,d1
 	btst	#4,d0
 	sne		level_select_flag
 	move.b	d0,d1
@@ -604,10 +603,10 @@ apply_settings:
 
 0:
 1:	
-	* default is 25Hz, but works fine on 50Hz on 68060 at least
+	* default is 50Hz (with possible frameskip), but can be fixed at 25Hz
 	move.l	misc_options,d1
 	btst	#0,d1
-	seq		frameskip
+	sne		frameskip
 
 	*sne		startup_menu_flag
 	.ifne	OPT_CD32_VERSION
@@ -6045,23 +6044,25 @@ decode_mcu_inputs:
 *	move.b	#1,(in_level_4261,a6)
 *0:	
 
-	clr.l	(in_edge_4276,a6)
-	clr.l	(in_edge_4276+4,a6)
-	clr.l	(in_edge_4276+8,a6)
+	clr.l	(jump_1p_edge_4276,a6)
+	clr.l	(jump_1p_edge_4276+4,a6)
+	clr.l	(jump_1p_edge_4276+8,a6)
 	move.l	joypad_1_state,d1
 	move.l	_previous_joypad_1_state,d2
 	
 	btst	#JPB_BTN_RED,d1
 	jeq		0f
+	move.b  #1,(in_level_4279,a6)
 	btst	#JPB_BTN_RED,d2
 	jne		0f					| previously pressed
-	move.b	#1,(in_edge_4278,a6)		| fire
+	move.b	#1,(fire_1p_edge_4278,a6)		| fire
 0:
 	btst	#JPB_BTN_BLU,d1
 	jeq		0f
+	move.b  #1,(in_level_4277,a6)
 	btst	#JPB_BTN_BLU,d2
 	jne		0f					| previously pressed
-	move.b	#1,(in_edge_4276,a6)		| jump
+	move.b	#1,(jump_1p_edge_4276,a6)		| jump
 0:
 	btst	#JPB_BTN_UP,d1
 	jeq		0f
@@ -6074,10 +6075,16 @@ decode_mcu_inputs:
 	btst	#JPB_BTN_RIGHT,d1
 	jeq		0f
 	move.b	#1,(in_level_427f,a6)
+	btst	#JPB_BTN_RIGHT,d2
+	jne		0f
+	move.b	#1,(in_edge_427e,a6)
 0:
 	btst	#JPB_BTN_LEFT,d1
 	jeq		0f
 	move.b	#1,(in_level_4281,a6)
+	btst	#JPB_BTN_LEFT,d2
+	jne		0f
+	move.b	#1,(in_edge_4280,a6)
 0:
 	btst	#JPB_BTN_PLAY,d1
 	beq.b	0f
@@ -6109,7 +6116,7 @@ decode_mcu_inputs:
 	beq.b	0f
 	tst.b	previous_ctrl_press
 	jne		0f
-	move.b	#1,(in_edge_4278,a6)		| fire
+	move.b	#1,(fire_1p_edge_4278,a6)		| fire
 0:
 	move.b	d1,previous_ctrl_press
 	
@@ -6117,7 +6124,7 @@ decode_mcu_inputs:
 	beq.b	0f
 	tst.b	previous_alt_press
 	jne		0f
-	move.b	#1,(in_edge_4276,a6)		| jump
+	move.b	#1,(jump_1p_edge_4276,a6)		| jump
 0:
 	move.b	d1,previous_alt_press
 	
@@ -8037,8 +8044,7 @@ dip_switches_2:
 	.byte	0
 ntsc_flag:
 	.byte 	0
-level_select_flag:
-	.byte	0
+
 no_level_music_flag:
 	.byte	0
 mid_screen_interrupt_count:

@@ -286,9 +286,9 @@ in_edge_425c = 0x425C
 in_level_425d = 0x425D
 in_edge_425e = 0x425E
 in_level_425f = 0x425F
-in_edge_4260 = 0x4260
+start_2p_edge_4260 = 0x4260
 in_level_4261 = 0x4261
-in_edge_4262 = 0x4262
+start_1p_edge_4262 = 0x4262
 in_level_4263 = 0x4263
 in_edge_4264 = 0x4264
 in_level_4265 = 0x4265
@@ -308,9 +308,9 @@ in_edge_4272 = 0x4272
 in_level_4273 = 0x4273
 in_edge_4274 = 0x4274
 in_level_4275 = 0x4275
-in_edge_4276 = 0x4276
+jump_1p_edge_4276 = 0x4276
 in_level_4277 = 0x4277
-in_edge_4278 = 0x4278
+fire_1p_edge_4278 = 0x4278
 in_level_4279 = 0x4279
 in_edge_427a = 0x427A
 in_level_427b = 0x427B
@@ -1019,7 +1019,7 @@ read_player_input_82b8:
 	OP_1_ON_DP_ADDRESS	clr,0x0a             | [$82be: clr    $0a]
 	rts                                    	| [$82c0: rts]
 l_82c1:
-	move.w	#in_edge_4276,d2                	| [$82c1: ldx    #in_edge_4276] [freq=low, count=20%]
+	move.w	#jump_1p_edge_4276,d2                	| [$82c1: ldx    #jump_1p_edge_4276] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,0x1e,d0         | [$82c4: lda    $1e] [freq=low, count=20%]
 	jne	l_82ca                             	| [$82c6: bne    $82ca] [freq=low, count=20%]
 	sub.w	#0xc,d2                          	| [$82c8: leax   -$c,x]
@@ -3084,17 +3084,17 @@ l_8bba:
 	GET_REG_ADDRESS	0,d5                   	| [$8bc2: lda    ,s+] [local]
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	in_edge_4276               	| [$8bc4: lda    in_edge_4276]
+	GET_ADDRESS	jump_1p_edge_4276               	| [$8bc4: lda    jump_1p_edge_4276]
 	move.b	(a0),d0                         	| [...]
 	GET_ADDRESS	in_edge_426a               	| [$8bc7: ora    in_edge_426a] input edge  [23] IN1.1 BUTTON2 p2 (jump)
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4278               	| [$8bca: ora    in_edge_4278] input edge  [30] IN2.3 BUTTON1 p1 (shoot)
+	GET_ADDRESS	fire_1p_edge_4278               	| [$8bca: ora    fire_1p_edge_4278] input edge  [30] IN2.3 BUTTON1 p1 (shoot)
 	or.b	(a0),d0                           	| [...]
 	GET_ADDRESS	in_edge_426c               	| [$8bcd: ora    in_edge_426c] input edge  [24] IN2.6 BUTTON1 p2 (shoot)
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4262               	| [$8bd0: ora    in_edge_4262] input edge  [19] IN0.6 START1
+	GET_ADDRESS	start_1p_edge_4262               	| [$8bd0: ora    start_1p_edge_4262] input edge  [19] IN0.6 START1
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4260               	| [$8bd3: ora    in_edge_4260] input edge  [18] IN1.6 START2
+	GET_ADDRESS	start_2p_edge_4260               	| [$8bd3: ora    start_2p_edge_4260] input edge  [18] IN1.6 START2
 	or.b	(a0),d0                           	| [...]
 	jeq	l_8c74                             	| [$8bd6: lbeq   $8c74]
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8bda: lda    cpu2_ready_5ff3]
@@ -3132,17 +3132,17 @@ l_8bf4:
 	GET_REG_ADDRESS	0,d5                   	| [$8bfc: lda    ,s+] [local]
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	in_edge_4276               	| [$8bfe: lda    in_edge_4276]
+	GET_ADDRESS	jump_1p_edge_4276               	| [$8bfe: lda    jump_1p_edge_4276]
 	move.b	(a0),d0                         	| [...]
 	GET_ADDRESS	in_edge_426a               	| [$8c01: ora    in_edge_426a]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4278               	| [$8c04: ora    in_edge_4278]
+	GET_ADDRESS	fire_1p_edge_4278               	| [$8c04: ora    fire_1p_edge_4278]
 	or.b	(a0),d0                           	| [...]
 	GET_ADDRESS	in_edge_426c               	| [$8c07: ora    in_edge_426c]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4262               	| [$8c0a: ora    in_edge_4262]
+	GET_ADDRESS	start_1p_edge_4262               	| [$8c0a: ora    start_1p_edge_4262]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4260               	| [$8c0d: ora    in_edge_4260]
+	GET_ADDRESS	start_2p_edge_4260               	| [$8c0d: ora    start_2p_edge_4260]
 	or.b	(a0),d0                           	| [...]
 	jeq	l_8c74                             	| [$8c10: beq    $8c74]
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8c12: lda    cpu2_ready_5ff3]
@@ -3175,17 +3175,17 @@ l_8c27:
 	GET_REG_ADDRESS	0,d5                   	| [$8c2f: lda    ,s+] [local]
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	in_edge_4276               	| [$8c31: lda    in_edge_4276]
+	GET_ADDRESS	jump_1p_edge_4276               	| [$8c31: lda    jump_1p_edge_4276]
 	move.b	(a0),d0                         	| [...]
 	GET_ADDRESS	in_edge_426a               	| [$8c34: ora    in_edge_426a]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4278               	| [$8c37: ora    in_edge_4278]
+	GET_ADDRESS	fire_1p_edge_4278               	| [$8c37: ora    fire_1p_edge_4278]
 	or.b	(a0),d0                           	| [...]
 	GET_ADDRESS	in_edge_426c               	| [$8c3a: ora    in_edge_426c]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4262               	| [$8c3d: ora    in_edge_4262]
+	GET_ADDRESS	start_1p_edge_4262               	| [$8c3d: ora    start_1p_edge_4262]
 	or.b	(a0),d0                           	| [...]
-	GET_ADDRESS	in_edge_4260               	| [$8c40: ora    in_edge_4260]
+	GET_ADDRESS	start_2p_edge_4260               	| [$8c40: ora    start_2p_edge_4260]
 	or.b	(a0),d0                           	| [...]
 	jeq	l_8c74                             	| [$8c43: beq    $8c74]
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8c45: lda    cpu2_ready_5ff3]
@@ -3865,8 +3865,8 @@ service_mode_9114:
 function_9138:
 	move.b	#0x40,d0                        	| [$9138: lda    #$40]
 	OP_W_ON_DP_ADDRESS	move,energy_c1,d0    | [$913a: sta    energy_c1]
-	OP_1_ON_DP_ADDRESS	clr,story_c2             | [$913c: clr    $c2]
-	OP_1_ON_DP_ADDRESS	clr,0xc4             | [$913e: clr    $c4]
+	OP_1_ON_DP_ADDRESS	clr,start_story_number_c2             | [$913c: clr    $c2]
+	OP_1_ON_DP_ADDRESS	clr,start_area_number_c4             | [$913e: clr    $c4]
 	move.b	#0x01,d0                        	| [$9140: lda    #$01]
 	OP_W_ON_DP_ADDRESS	move,story_number_c3,d0| [$9142: sta    story_number_c3]
 	OP_W_ON_DP_ADDRESS	move,starting_area_c5,d0| [$9144: sta    starting_area_c5]
@@ -5042,7 +5042,7 @@ function_96e8:
 	MAKE_D                                 	| [...]
 	GET_ADDRESS	0x542e                     	| [$96f2: std    $542e]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	move.w	#in_edge_4278,d4                	| [$96f5: ldu    #in_edge_4278] input edge  [30] IN2.3 BUTTON1 p1 (shoot)
+	move.w	#fire_1p_edge_4278,d4                	| [$96f5: ldu    #fire_1p_edge_4278] input edge  [30] IN2.3 BUTTON1 p1 (shoot)
 	OP_R_ON_DP_ADDRESS	move,0x01,d0         | [$96f8: lda    $01]
 	jeq	l_9703                             	| [$96fa: beq    $9703]
 	GET_ADDRESS	in_level_4259              	| [$96fc: lda    in_level_4259] input level [14] dip SWB:7 (cabinet)
@@ -6854,13 +6854,15 @@ l_9ef3:
 	move.b	#0xff,d0                        	| [$9f0b: lda    #$ff]
 l_9f0d:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$9f0d: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$9f0d: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$9f0f: lda    $da]
 	and.b	#0x0f,d0                         	| [$9f11: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$9f13: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$9f13: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	move.w	#0x3dae,d3                      	| [$9f15: ldy    #$3dae]
 	move.b	#0xec,d1                        	| [$9f19: ldb    #$ec]
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$9f1b: lda    starting_area_c5]
@@ -6872,13 +6874,15 @@ l_9f0d:
 	move.b	#0xff,d0                        	| [$9f23: lda    #$ff]
 l_9f25:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$9f25: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$9f25: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$9f27: lda    starting_area_c5]
 	and.b	#0x0f,d0                         	| [$9f29: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$9f2b: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$9f2b: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_W_ON_DP_ADDRESS	addq,dp_sem_cpu1_06,#1| [$9f2d: inc    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
 	OP_1_ON_DP_ADDRESS	tst,0x01             | [$9f2f: tst    $01]
@@ -6955,9 +6959,10 @@ l_9f6c:
 	VIDEO_WORD_DIRTY | [...]
 	jbsr	function_returns_z_a0f9           	| [$9f75: jsr    function_returns_z_a0f9]
 	jeq	l_9fd0                             	| [$9f78: beq    $9fd0]
-	GET_ADDRESS	in_edge_4262               	| [$9f7a: lda    in_edge_4262] input edge  [19] IN0.6 START1
+	* check if player presses START to select zone (changed to fire/jump)
+	GET_ADDRESS	fire_1p_edge_4278               	| [$9f7a: lda    start_1p_edge_4262] input edge  [19] IN0.6 START1
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	in_edge_4260               	| [$9f7d: ora    in_edge_4260] input edge  [18] IN1.6 START2
+	GET_ADDRESS	jump_1p_edge_4276               	| [$9f7d: ora    start_2p_edge_4260] input edge  [18] IN1.6 START2
 	or.b	(a0),d0                           	| [...]
 	jne	l_9f83                             	| [$9f80: bne    $9f83]
 	rts                                    	| [$9f82: rts]
@@ -7078,8 +7083,9 @@ l_9fe3:
 	move.b	#0xff,d0                        	| [$9ffb: lda    #$ff]
 l_9ffd:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$9ffd: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$9ffd: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$9fff: lda    starting_area_c5]
 	and.b	#0x0f,d0                         	| [$a001: anda   #$0f]
 	MAKE_D                                 	| [...]
@@ -7088,12 +7094,12 @@ l_9ffd:
 	VIDEO_WORD_DIRTY | [...]
 	rts                                    	| [$a005: rts]
 l_a006:
-	GET_ADDRESS	in_level_4263              	| [$a006: lda    in_level_4263] input level [19] IN0.6 START1
+	GET_ADDRESS	fire_1p_edge_4278+1              	| [$a006: lda    in_level_4263] input level [19] IN0.6 START1
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	in_level_4261              	| [$a009: ora    in_level_4261] input level [18] IN1.6 START2
+	GET_ADDRESS	jump_1p_edge_4276+1              	| [$a009: ora    in_level_4261] input level [18] IN1.6 START2
 	or.b	(a0),d0                           	| [...]
 	jeq	l_9fd0                             	| [$a00c: beq    $9fd0]
-	move.w	#in_edge_4276,d4                	| [$a00e: ldu    #in_edge_4276]
+	move.w	#jump_1p_edge_4276,d4                	| [$a00e: ldu    #jump_1p_edge_4276]
 	OP_R_ON_DP_ADDRESS	move,0x1e,d0         | [$a011: lda    $1e]
 	jne	l_a017                             	| [$a013: bne    $a017]
 	sub.w	#0xc,d4                          	| [$a015: leau   -$c,u]
@@ -7107,19 +7113,19 @@ l_a017:
 	rts                                    	| [$a01f: rts]
 	
 decrease_starting_area_a020:
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a020: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a020: lda    $c4]
 	jne		l_a025                             	| [$a022: bne    $a025]
 	* first area of this story: borrow from the story below if there is one
-	OP_R_ON_DP_ADDRESS	move,0xc2,d0
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0
 	jeq		9f			| already area 1
-	OP_W_ON_DP_ADDRESS	subq,0xc2,#1
+	OP_W_ON_DP_ADDRESS	subq,start_story_number_c2,#1
 	move.b	#0x05,d0
-	OP_W_ON_DP_ADDRESS	move,0xc4,d0	| the dec at l_a025 makes it 4
+	OP_W_ON_DP_ADDRESS	move,start_area_number_c4,d0	| the dec at l_a025 makes it 4
 	jra		l_a025
 9:
 	rts
 l_a025:
-	OP_W_ON_DP_ADDRESS	subq,0xc4,#1         | [$a025: dec    $c4]
+	OP_W_ON_DP_ADDRESS	subq,start_area_number_c4,#1         | [$a025: dec    $c4]
 	OP_W_ON_DP_ADDRESS	subq,0xd1,#1         | [$a027: dec    $d1]
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$a029: lda    starting_area_c5]
 	CLR_XC_FLAGS
@@ -7149,22 +7155,22 @@ l_a040:
 	rts                                    	| [$a048: rts]
 
 increase_starting_area_a049:
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a049: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a049: lda    $c4]
 	addq.b	#1,d0                           	| [$a04b: inca]
 	cmp.b	#0x05,d0                         	| [$a04c: cmpa   #$05]
 	jcs		l_a051                          	| still inside this story
 	* area rolled over: carry into the story, which is what $a6ef multiplies
 	* by 5.  $c4 must stay under $71 or the clamp at $a2ba pulls it back.
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0
 	cmp.b	#0x01,d0
 	jcc		9f			| already story 2: area 10 is the maximum
-	OP_W_ON_DP_ADDRESS	addq,story_c2,#1
+	OP_W_ON_DP_ADDRESS	addq,start_story_number_c2,#1
 	moveq	#0,d0			| first area of the new story
 	jra		l_a051
 9:
 	rts                                	| [$a050: rts]
 l_a051:
-	OP_W_ON_DP_ADDRESS	move,0xc4,d0         | [$a051: sta    $c4]
+	OP_W_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a051: sta    $c4]
 	OP_W_ON_DP_ADDRESS	addq,0xd1,#1         | [$a053: inc    $d1]
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$a055: lda    starting_area_c5]
 	CLR_XC_FLAGS
@@ -7326,13 +7332,15 @@ l_a109:
 	move.b	#0xff,d0                        	| [$a117: lda    #$ff]
 l_a119:
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0,d3                   	| [$a119: std    ,y]
+	GET_REG_VIDEO_ADDRESS	0,d3                   	| [$a119: std    ,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$a11b: lda    $da]
 	and.b	#0x0f,d0                         	| [$a11d: anda   #$0f]
 	MAKE_D                                 	| [...]
-	GET_REG_ADDRESS	0x2,d3                 	| [$a11f: std    $2,y]
+	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$a11f: std    $2,y]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
+	VIDEO_WORD_DIRTY
 	OP_R_ON_DP_ADDRESS	move,0xda,d0         | [$a121: lda    $da]
 	rts                                    	| [$a123: rts]
 
@@ -7612,11 +7620,11 @@ function_a24b:
 	addq.w	#1,d4                           	| [...]
 	move.b	(a0),d0                         	| [...]
 	OP_W_ON_DP_ADDRESS	move,0x70,d0         | [$a255: sta    $70]
-	OP_R_ON_DP_ADDRESS	cmp,story_c2,d0          | [$a257: cmpa   $c2]
+	OP_R_ON_DP_ADDRESS	cmp,start_story_number_c2,d0          | [$a257: cmpa   $c2]
 	jhi	l_a25d                             	| [$a259: bhi    $a25d]
-	OP_W_ON_DP_ADDRESS	subq,story_c2,#1         | [$a25b: dec    $c2]
+	OP_W_ON_DP_ADDRESS	subq,start_story_number_c2,#1         | [$a25b: dec    $c2]
 l_a25d:
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a25d: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$a25d: lda    $c2]
 	add.b	d0,d0                            	| [$a25f: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -7689,12 +7697,12 @@ function_a2ab:
 	addq.w	#1,d4                           	| [...]
 	move.b	(a0),d0                         	| [...]
 	OP_W_ON_DP_ADDRESS	move,0x71,d0         | [$a2b4: sta    $71]
-	OP_R_ON_DP_ADDRESS	cmp,0xc4,d0          | [$a2b6: cmpa   $c4]
+	OP_R_ON_DP_ADDRESS	cmp,start_area_number_c4,d0          | [$a2b6: cmpa   $c4]
 	jhi	l_a2bc                             	| [$a2b8: bhi    $a2bc]
-	OP_W_ON_DP_ADDRESS	subq,0xc4,#1         | [$a2ba: dec    $c4]
+	OP_W_ON_DP_ADDRESS	subq,start_area_number_c4,#1         | [$a2ba: dec    $c4]
 l_a2bc:
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a2bc: lda    $c4]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a2be: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a2bc: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a2be: lda    $c4]
 	add.b	d0,d0                            	| [$a2c0: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -7822,8 +7830,8 @@ l_a34a:
 
 * 1 jump-table ref
 function_a358:
-	OP_W_ON_DP_ADDRESS	addq,0xc4,#1         | [$a358: inc    $c4]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$a35a: lda    $c4]
+	OP_W_ON_DP_ADDRESS	addq,start_area_number_c4,#1         | [$a358: inc    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a35a: lda    $c4]
 	OP_R_ON_DP_ADDRESS	cmp,0x71,d0          | [$a35c: cmpa   $71]
 	jcc	l_a3ba                             	| [$a35e: bcc    $a3ba]
 	move.w	#0xb12c,d4                      	| [$a360: ldu    #$b12c] ROM
@@ -7909,8 +7917,8 @@ l_a39e:
 	jbsr	osd_yield   | sync after semaphore write
 	jra	function_b434                      	| [$a3b7: jmp    function_b434]
 l_a3ba:
-	OP_W_ON_DP_ADDRESS	addq,story_c2,#1         | [$a3ba: inc    $c2]
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a3bc: lda    $c2]
+	OP_W_ON_DP_ADDRESS	addq,start_story_number_c2,#1         | [$a3ba: inc    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$a3bc: lda    $c2]
 	OP_R_ON_DP_ADDRESS	cmp,0x70,d0          | [$a3be: cmpa   $70]
 	jcc	l_a41c                             	| [$a3c0: bcc    $a41c]
 	move.w	#0xb12c,d4                      	| [$a3c2: ldu    #$b12c]
@@ -7986,7 +7994,7 @@ l_a400:
 	move.b	#0x01,d6	| [...]
 	abcd	d6,d0	| [...]
 	OP_W_ON_DP_ADDRESS	move,story_number_c3,d0| [$a40d: sta    story_number_c3]
-	OP_1_ON_DP_ADDRESS	clr,0xc4             | [$a40f: clr    $c4]
+	OP_1_ON_DP_ADDRESS	clr,start_area_number_c4             | [$a40f: clr    $c4]
 * increase level number (stage 5)
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$a411: lda    starting_area_c5]
 	CLR_XC_FLAGS
@@ -8219,7 +8227,7 @@ l_a531:
 * 1 jump-table ref
 resume_play_a53b:
 	jbsr	set_level_context   | next level: set new context
-	OP_1_ON_DP_ADDRESS	tst,0xc4             | [$a53b: tst    $c4]
+	OP_1_ON_DP_ADDRESS	tst,start_area_number_c4             | [$a53b: tst    $c4]
 	jeq	l_a54c                             	| [$a53d: beq    $a54c]
 * re sets game in play
 	move.b	#0x04,d0                        	| [$a53f: lda    #$04]
@@ -8612,11 +8620,11 @@ function_a6da:
 * 1 jump-table ref
 function_a6e6:
 	move.w	#0xa866,d4                      	| [$a6e6: ldu    #$a866] ROM
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$a6e9: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$a6e9: lda    $c2]
                                          | [$a6eb: asla]
 	asl.b	#2,d0                            	| [$a6ec: asla]
-	OP_R_ON_DP_ADDRESS	add,story_c2,d0          | [$a6ed: adda   $c2]
-	OP_R_ON_DP_ADDRESS	add,0xc4,d0          | [$a6ef: adda   $c4]
+	OP_R_ON_DP_ADDRESS	add,start_story_number_c2,d0          | [$a6ed: adda   $c2]		| story times 5
+	OP_R_ON_DP_ADDRESS	add,start_area_number_c4,d0          | [$a6ef: adda   $c4]          | plus selected level
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -15016,10 +15024,10 @@ function_c5b2:
 	add.b	d0,d0                            	| [$c5b7: asla]
 	JMP_A_INDEXED	a2,5  | [$c5b8: jmp    [a,u]] [indirect_jump] [nb_entries=5]
 
-	BIT	#0xc4,d1                           	| [$c5ba: bitb   #$c4]
-	BIT	#0xc4,d1                           	| [$c5bc: bitb   #$c4]
-	BIT	#0xc4,d1                           	| [$c5be: bitb   #$c4]
-	BIT	#0xc4,d1                           	| [$c5c0: bitb   #$c4]
+	BIT	#start_area_number_c4,d1                           	| [$c5ba: bitb   #$c4]
+	BIT	#start_area_number_c4,d1                           	| [$c5bc: bitb   #$c4]
+	BIT	#start_area_number_c4,d1                           	| [$c5be: bitb   #$c4]
+	BIT	#start_area_number_c4,d1                           	| [$c5c0: bitb   #$c4]
 	move.b	#0x0e,d1                        	| [$c5c2: ldb    #$0e]
 
 * 4 jump-table ref
@@ -18141,14 +18149,14 @@ l_d600:
 	GET_REG_ADDRESS	0,d5                   	| [$d611: std    ,--s] [local]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d613: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d616: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$d616: lda    $c2]
 	add.b	d0,d0                            	| [$d618: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d619: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d61b: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d61b: lda    $c4]
 	add.b	d0,d0                            	| [$d61d: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18235,14 +18243,14 @@ function_d672:
 	GET_DP_ADDRESS	0x6c                    	| [$d67b: std    $6c] [freq=low, count=00%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d67d: ldu    #$e9fa] ROM [freq=low, count=00%]
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d680: lda    $c2] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$d680: lda    $c2] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d682: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d683: ldu    a,u] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d685: lda    $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d685: lda    $c4] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d687: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18270,14 +18278,14 @@ function_d697:
 	GET_DP_ADDRESS	0x6c                    	| [$d69f: std    $6c] [freq=low, count=00%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6a1: ldu    #$e9fa] ROM [freq=low, count=00%]
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6a4: lda    $c2] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$d6a4: lda    $c2] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d6a6: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6a7: ldu    a,u] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6a9: lda    $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d6a9: lda    $c4] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d6ab: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18306,14 +18314,14 @@ function_d6bb:
 	GET_DP_ADDRESS	0x6c                    	| [$d6c4: std    $6c]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6c6: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6c9: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$d6c9: lda    $c2]
 	add.b	d0,d0                            	| [$d6cb: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6cc: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6ce: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d6ce: lda    $c4]
 	add.b	d0,d0                            	| [$d6d0: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -18341,14 +18349,14 @@ function_d6e0:
 	GET_DP_ADDRESS	0x6c                    	| [$d6e8: std    $6c]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	move.w	#0xe9fa,d4                      	| [$d6ea: ldu    #$e9fa] ROM
-	OP_R_ON_DP_ADDRESS	move,story_c2,d0         | [$d6ed: lda    $c2]
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0         | [$d6ed: lda    $c2]
 	add.b	d0,d0                            	| [$d6ef: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ADDRESS_FROM_REG	d6,d4         	| [$d6f0: ldu    a,u]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d6f2: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d6f2: lda    $c4]
 	add.b	d0,d0                            	| [$d6f4: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
