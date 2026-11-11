@@ -2354,6 +2354,8 @@ playing_out:
 	move.b	_mt_E8Trigger,d0
 	jeq		0f
 	* workaround for stupid trigger firing several times
+	* this is annoying as hell and sometimes prevents follow-up music from
+	* starting
 	cmp.b	last_e8_trigger,d0
 	jeq		0f
 	move.b	d0,last_e8_trigger
@@ -2363,7 +2365,8 @@ playing_out:
 	clr.b	_mt_E8Trigger
 	cmp.b	#2,d0
 	jne		1f
-	* continues music
+	* trigger 2 is special, it tells the engine to
+	* continues music with the level-specific follow_up tune
 	st.b	(snd_music_req_4380,a6)		| set as playing
 	move.w	#MAIN_BGM_CONT_SND,d0
 	moveq	#0,d1
@@ -7676,7 +7679,7 @@ tunes_table:
 	.long	main_bgm_06      | level 1 tune
 	.long	boss_killed_07      | 7: boss killed jingle
 	.long	-2      | 8
-	.long	-1  | mission_complete_09      | 9
+	.long	mission_complete_09  |       | 9
 	.long	main_bgm_06  |alt_bgm_0a      | a
 	.long	high_score_0b      | b
 	.long	game_over_0c      | c
