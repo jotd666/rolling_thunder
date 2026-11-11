@@ -7,7 +7,8 @@ for next release
 - HUD tile clut 3B/3F doesn't seem to register (area select)
   get the addresses of the blue text and debug
 - load/save highscores
-- fire insert coins, up/down start game
+- down: start 2P game, 2 2P game ?? not working
+- 1 pixel too high for sprites!!
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying

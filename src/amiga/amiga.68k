@@ -2722,16 +2722,15 @@ add_to_score:
 * Z: set if playing
 is_game_playing:
 	movem.l	d0/a6,-(a7)
-	CPU1_GET_MEMORY_START_IN_A6
+	CPU1_GET_MEMORY_START_AND_DP
 	* if game is in "continue play", consider that game is not playing
 	* check that first
 
-	cmp.b	#2,d0
+	cmp.b	#6,(dp_state_cpu1_02,a5)
 1:
 	movem.l	(a7)+,d0/a6
 	rts
 0:
-	moveq	#1,d0
 	jra		1b
 	
 * what: blits data on bg plane, no horizontal shifting (erase)
@@ -6006,6 +6005,10 @@ osd_read_dsw2:
 	move.b	dip_switches_2,d0	| what MAME returns by default
 	rts
 	
+	.macro	IS_GAME_PLAYING
+	cmp.b 	#6,(dp_state_cpu1_02+0x5600,a6)
+	.endm
+	
 * < A6: CPU1 ram base
 decode_mcu_inputs:
 	movem.l	a0/d1,-(a7)
@@ -6064,6 +6067,10 @@ decode_mcu_inputs:
 	btst	#JPB_BTN_RED,d2
 	jne		0f					| previously pressed
 	move.b	#1,(fire_1p_edge_4278,a6)		| fire
+	IS_GAME_PLAYING | game playing?
+	jeq		0f
+	* insert coin
+	move.b	#1,coin1_requested
 0:
 	btst	#JPB_BTN_BLU,d1
 	jeq		0f
@@ -6075,10 +6082,18 @@ decode_mcu_inputs:
 	btst	#JPB_BTN_UP,d1
 	jeq		0f
 	move.b	#1,(in_level_427b,a6)
+	IS_GAME_PLAYING
+	jeq		0f
+	move.b	#1,(mcu_game_start_flag_418c,a6)
+	clr.b	(mcu_2p_flag_418e,a6)
 0:
 	btst	#JPB_BTN_DOWN,d1
 	jeq		0f
 	move.b	#1,(in_level_427d,a6)
+	IS_GAME_PLAYING
+	jeq		0f
+	move.b	#1,(mcu_game_start_flag_418c,a6)
+	move.b	#1,(mcu_2p_flag_418e,a6)
 0:
 	btst	#JPB_BTN_RIGHT,d1
 	jeq		0f
@@ -6136,28 +6151,7 @@ decode_mcu_inputs:
 0:
 	move.b	d1,previous_alt_press
 	
-	jbsr		is_game_playing
-	jeq	1f
-	move.l	joypad_1_state,d1
 
-	* game not playing, we can insert coin/start with joypad
-	btst	#JPB_BTN_RED,d1		| "5" key like in MAME
-	jeq		0f
-	st.b	detect_controllers
-	*bclr	#BIT_COIN1,d0
-0:
-	btst	#JPB_BTN_UP,d1		| "1" key like in MAME
-	jeq		0f
-	st.b	detect_controllers
-	*bclr	#BIT_START_1P,d0
-0:
-	btst	#JPB_BTN_DOWN,d1		| "2" key like in MAME
-	jeq		0f
-	st.b	detect_controllers
-	*bclr	#BIT_START_2P,d0
-0:
-
-1:	
 	movem.l	(a7)+,a0/d1
 	rts
 

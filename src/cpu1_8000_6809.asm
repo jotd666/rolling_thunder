@@ -240,7 +240,7 @@ mcu_status_4189              = $4189		; <- MCU: coin/credit status byte
 mcu_coin_acc_418b            = $418B		; <- MCU: coin accumulator
 mcu_game_start_flag_418c                = $418C		; <-> MCU: game start flag
 mcu_flag_418d                = $418D		; <-> MCU: game-in-progress flag
-mcu_flag_418e                = $418E		; <- MCU: freeplay / continue flag
+mcu_2p_flag_418e                = $418E		; <- MCU: freeplay / continue flag
 mcu_timer_4190               = $4190		; <- MCU: down-counter tick
 mcu_flag_41a5                = $41A5		; <- MCU: attract-mode / demo permission flag
 in_edge_423c                 = $423C		; input edge  [ 0] dip SWA:1 (service mode)
@@ -301,9 +301,9 @@ in_edge_4272                 = $4272		; input edge  [27] IN0.4 RIGHT p2
 in_level_4273                = $4273		; input level [27] IN0.4 RIGHT p2
 in_edge_4274                 = $4274		; input edge  [28] IN2.7 LEFT p2
 in_level_4275                = $4275		; input level [28] IN2.7 LEFT p2
-in_edge_4276                 = $4276		; input edge  [29] IN0.1 BUTTON2 p1 (jump)
+jump_1p_edge_4276                 = $4276		; input edge  [29] IN0.1 BUTTON2 p1 (jump)
 in_level_4277                = $4277		; input level [29] IN0.1 BUTTON2 p1 (jump)
-in_edge_4278                 = $4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
+fire_1p_edge_4278                 = $4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
 in_level_4279                = $4279		; input level [30] IN2.3 BUTTON1 p1 (shoot)
 in_edge_427a                 = $427A		; input edge  [31] IN1.2 UP p1
 in_level_427b                = $427B		; input level [31] IN1.2 UP p1
@@ -371,7 +371,7 @@ tile_related_counter_ae = $ae      ; 0 or $20 to draw tiles when scrolling needs
 player_number_01 = $01
 music_request_e8 = $e8
 prev_music_request_e9 = $e9
-story_c2 = $c2
+start_story_number_c2 = $c2
 
 ;CPU #1 4380 write controls MCU tune play: 
 ;
@@ -832,7 +832,7 @@ read_player_input_82b8:
 82BC: 26 03       BNE    $82C1
 82BE: 0F 0A       CLR    $0A
 82C0: 39          RTS
-82C1: 8E 42 76    LDX    #in_edge_4276
+82C1: 8E 42 76    LDX    #jump_1p_edge_4276
 82C4: 96 1E       LDA    $1E
 82C6: 26 02       BNE    $82CA
 82C8: 30 14       LEAX   -$C,X
@@ -1986,9 +1986,9 @@ function_8937:
 8BBE: 6A E4       DEC    ,S		; [local]
 8BC0: 26 F8       BNE    $8BBA
 8BC2: A6 E0       LDA    ,S+		; [local]
-8BC4: B6 42 76    LDA    in_edge_4276
+8BC4: B6 42 76    LDA    jump_1p_edge_4276
 8BC7: BA 42 6A    ORA    in_edge_426a		; input edge  [23] IN1.1 BUTTON2 p2 (jump)
-8BCA: BA 42 78    ORA    in_edge_4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
+8BCA: BA 42 78    ORA    fire_1p_edge_4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
 8BCD: BA 42 6C    ORA    in_edge_426c		; input edge  [24] IN2.6 BUTTON1 p2 (shoot)
 8BD0: BA 42 62    ORA    in_edge_4262		; input edge  [19] IN0.6 START1
 8BD3: BA 42 60    ORA    in_edge_4260		; input edge  [18] IN1.6 START2
@@ -2008,9 +2008,9 @@ function_8937:
 8BF8: 6A E4       DEC    ,S		; [local]
 8BFA: 26 F8       BNE    $8BF4
 8BFC: A6 E0       LDA    ,S+		; [local]
-8BFE: B6 42 76    LDA    in_edge_4276
+8BFE: B6 42 76    LDA    jump_1p_edge_4276
 8C01: BA 42 6A    ORA    in_edge_426a
-8C04: BA 42 78    ORA    in_edge_4278
+8C04: BA 42 78    ORA    fire_1p_edge_4278
 8C07: BA 42 6C    ORA    in_edge_426c
 8C0A: BA 42 62    ORA    in_edge_4262
 8C0D: BA 42 60    ORA    in_edge_4260
@@ -2028,9 +2028,9 @@ function_8937:
 8C2B: 6A E4       DEC    ,S		; [local]
 8C2D: 26 F8       BNE    $8C27
 8C2F: A6 E0       LDA    ,S+		; [local]
-8C31: B6 42 76    LDA    in_edge_4276
+8C31: B6 42 76    LDA    jump_1p_edge_4276
 8C34: BA 42 6A    ORA    in_edge_426a
-8C37: BA 42 78    ORA    in_edge_4278
+8C37: BA 42 78    ORA    fire_1p_edge_4278
 8C3A: BA 42 6C    ORA    in_edge_426c
 8C3D: BA 42 62    ORA    in_edge_4262
 8C40: BA 42 60    ORA    in_edge_4260
@@ -2406,7 +2406,7 @@ service_mode_9114:
 function_9138:
 9138: 86 40       LDA    #$40
 913A: 97 C1       STA    energy_c1
-913C: 0F C2       CLR    story_c2
+913C: 0F C2       CLR    start_story_number_c2
 913E: 0F C4       CLR    $C4
 9140: 86 01       LDA    #$01
 9142: 97 C3       STA    story_number_c3
@@ -3137,7 +3137,7 @@ function_96e8:
 96EB: 83 00 01    SUBD   #$0001
 96EE: 10 27 00 89 LBEQ   $977B
 96F2: FD 54 2E    STD    $542E
-96F5: CE 42 78    LDU    #in_edge_4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
+96F5: CE 42 78    LDU    #fire_1p_edge_4278		; input edge  [30] IN2.3 BUTTON1 p1 (shoot)
 96F8: 96 01       LDA    $01
 96FA: 27 07       BEQ    $9703
 96FC: B6 42 59    LDA    in_level_4259		; input level [14] dip SWB:7 (cabinet)
@@ -3788,7 +3788,7 @@ function_9c2b:
 9C40: FD 54 5E    STD    $545E
 9C43: 96 D9       LDA    $D9
 9C45: 26 1F       BNE    $9C66
-9C47: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
+9C47: 7D 41 8E    TST    mcu_2p_flag_418e		; <- MCU: set if 2 player
 9C4A: 27 05       BEQ    $9C51
 9C4C: CE 54 A0    LDU    #$54A0
 9C4F: 8D 65       BSR    function_9cb6
@@ -3804,7 +3804,7 @@ function_9c2b:
 9C65: 39          RTS
 9C66: 81 01       CMPA   #$01
 9C68: 26 1F       BNE    $9C89
-9C6A: 7D 41 8E    TST    mcu_flag_418e
+9C6A: 7D 41 8E    TST    mcu_2p_flag_418e
 9C6D: 27 05       BEQ    $9C74
 9C6F: CE 54 A0    LDU    #$54A0
 9C72: 8D 42       BSR    function_9cb6
@@ -3818,7 +3818,7 @@ function_9c2b:
 9C84: 0C 04       INC    dp_sub_cpu1_04
 9C86: 0F 06       CLR    dp_sem_cpu1_06
 9C88: 39          RTS
-9C89: 7D 41 8E    TST    mcu_flag_418e
+9C89: 7D 41 8E    TST    mcu_2p_flag_418e
 9C8C: 26 15       BNE    $9CA3
 9C8E: CE 54 80    LDU    #$5480
 9C91: 8D 58       BSR    function_9ceb
@@ -4247,7 +4247,7 @@ A005: 39          RTS
 A006: B6 42 63    LDA    in_level_4263		; input level [19] IN0.6 START1
 A009: BA 42 61    ORA    in_level_4261		; input level [18] IN1.6 START2
 A00C: 27 C2       BEQ    $9FD0
-A00E: CE 42 76    LDU    #in_edge_4276
+A00E: CE 42 76    LDU    #jump_1p_edge_4276
 A011: 96 1E       LDA    $1E
 A013: 26 02       BNE    $A017
 A015: 33 54       LEAU   -$C,U
@@ -4482,7 +4482,7 @@ A1B0: 86 40       LDA    #$40
 A1B2: 97 C1       STA    energy_c1
 A1B4: CC 00 50    LDD    #$0050
 A1B7: DD CA       STD    $CA
-A1B9: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
+A1B9: 7D 41 8E    TST    mcu_2p_flag_418e		; <- MCU: freeplay / continue flag
 A1BC: 26 12       BNE    $A1D0
 A1BE: CE 54 80    LDU    #$5480		; work RAM (shared with CPU2)
 A1C1: 8D 62       BSR    function_a225
@@ -4562,10 +4562,10 @@ A24D: B7 68 00    STA    cus115_rombank_6800
 A250: CE 60 00    LDU    #cus115_63701x_0_6000		; expansion: 63701X sample player reg 0
 A253: A6 C0       LDA    ,U+		; [bank_address]
 A255: 97 70       STA    $70
-A257: 91 C2       CMPA   story_c2
+A257: 91 C2       CMPA   start_story_number_c2
 A259: 22 02       BHI    $A25D
-A25B: 0A C2       DEC    story_c2
-A25D: 96 C2       LDA    story_c2
+A25B: 0A C2       DEC    start_story_number_c2
+A25D: 96 C2       LDA    start_story_number_c2
 A25F: 48          ASLA
 A260: EC C6       LDD    A,U		; [bank_address]
 A262: DD 72       STD    $72
@@ -4740,8 +4740,8 @@ A3B1: 0F 0E       CLR    dp_irqcount1_0e		; CPU1 IRQ/frame counter
 A3B3: 0C 06       INC    dp_sem_cpu1_06
 A3B5: 0C 07       INC    dp_sem_cpu2_07
 A3B7: 7E B4 34    JMP    function_b434
-A3BA: 0C C2       INC    story_c2
-A3BC: 96 C2       LDA    story_c2
+A3BA: 0C C2       INC    start_story_number_c2
+A3BC: 96 C2       LDA    start_story_number_c2
 A3BE: 91 70       CMPA   $70
 A3C0: 24 5A       BCC    $A41C
 A3C2: CE B1 2C    LDU    #$B12C
@@ -5177,10 +5177,10 @@ A6E0: 6E D6       JMP    [A,U]		; [indirect_jump] [nb_entries=2]
 ; 1 jump-table ref
 function_a6e6:
 A6E6: CE A8 66    LDU    #$A866		; ROM
-A6E9: 96 C2       LDA    story_c2
+A6E9: 96 C2       LDA    start_story_number_c2
 A6EB: 48          ASLA
 A6EC: 48          ASLA
-A6ED: 9B C2       ADDA   story_c2
+A6ED: 9B C2       ADDA   start_story_number_c2
 A6EF: 9B C4       ADDA   $C4
 A6F1: A6 C6       LDA    A,U
 A6F3: 97 E8       STA    music_request_e8
@@ -5623,7 +5623,7 @@ AA9C: B6 41 8A    LDA    nb_credits_418a
 AA9F: FD 3F 98    STD    $3F98
 AAA2: BD 84 8C    JSR    function_848c
 AAA5: BD 83 CB    JSR    clear_layer_0_83cb
-AAA8: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
+AAA8: 7D 41 8E    TST    mcu_2p_flag_418e		; <- MCU: freeplay / continue flag
 AAAB: 27 37       BEQ    $AAE4
 AAAD: 0D 01       TST    player_number_01
 AAAF: 26 2E       BNE    $AADF
@@ -5655,7 +5655,7 @@ AAE6: 0D DB       TST    $DB
 AAE8: 27 0F       BEQ    $AAF9
 AAEA: 0D D8       TST    $D8
 AAEC: 2B 0B       BMI    $AAF9
-AAEE: B6 41 8E    LDA    mcu_flag_418e
+AAEE: B6 41 8E    LDA    mcu_2p_flag_418e
 AAF1: 4C          INCA
 AAF2: 97 D8       STA    $D8
 AAF4: 0C 06       INC    dp_sem_cpu1_06
@@ -6110,7 +6110,7 @@ AE8A: BD B4 B8    JSR    clear_hud_rect_b4b8
 AE8D: BD 84 23    JSR    function_8423
 AE90: 86 FF       LDA    #$FF
 AE92: 97 D8       STA    $D8
-AE94: 7D 41 8E    TST    mcu_flag_418e		; <- MCU: freeplay / continue flag
+AE94: 7D 41 8E    TST    mcu_2p_flag_418e		; <- MCU: freeplay / continue flag
 AE97: 27 3D       BEQ    $AED6
 AE99: 0D 01       TST    player_number_01
 AE9B: 26 31       BNE    $AECE
@@ -11404,7 +11404,7 @@ D60E: 24 25       BCC    $D635
 D610: 1D          SEX
 D611: ED E3       STD    ,--S		; [local]
 D613: CE E9 FA    LDU    #$E9FA		; ROM
-D616: 96 C2       LDA    story_c2
+D616: 96 C2       LDA    start_story_number_c2
 D618: 48          ASLA
 D619: EE C6       LDU    A,U
 D61B: 96 C4       LDA    $C4
@@ -11465,7 +11465,7 @@ D677: 2C 14       BGE    $D68D
 D679: C0 02       SUBB   #$02
 D67B: DD 6C       STD    $6C
 D67D: CE E9 FA    LDU    #$E9FA		; ROM
-D680: 96 C2       LDA    story_c2
+D680: 96 C2       LDA    start_story_number_c2
 D682: 48          ASLA
 D683: EE C6       LDU    A,U
 D685: 96 C4       LDA    $C4
@@ -11487,7 +11487,7 @@ D69B: 2B 14       BMI    $D6B1
 D69D: C0 03       SUBB   #$03
 D69F: DD 6C       STD    $6C
 D6A1: CE E9 FA    LDU    #$E9FA		; ROM
-D6A4: 96 C2       LDA    story_c2
+D6A4: 96 C2       LDA    start_story_number_c2
 D6A6: 48          ASLA
 D6A7: EE C6       LDU    A,U
 D6A9: 96 C4       LDA    $C4
@@ -11510,7 +11510,7 @@ D6C0: D1 79       CMPB   $79
 D6C2: 2C 12       BGE    $D6D6
 D6C4: DD 6C       STD    $6C
 D6C6: CE E9 FA    LDU    #$E9FA		; ROM
-D6C9: 96 C2       LDA    story_c2
+D6C9: 96 C2       LDA    start_story_number_c2
 D6CB: 48          ASLA
 D6CC: EE C6       LDU    A,U
 D6CE: 96 C4       LDA    $C4
@@ -11532,7 +11532,7 @@ D6E4: C0 03       SUBB   #$03
 D6E6: 2B 12       BMI    $D6FA
 D6E8: DD 6C       STD    $6C
 D6EA: CE E9 FA    LDU    #$E9FA		; ROM
-D6ED: 96 C2       LDA    story_c2
+D6ED: 96 C2       LDA    start_story_number_c2
 D6EF: 48          ASLA
 D6F0: EE C6       LDU    A,U
 D6F2: 96 C4       LDA    $C4
