@@ -1492,6 +1492,11 @@ force_all_screen_redraw:
 	* given the current scroll X/Y, draw all tiles on screen
 	jbsr	set_initial_scroll_values
 	
+	* we will skip the full screen refresh if state is intermission
+	tst.w	current_context
+	jeq		10f
+	* intermission, don't redraw tiles, it's already taken care of by game
+
 	move.w	host_scroll_x,d0
 	move.w	d0,d5				| save scroll X
 	lsr.w	#3,D0	| divide by 8 to get real X tile offset
@@ -1529,8 +1534,8 @@ force_all_screen_redraw:
 	dbf		d2,0b
 	
 	
+10:
 	clr.w	x_offset
-	
 	* refresh HUD layer too
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	(0x3000,a6),a0
@@ -7061,7 +7066,12 @@ osd_sound_start:
 
 
 	* special case if game starts cut the music that could remain from attract
-
+	cmp.w 	#MAIN_BGM_SND,d0
+	jne		0f
+	* reset trigger so the workaround for repeated trigger
+	* works
+	st.b	last_e8_trigger
+0:
 	
 	and.w	#0xFF,d0
 

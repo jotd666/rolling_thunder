@@ -1,17 +1,13 @@
 for next release
 
+- area select > 5 doesn't work properly (story 1 area 7) despite A.I. fix
+  plus resume on level 10 after dying completely trashes, game loads
+  "intermission" context for some reason WTF
 - "LOADING..." like in DD
-- clut 3B/3F doesn't seem to register (area select)
-- area select > 5 doesn't work properly (story 1 area 7)
-- analyse with engine9000 https://github.com/alpine9000/engine9000-public
-- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
-- die, level restarts: follow up music doesn't play???
-- maybe block force refresh on intermission (double refresh)
-- mission complete music not there, boss kill played instead??
-- mission complete music ack
+- HUD tile clut 3B/3F doesn't seem to register (area select)
+  get the addresses of the blue text and debug
 - load/save highscores
 - fire insert coins, up/down start game
-- trainer infinite lives
 
 site	waits for	tune requested by
 $9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
@@ -24,6 +20,7 @@ $AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 
 
 
+- level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
 - could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
   which would allow shorter (and faster) sprite overlay: less chip, faster blits
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
