@@ -433,11 +433,17 @@ l_80db:
 
 * called 19x  from $80AB, $8542, $857E, $85CE, $87F7, $8822, $8843, $888F, ...
 clear_workram_0000_0300_80e9:
+	* our problem is that this routine clears the MCU "2 player" (cpu 1 @418E) mode as the MCU copies
+	* it constantly on the real machine it doesn't show but here we have to save it
+	
 	clr.w	d2                               	| [$80e9: ldx    #$0000] work RAM (CPU2 only - hidden behind sound RAM on CPU1)
 	move.b	#0x00,d0                        	| [$80ec: ldd    #$0000]
 	move.w	#0x0000,d1                      	| [$80ec: ldd    #$0000]
 	OP_W_ON_DP_ADDRESS	move,0x20,d0         | [$80ef: sta    $20]
 	OP_W_ON_DP_ADDRESS	move,0x21,d0         | [$80f1: sta    $21]
+	GET_REG_ADDRESS	0x18E,d2
+	move.w	(a0),-(a7)
+	move.l	a0,-(a7)
 l_80f3:
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0,d2                   	| [$80f3: std    ,x++]
@@ -446,7 +452,9 @@ l_80f3:
 	cmp.w	#0x0300,d2                       	| [$80f5: cmpx   #$0300]
 	jcs	l_80f3                             	| [$80f8: bcs    $80f3]
 	 |  [$80fa: sta    watchdog_8000]
-	jbsr	osd_set_dsw_settings |  [$80fd: rts]
+	move.l	(a7)+,a0
+	move.w	(a7)+,(a0)
+	jbra	osd_set_dsw_settings |  [$80fd: rts]
 
 * called 15x; jumped-to 4x  from $80AE, $8545, $8581, $85D1, $87FA, $8825, $8846, $8895, ...
 clear_workram_0400_0910_80fe:

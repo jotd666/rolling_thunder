@@ -110,7 +110,7 @@ def game_specific_cpu2(address,lines,i):
         # skip memory/video memory test of boot
         kill_code(lines,i,0x8097)
     elif address == 0x80FD:
-        line = change_instruction("jbsr\tosd_set_dsw_settings",lines,i)
+        line = change_instruction("jbra\tosd_set_dsw_settings",lines,i)
     return line
 
 dreg_dict = {'a':'d0','b':'d1'}

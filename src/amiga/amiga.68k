@@ -6068,13 +6068,17 @@ decode_mcu_inputs:
 	st.b	detect_controllers
 	clr.b	(1,a0)
 	move.b	#1,(mcu_game_start_flag_418c,a6)
+	jra		1f
 0:	
-*	clr.b	(in_level_4261,a6)
-*	tst.b	(2,a0)		| "2" key like in MAME
-*	beq.b	0f
-*	st.b	detect_controllers
-*	move.b	#1,(in_level_4261,a6)
-*0:	
+	tst.b	(2,a0)		| "2" key like in MAME
+	beq.b	0f
+	st.b	detect_controllers
+	clr.b	(2,a0)
+	move.b	#1,(mcu_game_start_flag_418c,a6)
+	move.b	#1,(mcu_2p_flag_418e,a6)
+	BREAKPOINT	"2P"
+0:
+1:	
 	lea		(jump_1p_edge_4276,a6),a0
 	clr.l	(a0)+
 	clr.l	(a0)+

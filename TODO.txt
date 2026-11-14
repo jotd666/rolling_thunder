@@ -5,28 +5,19 @@ for next release
 - "LOADING..." like in DD
 - load/save highscores
 - dip switches difficulty / nb lives
-- down: start 2P game, 2 2P game ?? not working
-
+- set context: stop music else swap between players (and levels) music is fucked up
+- insert coin: nb credits 0->1->0
 
 ------------
 
-
-
-
-
 - level 3 & 5 & 10 are fully horizontal: optimize: don't do tile vertical duplication
 - could quantize more bg1 max 36 colors. If color more reduced could fit on 5 bitplanes
-  which would allow shorter (and faster) sprite overlay: less chip, faster blits
+  which would allow shorter (and faster) sprite overlay: less chip, faster blits in the case of
+  low priority sprites: no effect for high priority sprites, small effect on memory => not worth it
 - try sprites in 128 colors, check if memory holds, check if speed is ok on real HW
 - sprites 128 colors, bg in 64 to avoid washed down
 
-
 placement of the 5th sprite isn't correct (1 pixel off!)
-
-
-
 
 tunes: https://vgmrips.net/packs/pack/rolling-thunder-namco-system-86
 to rip sounds/voices: select service mode!
-
-

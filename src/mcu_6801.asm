@@ -2025,18 +2025,18 @@ F60A: E6 67    ldb  $67,x
 F60C: EE 57    ldx  $57,x
 F60E: 58       aslb 
 F60F: 3A       abx  
-F610: A6 00    lda  $00,x
-F612: 26 2B    bne  $F63F
+F610: A6 00    lda  $00,x        ; START1 edge
+F612: 26 2B    bne  $F63F        ; pressed -> 1 player
 F614: 96 80    lda  nb_credits_80
 F616: DE AE    ldx  $AE
-F618: A1 78    cmpa $78,x
+F618: A1 78    cmpa $78,x        ; enough credits for 2P?
 F61A: 25 41    bcs  $F65D
 F61C: DE AE    ldx  $AE
 F61E: E6 68    ldb  $68,x
 F620: EE 57    ldx  $57,x
 F622: 58       aslb 
 F623: 3A       abx  
-F624: A6 00    lda  $00,x
+F624: A6 00    lda  $00,x        ; START2 edge
 F626: 27 35    beq  $F65D
 F628: DE AE    ldx  $AE
 F62A: E6 78    ldb  $78,x
@@ -2045,20 +2045,20 @@ F62E: 96 80    lda  nb_credits_80
 F630: 10       sba  
 F631: 97 80    sta  nb_credits_80
 F633: 86 01    lda  #$01
-F635: B7 11 8E sta  $118E
+F635: B7 11 8E sta  $118E        ; <-- 2P flag SET
 F638: DE 8D    ldx  $8D
 F63A: 08       inx  
 F63B: DF 8D    stx  $8D
 F63D: 20 0F    bra  $F64E
-F63F: C6 01    ldb  #$01
+F63F: C6 01    ldb  #$01         ; 1 player
 F641: D7 82    stb  $82
 F643: 7A 00 80 dec  $0080
-F646: 7F 11 8E clr  $118E
+F646: 7F 11 8E clr  $118E        ; <-- 2P flag CLEARED
 F649: DE 8B    ldx  $8B
 F64B: 08       inx  
 F64C: DF 8B    stx  $8B
 F64E: 86 01    lda  #$01
-F650: B7 11 8C sta  $118C
+F650: B7 11 8C sta  $118C        ; <-- start flag, both paths
 F653: DE AE    ldx  $AE
 F655: A6 7B    lda  $7B,x
 F657: 27 04    beq  $F65D
