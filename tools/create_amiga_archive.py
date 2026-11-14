@@ -40,7 +40,7 @@ shutil.copy(progdir / "assets" / "amiga" / "RollingThunder_AGA.info",outdir)
 
 
 # cleanup of log files in data dir that whdload creates
-for x in datadir.glob("*_used_*"):
+for x in datadir.glob("*used_*"):
     os.remove(x)
 
 

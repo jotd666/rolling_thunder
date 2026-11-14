@@ -107,7 +107,7 @@ BG_TILE_HEIGHT = 8
 ALWAYS_HIDDEN_HEIGHT = 32
 
 BG_TILE_FILE_MAX_SIZE = 1550000
-SPRITE_FILE_BITMAP_MAX_SIZE = 0x102000   | in chipmem!
+SPRITE_FILE_BITMAP_MAX_SIZE = 0x103000   | in chipmem!
 SPRITE_FILE_HEADER_MAX_SIZE = 350000
 BIGGEST_MUSIC_SIZE = 298000      | in chipmem!
 OPT_SPRITE_MIRRORING = 0
@@ -117,7 +117,7 @@ OPT_SPRITE_MIRRORING = 0
 MIRROR_BUFFER_SIZE = 0x15000
 	.endif
 	
-SCORE_FILE_SIZE = 90
+SCORE_FILE_SIZE = 0x23
 
 LOG_BUFFER_SIZE = 0x100000
 
@@ -637,20 +637,13 @@ apply_settings:
 
 0:
 
-
+	* pretty basic binary switches
 	lea		lives_table,a0
-	move.b	start_lives+3,d1
-	and.w	#3,d1
-	move.b	(a0,d1.w),d0
+	move.b	start_lives+3,five_lives_flag
 
-
-	lea		difficulty_table,a0
 	move.b	difficulty_level+3,d1
-	and.w	#3,d1
-	move.b	(a0,d1.w),d1
-	lsl.b	#4,d1
-	or.b	d1,d0
-	not.b	d0
+	bchg	#0,d1
+	move.b	d1,difficulty_flag
 
 	rts
 
@@ -1054,7 +1047,7 @@ demo_game:
 * (MCU writes the settings back but here it does not as MCU
 * is not emulated)
 osd_set_dsw_settings:
-	move.b	#1,(in_level_4251-0x4000,a6)    | 150 seconds, not 120
+	move.b	#1,(timer_dsw_4251-0x4000,a6)    | 150 seconds, not 120
 	rts
 	
 	
@@ -4718,6 +4711,7 @@ platform_init:
 	moveq	#4,d7  | only 5 first sprites are used
 	moveq	#0x1F,d2	| sprite X start
 0:
+
 	move.w	d2,d0
 	move.w	#0x0,d1
 *	tst.b	ntsc_flag
@@ -4726,14 +4720,13 @@ platform_init:
 *1:
 	jbsr	store_sprite_pos
 	add.w	#64,d2		| advance X
-	
+
 	* store control word
 	move.l	(a0)+,a2
 	move.w	d0,(8,a2)
 	swap 	d0
 	move.w	d0,(a2)
 	addq	#8,a2
-	
 	dbf	d7,0b
 
 	* 3 last sprites are not displayed
@@ -5258,6 +5251,8 @@ update_bg0_tile:
 	moveq	#0,d0
 	move.w	(a6),d1
 	cmp.w	#0xFF03,d1	| empty tile layer 2
+	jeq		tile_layers_done
+	cmp.w	#0x8C5F,d1	| empty tile layer 2 (intermission below enemies)
 	jeq		tile_layers_done
 	move.b	(a6)+,d0
 
@@ -6895,7 +6890,7 @@ osd_read_high_scores:
 	OSD_ENTER
 	movem.l	d0-d7/a0-a6,-(a7)
 	CPU1_GET_MEMORY_START_IN_A6
-	*lea	(high_score_table_1518,a6),a0
+	lea	(high_score_table_5400,a6),a0
 	move.l	_resload,d0
 	beq.b	0f
 	move.l	d0,a2
@@ -6920,11 +6915,9 @@ osd_read_high_scores:
 	move.b	(a1)+,(a0)+
 	dbf		d0,0b
 1:
-	*lea	(high_score_table_1518,a6),a0
-	move.w	(a0),d0		| offset for highest score
-	lea		(a6,d0.w),a0
+	lea	(high_score_table_5400,a6),a0
 	* also update copy (for top screen display)
-	*lea	(high_score_00d0,a6),a1
+	lea	(high_score_5450,a6),a1
 	move.l	(a0),(a1)
 	movem.l	(a7)+,d0-d7/a0-a6
 	OSD_EXIT
@@ -6939,7 +6932,7 @@ osd_write_high_scores:
 	bne.b	2f
 	.endif
 	CPU1_GET_MEMORY_START_IN_A6
-	*lea	(high_score_table_1518,a6),a0
+	lea	(high_score_table_5400,a6),a0
 	
 	move.l	_resload,d0
 	bne.b	1f

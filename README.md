@@ -30,6 +30,8 @@ Cheat keys:
 
 F1: toggle invincibility
 
+Warning: enabling "area select" counts as cheat, and high-scores won't be saved
+
 Story 1 (First Half)
 
 • Area 1: Underground base entrance; maneuvering between floor levels and collecting initial pistol/machine gun ammo from doors.

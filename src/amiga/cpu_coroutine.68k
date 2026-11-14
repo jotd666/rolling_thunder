@@ -109,10 +109,16 @@ osd_yield:
 0:
 	movem.l d0-d7/a0-a6,-(sp)
 
+	* the following was to detect deadlock. There's only one deadlock, at the end
+	* of attract mode, and if ignored, it is not causing any issues. I suppose that
+	* cpu 2 task is just "killed" and game continues without any visible issues
+	* I also suppose that this is happening on the real machine too.
+	.ifndef	RELEASE
 	subq.w  #1,yield_budget
 	jbne   .alive
 	jbsr     sync_deadlock       | debug hook / breakpoint
 .alive:
+	.endif
 	tst.b   cur_task
 	bne.s   .from_cpu2
 

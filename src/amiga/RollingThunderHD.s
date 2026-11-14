@@ -57,8 +57,8 @@ _config
 
 	*dc.b	"C2:X:startup menu:5;"
 
-	dc.b	"C3:L:difficulty level:easy,normal,difficult,very difficult;"
-	dc.b	"C4:L:lives:3,4,5,7;"
+	dc.b	"C3:L:difficulty level:easy,normal;"
+	dc.b	"C4:L:lives:3,5;"
 	dc.b	0
 
 	IFD BARFLY

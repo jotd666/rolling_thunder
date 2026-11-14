@@ -658,11 +658,15 @@ irq_update_video_state_81cc:
 	OP_W_ON_DP_ADDRESS	move,dp_frame_parity_00,d0| [$81d3: sta    dp_frame_parity_00] [freq=low, count=20%]
 	move.b	invincible_flag,d0 |  [$81d5: lda    in_level_4245] input level [ 4] dip SWA:5 (invuln) [freq=low, count=20%]
 	OP_W_ON_DP_ADDRESS	move,invulnerable_10,d0| [$81d8: sta    invulnerable_10] [freq=low, count=20%]
-	GET_ADDRESS	in_level_4253              	| [$81da: lda    in_level_4253] input level [11] dip SWB:4 (difficulty) [freq=low, count=20%]
-	move.b	(a0),d0                         	| [...]
+	*GET_ADDRESS	difficult_dsw_4253              	| [$81da: lda    difficult_dsw_4253] input level [11] dip SWB:4 (difficulty) [freq=low, count=20%]
+	*move.b	(a0),d0                         	| [...]
+	move.b	difficulty_flag,d0
 	OP_W_ON_DP_ADDRESS	move,difficulty_3c,d0| [$81dd: sta    difficulty_3c] [freq=low, count=20%]
-	jbsr	compute_flip_screen_81e8          	| [$81df: bsr    compute_flip_screen_81e8] [freq=low, count=20%]
-	jbsr	compute_active_player_side_8203   	| [$81e1: bsr    compute_active_player_side_8203] [freq=low, count=20%]
+	* no need to call that and waste cpu as screen is always upright
+	*jbsr	compute_flip_screen_81e8          	| [$81df: bsr    compute_flip_screen_81e8] [freq=low, count=20%]
+	* no need to compute side, just set 1 in the proper memory location
+	*jbsr	compute_active_player_side_8203   	| [$81e1: bsr    compute_active_player_side_8203] [freq=low, count=20%]
+	OP_W_ON_DP_ADDRESS	move,0x1e,#1
 	jbsr	update_scroll_layers_821d         	| [$81e3: bsr    update_scroll_layers_821d] [freq=low, count=20%]
 	jra	read_player_input_82b8             	| [$81e5: jmp    read_player_input_82b8] [freq=low, count=20%]
 
@@ -969,7 +973,7 @@ state_init_8355:
 	jbsr	function_84cd                     	| [$8364: jsr    function_84cd]
 	jbsr	function_84e0                     	| [$8367: jsr    function_84e0]
 	jbsr	function_84f9                     	| [$836a: jsr    function_84f9]
-	jbsr	function_95e3                     	| [$836d: jsr    function_95e3]
+	jbsr	load_default_highscores_95e3                     	| [$836d: jsr    load_default_highscores_95e3]
 	OP_1_ON_DP_ADDRESS	clr,0x01             | [$8370: clr    $01]
 	move.w	#0x53c0,d2                      	| [$8372: ldx    #$53c0] work RAM (shared with CPU2)
 	move.b	#0x01,d0                        	| [$8375: lda    #$01]
@@ -1113,7 +1117,7 @@ l_8419:
 	GET_REG_ADDRESS	0,d2                   	| [$8419: std    ,x++]
 	addq.w	#2,d2                           	| [...]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	cmp.w	#0x5400,d2                       	| [$841b: cmpx   #$5400]
+	cmp.w	#high_score_table_5400,d2                       	| [$841b: cmpx   #$5400]
 	jcs	l_8419                             	| [$841e: bcs    $8419]
 	 |  [$8420: sta    watchdog_8000]
 
@@ -1164,7 +1168,7 @@ function_8423:
 
 * called 1x  from $835B
 function_8459:
-	move.w	#0x5400,d2                      	| [$8459: ldx    #$5400] work RAM (shared with CPU2)
+	move.w	#high_score_table_5400,d2                      	| [$8459: ldx    #$5400] work RAM (shared with CPU2)
 	move.b	#0x00,d0                        	| [$845c: ldd    #$0000]
 	move.w	#0x0000,d1                      	| [$845c: ldd    #$0000]
 l_845f:
@@ -2487,7 +2491,7 @@ l_89b0:
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
 l_89ba:
-	GET_ADDRESS	in_level_424d              	| [$89ba: lda    in_level_424d] input level [ 8] dip SWB:1 (lives)
+	GET_ADDRESS	lives_dsw_424d              	| [$89ba: lda    lives_dsw_424d] input level [ 8] dip SWB:1 (lives)
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x01,d0                         	| [$89bd: anda   #$01]
 	move.w	#0x8851,d4                      	| [$89bf: ldu    #$8851]
@@ -2501,7 +2505,7 @@ l_89ba:
 	GET_VIDEO_ADDRESS	0x37ac                     	| [$89c6: std    $37ac] [video_address]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
-	GET_ADDRESS	in_level_424f              	| [$89c9: lda    in_level_424f] input level [ 9] dip SWB:2 (bonus life)
+	GET_ADDRESS	bonus_life_424f              	| [$89c9: lda    bonus_life_424f] input level [ 9] dip SWB:2 (bonus life)
 	move.b	(a0),d0                         	| [...]
 	jne	l_89e7                             	| [$89cc: bne    $89e7]
 	move.w	#0x8e63,d4                      	| [$89ce: ldu    #$8e63]
@@ -2555,7 +2559,7 @@ l_89f4:
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
 l_89fe:
-	GET_ADDRESS	in_level_4251              	| [$89fe: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$89fe: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	jne	l_8a1c                             	| [$8a01: bne    $8a1c]
 	move.w	#0x8e8d,d4                      	| [$8a03: ldu    #$8e8d]
@@ -2609,7 +2613,7 @@ l_8a29:
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
 l_8a33:
-	GET_ADDRESS	in_level_4253              	| [$8a33: lda    in_level_4253] input level [11] dip SWB:4 (difficulty)
+	GET_ADDRESS	difficult_dsw_4253              	| [$8a33: lda    difficult_dsw_4253] input level [11] dip SWB:4 (difficulty)
 	move.b	(a0),d0                         	| [...]
 	jne	l_8a51                             	| [$8a36: bne    $8a51]
 	move.w	#0x8ea8,d4                      	| [$8a38: ldu    #$8ea8]
@@ -2790,7 +2794,7 @@ l_8ae5:
 	move.w	#in_level_423d,d2               	| [$8ae5: ldx    #in_level_423d] input level [ 0] dip SWA:1 (service mode)
 	move.w	#0x3eac,d4                      	| [$8ae8: ldu    #$3eac]
 	jbsr	function_8c96                     	| [$8aeb: jsr    function_8c96]
-	move.w	#in_level_424d,d2               	| [$8aee: ldx    #in_level_424d]
+	move.w	#lives_dsw_424d,d2               	| [$8aee: ldx    #lives_dsw_424d]
 	move.w	#0x3f2c,d4                      	| [$8af1: ldu    #$3f2c]
 	jbsr	function_8c96                     	| [$8af4: jsr    function_8c96]
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8af7: ldb    cpu2_ready_5ff3] CPU2 -> CPU1 'POST finished' handshake ($1FF3)
@@ -3409,7 +3413,7 @@ l_8fd9:
 	move.w	#0x328c,d4                      	| [$8fea: ldu    #$328c]
 	move.b	#0xfc,d1                        	| [$8fed: ldb    #$fc]
 	jbsr	write_to_screen_9477              	| [$8fef: jsr    write_to_screen_9477] display player 1 score (00)
-	move.w	#0x5450,d2                      	| [$8ff2: ldx    #$5450]
+	move.w	#high_score_5450,d2                      	| [$8ff2: ldx    #$5450]
 	move.w	#0x32a4,d4                      	| [$8ff5: ldu    #$32a4]
 	move.b	#0xe4,d1                        	| [$8ff8: ldb    #$e4]
 	jbsr	write_to_screen_9477              	| [$8ffa: jsr    write_to_screen_9477] display high score (30000)
@@ -4205,7 +4209,7 @@ function_937a:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	GET_ADDRESS	0x545e                     	| [$9398: std    $545e] [freq=low, count=20%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
-	move.w	#0x5450,d2                      	| [$939b: ldx    #$5450] [freq=low, count=20%]
+	move.w	#high_score_5450,d2                      	| [$939b: ldx    #$5450] [freq=low, count=20%]
 	GET_REG_ADDRESS	0,d4                   	| [$939e: ldd    ,u] [freq=low, count=20%]
 	LOAD_D                                 	| [$939e: ldd    ,u] [freq=low, count=20%]
 	GET_REG_ADDRESS	0,d2                   	| [$93a0: cmpd   ,x] [freq=low, count=20%]
@@ -4228,7 +4232,7 @@ l_93ad:
 	move.b	d0,(a0)                         	| [...]
 l_93b5:
 	move.w	#0x946f,d2                      	| [$93b5: ldx    #$946f] ROM [freq=low, count=20%]
-	GET_ADDRESS	in_level_424f              	| [$93b8: ldb    in_level_424f] input level [ 9] dip SWB:2 (bonus life) [freq=low, count=20%]
+	GET_ADDRESS	bonus_life_424f              	| [$93b8: ldb    bonus_life_424f] input level [ 9] dip SWB:2 (bonus life) [freq=low, count=20%]
 	move.b	(a0),d1                         	| [...]
                                          | [$93bb: aslb]
 	asl.b	#2,d1                            	| [$93bc: aslb] [freq=low, count=20%]
@@ -4269,7 +4273,7 @@ function_93e4:
 	move.w	#0x328c,d4                      	| [$93e7: ldu    #$328c] layer 3 tilemap / HUD [freq=low, count=20%]
 	move.b	#0xfc,d1                        	| [$93ea: ldb    #$fc] [freq=low, count=20%]
 	jbsr	write_to_screen_9477              	| [$93ec: jsr    write_to_screen_9477] [freq=low, count=20%]
-	move.w	#0x5450,d2                      	| [$93ef: ldx    #$5450] [freq=low, count=20%]
+	move.w	#high_score_5450,d2                      	| [$93ef: ldx    #$5450] [freq=low, count=20%]
 	move.w	#0x32a4,d4                      	| [$93f2: ldu    #$32a4] [freq=low, count=20%]
 	move.b	#0xe4,d1                        	| [$93f5: ldb    #$e4] [freq=low, count=20%]
 	jbsr	write_to_screen_9477              	| [$93f7: jsr    write_to_screen_9477] [freq=low, count=20%]
@@ -4717,9 +4721,9 @@ l_95ab:
 
 
 * called 1x  from $836D
-function_95e3:
+load_default_highscores_95e3:
 	move.b	#0x05,d1                        	| [$95e3: ldb    #$05]
-	move.w	#0x5400,d4                      	| [$95e5: ldu    #$5400] work RAM (shared with CPU2)
+	move.w	#high_score_table_5400,d4                      	| [$95e5: ldu    #$5400] work RAM (shared with CPU2)
 	move.w	#0x960d,d2                      	| [$95e8: ldx    #$960d] ROM
 l_95eb:
 	move.l	d4,-(sp)                        	| [$95eb: pshs   u]
@@ -4742,10 +4746,11 @@ l_95f1:
 	move.b	#0x00,d0                        	| [$9603: ldd    #$0030]
 	move.w	#0x0030,d1                      	| [$9603: ldd    #$0030]
 	MAKE_D                                 	| [...]
-	GET_ADDRESS	0x5450                     	| [$9606: std    $5450]
+	GET_ADDRESS	high_score_5450                     	| [$9606: std    $5450]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	GET_ADDRESS	0x5452                     	| [$9609: sta    $5452]
 	move.b	d0,(a0)                         	| [...]
+	jbsr	osd_read_high_scores
 	rts                                    	| [$960c: rts]
 
 
@@ -4768,7 +4773,7 @@ function_9641:
 
 * 1 jump-table ref
 function_9642:
-	move.w	#0x5400,d4                      	| [$9642: ldu    #$5400] work RAM (shared with CPU2)
+	move.w	#high_score_table_5400,d4                      	| [$9642: ldu    #$5400] work RAM (shared with CPU2)
 	GET_ADDRESS	0x542a                     	| [$9645: clr    $542a]
 	clr.b	(a0)                         	| [...]
 	move.b	#0x01,d0                        	| [$9648: lda    #$01]
@@ -5019,7 +5024,9 @@ l_9792:
 	subq.b	#1,d1                           	| [$9796: decb]
 	jne	l_9792                             	| [$9797: bne    $9792]
 	GET_ADDRESS	0x542d                     	| [$9799: inc    $542d]
+	* change state: highscore flashes
 	addq.b	#1,(a0)                         	| [...]
+	jbsr	osd_write_high_scores
 	move.b	#0xb4,d0                        	| [$979c: lda    #$b4]
 	GET_ADDRESS	0x542e                     	| [$979e: sta    $542e]
 	move.b	d0,(a0)                         	| [...]
@@ -5027,7 +5034,7 @@ l_9792:
 
 * 1 jump-table ref
 * high score enter timeout
-function_97a2:
+flash_high_score_97a2:
 	GET_ADDRESS	0x542e                     	| [$97a2: dec    $542e] work RAM (shared with CPU2)
 	subq.b	#1,(a0)                         	| [...]
 	jeq	l_97cc                             	| [$97a5: beq    $97cc]
@@ -5235,7 +5242,7 @@ l_986b:
 	addq.w	#1,d5                           	| [...]
 	move.b	(a0),d0                         	| [...]
 	move.l	d2,-(sp)                        	| [$9875: pshs   x]
-	move.w	#0x5400,d3                      	| [$9877: ldy    #$5400] work RAM (shared with CPU2)
+	move.w	#high_score_table_5400,d3                      	| [$9877: ldy    #$5400] work RAM (shared with CPU2)
 	move.w	#0x359c,d4                      	| [$987b: ldu    #$359c]
 	move.b	#0x05,d1                        	| [$987e: ldb    #$05]
 l_9880:
@@ -6069,7 +6076,7 @@ l_9c01:
 * 1 jump-table ref
 function_9c2b:
 	move.w	#0x9cb2,d4                      	| [$9c2b: ldu    #$9cb2] ROM
-	GET_ADDRESS	in_level_4251              	| [$9c2e: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$9c2e: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	add.b	d0,d0                            	| [$9c31: asla]
 	moveq	#0,d6                            	| [...]
@@ -6174,8 +6181,9 @@ l_9ca3:
 * called 3x  from $9C4F, $9C54, $9C72
 function_9cb6:
 	move.w	#0x9d0b,d3                      	| [$9cb6: ldy    #$9d0b] ROM
-	GET_ADDRESS	in_level_424d              	| [$9cba: lda    in_level_424d] input level [ 8] dip SWB:1 (lives)
-	move.b	(a0),d0                         	| [...]
+	*GET_ADDRESS	lives_dsw_424d              	| [$9cba: lda    lives_dsw_424d] input level [ 8] dip SWB:1 (lives)
+	*move.b	(a0),d0                         	| [...]
+	move.b	five_lives_flag,d0
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -6225,7 +6233,7 @@ function_9cb6:
 * called 4x  from $9C77, $9C91, $9CA6, $9CAB
 function_9ceb:
 	move.w	#0x9d0b,d3                      	| [$9ceb: ldy    #$9d0b] ROM
-	GET_ADDRESS	in_level_424d              	| [$9cef: lda    in_level_424d] input level [ 8] dip SWB:1 (lives)
+	GET_ADDRESS	lives_dsw_424d              	| [$9cef: lda    lives_dsw_424d] input level [ 8] dip SWB:1 (lives)
 	move.b	(a0),d0                         	| [...]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -7293,6 +7301,8 @@ l_a131:
 	OP_R_ON_DP_ADDRESS	move,0x0a,d0         | [$a161: lda    $0a]
 	and.b	#0xfc,d0                         	| [$a163: anda   #$fc]
 	OP_W_ON_DP_ADDRESS	move,0x0a,d0         | [$a165: sta    $0a]
+	* called when starting game (before area select or without area select) and also
+	* on each restart or level up
 	jbsr	set_level_context   | next level: set new context
 	OP_W_ON_DP_ADDRESS	addq,dp_sub_cpu1_04,#1| [$a167: inc    dp_sub_cpu1_04] CPU1 sub-state
 	OP_1_ON_DP_ADDRESS	clr,dp_sem_cpu1_06   | [$a169: clr    dp_sem_cpu1_06]
@@ -7402,7 +7412,7 @@ l_a1ea:
 	OP_W_ON_DP_ADDRESS	move,player_number_01,d0| [$a1fc: sta    player_number_01]
 l_a1fe:
 	move.w	#0xa221,d4                      	| [$a1fe: ldu    #$a221] ROM
-	GET_ADDRESS	in_level_4251              	| [$a201: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$a201: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	add.b	d0,d0                            	| [$a204: asla]
 	moveq	#0,d6                            	| [...]
@@ -8062,7 +8072,7 @@ function_a4fd:
 	OP_W_ON_DP_ADDRESS	move,0x14,d0         | [$a506: sta    $14]
 	OP_W_ON_DP_ADDRESS	move,0x15,d0         | [$a508: sta    $15]
 	move.w	#0xa537,d4                      	| [$a50a: ldu    #$a537] ROM
-	GET_ADDRESS	in_level_4251              	| [$a50d: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$a50d: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	add.b	d0,d0                            	| [$a510: asla]
 	moveq	#0,d6                            	| [...]
@@ -9377,7 +9387,7 @@ l_aab6:
 	eor.b	#0x01,d0                         	| [$aab8: eora   #$01]
 	OP_W_ON_DP_ADDRESS	move,player_number_01,d0| [$aaba: sta    player_number_01]
 	move.w	#0xab02,d4                      	| [$aabc: ldu    #$ab02] ROM
-	GET_ADDRESS	in_level_4251              	| [$aabf: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$aabf: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	add.b	d0,d0                            	| [$aac2: asla]
 	moveq	#0,d6                            	| [...]
@@ -10223,7 +10233,7 @@ l_aea5:
 	eor.b	#0x01,d0                         	| [$aea7: eora   #$01]
 	OP_W_ON_DP_ADDRESS	move,player_number_01,d0| [$aea9: sta    player_number_01]
 	move.w	#0xaee3,d4                      	| [$aeab: ldu    #$aee3] ROM
-	GET_ADDRESS	in_level_4251              	| [$aeae: lda    in_level_4251] input level [10] dip SWB:3 (timer)
+	GET_ADDRESS	timer_dsw_4251              	| [$aeae: lda    timer_dsw_4251] input level [10] dip SWB:3 (timer)
 	move.b	(a0),d0                         	| [...]
 	add.b	d0,d0                            	| [$aeb1: asla]
 	moveq	#0,d6                            	| [...]
@@ -18533,9 +18543,9 @@ function_d8d5:
 * 1 jump-table ref
 function_d8d6:
 	GET_REG_ADDRESS	0x3,d2                 	| [$d8d6: inc    $3,x] [freq=low, count=21%]
-	addq.b	#1,(a0)                         	| [...]
-	GET_REG_ADDRESS	0x3,d2                 	| [$d8d8: lda    $3,x] [freq=low, count=21%]
-	move.b	(a0),d0                         	| [...]
+	move.b	(a0),d0                 	| [$d8d8: lda    $3,x] [freq=low, count=21%]
+	addq.b	#1,d0                         	| [...]
+	move.b  d0,(a0)
 	and.b	#0x07,d0                         	| [$d8da: anda   #$07] [freq=low, count=21%]
 	jeq	l_d8df                             	| [$d8dc: beq    $d8df] [freq=low, count=21%]
 	rts                                    	| [$d8de: rts] [freq=low, count=19%]
@@ -19943,7 +19953,7 @@ jump_table_927b:
 jump_table_9639:
 	.long	function_9642                    	|  $9639
 	.long	function_96e8                    	|  $963b
-	.long	function_97a2                    	|  $963d
+	.long	flash_high_score_97a2                    	|  $963d
 	.long	function_9641                    	|  $963f
 jump_table_992d:
 	.long	credit_inserted_from_intro_91fb  	|  $992d

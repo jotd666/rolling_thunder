@@ -5,7 +5,8 @@
 	.global infinite_time_flag
 
 	.global invincible_flag
-	.global start_level_flag
+	.global difficulty_flag
+	.global five_lives_flag
 	.global infinite_bullets_flag
 	.global level_select_flag
 	.global up_previously_pressed_flag
@@ -87,15 +88,16 @@ cpu2_m6809_direct_page_pointer:
 
 cpu1_current_bank:
 	.byte	0
-skip_intro_flag:
-	.byte	0
-start_level_flag:
-	.byte	0
+
 invincible_flag:
 	.byte	0
 infinite_lives_flag:
 	.byte	0
 infinite_time_flag:
+	.byte	0
+difficulty_flag:
+	.byte	0
+five_lives_flag:
 	.byte	0
 up_previously_pressed_flag:
 	.byte	0
