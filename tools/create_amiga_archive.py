@@ -39,9 +39,6 @@ shutil.copy(progdir / "assets" / "amiga" / "RollingThunder_AGA.info",outdir)
 
 
 
-# cleanup of log files in data dir that whdload creates
-for x in datadir.glob("*used_*"):
-    os.remove(x)
 
 
 
@@ -51,8 +48,9 @@ dataout.mkdir(exist_ok=True,parents=True)
 
 pack_data = True  # set to false to create unpacked distros (much faster)
 
+
 for sourcefile in datadir.glob("*"):
-    if sourcefile.is_file():
+    if sourcefile.is_file() and all(not sourcefile.match(p) for p in ("*used_*","*.high","*savegame*")):
         destfile = dataout / sourcefile.name
         pack_data = not sourcefile.name.endswith(".mod")
         # -= RNC ProPackED v1.8 [by Lab 313] (01/26/2021) =-

@@ -19,8 +19,8 @@ Credits:
 
 Instructions:
 
-5: insert coin
-1/2: start game
+5/fire: insert coin
+1/2/up/down: start 1P/2P game
 arrows/joystick: move
 red/ctrl: shoot
 blue/alt: jump
