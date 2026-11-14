@@ -6037,9 +6037,9 @@ l_9bda:
 
 * 1 jump-table ref
 function_9bef:
-	GET_ADDRESS	in_level_423d              	| [$9bef: tst    in_level_423d] input level [ 0] dip SWA:1 (service mode) [freq=low, count=20%]
-	tst.b	(a0)                             	| [...]
-	jne	l_9c01                             	| [$9bf2: bne    $9c01] [freq=low, count=20%]
+*	GET_ADDRESS	in_level_423d              	| [$9bef: tst    in_level_423d] input level [ 0] dip SWA:1 (service mode) [freq=low, count=20%]
+*	tst.b	(a0)                             	| [...]
+*	jne	l_9c01                             	| [$9bf2: bne    $9c01] [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	move,dp_sub_cpu1_04,d0| [$9bf4: lda    dp_sub_cpu1_04] CPU1 sub-state [freq=low, count=20%]
 	OP_R_ON_DP_ADDRESS	cmp,dp_sub_cpu2_05,d0| [$9bf6: cmpa   dp_sub_cpu2_05] CPU2 sub-state [freq=low, count=20%]
 	jls	l_9bfb                             	| [$9bf8: bls    $9bfb] [freq=low, count=20%]
@@ -6501,6 +6501,7 @@ l_9e12:
 	OP_W_ON_DP_ADDRESS	move,dp_sub_cpu2_05,d0| [$9e22: sta    dp_sub_cpu2_05]
 	OP_1_ON_DP_ADDRESS	clr,dp_sem_cpu2_07   | [$9e24: clr    dp_sem_cpu2_07]
 	jbsr	osd_yield   | sync after semaphore write
+	jbsr	set_end_context
 	rts                                    	| [$9e26: rts]
 
 * 1 jump-table ref
@@ -6960,8 +6961,8 @@ l_9ffd:
 	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$a003: std    $2,y] [video_address_word]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
-	jbra	set_level_context
-	rts                                    	| [$a005: rts]
+	* set context after area selection
+	jbra	set_level_context            	| [$a005: rts]
 l_a006:
 	* jotd: changed hold 1P/2P start by fire/jump in area selection menu
 	GET_ADDRESS	fire_1p_level_4279              	| [$a006: lda    in_level_4263] input level [19] IN0.6 START1
@@ -7651,7 +7652,7 @@ l_a2d3:
 	rts                                    	| [$a308: rts]
 
 * 1 jump-table ref
-function_a309:
+end_of_level_a309:
 	OP_R_ON_DP_ADDRESS	move,dp_sem_cpu1_06,d0| [$a309: lda    dp_sem_cpu1_06]
 	OP_R_ON_DP_ADDRESS	cmp,dp_sem_cpu2_07,d0| [$a30b: cmpa   dp_sem_cpu2_07]
 	jls	l_a310                             	| [$a30d: bls    $a310] [no_semwait]
@@ -8273,9 +8274,7 @@ l_a5f9:
 	GET_REG_ADDRESS	0x6,d2                 	| [$a5f9: ldd    $6,x]
 	LOAD_D                                 	| [$a5f9: ldd    $6,x]
 	sub.w	#0x0080,d1                       	| [$a5fb: subd   #$0080]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
 	and.b	#0x0f,d0                         	| [$a5fe: anda   #$0f]
 	MAKE_D                                 	| [...]
 	GET_REG_ADDRESS	0x6,d2                 	| [$a600: std    $6,x]
@@ -8291,10 +8290,7 @@ l_a5f9:
 	LOAD_D                                 	| [$a608: ldd    a,u]
 	GET_REG_ADDRESS	0x6,d2                 	| [$a60a: addd   $6,x]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	PUSH_SR                                	| [...]
-	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	MAKE_D                                 	| [...]
+
 	GET_DP_ADDRESS	0xa9                    	| [$a60c: std    $a9]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	GET_DP_ADDRESS	0x80                    	| [$a60e: ldd    $80]
@@ -8324,10 +8320,9 @@ l_a621:
 	move.b	d0,(a0)                         	| [...]
 	GET_REG_ADDRESS	0x5,d2                 	| [$a62b: sta    $5,x]
 	move.b	d0,(a0)                         	| [...]
-	jbsr	display_congrats_a63f             	| [$a62d: bsr    display_congrats_a63f]
+	jbsr	redraw_level_tiles_a63f             	| [$a62d: bsr    redraw_level_tiles_a63f]
 	OP_W_ON_DP_ADDRESS	subq,tile_related_counter_ae,#1| [$a62f: dec    tile_related_counter_ae]
 	jpl	l_a63a                             	| [$a631: bpl    $a63a]
-	jbsr	set_end_context
 	OP_W_ON_DP_ADDRESS	addq,0xac,#1         | [$a633: inc    $ac]
 	GET_REG_ADDRESS	0xb,d3                 	| [$a635: lda    $b,y]
 	move.b	(a0),d0                         	| [...]
@@ -8340,7 +8335,7 @@ l_a63a:
 
 
 * called 1x  from $A62D
-display_congrats_a63f:
+redraw_level_tiles_a63f:
 	move.b	#0x2c,d0                        	| [$a63f: lda    #$2c]
 	OP_W_ON_DP_ADDRESS	move,0xb2,d0         | [$a641: sta    $b2]
 l_a643:
@@ -8464,10 +8459,7 @@ l_a6cc:
 	GET_DP_ADDRESS	0xc6                    	| [$a6cc: ldd    $c6] [freq=low, count=00%]
 	LOAD_D                                 	| [$a6cc: ldd    $c6] [freq=low, count=00%]
 	sub.w	#0x0101,d1                       	| [$a6ce: subd   #$0101] [freq=low, count=00%]
-	PUSH_SR                                	| [...]
 	MAKE_A                                 	| [...]
-	POP_SR                                 	| [...]
-	MAKE_D
 	GET_DP_ADDRESS	0x7c                    	| [$a6d1: cmpd   $7c] [freq=low, count=00%]
 	CMP_W_TO_REG	a0,d1                          	| [...]
 	jeq	l_a6d7                             	| [$a6d4: beq    $a6d7] [freq=low, count=00%]
@@ -8949,7 +8941,7 @@ l_a8aa:
 	rts                                    	| [$a8c4: rts]
 
 * 1 jump-table ref
-function_a8c5:
+playing_level_a8c5:
 	OP_R_ON_DP_ADDRESS	move,dp_sem_cpu1_06,d0| [$a8c5: lda    dp_sem_cpu1_06]
 	OP_R_ON_DP_ADDRESS	cmp,dp_sem_cpu2_07,d0| [$a8c7: cmpa   dp_sem_cpu2_07]
 	jls	l_a8cc                             	| [$a8c9: bls    $a8cc] [no_semwait]
@@ -18472,8 +18464,7 @@ l_d844:
 	GET_REG_ADDRESS	0x6,d2                 	| [$d854: tst    $6,x] [freq=low, count=32%]
 	tst.b	(a0)                             	| [...]
 	jeq	l_d85a                             	| [$d856: beq    $d85a] [freq=low, count=32%]
-	GET_REG_ADDRESS	0x6,d2                 	| [$d858: dec    $6,x]
-	subq.b	#1,(a0)                         	| [...]
+	subq.b	#1,(a0)                 	| [$d858: dec    $6,x]
 l_d85a:
 	.ifndef	RELEASE
 	move.w	#0xd86e,d4             	| [$d85a: ldu    #0xd86e] [freq=low, count=32%]
@@ -18506,7 +18497,7 @@ function_d89e:                          	| [cc_handled]
 	LOAD_D                                 	| [$d8a4: ldd    $8a] [freq=medium, count=59%]
 	GET_REG_ADDRESS	0xc,d2                 	| [$d8a6: addd   $c,x] [freq=medium, count=59%]
 	ADD_W_TO_REG	a0,d1                          	| [...]
-	GET_REG_ADDRESS	0xc,d2                 	| [$d8a8: std    $c,x] [freq=medium, count=59%]
+											| [$d8a8: std    $c,x] [freq=medium, count=59%]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	cmp.w	#0xff00,d1                       	| [$d8aa: cmpd   #$ff00] [freq=medium, count=59%]
 	jlt	l_d8cd                             	| [$d8ae: blt    $d8cd] [freq=medium, count=59%]
@@ -18522,15 +18513,13 @@ function_d89e:                          	| [cc_handled]
 	GET_REG_ADDRESS	0,d2                   	| [$d8c6: lda    ,x] [freq=low, count=32%]
 	move.b	(a0),d0                         	| [...]
 	and.b	#0x7f,d0                         	| [$d8c8: anda   #$7f] [freq=low, count=32%]
-	GET_REG_ADDRESS	0,d2                   	| [$d8ca: sta    ,x] [freq=low, count=32%]
-	move.b	d0,(a0)                         	| [...]
+	move.b	d0,(a0)                   	| [$d8ca: sta    ,x] [freq=low, count=32%]
 	rts                                    	| [$d8cc: rts] [freq=low, count=32%]
 l_d8cd:
 	GET_REG_ADDRESS	0,d2                   	| [$d8cd: lda    ,x] [freq=low, count=29%]
 	move.b	(a0),d0                         	| [...]
 	or.b	#0x80,d0                          	| [$d8cf: ora    #$80] [freq=low, count=29%]
-	GET_REG_ADDRESS	0,d2                   	| [$d8d1: sta    ,x] [freq=low, count=29%]
-	move.b	d0,(a0)                         	| [...]
+	move.b	d0,(a0)                   	| [$d8d1: sta    ,x] [freq=low, count=29%]
 	rts                                    	| [$d8d3: rts] [freq=low, count=29%]
 
 * 3 jump-table ref
@@ -19976,8 +19965,8 @@ jump_table_9c11:
 	.long	function_a6da                    	|  $9c1f
 	.long	function_9d0d                    	|  $9c21
 	.long	function_a170                    	|  $9c23
-	.long	function_a8c5                    	|  $9c25
-	.long	function_a309                    	|  $9c27
+	.long	playing_level_a8c5                    	|  $9c25
+	.long	end_of_level_a309                    	|  $9c27
 	.long	function_ac7e                    	|  $9c29
 jump_table_9e53:
 	.long	function_9e5b                    	|  $9e53
@@ -20981,12 +20970,8 @@ set_intermission_context:
     rts
 set_end_context:
     move.l  d0,-(a7)
-    OP_R_ON_DP_ADDRESS    move,starting_area_c5,d0
-    cmp.b   #0x10,d0    | only loads if end of game (level 10 BCD)
-    jne     0f
     moveq   #0,d0
     jbsr    osd_set_context
-0:
     move.l  (a7)+,d0
     rts
 set_level1_context:

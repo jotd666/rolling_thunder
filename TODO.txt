@@ -1,5 +1,8 @@
 for next release
 
+- set_end_context firing when resuming level 10!!! (or starting it)
+- set_level_context: avoid calling it if area_select (@a165)
+
 - area select/resume on level 10 after dying completely trashes, game loads
   "intermission" context for some reason WTF
 - "LOADING..." like in DD

@@ -1239,7 +1239,11 @@ load_context:
 	rts
 0:
 	movem.l	d0-a6,-(a7)
+	jbsr	osd_music_stop
+	* force music reload next time
+	clr.l	current_music_name
 	jbsr	disable_interrupts
+	
 	
 	.ifne	OPT_ENABLE_LOGGING
 	* reset logged tiles
@@ -1785,8 +1789,8 @@ osd_set_tilebank_8c00:
 	rts
 	
 osd_set_context:
-	jbsr	load_context
-	rts
+	jbra	load_context
+
 	
 * < D0: bank number	
 osd_set_cpu1_bank:
@@ -6711,14 +6715,14 @@ redraw_bg_tiles:
 	
 skip_level:
 	movem.l	d0-a6,-(a7)
-	CPU1_GET_MEMORY_START_IN_A6
-	*cmp.b	#1,(sub_sub_state_0008,a6)
-	jne		0f
-	*cmp.b	#6,(current_level_0072,a6)
-	jcc		0f
-	*clr.b	(sub_sub_state_0008,a6)
-
-0:
+	CPU1_GET_MEMORY_START_AND_DP
+	move.b	#0x09,d0
+	move.b	d0,(dp_state_cpu1_02,a5)
+	clr.b	(dp_sub_cpu1_04,a5)
+	clr.b	(dp_sem_cpu1_06,a5)
+	move.b	d0,(dp_state_cpu2_03,a5)
+	clr.b	(dp_sub_cpu2_05,a5)
+	clr.b	(dp_sem_cpu2_07,a5)
 	movem.l	(a7)+,d0-a6
 	rts
 toggle_invulnerability:
