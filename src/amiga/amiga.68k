@@ -6713,18 +6713,7 @@ redraw_bg_tiles:
 	movem.l	(a7)+,d0-a6
 	rts
 	
-skip_level:
-	movem.l	d0-a6,-(a7)
-	CPU1_GET_MEMORY_START_AND_DP
-	move.b	#0x09,d0
-	move.b	d0,(dp_state_cpu1_02,a5)
-	clr.b	(dp_sub_cpu1_04,a5)
-	clr.b	(dp_sem_cpu1_06,a5)
-	move.b	d0,(dp_state_cpu2_03,a5)
-	clr.b	(dp_sub_cpu2_05,a5)
-	clr.b	(dp_sem_cpu2_07,a5)
-	movem.l	(a7)+,d0-a6
-	rts
+
 toggle_invulnerability:
 	movem.l	d0-a6,-(a7)
 	CPU1_GET_MEMORY_START_IN_A6
@@ -6790,23 +6779,17 @@ handle_keyboard:
 	COLOR0_FLASH	0x0FF
 	
 0:
-	cmp.b	#0x51,d0	| F2 key: skip level
-	bne.b	0f
-	st.b	cheat_used
-	jbsr	skip_level
-	COLOR0_FLASH	0x0FF
-	
-0:
-	cmp.b	#0x52,d0	| F3 key: change weapon
-	bne.b	0f
-	st.b	cheat_used
-	
-0:
-
-	cmp.b	#0x53,d0	| F4 key:
-	bne.b	0f
-	st.b	cheat_used
-	COLOR0_FLASH	0x0FF
+*	cmp.b	#0x51,d0	| F2 key: skip level
+*	bne.b	0f
+*	st.b	cheat_used
+*	COLOR0_FLASH	0x0FF
+*	
+*0:
+*	cmp.b	#0x52,d0	| F3 key: change weapon
+*	bne.b	0f
+*	st.b	cheat_used
+*	
+*0:
 0:
 	cmp.b	#0x54,d0	| F5 key
 	bne.b	0f

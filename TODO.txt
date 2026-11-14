@@ -1,14 +1,11 @@
 for next release
 
-- set_end_context firing when resuming level 10!!! (or starting it)
 - set_level_context: avoid calling it if area_select (@a165)
 
-- area select/resume on level 10 after dying completely trashes, game loads
-  "intermission" context for some reason WTF
+
 - "LOADING..." like in DD
 - load/save highscores
 - dip switches difficulty / nb lives
-- set context: stop music else swap between players (and levels) music is fucked up
 - insert coin: nb credits 0->1->0
 
 ------------

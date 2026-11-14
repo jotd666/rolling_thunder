@@ -3,6 +3,10 @@ remake of Rolling Thunder for Amiga AGA, fastmem & whdload required
 
 Requires a 2-button joystick, or the keyboard
 
+Features:
+
+- 50Hz on 68040/68060 at arcade speed. On 68020/030 use 25Hz for good speed
+
 Credits:
 
 - jotd: reverse-engineering, 68020 transcode, graphics conversion
@@ -24,7 +28,7 @@ ESC: quit current game
 
 Cheat keys:
 
-
+F1: toggle invincibility
 
 Story 1 (First Half)
 
