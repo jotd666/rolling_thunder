@@ -2726,7 +2726,7 @@ test_x_offset:
 	move.w	x_offset,d0
 	
 *	move.w	#0xAC4,host_scroll_x
-*	move.w	#0xC4,game_scroll_x
+*	move.w	#start_area_number_c4,game_scroll_x
 *	move.w	#0x2C6,d7
 *	jbsr	compute_x_offset
 *	move.w	x_offset,d0

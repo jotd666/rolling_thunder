@@ -3500,11 +3500,9 @@ compute_sprite_xy:
 	* sy -= sprite_yoffs
 	sub.w	sprite_yoffs,d1
 
-	* sy++   (one-scanline sprite buffer delay)
-	addq.w	#1,d1
-
 	* ((sy + 16) & 0xff) - 16   -- LAST step of the hardware formula
-	add.w	#16,d1
+	* sy++   (one-scanline sprite buffer delay) (make it two)
+	add.w	#18,d1
 	and.w	#0xFF,d1
 	sub.w	#16,d1
 
@@ -4761,11 +4759,15 @@ platform_init:
 	swap	d0
 	move.w	d0,copper_resume_high+2
 	
-*enable_gray_gradient
+	lea		end2_gray_gradient,a0
+	move.l	a0,d0
+	move.w	d0,copper2_resume_low+2
+	swap	d0
+	move.w	d0,copper2_resume_high+2
+	
 
 
-	
-	
+
 	lea		_custom,a5
 	lea		game_copperlist,a0
 	move.l	a0,cop1lc(a5)
@@ -5666,6 +5668,20 @@ update_fg_tile:
 	move.b	(1,a6,d7.w),d1		| attribute
 	sub.w	#FG_SCREEN_TILE_ADDRESS,d7
 	
+	cmp.w	#0xDA2,d7
+	jne		0f
+	cmp.b	#0xA,d0
+	jne		2f
+	* change color palette for non-white as blue (default red)
+	move.w	#0x00F,d4
+	jra 	1f
+2:
+	* re-set normal red color
+	move.w	#0xF00,d4
+1:	
+	move.w	d4,area_select_color1
+	move.w	d4,area_select_color2
+
 	cmp.w	#0xFC8,d7
 	jcs		0f
 	* time value: 0xE4: red, 0xF0: yellow, 0xE8: green
@@ -5694,12 +5710,17 @@ update_fg_tile:
 	jne		0f
 	lea		enable_gray_gradient,a0
 	move.w	#copjmp2,(a0)
+	lea		enable2_gray_gradient,a0
+	move.w	#copjmp2,(a0)
 	* default: disable copper bar
 	cmp.b	#0xFE/4,d3
 	jne		0f
 	cmp.b	#3,d2
 	jne		0f
 	* enable copper bar
+	lea		enable_gray_gradient,a0
+	move.w	#0x1FE,(a0)		| nop: copper bar active
+	lea		enable2_gray_gradient,a0
 	move.w	#0x1FE,(a0)		| nop: copper bar active
 0:
 	* D7 is even, 0-0xFFF, no need to divide then multiply to get 2 bytes
@@ -6054,16 +6075,16 @@ decode_mcu_inputs:
 *	st.b	detect_controllers
 *	move.b	#1,(in_level_4261,a6)
 *0:	
-
-	clr.l	(jump_1p_edge_4276,a6)
-	clr.l	(jump_1p_edge_4276+4,a6)
-	clr.l	(jump_1p_edge_4276+8,a6)
+	lea		(jump_1p_edge_4276,a6),a0
+	clr.l	(a0)+
+	clr.l	(a0)+
+	clr.l	(a0)+
 	move.l	joypad_1_state,d1
 	move.l	_previous_joypad_1_state,d2
 	
 	btst	#JPB_BTN_RED,d1
 	jeq		0f
-	move.b  #1,(in_level_4279,a6)
+	move.b  #1,(fire_1p_level_4279,a6)
 	btst	#JPB_BTN_RED,d2
 	jne		0f					| previously pressed
 	move.b	#1,(fire_1p_edge_4278,a6)		| fire
@@ -6074,14 +6095,14 @@ decode_mcu_inputs:
 0:
 	btst	#JPB_BTN_BLU,d1
 	jeq		0f
-	move.b  #1,(in_level_4277,a6)
+	move.b  #1,(jump_1p_level_4277,a6)
 	btst	#JPB_BTN_BLU,d2
 	jne		0f					| previously pressed
 	move.b	#1,(jump_1p_edge_4276,a6)		| jump
 0:
 	btst	#JPB_BTN_UP,d1
 	jeq		0f
-	move.b	#1,(in_level_427b,a6)
+	move.b	#1,(up_level_427b,a6)
 	IS_GAME_PLAYING
 	jeq		0f
 	move.b	#1,(mcu_game_start_flag_418c,a6)
@@ -6089,7 +6110,7 @@ decode_mcu_inputs:
 0:
 	btst	#JPB_BTN_DOWN,d1
 	jeq		0f
-	move.b	#1,(in_level_427d,a6)
+	move.b	#1,(down_level_427d,a6)
 	IS_GAME_PLAYING
 	jeq		0f
 	move.b	#1,(mcu_game_start_flag_418c,a6)
@@ -6097,17 +6118,17 @@ decode_mcu_inputs:
 0:
 	btst	#JPB_BTN_RIGHT,d1
 	jeq		0f
-	move.b	#1,(in_level_427f,a6)
+	move.b	#1,(right_level_427f,a6)
 	btst	#JPB_BTN_RIGHT,d2
 	jne		0f
-	move.b	#1,(in_edge_427e,a6)
+	move.b	#1,(right_edge_427e,a6)
 0:
 	btst	#JPB_BTN_LEFT,d1
 	jeq		0f
-	move.b	#1,(in_level_4281,a6)
+	move.b	#1,(left_level_4281,a6)
 	btst	#JPB_BTN_LEFT,d2
 	jne		0f
-	move.b	#1,(in_edge_4280,a6)
+	move.b	#1,(left_edge_4280,a6)
 0:
 	btst	#JPB_BTN_PLAY,d1
 	beq.b	0f
@@ -6121,22 +6142,33 @@ decode_mcu_inputs:
 
 	tst.b	(0x4C,a0)		| "up" key
 	beq.b	0f
-	move.b	#1,(in_level_427b,a6)
+	move.b	#1,(up_level_427b,a6)
 0:
 	tst.b	(0x4D,a0)		| "down" key
 	beq.b	0f
-	move.b	#1,(in_level_427d,a6)
+	move.b	#1,(down_level_427d,a6)
 0:
-	tst.b	(0x4F,a0)		| "<-" key
+	move.b	(0x4F,a0),d1		| "<-" key
 	beq.b	0f
-	move.b	#1,(in_level_4281,a6)
+	move.b	#1,(left_level_4281,a6)
+	tst.b	previous_left_press
+	jne		0f
+	move.b	#1,(left_edge_4280,a6)
 0:
-	tst.b	(0x4E,a0)		| "->" key
+	move.b	d1,previous_left_press
+	move.b	(0x4E,a0),d1		| "->" key
 	beq.b	0f
-	move.b	#1,(in_level_427f,a6)
+	move.b	#1,(right_level_427f,a6)
+	tst.b	previous_right_press
+	jne		0f
+	move.b	#1,(right_edge_427e,a6)
 0:
+	move.b	d1,previous_right_press
+	
 	move.b	(0x63,a0),d1	| "ctrl" key
 	beq.b	0f
+	move.b	#1,(fire_1p_level_4279,a6)
+	
 	tst.b	previous_ctrl_press
 	jne		0f
 	move.b	#1,(fire_1p_edge_4278,a6)		| fire
@@ -6145,6 +6177,7 @@ decode_mcu_inputs:
 	
 	move.b	(0x64,a0),d1		| left "alt" key
 	beq.b	0f
+	move.b  #1,(jump_1p_level_4277,a6)
 	tst.b	previous_alt_press
 	jne		0f
 	move.b	#1,(jump_1p_edge_4276,a6)		| jump
@@ -7841,6 +7874,10 @@ previous_ctrl_press:
 	.byte	0
 previous_alt_press:
 	.byte	0
+previous_right_press:
+	.byte	0
+previous_left_press:
+	.byte	0
 last_e8_trigger:
 	.byte	0
 sound_voice_0:
@@ -8429,12 +8466,23 @@ enable_gray_gradient:
 	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0xBBC
 end_gray_gradient:
 	
-	* here was first_rows (before I disabled it)
 	* mid-line wait & extra interrupt
 	.word	0x8001,0xFFFE
+	
+	
+
 pal_intreq_block_game:
 	.word	 intreq,0x8014  | call level 1 interrupt in the middle of a frame, also flag so copper interrupt knows that we're going to call copper int
-	* here was second_rows (before I disabled it)
+
+
+* second part of the title gradient
+copper2_resume_high:
+	.word	cop2lc,0
+copper2_resume_low:
+	.word	cop2lc+2,0
+enable2_gray_gradient:
+	.word	copjmp2,0
+
 
 	.set	offset,offset+36
 	TITLE_SPRITE_COLOR	0x5E01+offset<<8,0x889
@@ -8451,6 +8499,17 @@ pal_intreq_block_game:
 	* reset to white
 
 	TITLE_SPRITE_COLOR	0xB001,0xDDD
+end2_gray_gradient:
+	
+	* area select color
+	.word	0xD001,0xFFFE
+	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
+	.word	color+6
+area_select_color1:
+	.word	0x00F
+	.word	color+6+8
+area_select_color2:
+	.word	0x00F
 	
 	* pal limit
 	.if		NB_PLAYFIELD_PLANES>6
@@ -8459,7 +8518,6 @@ pal_intreq_block_game:
     .word  0xFFDF,0xFFFE       | PAL wait
 	.endif
 	* extra wait for PAL (NTSC can't afford this)
-	* here was fourth_rows (before I disabled it)
 	.word	0x0801,0xFFFE
 	.word	bplcon3,(2<<13)+(BORDERBLANK<<5)
 	.word	color+6+8

@@ -273,7 +273,7 @@ used_cluts = set()
 for atc in alphanum_tile_codes:
 ##    cluts = fg_tile_cluts.get(atc)
 ##    if cluts:
-    used_cluts.update([0x3F,0x39])
+    used_cluts.update([0x3F,0x39,0x3B])
 # now set cluts for all alphanum tiles
 for atc in alphanum_tile_codes:
     fg_tile_cluts[atc] = sorted(used_cluts)

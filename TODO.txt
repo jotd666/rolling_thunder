@@ -1,19 +1,12 @@
 for next release
 
-- area select > 5 doesn't work properly (story 1 area 7) despite A.I. fix
-  plus resume on level 10 after dying completely trashes, game loads
+- area select/resume on level 10 after dying completely trashes, game loads
   "intermission" context for some reason WTF
 - "LOADING..." like in DD
-- HUD tile clut 3B/3F doesn't seem to register (area select)
-  get the addresses of the blue text and debug
 - load/save highscores
+- dip switches difficulty / nb lives
 - down: start 2P game, 2 2P game ?? not working
-- 1 pixel too high for sprites!!
 
-site	waits for	tune requested by
-$9DE8	before arming sub-state 12	$07, CPU2 $CE77 when the boss starts dying
-$A958	sub-state 10 step 1 (GAME OVER)	$0C, CPU1 $A8E6 step 0
-$AE3F	sub-state 12 step 7 (MISSION COMPLETE)	$09, CPU1 $ACD1 step 3
 
 ------------
 

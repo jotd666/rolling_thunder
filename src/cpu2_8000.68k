@@ -1212,7 +1212,7 @@ l_84b6:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d3         	| [$84bd: ldy    a,y] [rom_address]
 	MOVE_W_TO_REG	a0,d3                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$84c0: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$84c0: lda    $c4]
 	add.b	d0,d0                            	| [$84c2: asla]
 	OP_R_ON_DP_ADDRESS	add,0xcf,d0          | [$84c3: adda   $cf]
 	add.b	d0,d0                            	| [$84c5: asla]
@@ -5094,7 +5094,7 @@ l_98f0:
 l_98f5:
 	OP_R_ON_DP_ADDRESS	move,0xc2,d0         | [$98f5: lda    $c2] [freq=low, count=17%]
 	jeq	l_9912                             	| [$98f7: beq    $9912] [freq=low, count=17%]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$98f9: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$98f9: lda    $c4]
 	cmp.b	#0x04,d0                         	| [$98fb: cmpa   #$04]
 	jne	l_9912                             	| [$98fd: bne    $9912]
 	OP_1_ON_DP_ADDRESS	tst,0x1f             | [$98ff: tst    $1f]
@@ -5308,7 +5308,7 @@ function_9ad5:
                                          | [$9ada: asla]
 	asl.b	#2,d0                            	| [$9adb: asla] [freq=low, count=00%]
 	OP_R_ON_DP_ADDRESS	add,0xc2,d0          | [$9adc: adda   $c2] [freq=low, count=00%]
-	OP_R_ON_DP_ADDRESS	add,0xc4,d0          | [$9ade: adda   $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	add,start_area_number_c4,d0          | [$9ade: adda   $c4] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
 	DO_EXTB	d6                             	| [...] with sign extension
@@ -9534,7 +9534,7 @@ l_b061:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$b07d: ldu    a,u] [rom_address]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$b07f: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$b07f: lda    $c4]
 	add.b	d0,d0                            	| [$b081: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -9651,7 +9651,7 @@ function_b0ee:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$b102: ldu    a,u] [rom_address] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$b104: lda    $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$b104: lda    $c4] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$b106: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -9688,7 +9688,7 @@ function_b116:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$b129: ldu    a,u] [rom_address] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$b12b: lda    $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$b12b: lda    $c4] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$b12d: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -9726,7 +9726,7 @@ function_b13d:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$b151: ldu    a,u] [rom_address]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$b153: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$b153: lda    $c4]
 	add.b	d0,d0                            	| [$b155: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -9763,7 +9763,7 @@ function_b165:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$b178: ldu    a,u] [rom_address]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$b17a: lda    $c4]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$b17a: lda    $c4]
 	add.b	d0,d0                            	| [$b17c: asla]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte
@@ -16004,7 +16004,7 @@ l_d091:
 	DO_EXTB	d6                             	| [...] with sign extension
 	GET_REG_ROM_ADDRESS_FROM_REG	d6,d4         	| [$d09b: ldu    a,u] [rom_address] [freq=low, count=00%]
 	MOVE_W_TO_REG	a0,d4                         	| [...]
-	OP_R_ON_DP_ADDRESS	move,0xc4,d0         | [$d09d: lda    $c4] [freq=low, count=00%]
+	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$d09d: lda    $c4] [freq=low, count=00%]
 	add.b	d0,d0                            	| [$d09f: asla] [freq=low, count=00%]
 	moveq	#0,d6                            	| [...]
 	move.b	d0,d6                           	| [...] as byte

@@ -2799,7 +2799,7 @@ l_8ae5:
 	jbsr	function_8caf                     	| [$8afd: jsr    function_8caf]
 	GET_ADDRESS	0x542c                     	| [$8b00: inc    $542c] work RAM (shared with CPU2)
 	addq.b	#1,(a0)                         	| [...]
-	GET_ADDRESS	in_edge_427a               	| [$8b03: lda    in_edge_427a] input edge  [31] IN1.2 UP p1
+	GET_ADDRESS	up_edge_427a               	| [$8b03: lda    up_edge_427a] input edge  [31] IN1.2 UP p1
 	move.b	(a0),d0                         	| [...]
 	GET_ADDRESS	in_edge_426e               	| [$8b06: ora    in_edge_426e] input edge  [25] IN1.3 UP p2
 	or.b	(a0),d0                           	| [...]
@@ -2816,7 +2816,7 @@ l_8b17:
 	subq.b	#1,(a0)                         	| [...]
 	jra	l_8b33                             	| [$8b1a: bra    $8b33]
 l_8b1c:
-	GET_ADDRESS	in_edge_427c               	| [$8b1c: lda    in_edge_427c] input edge  [32] IN0.2 DOWN p1
+	GET_ADDRESS	down_edge_427c               	| [$8b1c: lda    down_edge_427c] input edge  [32] IN0.2 DOWN p1
 	move.b	(a0),d0                         	| [...]
 	GET_ADDRESS	in_edge_4270               	| [$8b1f: ora    in_edge_4270] input edge  [26] IN0.3 DOWN p2
 	or.b	(a0),d0                           	| [...]
@@ -2835,12 +2835,12 @@ l_8b33:
 	GET_ADDRESS	cpu2_ready_5ff3            	| [$8b33: lda    cpu2_ready_5ff3]
 	move.b	(a0),d0                         	| [...]
 	move.w	#sound_table_4285,d2            	| [$8b36: ldx    #sound_table_4285] input level [36] IN1.0 button3 p1 (unused)
-	GET_ADDRESS	in_edge_427e               	| [$8b39: ldb    in_edge_427e] input edge  [33] IN2.5 RIGHT p1
+	GET_ADDRESS	right_edge_427e               	| [$8b39: ldb    right_edge_427e] input edge  [33] IN2.5 RIGHT p1
 	move.b	(a0),d1                         	| [...]
 	GET_ADDRESS	in_edge_4272               	| [$8b3c: orb    in_edge_4272] input edge  [27] IN0.4 RIGHT p2
 	or.b	(a0),d1                           	| [...]
 	jne	l_8b50                             	| [$8b3f: bne    $8b50]
-	GET_ADDRESS	in_level_427f              	| [$8b41: ldb    in_level_427f] input level [33] IN2.5 RIGHT p1
+	GET_ADDRESS	right_level_427f              	| [$8b41: ldb    right_level_427f] input level [33] IN2.5 RIGHT p1
 	move.b	(a0),d1                         	| [...]
 	GET_ADDRESS	in_level_4273              	| [$8b44: orb    in_level_4273] input level [27] IN0.4 RIGHT p2
 	or.b	(a0),d1                           	| [...]
@@ -2861,12 +2861,12 @@ l_8b50:
 	clr.b	(a0)                         	| [...]
 	addq.b	#1,d0                           	| [$8b58: inca]
 l_8b59:
-	GET_ADDRESS	in_edge_4280               	| [$8b59: ldb    in_edge_4280] input edge  [34] IN2.4 LEFT p1
+	GET_ADDRESS	left_edge_4280               	| [$8b59: ldb    left_edge_4280] input edge  [34] IN2.4 LEFT p1
 	move.b	(a0),d1                         	| [...]
 	GET_ADDRESS	in_edge_4274               	| [$8b5c: orb    in_edge_4274] input edge  [28] IN2.7 LEFT p2
 	or.b	(a0),d1                           	| [...]
 	jne	l_8b70                             	| [$8b5f: bne    $8b70]
-	GET_ADDRESS	in_level_4281              	| [$8b61: ldb    in_level_4281] input level [34] IN2.4 LEFT p1
+	GET_ADDRESS	left_level_4281              	| [$8b61: ldb    left_level_4281] input level [34] IN2.4 LEFT p1
 	move.b	(a0),d1                         	| [...]
 	GET_ADDRESS	in_level_4275              	| [$8b64: orb    in_level_4275] input level [28] IN2.7 LEFT p2
 	or.b	(a0),d1                           	| [...]
@@ -4923,7 +4923,7 @@ l_9703:
 	addq.b	#1,(a0)                         	| [...]
 	jra	l_975c                             	| [$9711: bra    $975c]
 l_9713:
-	move.w	#in_edge_4280,d4                	| [$9713: ldu    #in_edge_4280] input edge  [34] IN2.4 LEFT p1
+	move.w	#left_edge_4280,d4                	| [$9713: ldu    #left_edge_4280] input edge  [34] IN2.4 LEFT p1
 	OP_R_ON_DP_ADDRESS	move,0x01,d0         | [$9716: lda    $01]
 	jeq	l_9721                             	| [$9718: beq    $9721]
 	GET_ADDRESS	in_level_4259              	| [$971a: lda    in_level_4259]
@@ -4946,7 +4946,7 @@ l_9733:
 	subq.b	#1,(a0)                         	| [...]
 	jra	l_975c                             	| [$9736: bra    $975c]
 l_9738:
-	move.w	#in_edge_427e,d4                	| [$9738: ldu    #in_edge_427e] input edge  [33] IN2.5 RIGHT p1
+	move.w	#right_edge_427e,d4                	| [$9738: ldu    #right_edge_427e] input edge  [33] IN2.5 RIGHT p1
 	OP_R_ON_DP_ADDRESS	move,0x01,d0         | [$973b: lda    $01]
 	jeq	l_9746                             	| [$973d: beq    $9746]
 	GET_ADDRESS	in_level_4259              	| [$973f: lda    in_level_4259]
@@ -6820,7 +6820,7 @@ l_9f6c:
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
 	jbsr	function_returns_z_a0f9           	| [$9f75: jsr    function_returns_z_a0f9]
-	jeq	l_9fd0                             	| [$9f78: beq    $9fd0]
+	jeq	area_select_done_9fd0                             	| [$9f78: beq    $9fd0]
 	* check if player presses START to select zone (changed to fire/jump)
 	GET_ADDRESS	fire_1p_edge_4278               	| [$9f7a: lda    start_1p_edge_4262] input edge  [19] IN0.6 START1
 	move.b	(a0),d0                         	| [...]
@@ -6905,7 +6905,7 @@ l_9fc2:
 	VIDEO_WORD_DIRTY | [...]
 	jbsr	function_returns_z_a0f9           	| [$9fcb: jsr    function_returns_z_a0f9]
 	jne	l_a006                             	| [$9fce: bne    $a006]
-l_9fd0:
+area_select_done_9fd0:
 	move.b	#0x03,d0                        	| [$9fd0: lda    #$03]
 	OP_W_ON_DP_ADDRESS	move,dp_sem_cpu1_06,d0| [$9fd2: sta    dp_sem_cpu1_06]
 	jbsr	osd_yield   | sync after semaphore write
@@ -6936,6 +6936,12 @@ l_9fe3:
 	move.b	(a0),d0                         	| [...]
 	move.w	#0x3dae,d3                      	| [$9fed: ldy    #$3dae]
 	move.b	#0xfc,d1                        	| [$9ff1: ldb    #$fc]
+	
+	* copy story number too
+	OP_R_ON_DP_ADDRESS	move,start_story_number_c2,d0
+	addq	#1,d0
+	OP_W_ON_DP_ADDRESS	move,story_number_c3,d0
+	
 	OP_R_ON_DP_ADDRESS	move,starting_area_c5,d0| [$9ff3: lda    starting_area_c5]
                                          | [$9ff5: lsra]
                                          | [$9ff6: lsra]
@@ -6954,13 +6960,16 @@ l_9ffd:
 	GET_REG_VIDEO_ADDRESS	0x2,d3                 	| [$a003: std    $2,y] [video_address_word]
 	MOVE_W_FROM_REG	d1,a0                         	| [...]
 	VIDEO_WORD_DIRTY | [...]
+	jbra	set_level_context
 	rts                                    	| [$a005: rts]
 l_a006:
-	GET_ADDRESS	fire_1p_edge_4278+1              	| [$a006: lda    in_level_4263] input level [19] IN0.6 START1
+	* jotd: changed hold 1P/2P start by fire/jump in area selection menu
+	GET_ADDRESS	fire_1p_level_4279              	| [$a006: lda    in_level_4263] input level [19] IN0.6 START1
 	move.b	(a0),d0                         	| [...]
-	GET_ADDRESS	jump_1p_edge_4276+1              	| [$a009: ora    in_level_4261] input level [18] IN1.6 START2
+	GET_ADDRESS	jump_1p_level_4277              	| [$a009: ora    in_level_4261] input level [18] IN1.6 START2
 	or.b	(a0),d0                           	| [...]
-	jeq	l_9fd0                             	| [$a00c: beq    $9fd0]
+	jeq	area_select_done_9fd0                             	| [$a00c: beq    $9fd0]
+	* as long as fire or jump are kept pressed, player can move right/left to select starting area
 	move.w	#jump_1p_edge_4276,d4                	| [$a00e: ldu    #jump_1p_edge_4276]
 	OP_R_ON_DP_ADDRESS	move,0x1e,d0         | [$a011: lda    $1e]
 	jne	l_a017                             	| [$a013: bne    $a017]
@@ -7016,6 +7025,7 @@ l_a040:
 	VIDEO_WORD_DIRTY | [...]
 	rts                                    	| [$a048: rts]
 
+* advance starting area
 increase_starting_area_a049:
 	OP_R_ON_DP_ADDRESS	move,start_area_number_c4,d0         | [$a049: lda    $c4]
 	addq.b	#1,d0                           	| [$a04b: inca]
