@@ -6795,6 +6795,13 @@ handle_keyboard:
 	.endif
 
 	
+	cmp.b	#0x54,d0	| F5 key: play BGM
+	bne.b	0f
+	move.l	d0,-(a7)
+	move.w 	#MAIN_BGM_SND,d0
+	jbsr	osd_sound_start
+	move.l	(a7)+,d0
+0:
 	cmp.b	#0x55,d0	| F6 key: debug params
 	bne.b	0f
 	COLOR0_FLASH	0x0FF
@@ -6878,7 +6885,6 @@ read_args_string_end:
 * < A0: highscore buffer
 osd_read_high_scores:
 	OSD_ENTER
-	BREAKPOINT	"FUCKKK"
 	movem.l	d0-d7/a0-a6,-(a7)
 	CPU1_GET_MEMORY_START_IN_A6
 	lea	(high_score_table_5400,a6),a0
@@ -7068,22 +7074,22 @@ osd_sound_start:
 	movem.l	d0/d1/d2/a0/a1/a6,-(a7)
 	lea		_custom,a6
 
-
-	* special case if game starts cut the music that could remain from attract
-	cmp.w 	#MAIN_BGM_SND,d0
-	jne		0f
-	* reset trigger so the workaround for repeated trigger
-	* works
-	st.b	last_e8_trigger
-0:
-	cmp.w 	#DEAD_0B_SND,d0
-	jne		0f
-	* reset trigger so the workaround for repeated trigger
-	* works
-	st.b	last_e8_trigger
-0:
 	
 	and.w	#0xFF,d0
+
+	* special case if game starts cut the music that could remain from attract
+	cmp.b 	#MAIN_BGM_SND,d0
+	jne		0f
+	* reset trigger so the workaround for repeated trigger
+	* works
+	st.b	last_e8_trigger
+0:
+	cmp.b 	#DEAD_0B_SND,d0
+	jne		0f
+	* reset trigger so the workaround for repeated trigger
+	* works
+	st.b	last_e8_trigger
+0:
 
 	moveq	#0,d2
 	lsl.w	#3,d0
