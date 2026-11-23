@@ -2357,13 +2357,13 @@ playing_out:
 	* workaround for stupid trigger firing several times
 	* this is annoying as hell and sometimes prevents follow-up music from
 	* starting
-	cmp.b	last_e8_trigger,d0
-	jeq		0f
-	move.b	d0,last_e8_trigger
-	
+
 	clr.b	(snd_music_req_4380,a6)		| set as not playing
 	jbsr	osd_music_stop
 	clr.b	_mt_E8Trigger
+
+	
+	
 	cmp.b	#2,d0
 	jne		1f
 	* trigger 2 is special, it tells the engine to
@@ -7074,22 +7074,9 @@ osd_sound_start:
 	movem.l	d0/d1/d2/a0/a1/a6,-(a7)
 	lea		_custom,a6
 
-	
 	and.w	#0xFF,d0
 
-	* special case if game starts cut the music that could remain from attract
-	cmp.b 	#MAIN_BGM_SND,d0
-	jne		0f
-	* reset trigger so the workaround for repeated trigger
-	* works
-	st.b	last_e8_trigger
-0:
-	cmp.b 	#DEAD_0B_SND,d0
-	jne		0f
-	* reset trigger so the workaround for repeated trigger
-	* works
-	st.b	last_e8_trigger
-0:
+
 
 	moveq	#0,d2
 	lsl.w	#3,d0
@@ -7866,8 +7853,6 @@ previous_alt_press:
 previous_right_press:
 	.byte	0
 previous_left_press:
-	.byte	0
-last_e8_trigger:
 	.byte	0
 sound_voice_0:
 	.byte	0

@@ -3039,9 +3039,18 @@ mt_tremoctrl:
 mt_e8:
 * cmd E 8 x (x = trigger value)
 * d0 = x
+mt_e8:
+* cmd E 8 x (x = trigger value)
+* d0 = x
+* Only on the first tick of a row, and not again while a pattern
+* delay (EEx) repeats that row.
 
+	tst.b	mt_Counter(a4)
+	jne	1f
+	tst.b	mt_PattDelTime2(a4)
+	jne	1f
 	move.b	d0,mt_E8Trigger(a4)
-	rts
+1:	rts
 
 
 mt_retrignote:

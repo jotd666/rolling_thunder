@@ -2,7 +2,7 @@
 - music not restarting level1 => intermission => level2: no more music
  test:load end lev 1, infinite lives, level 2 fails? debug, lose life repeat
 ------------
-
+- HALT1 random!!
 - set_level_context: avoid calling it if area_select (@a165): not trivial
 - "LOADING..." like in DD
 - insert coin: nb credits 0->1->0
